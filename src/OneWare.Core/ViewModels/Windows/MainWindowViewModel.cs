@@ -73,17 +73,17 @@ public class MainWindowViewModel : ObservableObject
             }
         });
 
-        _windowService.RegisterMenuItem("MainWindow_MainMenu/View", new MenuItemViewModel("FindAll")
+        _windowService.RegisterMenuItem("MainWindow_MainMenu/View", new MenuItemModel("FindAll")
         {
             Header = "Find All",
             Command = new RelayCommand(() => OpenManager(GetMainView(), "All")),
             InputGesture = new KeyGesture(Key.T, PlatformHelper.ControlKey)
-        }, new MenuItemViewModel("FindActions")
+        }, new MenuItemModel("FindActions")
         {
             Header = "Find Actions",
             Command = new RelayCommand(() => OpenManager(GetMainView(), "Actions")),
             InputGesture = new KeyGesture(Key.P, PlatformHelper.ControlKey | KeyModifiers.Shift)
-        }, new MenuItemViewModel("FindFiles")
+        }, new MenuItemModel("FindFiles")
         {
             Header = "Find Files",
             Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
@@ -105,7 +105,7 @@ public class MainWindowViewModel : ObservableObject
     public IApplicationStateService ApplicationStateService { get; }
     public IPaths Paths { get; }
 
-    public ObservableCollection<MenuItemViewModel> TypeAssistanceQuickOptions { get; } = new();
+    public ObservableCollection<MenuItemModel> TypeAssistanceQuickOptions { get; } = new();
 
     public string Title
     {
@@ -141,7 +141,7 @@ public class MainWindowViewModel : ObservableObject
     
     public ObservableCollection<OneWareUiExtension> RightToolBarExtension { get; }
     public ObservableCollection<OneWareUiExtension> BottomRightExtension { get; }
-    public ObservableCollection<MenuItemViewModel> MainMenu { get; }
+    public ObservableCollection<MenuItemModel> MainMenu { get; }
 
     public RelayCommand MarkNotificationsReadCommand => new RelayCommand(() =>
     {
@@ -184,13 +184,13 @@ public class MainWindowViewModel : ObservableObject
         }
     }
 
-    private void AddMenuItem(MenuItemViewModel menuItem, string path = "")
+    private void AddMenuItem(MenuItemModel menuItem, string path = "")
     {
         if (menuItem.Command is not null)
             _applicationCommandService.RegisterCommand(new MenuItemApplicationCommand(menuItem, path));
     }
 
-    private void RemoveMenuItem(MenuItemViewModel menuItem)
+    private void RemoveMenuItem(MenuItemModel menuItem)
     {
         var removals = _applicationCommandService.ApplicationCommands.Where(x =>
             x is MenuItemApplicationCommand command && command.MenuItem == menuItem);

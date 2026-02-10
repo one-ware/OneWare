@@ -10,6 +10,7 @@ using OneWare.Core.Extensions;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Core.Views.Windows;
@@ -109,14 +110,14 @@ public partial class MainWindow : AdvancedWindow
     private void ConvertMenuToNativeMenu(IEnumerable<object> m, NativeMenu nm)
     {
         foreach (var item in m)
-            if (item is MenuItemViewModel mi)
+            if (item is MenuItemModel mi)
             {
                 var nmi = new NativeMenuItem(mi.Header ?? "")
                 {
                     Gesture = mi.InputGesture
                 };
 
-                if (mi.Icon is IObservable<Bitmap> btm) nmi.Bind(NativeMenuItem.IconProperty, btm);
+                if (mi.Icon?.IconObservable is IObservable<Bitmap> btm) nmi.Bind(NativeMenuItem.IconProperty, btm);
 
                 nmi.Bind(NativeMenuItem.CommandProperty, mi.WhenValueChanged(x => x.Command));
                 nmi.Bind(NativeMenuItem.IsEnabledProperty, mi.WhenValueChanged(x => x.IsEnabled));

@@ -61,6 +61,8 @@
                 <behaviors:CommandOnCopyBehavior Command="{Binding CopyAsync}" />
                 <behaviors:CommandOnKeyPressedBehavior Command="{Binding DeleteSelectedDialogAsync}"
                                                        TriggerKey="Delete" />
+                <behaviors:CommandOnDoubleTapBehavior
+                    Command="{Binding DoubleTab}" />
             </Interaction.Behaviors>
             <TreeDataGrid.ContextMenu>
                 <ContextMenu Classes="BindMenu" x:Name="TreeViewContextMenu"
@@ -68,62 +70,33 @@
             </TreeDataGrid.ContextMenu>
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
-                    <DockPanel>
+                    <Grid ColumnDefinitions="20, *" Background="Transparent">
                         <Interaction.Behaviors>
-                            <behaviors:CommandOnDoubleTapBehavior
-                                Command="{Binding $parent[TreeDataGrid].((viewModels:ProjectExplorerViewModel)DataContext).DoubleTab, FallbackValue={x:Null}}"
-                                CommandParameter="{Binding}" />
+                            <behaviors1:ProjectExplorerProjectEntryModificationBehavior />
                             <behaviors1:ProjectExplorerViewDragBehavior />
                         </Interaction.Behaviors>
 
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                            <ItemsControl ItemsSource="{Binding RightIcons}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="3" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Image Source="{Binding }" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                        <DockPanel DockPanel.Dock="Left" HorizontalAlignment="Stretch" Background="Transparent">
+                        <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
+                                                       Value="{Binding Icon}" Height="16" Width="16" />
 
-                            <Panel DockPanel.Dock="Left" VerticalAlignment="Center">
-                                <Image Height="16" Width="16"
-                                       Source="{Binding Icon}" />
-                                <ItemsControl ItemsSource="{Binding IconOverlays}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <Panel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Image Source="{Binding }" Height="16" Width="16" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Panel>
-
-                            <controls:RenamingTextBox DockPanel.Dock="Left" ToolTip.Tip="{Binding Header}"
-                                                      FontWeight="{Binding FontWeight}"
-                                                      VerticalAlignment="Center"
-                                                      IsEnabled="False" x:Name="RenamingTextBox"
-                                                      Margin="4 0 0 0"
-                                                      Text="{Binding Header, Mode=OneWay}"
-                                                      RenameAction="{Binding (models:IProjectEntry).RequestRename}"
-                                                      Opacity="{Binding TextOpacity}" />
-                        </DockPanel>
-                    </DockPanel>
+                        <TextBlock Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   FontWeight="{Binding FontWeight}"
+                                   Text="{Binding Header, Mode=OneWay}"
+                                   Opacity="{Binding TextOpacity}" />
+                    </Grid>
                 </DataTemplate>
             </TreeDataGrid.Resources>
             <TreeDataGrid.Styles>
                 <Style Selector="TreeDataGridRow" x:DataType="models:IProjectExplorerNode">
                     <Setter Property="Background" Value="{Binding Background}" />
+                    <Setter Property="Interaction.Behaviors">
+                        <BehaviorCollectionTemplate>
+                            <BehaviorCollection>
+                                <behaviors1:ProjectExplorerViewDragBehavior />
+                            </BehaviorCollection>
+                        </BehaviorCollectionTemplate>
+                    </Setter>
                 </Style>
                 <Style Selector="TreeDataGridRow TextBox:disabled /template/ Border#border">
                     <Setter Property="Opacity" Value="1" />
@@ -137,7 +110,7 @@
                 </Style>
                 <Style Selector="TreeDataGridExpanderCell /template/ ToggleButton#ExpanderToggleButton"
                        x:DataType="models:IProjectFolder">
-                    <Setter Property="Command" Value="{Binding SetIsExpandedFromView}" />
+                    <Setter Property="Command" Value="{Binding SetIsExpanded}" />
                 </Style>
             </TreeDataGrid.Styles>
         </projectExplorer:TreeDataGridCustom>

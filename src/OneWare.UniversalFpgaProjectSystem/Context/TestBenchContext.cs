@@ -1,16 +1,15 @@
 ﻿using System.Text.Json.Nodes;
-using OneWare.Essentials.Models;
 
 namespace OneWare.UniversalFpgaProjectSystem.Context;
 
-public class TestBenchContext(IFile file, JsonObject properties)
+public class TestBenchContext(string filePath, JsonObject properties)
 {
-    public IFile File { get; } = file;
+    public string FilePath { get; } = filePath;
 
     public string? Simulator
     {
-        get => Properties["Simulator"]?.ToString();
-        set => Properties["Simulator"] = value;
+        get => Properties["simulator"]?.ToString();
+        set => Properties["simulator"] = value;
     }
 
     public JsonObject Properties { get; } = properties;

@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Context;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -12,86 +14,83 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
 {
     private readonly IMainDockService _mainDockService;
-
-    private readonly INotifyCollectionChanged? _testBenchCollection;
-
-    private bool _isVisible;
-
-    private IFpgaSimulator? _selectedSimulator;
-
-    private TestBenchContext? _testBenchContext;
-
-    public UniversalFpgaProjectTestBenchToolBarViewModel(IFile file, IMainDockService mainDockService,
-        FpgaService fpgaService)
+    private readonly IProjectExplorerService _projectExplorerService;
+    private readonly string _filePath;
+    private UniversalFpgaProjectRoot? _projectRoot;
+    
+    public UniversalFpgaProjectTestBenchToolBarViewModel(string filePath, IMainDockService mainDockService,
+        FpgaService fpgaService, IProjectExplorerService projectExplorerService)
     {
-        File = file;
+        _filePath = filePath;
         _mainDockService = mainDockService;
+        _projectExplorerService = projectExplorerService;
         Simulators = fpgaService.Simulators;
 
-        if (file is FpgaProjectFile { Root: UniversalFpgaProjectRoot fpgaProjectRoot } fpgaProjectFile)
+        var root = projectExplorerService.GetRootFromFile(filePath);
+        
+        if (root is UniversalFpgaProjectRoot fpgaProjectRoot)
         {
-            IsVisible = fpgaProjectRoot.TestBenches.Contains(fpgaProjectFile);
-
-            _testBenchCollection = fpgaProjectRoot.TestBenches;
-            _testBenchCollection.CollectionChanged += OnCollectionChanged;
+            _projectRoot = fpgaProjectRoot;
+            IsVisible = fpgaProjectRoot.IsTestBench(Path.GetRelativePath(root.RootFolderPath, filePath));
+            
+            fpgaProjectRoot.Properties.ProjectPropertyChanged += OnProjectPropertyChanged;
         }
     }
 
-    public IFile File { get; }
-
     public bool IsVisible
     {
-        get => _isVisible;
+        get;
         set
         {
-            SetProperty(ref _isVisible, value);
+            SetProperty(ref field, value);
             if (value && TestBenchContext == null) _ = LoadContextAsync();
         }
     }
 
     public TestBenchContext? TestBenchContext
     {
-        get => _testBenchContext;
-        set => SetProperty(ref _testBenchContext, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public ObservableCollection<IFpgaSimulator> Simulators { get; }
 
     public IFpgaSimulator? SelectedSimulator
     {
-        get => _selectedSimulator;
+        get;
         set
         {
-            SetProperty(ref _selectedSimulator, value);
+            SetProperty(ref field, value);
 
             if (TestBenchContext != null)
             {
                 if (value != null)
-                    TestBenchContext.SetBenchProperty("Simulator", value.Name);
+                    TestBenchContext.SetBenchProperty("simulator", value.Name);
                 else
-                    TestBenchContext.RemoveBenchProperty("Simulator");
+                    TestBenchContext.RemoveBenchProperty("simulator");
 
                 _ = TestBenchContextManager.SaveContextAsync(TestBenchContext);
             }
         }
     }
 
-    private void OnCollectionChanged(object? o, NotifyCollectionChangedEventArgs args)
+    private void OnProjectPropertyChanged(object? o, ProjectPropertyChangedEventArgs args)
     {
-        if (File is FpgaProjectFile { Root: UniversalFpgaProjectRoot fpgaProjectRoot } fpgaProjectFile)
-            IsVisible = fpgaProjectRoot.TestBenches.Contains(fpgaProjectFile);
+        if (_projectRoot != null)
+            IsVisible = _projectRoot.IsTestBench(Path.GetRelativePath(_projectRoot.RootFolderPath, _filePath));
     }
 
     public void Detach()
     {
-        if (_testBenchCollection != null) _testBenchCollection.CollectionChanged -= OnCollectionChanged;
+        if (_projectRoot != null)
+            _projectRoot.Properties.ProjectPropertyChanged -= OnProjectPropertyChanged;
     }
 
     private async Task LoadContextAsync()
     {
-        TestBenchContext = await TestBenchContextManager.LoadContextAsync(File);
+        TestBenchContext = await TestBenchContextManager.LoadContextAsync(_filePath);
 
-        var simulator = TestBenchContext.GetBenchProperty("Simulator");
+        var simulator = TestBenchContext.GetBenchProperty("simulator");
 
         SelectedSimulator = Simulators.FirstOrDefault(x => x.Name == simulator);
     }
@@ -100,9 +99,9 @@ public class UniversalFpgaProjectTestBenchToolBarViewModel : ObservableObject
     {
         if (SelectedSimulator == null) return;
         if (TestBenchContext == null) throw new NullReferenceException(nameof(TestBenchContext));
-        if (_mainDockService.OpenFiles.TryGetValue(File, out var fileView))
+        if (_mainDockService.OpenFiles.TryGetValue(_filePath.ToPathKey(), out var fileView))
             await fileView.SaveAsync();
         await TestBenchContextManager.SaveContextAsync(TestBenchContext);
-        await SelectedSimulator.SimulateAsync(File);
+        await SelectedSimulator.SimulateAsync(_filePath);
     }
 }

@@ -62,7 +62,7 @@ public class GitRepositoryModel : ObservableObject
         set => SetProperty(ref _pushCommits, value);
     }
 
-    public ObservableCollection<MenuItemViewModel> AvailableBranchesMenu { get; } = new();
+    public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
 
     public void Refresh(SourceControlViewModel sourceControlViewModel)
     {
@@ -76,28 +76,28 @@ public class GitRepositoryModel : ObservableObject
         {
             HeadBranch = Repository.Head;
 
-            var branchesMenu = new List<MenuItemViewModel>();
+            var branchesMenu = new List<MenuItemModel>();
 
             foreach (var branch in Repository.Branches)
             {
-                var menuItem = new MenuItemViewModel("BranchName")
+                var menuItem = new MenuItemModel("BranchName")
                 {
                     Header = branch.FriendlyName,
                     Command = new RelayCommand(() => sourceControlViewModel.ChangeBranch(branch))
                 };
                 if (branch.IsCurrentRepositoryHead)
                 {
-                    menuItem.IconObservable = Application.Current!.GetResourceObservable("PicolIcons.Accept");
+                    menuItem.Icon = new IconModel("PicolIcons.Accept");
                     menuItem.IsEnabled = false;
                 }
 
                 branchesMenu.Add(menuItem);
             }
 
-            branchesMenu.Add(new MenuItemViewModel("NewBranch")
+            branchesMenu.Add(new MenuItemModel("NewBranch")
             {
                 Header = "New Branch...",
-                IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch"),
+                Icon = new IconModel("BoxIcons.RegularGitBranch"),
                 Command = sourceControlViewModel.CreateBranchDialogAsyncCommand
             });
 
@@ -107,7 +107,7 @@ public class GitRepositoryModel : ObservableObject
 
                     if (equal)
                     {
-                        a.IconObservable = b.IconObservable;
+                        a.Icon = b.Icon;
                         a.IsEnabled = b.IsEnabled;
                         a.Command = b.Command;
                         a.CommandParameter = b.CommandParameter;
@@ -135,10 +135,7 @@ public class GitRepositoryModel : ObservableObject
             {
                 var fullPath = Path.Combine(Repository.Info.WorkingDirectory, item.FilePath);
 
-                var sModel = new SourceControlFileModel(fullPath, item)
-                {
-                    ProjectFile = projectExplorerService.SearchFullPath(fullPath) as IProjectFile
-                };
+                var sModel = new SourceControlFileModel(fullPath, item);
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
                     item.State.HasFlag(FileStatus.RenamedInIndex) ||

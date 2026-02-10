@@ -110,7 +110,7 @@ public class BackupService
     private void Save()
     {
         var closedFiles =
-            _backups.Where(x => !_mainDockService.OpenFiles.Any(b => b.Key.FullPath.EqualPaths(x.RealPath)));
+            _backups.Where(x => !_mainDockService.OpenFiles.Any(b => b.Key.EqualPaths(x.RealPath)));
 
         foreach (var closedFile in closedFiles.ToList()) RemoveBackup(closedFile);
 
@@ -120,13 +120,13 @@ public class BackupService
             if (doc.Value is EditViewModel { IsDirty: true } evm)
                 try
                 {
-                    var backup = _backups.FirstOrDefault(x => x.RealPath.EqualPaths(doc.Key.FullPath));
+                    var backup = _backups.FirstOrDefault(x => x.RealPath.EqualPaths(doc.Key));
 
                     if (backup == null)
                     {
-                        backup = new BackupFile(doc.Key.FullPath, Path.Combine(_backupFolder,
+                        backup = new BackupFile(doc.Key, Path.Combine(_backupFolder,
                             Path.Combine(_backupFolder,
-                                Path.GetFileName(doc.Key.FullPath)).CheckNameFile()), DateTime.Now);
+                                Path.GetFileName(doc.Key)).CheckNameFile()), DateTime.Now);
                         _backups.Add(backup);
                     }
 
@@ -163,19 +163,21 @@ public class BackupService
     /// <summary>
     ///     ONLY CALL AFTER FILES LOADED!
     /// </summary>
-    public async Task SearchForBackupAsync(IFile file)
+    public async Task SearchForBackupAsync(string fullPath)
     {
         foreach (var backup in _backups)
-            if (backup.RealPath.EqualPaths(file.FullPath))
+            if (backup.RealPath.EqualPaths(fullPath))
             {
-                if (backup.SaveTime > file.LastSaveTime)
+                var lastSaveTime = File.Exists(fullPath) ? File.GetLastWriteTime(fullPath) : DateTime.MinValue;
+                if (backup.SaveTime > lastSaveTime)
                 {
-                    var dockable = await _mainDockService.OpenFileAsync(file);
+                    var dockable = await _mainDockService.OpenFileAsync(fullPath);
 
                     if (dockable is not EditViewModel evm) continue;
 
+                    var fileName = Path.GetFileName(fullPath);
                     var result = await _windowService.ShowYesNoAsync("Warning",
-                        $"There is a more recent version of {file.Name} stored in backups! Do you  want to restore it?",
+                        $"There is a more recent version of {fileName} stored in backups! Do you  want to restore it?",
                         MessageBoxIcon.Warning, _mainDockService.GetWindowOwner(dockable));
 
                     if (result == MessageBoxStatus.Yes)
@@ -186,12 +188,12 @@ public class BackupService
 
                             evm.CurrentDocument.Text = backupText;
 
-                            _logger.Log("File " + file.Name + " restored from backup!", true, Brushes.Green);
+                            _logger.Log("File " + fileName + " restored from backup!", true, Brushes.Green);
                         }
                         catch (Exception e)
                         {
                             _logger.Error(
-                                "Restoring file " + file.Name +
+                                "Restoring file " + fileName +
                                 " failed! More information can be found in the program log", e, true, true);
                         }
 

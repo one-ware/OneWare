@@ -33,14 +33,14 @@ public class PackageManagerModule : OneWareModuleBase
     {
         var windowService = serviceProvider.Resolve<IWindowService>();
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemViewModel("Extensions")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Extensions")
         {
             Header = "Extensions",
             Command = new RelayCommand(() => windowService.Show(new PackageManagerView
             {
                 DataContext = serviceProvider.Resolve<PackageManagerViewModel>()
             })),
-            IconObservable = Application.Current!.GetResourceObservable("PackageManager")
+            Icon = new IconModel("PackageManager")
         });
 
         serviceProvider.Resolve<ISettingsService>().RegisterSettingCategory("Package Manager", 0, "PackageManager");

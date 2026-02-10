@@ -4,7 +4,6 @@ using AvaloniaEdit.Indentation;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.Services;
-using IFile = OneWare.Essentials.Models.IFile;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
 
@@ -12,15 +11,15 @@ namespace OneWare.Essentials.LanguageService;
 
 public class LspIndentationStrategy : IIndentationStrategy
 {
-    private readonly IFile _file;
+    private readonly string _filePath;
     private readonly LanguageServiceLsp _languageService;
     private string _indentationString = "\t";
 
-    public LspIndentationStrategy(TextEditorOptions options, LanguageServiceLsp languageS, IFile file)
+    public LspIndentationStrategy(TextEditorOptions options, LanguageServiceLsp languageS, string filePath)
     {
         IndentationString = options.IndentationString;
         _languageService = languageS;
-        _file = file;
+        _filePath = filePath;
     }
 
     /// <summary>
@@ -51,7 +50,7 @@ public class LspIndentationStrategy : IIndentationStrategy
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
-        var formattingContainer = await _languageService.RequestFormattingAsync(_file.FullPath);
+        var formattingContainer = await _languageService.RequestFormattingAsync(_filePath);
         if (formattingContainer is not null)
             ApplyContainer(document, formattingContainer);
     }
@@ -59,7 +58,7 @@ public class LspIndentationStrategy : IIndentationStrategy
     public async Task IndentLineAsync(TextDocument document, DocumentLine line)
     {
         var lineNr = line.LineNumber;
-        var formattingContainer = await _languageService.RequestRangeFormattingAsync(_file.FullPath,
+        var formattingContainer = await _languageService.RequestRangeFormattingAsync(_filePath,
             new Range
             {
                 Start = new Position { Line = lineNr - 1, Character = 0 },
@@ -80,7 +79,7 @@ public class LspIndentationStrategy : IIndentationStrategy
             if (endLine > document.LineCount) return;
             var eline = document.GetLineByNumber(endLine);
 
-            var formattingContainer = await _languageService.RequestRangeFormattingAsync(_file.FullPath,
+            var formattingContainer = await _languageService.RequestRangeFormattingAsync(_filePath,
                 new Range
                 {
                     Start = new Position { Line = beginLine - 1, Character = 0 },

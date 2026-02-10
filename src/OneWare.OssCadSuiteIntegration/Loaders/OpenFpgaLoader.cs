@@ -14,11 +14,12 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
     IToolExecutionDispatcherService toolExecutionDispatcherService)
     : IFpgaLoader
 {
+    public string Id => "openFpgaLoader";
     public string Name => "OpenFpgaLoader";
 
     public async Task DownloadAsync(UniversalFpgaProjectRoot project)
     {
-        var fpga = project.GetProjectProperty("Fpga") ?? "unknown";
+        var fpga = project.Properties.GetString("Fpga") ?? "unknown";
 
         var longTerm = settingsService.GetSettingValue<bool>("UniversalFpgaProjectSystem_LongTermProgramming");
 

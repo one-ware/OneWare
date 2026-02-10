@@ -8,24 +8,11 @@ namespace OneWare.Essentials.Commands;
 
 public abstract class ApplicationCommandBase(string name) : ObservableObject, IApplicationCommand
 {
-    private readonly KeyGesture? _defaultGesture;
-
     private KeyGesture? _activeGesture;
 
-    private IImage? _icon;
-
-    private IDisposable? _subscription;
-
-    public IObservable<object?>? IconObservable
-    {
-        set
-        {
-            _subscription?.Dispose();
-            _subscription = value?.Subscribe(x => Icon = x as IImage);
-        }
-    }
-
     public string Name { get; } = name;
+    
+    public string? Detail { get; set; }
 
     public KeyGesture? ActiveGesture
     {
@@ -35,18 +22,18 @@ public abstract class ApplicationCommandBase(string name) : ObservableObject, IA
 
     public KeyGesture? DefaultGesture
     {
-        get => _defaultGesture;
+        get;
         init
         {
-            _defaultGesture = value;
+            field = value;
             _activeGesture = value;
         }
     }
 
-    public IImage? Icon
+    public IconModel? Icon
     {
-        get => _icon;
-        set => SetProperty(ref _icon, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public abstract bool Execute(ILogical source);

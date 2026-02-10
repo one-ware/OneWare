@@ -7,16 +7,13 @@
              x:Class="OneWare.OssCadSuiteIntegration.Views.YosysCompileWindowExtensionView"
              x:DataType="viewModels:YosysCompileWindowExtensionViewModel" Name="YosysCompileWindowExtensionViewView"
              IsVisible="{Binding IsVisible}">
-    <Border Classes="RoundToolBar">
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Button Command="{Binding OpenCompileSettingsAsync}"
-                    CommandParameter="{Binding #YosysCompileWindowExtensionViewView}">
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                    <TextBlock VerticalAlignment="Center" Text="Yosys Settings" />
-                    <Image Source="{DynamicResource Material.SettingsOutline}" VerticalAlignment="Center"
-                           Height="15" />
-                </StackPanel>
-            </Button>
+    <Button Command="{Binding OpenCompileSettingsAsync}"
+            Classes="RoundButton" Padding="5 0"
+            CommandParameter="{Binding #YosysCompileWindowExtensionViewView}">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock VerticalAlignment="Center" Text="Yosys Settings" />
+            <Image Source="{DynamicResource Material.SettingsOutline}" VerticalAlignment="Center"
+                   Height="15" />
         </StackPanel>
-    </Border>
+    </Button>
 </UserControl>

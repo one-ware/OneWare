@@ -8,5 +8,5 @@ public interface IFpgaSimulator
 
     public OneWareUiExtension? TestBenchToolbarTopUiExtension { get; }
 
-    public Task<bool> SimulateAsync(IFile file);
+    public Task<bool> SimulateAsync(string fullPath);
 }

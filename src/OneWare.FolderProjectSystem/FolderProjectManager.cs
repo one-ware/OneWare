@@ -17,13 +17,20 @@ public class FolderProjectManager : IProjectManager
 
     public string Extension => "";
 
-    public Task<IProjectRoot?> LoadProjectAsync(string path)
+    public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
-        if (!Directory.Exists(path)) return Task.FromResult<IProjectRoot?>(null);
+        if (!Directory.Exists(path)) return null;
 
         var root = new FolderProjectRoot(path);
 
-        return Task.FromResult<IProjectRoot?>(root);
+        await root.InitializeAsync();
+        
+        return root;
+    }
+
+    public Task ReloadProjectAsync(IProjectRoot project)
+    {
+        return Task.FromResult(true);
     }
 
     public Task<bool> SaveProjectAsync(IProjectRoot root)
@@ -31,43 +38,8 @@ public class FolderProjectManager : IProjectManager
         return Task.FromResult(true);
     }
 
-    public static void LoadFolder(IProjectFolder folder)
+    public IEnumerable<MenuItemModel> ConstructContextMenu(IProjectEntry entry)
     {
-        folder.Children.Clear();
-        folder.Entities.Clear();
-
-        if (!Directory.Exists(folder.FullPath))
-            return;
-
-        var options = new EnumerationOptions
-        {
-            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
-            IgnoreInaccessible = true,
-            RecurseSubdirectories = false
-        };
-        var directoryMatches = Directory.EnumerateDirectories(folder.FullPath, "*", options);
-
-        foreach (var match in directoryMatches)
-        {
-            var newFolder = new ProjectFolder(Path.GetFileName(match), folder);
-            folder.Children.Add(newFolder);
-            folder.Entities.Add(newFolder);
-            (folder.Root as FolderProjectRoot)!.RegisterEntry(newFolder);
-        }
-
-        var fileMatches = Directory.EnumerateFiles(folder.FullPath, "*.*", options);
-
-        foreach (var match in fileMatches)
-        {
-            var newFile = new ProjectFile(Path.GetFileName(match), folder);
-            folder.Children.Add(newFile);
-            folder.Entities.Add(newFile);
-            (folder.Root as FolderProjectRoot)!.RegisterEntry(newFile);
-        }
-    }
-
-    public IEnumerable<MenuItemViewModel> ConstructContextMenu(IProjectEntry entry)
-    {
-        return Array.Empty<MenuItemViewModel>();
+        return Array.Empty<MenuItemModel>();
     }
 }

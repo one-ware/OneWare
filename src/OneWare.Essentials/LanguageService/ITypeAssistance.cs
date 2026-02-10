@@ -1,5 +1,6 @@
 ﻿using Avalonia.Input;
 using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Essentials.LanguageService;
@@ -23,8 +24,8 @@ public interface ITypeAssistance
     void TextEntering(TextInputEventArgs e);
     void TextEntered(TextInputEventArgs e);
     void CaretPositionChanged(int offset);
-    Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset);
+    Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset);
     Task<string?> GetHoverInfoAsync(int offset);
     Task<Action?> GetActionOnControlWordAsync(int offset);
-    IEnumerable<MenuItemViewModel>? GetTypeAssistanceQuickOptions();
+    IEnumerable<MenuItemModel>? GetTypeAssistanceQuickOptions();
 }

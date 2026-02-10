@@ -4,6 +4,7 @@ using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.ProjectSystem;
 using OneWare.Settings.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -56,17 +57,17 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         };
 
         _toolchainSetting = new ComboBoxSetting("Toolchain",
-            fpgaService.Toolchains.FirstOrDefault()?.Name ?? "Unset",
+            fpgaService.Toolchains.FirstOrDefault()?.Id ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Toolchains
-                .Select(x => x.Name)).ToArray())
+                .Select(x => x.Id)).ToArray())
         {
             HoverDescription = "Set the toolchain to use for the project (can be changed later)"
         };
 
         _loaderSetting = new ComboBoxSetting("Loader",
-            fpgaService.Loaders.FirstOrDefault()?.Name ?? "Unset",
+            fpgaService.Loaders.FirstOrDefault()?.Id ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Loaders
-                .Select(x => x.Name)).ToArray())
+                .Select(x => x.Id)).ToArray())
         {
             HoverDescription = "Set the loader to use for the project (can be changed later)"
         };
@@ -113,26 +114,23 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             }
 
             var projectFile = Path.Combine(folder, name + UniversalFpgaProjectRoot.ProjectFileExtension);
+            
+            var root = new UniversalFpgaProjectRoot(projectFile);
+            root.Properties.AddToStringArray("include", ["*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"]);
+            root.Properties.AddToStringArray("exclude", ["build"]);
 
-            var defaultProperties = new JsonObject
+            if (_fpgaService.Loaders.FirstOrDefault(x => x.Id == _loaderSetting.Value.ToString()) is { } loader)
+                root.Loader = loader.Id;
+
+            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Id == _toolchainSetting.Value.ToString()) is { } tc)
             {
-                ["Include"] = new JsonArray("*.vhd", "*.vhdl", "*.v", "*.vcd", "vhdl_ls.toml"),
-                ["Exclude"] = new JsonArray("build")
-            };
-            var root = new UniversalFpgaProjectRoot(projectFile, defaultProperties);
-
-            if (_fpgaService.Loaders.FirstOrDefault(x => x.Name == _loaderSetting.Value.ToString()) is { } loader)
-                root.Loader = loader;
-
-            if (_fpgaService.Toolchains.FirstOrDefault(x => x.Name == _toolchainSetting.Value.ToString()) is { } tc)
-            {
-                root.Toolchain = tc;
+                root.Toolchain = tc.Id;
                 tc.OnProjectCreated(root);
             }
 
             await _manager.SaveProjectAsync(root);
 
-            _projectExplorerService.Insert(root);
+            _projectExplorerService.AddProject(root);
 
             _projectExplorerService.ActiveProject = root;
 
@@ -144,8 +142,6 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
             root.IsExpanded = true;
 
             Close(window);
-
-            _ = _projectExplorerService.SaveLastProjectsFileAsync();
         }
         catch (Exception e)
         {

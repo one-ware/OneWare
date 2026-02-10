@@ -5,7 +5,6 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Snippets;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using IFile = OneWare.Essentials.Models.IFile;
 
 namespace OneWare.Essentials.EditorExtensions;
 
@@ -15,7 +14,8 @@ public partial class CompletionData : ICompletionData
 
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
         double priority,
-        CompletionItem completionItem, int offset, IFile? file, Action? afterCompletion = null)
+        CompletionItem completionItem, int offset, string? fullPath, Action? afterCompletion = null,
+        bool isSnippet = true)
     {
         InsertText = insertText;
         Label = label;
@@ -25,12 +25,13 @@ public partial class CompletionData : ICompletionData
         Priority = priority;
         CompletionItemLsp = completionItem;
         AfterCompletion = afterCompletion;
-        File = file;
+        FullPath = fullPath;
         CompletionOffset = offset;
+        IsSnippet = isSnippet;
     }
 
     public CompletionData(string insertText, string label, string? detail, string? description, IImage? icon,
-        double priority, int offset, IFile? file, Action? afterCompletion = null)
+        double priority, int offset, string fullPath, Action? afterCompletion = null, bool isSnippet = true)
     {
         InsertText = insertText;
         Label = label;
@@ -38,9 +39,10 @@ public partial class CompletionData : ICompletionData
         Description = description;
         Image = icon;
         Priority = priority;
-        File = file;
+        FullPath = fullPath;
         AfterCompletion = afterCompletion;
         CompletionOffset = offset;
+        IsSnippet = isSnippet;
     }
 
     private Action? AfterCompletion { get; }
@@ -49,7 +51,7 @@ public partial class CompletionData : ICompletionData
 
     public string? Detail { get; }
 
-    public IFile? File { get; set; }
+    public string? FullPath { get; set; }
 
     public IImage? Image { get; }
 
@@ -61,9 +63,35 @@ public partial class CompletionData : ICompletionData
 
     public double Priority { get; }
 
+    public string? FilterText { get; set; }
+
+    public string? SortText { get; set; }
+
+    public string Text => FilterText ?? Label;
+
+    public bool IsSnippet { get; set; } = true;
+
+    public int? ReplaceStartOffset { get; set; }
+
+    public int? ReplaceEndOffset { get; set; }
+
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
     {
-        var segmentLine = textArea.Document.GetLineByOffset(completionSegment.Offset);
+        var segmentStart = completionSegment.Offset;
+        var segmentLength = completionSegment.Length;
+
+        if (ReplaceStartOffset.HasValue && ReplaceEndOffset.HasValue)
+        {
+            var start = ReplaceStartOffset.Value;
+            var end = ReplaceEndOffset.Value;
+            if (start >= 0 && end >= start)
+            {
+                segmentStart = start;
+                segmentLength = end - start;
+            }
+        }
+
+        var segmentLine = textArea.Document.GetLineByOffset(segmentStart);
 
         var placeHolder = PlaceHolderRegex();
 
@@ -71,6 +99,13 @@ public partial class CompletionData : ICompletionData
 
         var formattedText = InsertText.Replace("\r", "").Replace("\n", newLine)
             .Replace("\t", textArea.Options.IndentationString);
+
+        if (!IsSnippet)
+        {
+            textArea.Document.Replace(segmentStart, segmentLength, formattedText);
+            AfterCompletion?.Invoke();
+            return;
+        }
 
         var filteredText = formattedText!;
 
@@ -132,7 +167,8 @@ public partial class CompletionData : ICompletionData
 
         textArea.Document.BeginUpdate();
 
-        textArea.Document.Replace(completionSegment, "");
+        textArea.Document.Replace(segmentStart, segmentLength, "");
+        textArea.Caret.Offset = segmentStart;
 
         snippet.Insert(textArea);
 
@@ -146,6 +182,6 @@ public partial class CompletionData : ICompletionData
 
     private string ReplaceVariables(string input)
     {
-        return input.Replace("$TM_FILENAME_BASE", Path.GetFileNameWithoutExtension(File?.FullPath));
+        return input.Replace("$TM_FILENAME_BASE", Path.GetFileNameWithoutExtension(FullPath));
     }
 }

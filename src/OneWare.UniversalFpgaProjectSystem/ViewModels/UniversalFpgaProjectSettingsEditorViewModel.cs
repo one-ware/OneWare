@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Text.Json.Nodes;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
@@ -69,69 +71,64 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         foreach (var setting in _projectSettingsService.GetProjectSettingsList(category))
         {
-            var localCopy = setting.Setting;
+            var local = setting.Setting;
 
             if (!setting.ActivationFunction(_root)) continue;
 
-            if (_root.Properties.AsObject().ContainsKey(setting.Key))
+            if (_root.Properties.ContainsKey(setting.Key))
             {
                 // load stored value
+                var node = _root.Properties[setting.Key];
+                if (node == null) continue;
 
-                switch (localCopy.GetType().Name)
+                switch (local)
                 {
-                    case "CheckBoxSetting":
-	                    localCopy.Value = _root.Properties[setting.Key]!.ToString() == "True";
+                    case CheckBoxSetting:
+	                    local.Value = _root.Properties[setting.Key]!.ToString() == "True";
                         break;
 
-                    case "TextBoxSetting":
-	                    localCopy.Value = _root.Properties[setting.Key]!.ToString();
+                    case FolderPathSetting:
+                    case FilePathSetting:
+                    case TextBoxSetting:
+                        local.Value = _root.Properties[setting.Key]!.ToString();
                         break;
 
-                    case "ComboBoxSetting":
-	                    localCopy.Value = _root.Properties[setting.Key]!.ToString();
+                    case ListBoxSetting:
+	                    local.Value = new ObservableCollection<string>(_root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()));
                         break;
 
-                    case "ListBoxSetting":
-	                    localCopy.Value = new ObservableCollection<string>(_root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()));
+                    case ComboBoxSearchSetting:
+	                    local.Value = _root.Properties[setting.Key]!.ToString();
+                        break;
+                    
+                    case ComboBoxSetting:
+                        local.Value = _root.Properties[setting.Key]!.ToString();
                         break;
 
-                    case "ComboBoxSearchSetting":
-	                    localCopy.Value = _root.Properties[setting.Key]!.ToString();
-                        break;
-
-                    case "SliderSetting":
-	                    localCopy.Value = double.Parse(_root.Properties[setting.Key]!.ToString(),
+                    case SliderSetting:
+	                    local.Value = double.Parse(_root.Properties[setting.Key]!.ToString(),
 		                    CultureInfo.InvariantCulture);
                         break;
-
-                    case "FolderPathSetting":
-	                    localCopy.Value = _root.Properties[setting.Key]!.ToString();
-                        break;
-
-                    case "FilePathSetting":
-	                    localCopy.Value = _root.Properties[setting.Key]!.ToString();
-                        break;
-
-                    case "ColorSetting":
+                    
+                    case ColorSetting:
                         Color.TryParse(_root.Properties[setting.Key]!.ToString(), out var color);
-                        localCopy.Value = color;
+                        local.Value = color;
                         break;
 
                     default:
-
-                        _logger.Error($"Unknown setting of type: {localCopy.GetType().Name}");
+                        _logger.Error($"Unknown setting of type: {local.GetType().Name}");
                         continue;
                 }
 
-                localCopy.Priority = setting.Setting.Priority;
+                local.Priority = setting.Setting.Priority;
             }
             else
             {
-	            localCopy.Value = localCopy.DefaultValue;
+	            local.Value = local.DefaultValue;
             }
 
-            _dynamicSettingsKeys.Add(localCopy, setting.Key);
-            SettingsCollection.SettingModels.Add(localCopy);
+            _dynamicSettingsKeys.Add(local, setting.Key);
+            SettingsCollection.SettingModels.Add(local);
         }
 
         // OnPropertyChanged();
@@ -139,22 +136,22 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private void SetupMenu()
     {
-        var value = _root.Properties["VHDL_Standard"] == null ? "" : _root.Properties["VHDL_Standard"]!.ToString();
+        var value = _root.Properties.GetString("vhdlStandard") ?? "";
         var vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
 
-        var includes = _root.Properties["Include"]!.AsArray().Select(node => node!.ToString()).ToArray();
-        var exclude = _root.Properties["Exclude"]!.AsArray().Select(node => node!.ToString()).ToArray();
+        var includes = _root.Properties.GetStringArray("include")?.ToArray() ?? [];
+        var exclude = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
 
         var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
-            .Select(toolchain => toolchain.Name)
+            .Select(toolchain => toolchain.Id)
             .ToArray();
-        var currentToolchain = _root.Properties["Toolchain"]!.ToString();
+        var currentToolchain = _root.Properties.GetString("toolchain") ?? "";
         var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
         var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
-            .Select(loader => loader.Name)
+            .Select(loader => loader.Id)
             .ToArray();
-        var currentLoader = _root.Properties["Loader"]!.ToString();
+        var currentLoader = _root.Properties.GetString("loader") ?? "";
         var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
 
         var includesSettings = new ListBoxSetting("Files to Include", includes);
@@ -162,7 +159,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
-                .WithKey("Toolchain")
+                .WithKey("toolchain")
                 .WithSetting(toolchain)
                 .WithDisplayOrder(100)
                 .Build()
@@ -170,7 +167,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
-                .WithKey("Loader")
+                .WithKey("loader")
                 .WithDisplayOrder(90)
                 .WithSetting(loader)
                 .Build()
@@ -178,15 +175,15 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
-                .WithKey("VHDL_Standard")
+                .WithKey("vhdlStandard")
                 .WithDisplayOrder(80)
                 .WithSetting(vhdlStandard)
                 .WithActivation(file =>
                 {
                     if (file is UniversalFpgaProjectRoot root)
                     {
-                        if (root.TopEntity is not null) return Path.GetExtension(root.TopEntity.FullPath) is ".vhd";
-                        return root.Files.Exists(projectFile => Path.GetExtension(projectFile.FullPath) is ".vhd");
+                        if (root.TopEntity is not null) return Path.GetExtension(root.TopEntity) is ".vhd" or ".vhdl";
+                        return root.GetFiles().Any(projectFile => Path.GetExtension(projectFile) is ".vhd" or ".vhdl");
                     }
 
                     return false;
@@ -196,7 +193,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
-                .WithKey("Include")
+                .WithKey("include")
                 .WithSetting(includesSettings)
                 .WithDisplayOrder(200)
                 .WithCategory("Project")
@@ -205,7 +202,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
-                .WithKey("Exclude")
+                .WithKey("exclude")
                 .WithSetting(excludesSettings)
                 .WithDisplayOrder(100)
                 .WithCategory("Project")
@@ -215,61 +212,13 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     public async Task SaveAsync()
     {
-        foreach (var toSave in SettingsCollection.SettingModels)
+        foreach (var (setting, key) in _dynamicSettingsKeys)
         {
-            if (toSave is not TitledSetting) continue;
-
-            switch (toSave.GetType().Name)
-            {
-                case "CheckBoxSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "TextBoxSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "ComboBoxSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "ListBoxSetting":
-                    _root.SetProjectPropertyArray(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        ((ListBoxSetting)toSave).Items.Select(item => item.ToString()).ToArray());
-                    break;
-
-                case "ComboBoxSearchSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "SliderSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "FolderPathSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "FilePathSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        toSave.Value.ToString()!);
-                    break;
-
-                case "ColorSetting":
-                    _root.SetProjectProperty(_dynamicSettingsKeys[(toSave as TitledSetting)!],
-                        ((Color)((ColorSetting)toSave).Value).ToString());
-                    break;
-            }
+            _root.Properties.SetNode(key, JsonValue.Create(setting.Value));
         }
 
         await _projectExplorerService.SaveProjectAsync(_root);
-        await _projectExplorerService.ReloadAsync(_root);
+        await _projectExplorerService.ReloadProjectAsync(_root);
     }
 
     public async Task SaveAndCloseAsync(FlexibleWindow window)

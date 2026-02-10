@@ -25,17 +25,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     private CompositeDisposable? _compositeDisposable;
 
-    private bool _hideExtensions;
-
-    private bool _isLoading;
-
     private FpgaNode[]? _nodes;
-
-    private FpgaModel? _selectedModel;
-
-    private IFpgaPackage? _selectedPackage;
-
-    private FpgaViewModelBase? _selectedViewModel;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService, UniversalFpgaProjectRoot project)
@@ -52,13 +42,16 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
         });
 
+        Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
         _ = InitializeAsync();
     }
 
+    public IFpgaToolchain? Toolchain { get; }
+
     public bool IsLoading
     {
-        get => _isLoading;
-        private set => SetProperty(ref _isLoading, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public static KeyGesture SaveGesture => new(Key.S, PlatformHelper.ControlKey);
@@ -71,12 +64,12 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public IFpgaPackage? SelectedFpgaPackage
     {
-        get => _selectedPackage;
+        get;
         set
         {
-            if (_selectedPackage?.Name != value?.Name) IsDirty = true;
+            if (field?.Name != value?.Name) IsDirty = true;
 
-            SetProperty(ref _selectedPackage, value);
+            SetProperty(ref field, value);
 
             if (value != null)
             {
@@ -93,10 +86,10 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public FpgaModel? SelectedFpgaModel
     {
-        get => _selectedModel;
+        get;
         private set
         {
-            SetProperty(ref _selectedModel, value);
+            SetProperty(ref field, value);
 
             _compositeDisposable?.Dispose();
             _compositeDisposable = new CompositeDisposable();
@@ -107,7 +100,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     foreach (var nodeModel in _nodes)
                         value.AddNode(nodeModel);
 
-                Project.Toolchain?.LoadConnections(Project, value);
+                Toolchain?.LoadConnections(Project, value);
 
                 Observable.FromEventPattern(value, nameof(value.NodeConnected)).Subscribe(_ => { IsDirty = true; })
                     .DisposeWith(_compositeDisposable);
@@ -119,14 +112,14 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public FpgaViewModelBase? SelectedFpgaViewModel
     {
-        get => _selectedViewModel;
-        private set => SetProperty(ref _selectedViewModel, value);
+        get;
+        private set => SetProperty(ref field, value);
     }
 
     public bool HideExtensions
     {
-        get => _hideExtensions;
-        set => SetProperty(ref _hideExtensions, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     private async Task InitializeAsync()
@@ -135,7 +128,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            var file = Project.TopEntity as IProjectFile;
+            var file = Project.GetFile(Project.TopEntity);
             if (file == null) return;
 
             var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
@@ -152,7 +145,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             _nodes = nodesEnumerable.ToArray();
             RefreshHardware();
 
-            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.GetProjectProperty("Fpga")) ??
+            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Properties.GetString("fpga")) ??
                                   FpgaPackages.FirstOrDefault();
 
             IsDirty = false;
@@ -244,8 +237,8 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         if (SelectedFpgaModel != null)
         {
             FpgaSettingsParser.WriteDefaultSettingsIfEmpty(Project, SelectedFpgaModel.Fpga);
-            Project.SetProjectProperty("Fpga", SelectedFpgaModel.Fpga.Name);
-            Project.Toolchain?.SaveConnections(Project, SelectedFpgaModel);
+            Project.Properties.SetString("fpga", SelectedFpgaModel.Fpga.Name);
+            Toolchain?.SaveConnections(Project, SelectedFpgaModel);
             _ = _projectExplorerService.SaveProjectAsync(Project);
 
             IsDirty = false;
@@ -260,7 +253,9 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
     public void SaveAndCompile(FlexibleWindow window)
     {
-        if (SelectedFpgaModel != null) _ = Project.RunToolchainAsync(SelectedFpgaModel);
+        if (SelectedFpgaModel == null) return;
+        
         SaveAndClose(window);
+        _ = _fpgaService.RunToolchainAsync(Project, SelectedFpgaModel);
     }
 }

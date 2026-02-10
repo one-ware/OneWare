@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -10,65 +11,42 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
-    private readonly IImage _loadingFailedOverlay;
-    private IBrush _background = Brushes.Transparent;
-
-    private FontWeight _fontWeight = FontWeight.Regular;
-
-    private IImage? _icon;
-
-    private bool _isExpanded;
-
-    private bool _loadingFailed;
-
     private string _name;
-
-    private float _textOpacity = 1f;
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
     {
         _name = name;
         TopFolder = topFolder;
-
-        _loadingFailedOverlay =
-            Application.Current!.FindResource(ThemeVariant.Dark, "VsImageLib.StatusCriticalErrorOverlayExp16X") as
-                IImage
-            ?? throw new NullReferenceException(nameof(Application));
     }
 
-    public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
-    public ObservableCollection<IProjectEntry> Entities { get; } = new();
+    public ObservableCollection<IProjectExplorerNode>? Children { get; protected set; } = new();
 
     public IProjectExplorerNode? Parent => TopFolder;
 
     public IProjectFolder? TopFolder { get; set; }
 
-    public ObservableCollection<IImage> IconOverlays { get; } = new();
-
-    public ObservableCollection<IImage> RightIcons { get; } = new();
-
     public IBrush Background
     {
-        get => _background;
-        set => SetProperty(ref _background, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = Brushes.Transparent;
 
     public FontWeight FontWeight
     {
-        get => _fontWeight;
-        set => SetProperty(ref _fontWeight, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = FontWeight.Regular;
 
     public float TextOpacity
     {
-        get => _textOpacity;
-        set => SetProperty(ref _textOpacity, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1f;
 
-    public IImage? Icon
+    public IconModel? Icon
     {
-        get => _icon;
-        protected set => SetProperty(ref _icon, value);
+        get;
+        protected set => SetProperty(ref field, value);
     }
 
     public string Header => Name;
@@ -87,29 +65,34 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
 
     public bool LoadingFailed
     {
-        get => _loadingFailed;
+        get;
         set
         {
-            SetProperty(ref _loadingFailed, value);
-            if (value)
+            if (SetProperty(ref field, value))
             {
-                IconOverlays.Add(_loadingFailedOverlay);
-                IsExpanded = false;
-            }
-            else
-            {
-                IconOverlays.Remove(_loadingFailedOverlay);
+                if (value)
+                {
+                    IsExpanded = false;
+                    Icon?.AddOverlay("LoadingFailed", "VsImageLib.StatusCriticalErrorOverlayExp16X");
+                }
+                else
+                {
+                    Icon?.RemoveOverlay("LoadingFailed");
+                }
             }
         }
     }
 
     public bool IsExpanded
     {
-        get => _isExpanded;
+        get;
         set
         {
             if (this is IProjectFolder { Children.Count: 0 }) value = false;
-            if (value != _isExpanded) SetProperty(ref _isExpanded, value);
+            if (SetProperty(ref field, value))
+            {
+                OnIsExpandedChanged(value);
+            }
         }
     }
 
@@ -148,10 +131,7 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         }
     }
 
-    public Action<Action<string>>? RequestRename { get; set; }
-
-    public bool IsValid()
+    public virtual void OnIsExpandedChanged(bool isExpanded)
     {
-        return true;
     }
 }

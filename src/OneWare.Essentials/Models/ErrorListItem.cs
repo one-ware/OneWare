@@ -1,5 +1,7 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using System.IO;
 using System.Text;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using TextDocument = AvaloniaEdit.Document.TextDocument;
@@ -9,22 +11,25 @@ namespace OneWare.Essentials.Models;
 public class ErrorListItem(
     string description,
     ErrorType type,
-    IFile file,
+    string filePath,
     string? source,
     int startLine,
     int? startColumn = null,
     int? endLine = null,
     int? endColumn = null,
     string? code = null,
-    Diagnostic? diagnostic = null)
+    Diagnostic? diagnostic = null,
+    IProjectRoot? root = null)
     : IEquatable<ErrorListItem>, IComparable<ErrorListItem>
 {
     public Diagnostic? Diagnostic { get; set; } = diagnostic;
     public string Description { get; init; } = description;
     public ErrorType Type { get; init; } = type;
     public string? Source { get; init; } = source;
-    public IFile File { get; init; } = file;
-    public IProjectRoot? Root { get; } = (file as IProjectFile)?.Root;
+    public string FilePath { get; init; } = filePath.NormalizePath();
+    public string FileName => Path.GetFileName(FilePath);
+    public string FileExtension => Path.GetExtension(FilePath);
+    public IProjectRoot? Root { get; } = root;
     public int StartLine { get; init; } = startLine;
     public int? StartColumn { get; init; } = startColumn;
     public int? EndLine { get; init; } = endLine;
@@ -36,7 +41,7 @@ public class ErrorListItem(
         if (other == null) return -1;
         if (Type < other.Type) return -1;
         if (Type > other.Type) return 1;
-        var stringComp = string.Compare(File.Name, other.File.Name, StringComparison.OrdinalIgnoreCase);
+        var stringComp = string.Compare(FileName, other.FileName, StringComparison.OrdinalIgnoreCase);
         if (stringComp < 0) return -1;
         if (StartLine < other.StartLine) return -1;
         if (Equals(other)) return 0;
@@ -49,7 +54,7 @@ public class ErrorListItem(
         return model.Description == Description
                && model.Source == Source
                && model.Type == Type
-               && model.File == File
+               && model.FilePath.EqualPaths(FilePath)
                && model.StartLine == StartLine
                && model.StartColumn == StartColumn
                && model.EndLine == EndLine
@@ -71,7 +76,7 @@ public class ErrorListItem(
         hash.Add(Description);
         hash.Add(Source);
         hash.Add(Type);
-        hash.Add(File);
+        hash.Add(FilePath.ToPathKey());
         hash.Add(StartLine);
         hash.Add(StartColumn);
         hash.Add(EndLine);
@@ -105,9 +110,9 @@ public class ErrorListItem(
         builder.Append("; EndLine=").Append(EndLine?.ToString() ?? "null");
         builder.Append("; EndColumn=").Append(EndColumn?.ToString() ?? "null");
 
-        builder.Append("; FileName=").Append(File.Name);
-        builder.Append("; FilePath=").Append(File.FullPath);
-        builder.Append("; FileExtension=").Append(File.Extension);
+        builder.Append("; FileName=").Append(FileName);
+        builder.Append("; FilePath=").Append(FilePath);
+        builder.Append("; FileExtension=").Append(FileExtension);
 
         if (Root != null)
         {

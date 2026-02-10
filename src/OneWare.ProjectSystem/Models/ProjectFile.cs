@@ -1,4 +1,5 @@
-﻿using DynamicData.Binding;
+﻿using System.Reactive.Disposables;
+using DynamicData.Binding;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
@@ -8,16 +9,8 @@ public class ProjectFile : ProjectEntry, IProjectFile
 {
     public ProjectFile(string header, IProjectFolder topFolder) : base(header, topFolder)
     {
-        IDisposable? fileSubscription = null;
-
-        this.WhenValueChanged(x => x.FullPath).Subscribe(x =>
-        {
-            fileSubscription?.Dispose();
-            var observable = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIcon(Extension);
-            fileSubscription = observable?.Subscribe(icon => { Icon = icon; });
-        });
+        Icon = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIconModel(Extension);
     }
 
-    public DateTime LastSaveTime { get; set; } = DateTime.MinValue;
     public string Extension => Path.GetExtension(FullPath);
 }

@@ -16,7 +16,7 @@ namespace OneWare.ProjectExplorer.ViewModels;
 public abstract class ProjectViewModelBase : ExtendedTool
 {
     private string _searchString = "";
-    private IEnumerable<MenuItemViewModel>? _treeViewContextMenu;
+    private IEnumerable<MenuItemModel>? _treeViewContextMenu;
 
     public ProjectViewModelBase(string iconKey) : base(iconKey)
     {
@@ -34,7 +34,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         SelectedItems = Source.RowSelection.SelectedItems!;
     }
 
-    public IEnumerable<MenuItemViewModel>? TreeViewContextMenu
+    public IEnumerable<MenuItemModel>? TreeViewContextMenu
     {
         get => _treeViewContextMenu;
         set => SetProperty(ref _treeViewContextMenu, value);
@@ -55,7 +55,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
     public HierarchicalTreeDataGridSource<IProjectExplorerNode> Source { get; }
 
 
-    public virtual void Insert(IProjectRoot entry)
+    public virtual void AddProject(IProjectRoot entry)
     {
         if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
         {
@@ -124,7 +124,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         SearchResult.Clear();
         if (SearchString.Length < 3) return;
 
-        SearchResult.AddRange(DeepSearchName(SearchString));
+        //SearchResult.AddRange(DeepSearchName(SearchString));
 
         foreach (var r in SearchResult)
             r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ??
@@ -138,57 +138,39 @@ public abstract class ProjectViewModelBase : ExtendedTool
         ExpandToRoot(node.Parent);
     }
 
-    public IProjectEntry? SearchName(string path, bool recursive = true)
+    public IProjectRoot? GetRootFromFile(string fullPath)
     {
-        foreach (var i in Projects)
+        if (string.IsNullOrWhiteSpace(fullPath))
+            return null;
+
+        fullPath = Path.GetFullPath(fullPath);
+
+        return (from project in Projects
+            let projectRoot = Path.GetFullPath(project.RootFolderPath)
+            where fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase)
+            select project).FirstOrDefault();
+    }
+
+    public IProjectEntry? GetEntryFromFullPath(string fullPath)
+    {
+        if (string.IsNullOrWhiteSpace(fullPath))
+            return null;
+
+        fullPath = Path.GetFullPath(fullPath);
+
+        foreach (var project in Projects)
         {
-            if (path.Equals(Path.GetFullPath(i.Header), StringComparison.OrdinalIgnoreCase)) return i;
-            if (recursive && i is IProjectFolder folder)
-            {
-                var pe = folder.SearchName(path);
-                if (pe != null) return pe;
-            }
+            var projectRoot = Path.GetFullPath(project.RootFolderPath);
+
+            if (!fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var relative = Path.GetRelativePath(projectRoot, fullPath);
+
+            return project.GetEntry(relative);
         }
 
         return null;
-    }
-
-    public IProjectEntry? SearchFullPath(string path, bool recursive = true)
-    {
-        foreach (var i in Projects)
-        {
-            if (path.EqualPaths(i.FullPath)) //Search for name equality
-                return i;
-            if (recursive && i is IProjectFolder folder)
-            {
-                var pe = folder.SearchFullPath(path);
-                if (pe != null) return pe;
-            }
-        }
-
-        return null;
-    }
-
-    public List<IProjectEntry> DeepSearchName(string name)
-    {
-        var results = new List<IProjectEntry>();
-        foreach (var entry in Projects)
-        {
-            if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
-            if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
-        }
-
-        return results;
-    }
-
-    private void DeepSearchName(IProjectFolder pf, string name, List<IProjectEntry> results)
-    {
-        var folderItems = pf.Entities;
-        foreach (var entry in folderItems)
-        {
-            if (entry.Header.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0) results.Add(entry);
-            if (entry is IProjectFolder folder) DeepSearchName(folder, name, results);
-        }
     }
 
     public void CollapseAll(IEnumerable<IProjectExplorerNode> list)

@@ -2,10 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageCategoryViewModel(string header, IObservable<object?>? iconObservable = null) : ObservableObject
+public class PackageCategoryViewModel(string header, IconModel? iconModel = null) : ObservableObject
 {
     private bool _isExpanded = true;
     private PackageViewModel? _selectedPackage;
@@ -28,7 +29,7 @@ public class PackageCategoryViewModel(string header, IObservable<object?>? iconO
 
     public ObservableCollection<PackageCategoryViewModel> SubCategories { get; } = [];
 
-    public IObservable<object?>? IconObservable { get; } = iconObservable;
+    public IconModel? IconModel { get; } = iconModel;
 
     public string Header { get; } = header;
 

@@ -99,23 +99,23 @@ public class SourceControlViewModel : ExtendedTool
 
         applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Sync", SyncAsyncCommand)
         {
-            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
+            Icon = new IconModel("VsImageLib.RefreshGrey16X")
         });
 
         applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Pull", PullAsyncCommand)
         {
-            IconObservable = Application.Current!.GetResourceObservable("Entypo+.ArrowLongDownWhite")
+            Icon = new IconModel("Entypo+.ArrowLongDownWhite")
         });
 
         applicationCommandService.RegisterCommand(new CommandApplicationCommand("GIT Push", PushAsyncCommand)
         {
-            IconObservable = Application.Current!.GetResourceObservable("Entypo+.ArrowLongUpWhite")
+            Icon = new IconModel("Entypo+.ArrowLongUpWhite")
         });
 
         applicationCommandService.RegisterCommand(
             new CommandApplicationCommand("GIT Create Branch", CreateBranchDialogAsyncCommand)
             {
-                IconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularGitBranch")
+                Icon = new IconModel("BoxIcons.RegularGitBranch")
             });
     }
 
@@ -322,12 +322,17 @@ public class SourceControlViewModel : ExtendedTool
         if (_settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable")) _ = RefreshAsync();
     }
 
-    public void ViewInProjectExplorer(IProjectEntry entry)
+    public void ViewInProjectExplorer(string fullPath)
     {
         _mainDockService.Show(_projectExplorerService);
-        _projectExplorerService.ExpandToRoot(entry);
+
+        var file = _projectExplorerService.GetEntryFromFullPath(fullPath);
+        
+        if(file == null) return;
+        
+        _projectExplorerService.ExpandToRoot(file);
         _projectExplorerService.ClearSelection();
-        _projectExplorerService.AddToSelection(entry);
+        _projectExplorerService.AddToSelection(file);
     }
 
     #endregion
@@ -906,10 +911,6 @@ public class SourceControlViewModel : ExtendedTool
                 try
                 {
                     File.Delete(path);
-                    if (_projectExplorerService.ActiveProject?.SearchFullPath(Path.Combine(
-                            repository.Info.WorkingDirectory,
-                            path)) is IProjectFile file)
-                        _ = _projectExplorerService.RemoveAsync(file);
                 }
                 catch (Exception e)
                 {
@@ -947,9 +948,7 @@ public class SourceControlViewModel : ExtendedTool
                     if (result is MessageBoxStatus.Yes)
                         foreach (var f in deleteFiles)
                         {
-                            var projFile = _projectExplorerService.SearchFullPath(f);
-                            if (projFile != null) await _projectExplorerService.DeleteAsync(projFile);
-                            else File.Delete(f);
+                            File.Delete(f);
                         }
                 }
             }
@@ -966,17 +965,13 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Open & Compare
 
-    public async Task<IFile?> OpenFileAsync(string path)
+    public async Task<string?> OpenFileAsync(string path)
     {
         if (ActiveRepository?.Repository is not { } repository) return null;
 
         if (!Path.IsPathRooted(path)) path = Path.Combine(repository.Info.WorkingDirectory, path);
-
-        if (_projectExplorerService.ActiveProject?.SearchFullPath(path) is not IFile file)
-            file = _projectExplorerService.GetTemporaryFile(path);
-
-        await _mainDockService.OpenFileAsync(file);
-        return file;
+        await _mainDockService.OpenFileAsync(path);
+        return path;
     }
 
     public async Task OpenHeadFileAsync(string path)
@@ -993,9 +988,7 @@ public class SourceControlViewModel : ExtendedTool
             commitContent = await content.ReadToEndAsync();
         }
 
-        var file = _projectExplorerService.GetTemporaryFile(path);
-
-        var evm = await _mainDockService.OpenFileAsync(file);
+        var evm = await _mainDockService.OpenFileAsync(path);
 
         if (evm is IEditor editor)
         {
@@ -1073,10 +1066,10 @@ public class SourceControlViewModel : ExtendedTool
 
     private async Task MergeAllAsync(string path, MergeMode mode)
     {
-        var file = await OpenFileAsync(path);
-        if (file == null) return;
+        var fullPath = await OpenFileAsync(path);
+        if (fullPath == null) return;
 
-        var evm = await _mainDockService.OpenFileAsync(file);
+        var evm = await _mainDockService.OpenFileAsync(fullPath);
         if (evm is IEditor editor)
         {
             var merges = MergeService.GetMerges(editor.CurrentDocument);

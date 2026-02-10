@@ -5,7 +5,6 @@ using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Vcd.Parser;
@@ -32,9 +31,9 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     private bool _waitLiveExecution;
 
     public VcdViewModel(string fullPath, IProjectExplorerService projectExplorerService,
-        IMainDockService mainDockService,
+        IMainDockService mainDockService, IFileIconService fileIconService,
         ISettingsService settingsService, IWindowService windowService)
-        : base(fullPath, projectExplorerService, mainDockService, windowService)
+        : base(fullPath, fileIconService, projectExplorerService, mainDockService, windowService)
     {
         WaveFormViewer.ExtendSignals = true;
 
@@ -81,7 +80,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     public WaveFormViewModel WaveFormViewer { get; } = new();
 
     public override string CloseWarningMessage =>
-        $"Do you want to save the current view to the file {CurrentFile?.Name}? All added signals will be opened automatically next time!";
+        $"Do you want to save the current view to the file {Path.GetFileName(FullPath)}? All added signals will be opened automatically next time!";
 
     public void PrepareLiveStream()
     {
@@ -100,7 +99,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         SetTitle(0);
     }
 
-    protected override void UpdateCurrentFile(IFile? oldFile)
+    protected override void UpdateCurrentFile(string? oldPath)
     {
         Refresh();
     }
@@ -108,7 +107,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     public void Refresh()
     {
         WaveFormViewer.MarkerOffset = long.MaxValue;
-        if (CurrentFile != null && !_isLiveExecution)
+        if (!string.IsNullOrWhiteSpace(FullPath) && !_isLiveExecution)
         {
             if (_waitLiveExecution)
             {
@@ -263,7 +262,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
 
     private void SetTitle(int progress)
     {
-        var fileName = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : Path.GetFileName(FullPath);
+        var fileName = Path.GetFileName(FullPath);
         var title = _isLiveExecution ? $"{fileName} - LIVE" : $"{fileName}";
         if(progress > 0 && !_isLiveExecution) title += $" ({progress}%)";
         Title = title;

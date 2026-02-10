@@ -32,7 +32,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("new_file", "New FPGA Project...",
                 new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()))
             {
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                IconModel = new IconModel("UniversalProject")
             });
 
         welcomeScreenService.RegisterItemToOpen("open_project",
@@ -45,7 +45,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })))
             {
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                IconModel = new IconModel("UniversalProject")
             });
 
         settingsService.Register("UniversalFpgaProjectSystem_LongTermProgramming", false);
@@ -57,16 +57,16 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             .RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/New",
-            new MenuItemViewModel("FpgaProject")
+            new MenuItemModel("FpgaProject")
             {
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
                 Priority = 1,
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                Icon = new IconModel("UniversalProject")
             });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
-            new MenuItemViewModel("FpgaProject")
+            new MenuItemModel("FpgaProject")
             {
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => serviceProvider.Resolve<IProjectExplorerService>()
@@ -76,28 +76,28 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                         {
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })),
-                IconObservable = Application.Current!.GetResourceObservable("UniversalProject")
+                Icon = new IconModel("UniversalProject")
             });
 
         var toolBarViewModel = serviceProvider.Resolve<UniversalFpgaProjectToolBarViewModel>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu",
-            new MenuItemViewModel("FPGA")
+            new MenuItemModel("FPGA")
             {
                 Header = "FPGA",
                 Priority = 200
             });
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemViewModel("Download")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemModel("Download")
         {
             Header = "Download",
             Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
-            IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Download16X")
-        }, new MenuItemViewModel("Compile")
+            Icon = new IconModel("VsImageLib.Download16X")
+        }, new MenuItemModel("Compile")
         {
             Header = "Compile",
             Command = new AsyncRelayCommand(() => toolBarViewModel.CompileAsync()),
-            IconObservable = Application.Current!.GetResourceObservable("CreateIcon")
+            Icon = new IconModel("CreateIcon")
         });
 
         windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension",
@@ -105,11 +105,11 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
 
         windowService.RegisterUiExtension("EditView_Top", new OneWareUiExtension(x =>
         {
-            if (x is IFile)
+            if (x is string fullPath)
                 return new UniversalFpgaProjectTestBenchToolBarView
                 {
-                    DataContext =
-                        serviceProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>((typeof(IFile), x))
+                    DataContext = serviceProvider.Resolve<UniversalFpgaProjectTestBenchToolBarViewModel>(
+                        (typeof(string), fullPath))
                 };
             return null;
         }));

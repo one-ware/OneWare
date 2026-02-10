@@ -76,7 +76,7 @@
                             <MenuItem.Header>
                                 <StackPanel Cursor="Hand">
                                     <TextBlock
-                                        Text="{Binding CurrentEditor.CurrentFile.Extension, FallbackValue={x:Null}}"
+                                        Text="{Binding CurrentEditor.Extension, FallbackValue={x:Null}}"
                                         Foreground="White" />
                                 </StackPanel>
                             </MenuItem.Header>

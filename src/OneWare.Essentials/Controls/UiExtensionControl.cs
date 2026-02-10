@@ -49,7 +49,7 @@ public class UiExtensionControl : ContentControl
             Content = null;
             return;
         }
-
+        
         var extension = UiExtension.CreateUiExtension(Context);
         if (extension != null) Content = extension;
     }

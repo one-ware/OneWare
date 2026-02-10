@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
@@ -23,7 +24,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using CompletionList = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionList;
-using IFile = OneWare.Essentials.Models.IFile;
 using InlayHint = OneWare.Essentials.EditorExtensions.InlayHint;
 using Location = OmniSharp.Extensions.LanguageServer.Protocol.Models.Location;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
@@ -36,7 +36,7 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 {
     private readonly IBrush _highlightBackground = SolidColorBrush.Parse("#3300c8ff");
-    private readonly TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
+    private TimeSpan _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
 
     private readonly TimeSpan _timerTimeSpan = TimeSpan.FromMilliseconds(100);
 
@@ -68,31 +68,52 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile)
+        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFilePath)
             .OrderBy(x => x.Type)
             .FirstOrDefault(error => pos.Line >= error.StartLine
                                      && pos.Line <= error.EndLine
                                      && pos.Column >= error.StartColumn
                                      && pos.Column <= error.EndColumn);
-        var info = "";
+        var parts = new List<string>();
+        if (error != null) parts.Add(error.Description);
 
-        if (error != null) info += error.Description + "\n";
-
-        var hover = await Service.RequestHoverAsync(CurrentFile.FullPath,
+        var hover = await Service.RequestHoverAsync(CurrentFilePath,
             new Position(pos.Line - 1, pos.Column - 1));
         if (hover != null)
         {
-            if (hover.Contents.HasMarkedStrings)
-                info += hover.Contents.MarkedStrings!.First().Value.Split('\n')[0]; //TODO what is this?
-            if (hover.Contents.HasMarkupContent) info += hover.Contents.MarkupContent?.Value;
+            var hoverText = BuildHoverText(hover);
+            if (!string.IsNullOrWhiteSpace(hoverText)) parts.Add(hoverText);
         }
 
+        var info = string.Join("\n\n", parts);
         return string.IsNullOrWhiteSpace(info) ? null : info;
     }
 
-    public override async Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
+    private static string? BuildHoverText(Hover hover)
     {
-        var menuItems = new List<MenuItemViewModel>();
+        if (hover.Contents.HasMarkupContent)
+            return hover.Contents.MarkupContent?.Value;
+
+        if (hover.Contents is { HasMarkedStrings: true, MarkedStrings: not null })
+        {
+            var segments = new List<string>();
+            foreach (var marked in hover.Contents.MarkedStrings)
+            {
+                if (!string.IsNullOrWhiteSpace(marked.Language))
+                    segments.Add($"```{marked.Language}\n{marked.Value}\n```");
+                else
+                    segments.Add(marked.Value);
+            }
+
+            return segments.Count > 0 ? string.Join("\n\n", segments) : null;
+        }
+
+        return null;
+    }
+
+    public override async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
+    {
+        var menuItems = new List<MenuItemModel>();
         if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return menuItems;
         var location = CodeBox.Document.GetLocation(offset);
         var pos = CodeBox.Document.GetPositionFromOffset(offset);
@@ -101,28 +122,28 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var error = GetErrorAtLocation(location);
         if (error != null && error.Diagnostic != null)
         {
-            var codeactions = await Service.RequestCodeActionAsync(CurrentFile.FullPath,
+            var codeactions = await Service.RequestCodeActionAsync(CurrentFilePath,
                 new Range
                 {
-                    Start = new Position(error.StartLine - 1, error.StartColumn - 1 ?? 0),
-                    End = new Position(error.EndLine - 1 ?? 0, error.EndColumn - 1 ?? 0)
+                    Start = new Position(Math.Max(error.StartLine - 1, 0), Math.Max(error.StartColumn - 1 ?? 0, 0)),
+                    End = new Position(Math.Max(error.EndLine - 1 ?? 0, 0), Math.Max(error.EndColumn - 1 ?? 0, 0))
                 }, error.Diagnostic);
 
             if (codeactions is not null && IsOpen)
             {
-                var quickfixes = new ObservableCollection<MenuItemViewModel>();
+                var quickfixes = new ObservableCollection<MenuItemModel>();
                 foreach (var ca in codeactions)
                     if (ca.IsCodeAction && ca.CodeAction != null)
                     {
                         if (ca.CodeAction.Command != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                            quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new RelayCommand<Command>(ExecuteCommand),
                                 CommandParameter = ca.CodeAction.Command
                             });
                         else if (ca.CodeAction.Edit != null)
-                            quickfixes.Add(new MenuItemViewModel(ca.CodeAction.Title)
+                            quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
                             {
                                 Header = ca.CodeAction.Title,
                                 Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
@@ -131,7 +152,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                     }
 
                 if (quickfixes.Count > 0)
-                    menuItems.Add(new MenuItemViewModel("Quick fix")
+                    menuItems.Add(new MenuItemModel("Quick fix")
                     {
                         Header = "Quick fix...",
                         Items = quickfixes
@@ -140,88 +161,36 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
 
         //Refactorings
-        var prepareRefactor = await Service.PrepareRenameAsync(CurrentFile.FullPath, pos);
+        var prepareRefactor = await Service.PrepareRenameAsync(CurrentFilePath, pos);
         if (prepareRefactor != null)
-            menuItems.Add(new MenuItemViewModel("Rename")
+            menuItems.Add(new MenuItemModel("Rename")
             {
                 Header = "Rename...",
                 Command = new AsyncRelayCommand<RangeOrPlaceholderRange>(StartRenameSymbolAsync),
                 CommandParameter = prepareRefactor,
-                IconObservable = Application.Current?.GetResourceObservable("VsImageLib.Rename16X")
+                Icon = new IconModel("VsImageLib.Rename16X")
             });
 
-        var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
+        var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (definition != null && IsOpen)
-            foreach (var i in definition)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
-                    {
-                        Header = "Go to Definition",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
-                    {
-                        Header = "Go to Definition",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
-        var declaration = await Service.RequestDeclarationAsync(CurrentFile.FullPath,
+        var definitionMenuItem = CreateLocationMenuItem("GoToDefinition", "Go to Definition", definition);
+        if (definitionMenuItem != null && IsOpen) menuItems.Add(definitionMenuItem);
+
+        var declaration = await Service.RequestDeclarationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (declaration != null && IsOpen)
-            foreach (var i in declaration)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToDeclaration")
-                    {
-                        Header = "Go to Declaration",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemViewModel("GoToDeclaration")
-                    {
-                        Header = "Go to Declaration",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
-        var implementation = await Service.RequestImplementationAsync(CurrentFile.FullPath,
+        var declarationMenuItem = CreateLocationMenuItem("GoToDeclaration", "Go to Declaration", declaration);
+        if (declarationMenuItem != null && IsOpen) menuItems.Add(declarationMenuItem);
+
+        var implementation = await Service.RequestImplementationAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (implementation != null && IsOpen)
-            foreach (var i in implementation)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToImplementation")
-                    {
-                        Header = "Go to Implementation",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemViewModel("GoToImplementation")
-                    {
-                        Header = "Go to Implementation",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
-        var typeDefinition = await Service.RequestImplementationAsync(CurrentFile.FullPath,
+        var implementationMenuItem = CreateLocationMenuItem("GoToImplementation", "Go to Implementation", implementation);
+        if (implementationMenuItem != null && IsOpen) menuItems.Add(implementationMenuItem);
+
+        var typeDefinition = await Service.RequestTypeDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
-        if (typeDefinition != null && IsOpen)
-            foreach (var i in typeDefinition)
-                if (i.IsLocation)
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
-                    {
-                        Header = "Go to Type Definition",
-                        Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
-                        CommandParameter = i.Location
-                    });
-                else
-                    menuItems.Add(new MenuItemViewModel("GoToDefinition")
-                    {
-                        Header = "Go to Type Definition",
-                        Command = new RelayCommand<LocationLink>(GoToLocation),
-                        CommandParameter = i.Location
-                    });
+        var typeDefinitionMenuItem =
+            CreateLocationMenuItem("GoToTypeDefinition", "Go to Type Definition", typeDefinition);
+        if (typeDefinitionMenuItem != null && IsOpen) menuItems.Add(typeDefinitionMenuItem);
         return menuItems;
     }
 
@@ -264,7 +233,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         if (range.IsRange && range.Range != null)
         {
-            var workspaceEdit = await Service.RequestRenameAsync(CurrentFile.FullPath, range.Range.Start, newName);
+            var workspaceEdit = await Service.RequestRenameAsync(CurrentFilePath, range.Range.Start, newName);
             if (workspaceEdit != null && IsOpen)
                 await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
                     { Edit = workspaceEdit, Label = "Rename" });
@@ -280,14 +249,14 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (!Service.IsLanguageServiceReady || offset > CodeBox.Document.TextLength) return null;
         var location = CodeBox.Document.GetLocation(offset);
 
-        var definition = await Service.RequestDefinitionAsync(CurrentFile.FullPath,
+        var definition = await Service.RequestDefinitionAsync(CurrentFilePath,
             new Position(location.Line - 1, location.Column - 1));
         if (definition != null && IsOpen)
-            if (definition.FirstOrDefault() is { } loc)
-            {
-                if (loc.IsLocation && loc.Location != null) return () => _ = GoToLocationAsync(loc.Location);
-                if (loc.IsLocationLink && loc.LocationLink != null) return () => GoToLocation(loc.LocationLink);
-            }
+        {
+            var normalized = NormalizeLocations(definition);
+            if (normalized.Count > 0)
+                return () => _ = GoToLocationAsync(normalized[0]);
+        }
 
         return null;
     }
@@ -297,10 +266,8 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (location == null) return;
 
         var path = Path.GetFullPath(location.Uri.GetFileSystemPath());
-        var file = ContainerLocator.Container.Resolve<IProjectExplorerService>().SearchFullPath(path) as IFile;
-        file ??= ContainerLocator.Container.Resolve<IProjectExplorerService>().GetTemporaryFile(path);
-
-        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(file);
+        var dockable = await ContainerLocator.Container.Resolve<IMainDockService>()
+            .OpenFileAsync(path);
         if (dockable is IEditor evm)
         {
             var sOff = evm.CurrentDocument.GetOffsetFromPosition(location.Range.Start) - 1;
@@ -311,8 +278,112 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     public virtual void GoToLocation(LocationLink? location)
     {
-        ContainerLocator.Container.Resolve<ILogger>()?.Log("Location link not supported"); //TODO   
+        if (location == null) return;
+
+        var targetUri = location.TargetUri;
+        var targetRange = location.TargetSelectionRange ?? location.TargetRange;
+        if (targetUri == null || targetRange == null) return;
+
+        _ = GoToLocationAsync(new Location
+        {
+            Uri = targetUri,
+            Range = targetRange
+        });
     }
+
+    private MenuItemModel? CreateLocationMenuItem(string id, string header,
+        IEnumerable<LocationOrLocationLink>? locations)
+    {
+        if (locations == null) return null;
+
+        var normalized = NormalizeLocations(locations);
+        if (normalized.Count == 0) return null;
+
+        if (normalized.Count == 1)
+            return new MenuItemModel(id)
+            {
+                Header = header,
+                Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
+                CommandParameter = normalized[0]
+            };
+
+        var items = new ObservableCollection<MenuItemModel>();
+        var index = 1;
+        foreach (var location in normalized)
+        {
+            items.Add(new MenuItemModel(id + "Item")
+            {
+                Header = FormatLocationHeader(location, index++),
+                Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
+                CommandParameter = location
+            });
+        }
+
+        return new MenuItemModel(id)
+        {
+            Header = header,
+            Items = items
+        };
+    }
+
+    private List<Location> NormalizeLocations(IEnumerable<LocationOrLocationLink> locations)
+    {
+        var result = new List<Location>();
+        var seen = new HashSet<LocationKey>();
+
+        foreach (var entry in locations)
+        {
+            if (!TryGetLocation(entry, out var location, out var key)) continue;
+            if (seen.Add(key)) result.Add(location);
+        }
+
+        return result;
+    }
+
+    private static bool TryGetLocation(LocationOrLocationLink entry, out Location location, out LocationKey key)
+    {
+        location = null!;
+        key = default;
+
+        if (entry.IsLocation && entry.Location != null)
+        {
+            location = entry.Location;
+        }
+        else if (entry.IsLocationLink && entry.LocationLink != null)
+        {
+            var targetRange = entry.LocationLink.TargetSelectionRange ?? entry.LocationLink.TargetRange;
+            if (entry.LocationLink.TargetUri == null || targetRange == null) return false;
+
+            location = new Location
+            {
+                Uri = entry.LocationLink.TargetUri,
+                Range = targetRange
+            };
+        }
+        else
+        {
+            return false;
+        }
+
+        var path = location.Uri.GetFileSystemPath();
+        var keyPath = string.IsNullOrWhiteSpace(path) ? location.Uri.ToString() : path.ToPathKey();
+        var range = location.Range;
+
+        key = new LocationKey(keyPath, range.Start.Line, range.Start.Character, range.End.Line, range.End.Character);
+        return true;
+    }
+
+    private static string FormatLocationHeader(Location location, int index)
+    {
+        var path = location.Uri?.GetFileSystemPath();
+        var fileName = string.IsNullOrWhiteSpace(path) ? location.Uri?.ToString() ?? "Unknown" : Path.GetFileName(path);
+        var line = location.Range.Start.Line + 1;
+        var column = location.Range.Start.Character + 1;
+        return $"{index}. {fileName}:{line}:{column}";
+    }
+
+    private readonly record struct LocationKey(string PathKey, int StartLine, int StartCharacter, int EndLine,
+        int EndCharacter);
 
     protected override async Task TextEnteredAsync(TextInputEventArgs args)
     {
@@ -411,7 +482,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     private async Task GetDocumentHighlightAsync()
     {
-        var result = await Service.RequestDocumentHighlightAsync(CurrentFile.FullPath,
+        var result = await Service.RequestDocumentHighlightAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1));
 
         if (result is not null)
@@ -429,7 +500,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual async Task UpdateSemanticTokensAsync()
     {
-        var tokens = await Service.RequestSemanticTokensFullAsync(CurrentFile.FullPath);
+        var tokens = await Service.RequestSemanticTokensFullAsync(CurrentFilePath);
 
         var languageManager = ContainerLocator.Container.Resolve<ILanguageManager>();
 
@@ -464,7 +535,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (CodeBox.Document.LineCount == 0) return;
 
         var inlayHintContainer =
-            await Service.RequestInlayHintsAsync(CurrentFile.FullPath,
+            await Service.RequestInlayHintsAsync(CurrentFilePath,
                 new Range(0, 0, CodeBox.Document.LineCount,
                     CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length));
 
@@ -483,7 +554,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar,
         bool retrigger, SignatureHelp? activeSignatureHelp)
     {
-        var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFile.FullPath,
+        var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerKind,
             triggerChar, retrigger, activeSignatureHelp);
         if (signatureHelp != null && IsOpen)
@@ -499,6 +570,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
             OverloadInsight.SetValue(TextBlock.FontSizeProperty,
                 SettingsService.GetSettingValue<int>("Editor_FontSize"));
+            
             if (overloadProvider.Count > 0) OverloadInsight.Show();
         }
     }
@@ -508,9 +580,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         //Console.WriteLine($"Completion request kind: {triggerKind} char: {triggerChar}");
 
         var completionOffset = CodeBox.CaretOffset;
-        if (triggerKind is CompletionTriggerKind.Invoked) completionOffset--;
+        if (triggerKind is CompletionTriggerKind.Invoked)
+            completionOffset = Math.Max(0, completionOffset - 1);
 
-        var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFile.FullPath,
+        var lspCompletionItems = await Service.RequestCompletionAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1),
             triggerKind, triggerKind == CompletionTriggerKind.Invoked ? null : triggerChar);
 
@@ -539,6 +612,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             Completion.CompletionList.ListBox.WhenValueChanged(x => x.ItemsSource).Subscribe(x =>
             {
                 if (Completion.CompletionList.ListBox.Items.Count == 0) Completion.Close();
+            }).DisposeWith(_completionDisposable);
+            Completion.CompletionList.ListBox.WhenValueChanged(x => x.SelectedItem).Subscribe(_ =>
+            {
+                _lastCompletionItemChangedTime = DateTime.Now.TimeOfDay;
             }).DisposeWith(_completionDisposable);
 
             if (lspCompletionItems is not null)
@@ -605,15 +682,15 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         return Task.FromResult(new List<CompletionData>());
     }
 
-    public override IEnumerable<MenuItemViewModel> GetTypeAssistanceQuickOptions()
+    public override IEnumerable<MenuItemModel> GetTypeAssistanceQuickOptions()
     {
-        return new List<MenuItemViewModel>
+        return new List<MenuItemModel>
         {
             new("RestartLs")
             {
                 Header = "Restart Language Server",
                 Command = new RelayCommand(() => _ = Service.RestartAsync()),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
+                Icon = new IconModel("VsImageLib.RefreshGrey16X")
             }
         };
     }
@@ -658,27 +735,21 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var overloadOptions = new List<(string, string?)>();
         foreach (var s in signatureHelp.Signatures)
         {
-            if (s.Parameters is null) continue;
-            var m1 = "```cpp\n" + s.Label + "(";
-            for (var i = 0; i < s.Parameters.Count(); i++)
-            {
-                var p = s.Parameters.ElementAt(i);
-                if (s.ActiveParameter.HasValue && s.ActiveParameter.Value == i)
-                {
-                    m1 += p.Label.Label;
-                    if (i < s.Parameters.Count() - 1) m1 += ", ";
-                }
+            var signature = FormatSignatureLabel(s);
+            var docs = ExtractDocumentation(s.Documentation);
 
-                m1 += p.Label.Label;
-                if (i < s.Parameters.Count() - 1) m1 += ", ";
+            if (s.Parameters is not null && s.ActiveParameter.HasValue)
+            {
+                var index = s.ActiveParameter.Value;
+                if (index >= 0 && index < s.Parameters.Count())
+                {
+                    var paramDoc = ExtractDocumentation(s.Parameters.ElementAt(index).Documentation);
+                    if (!string.IsNullOrWhiteSpace(paramDoc))
+                        docs = string.IsNullOrWhiteSpace(docs) ? paramDoc : docs + "\n\n" + paramDoc;
+                }
             }
 
-            m1 += ")\n```";
-            var m2 = string.Empty;
-            if (s.Documentation != null && s.Documentation.HasMarkupContent)
-                m2 += s.Documentation.MarkupContent?.Value;
-            if (s.Documentation != null && s.Documentation.HasString) m2 += s.Documentation.String;
-            overloadOptions.Add((m1, m2.Length > 0 ? m2 : null));
+            overloadOptions.Add((signature, string.IsNullOrWhiteSpace(docs) ? null : docs));
         }
 
         return new OverloadProvider(overloadOptions)
@@ -689,11 +760,17 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual IEnumerable<ICompletionData> ConvertCompletionData(CompletionList list, int offset)
     {
-        //Parse completionitem
-        foreach (var comp in list.Items) yield return ConvertCompletionItem(comp, offset);
+        var items = list.Items.ToList();
+        if (items.Any(x => !string.IsNullOrWhiteSpace(x.SortText)))
+            items = items.OrderBy(x => string.IsNullOrWhiteSpace(x.SortText) ? x.Label : x.SortText,
+                StringComparer.Ordinal).ToList();
+
+        var priority = items.Count;
+        foreach (var comp in items)
+            yield return ConvertCompletionItem(comp, offset, priority--);
     }
 
-    protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset)
+    protected virtual ICompletionData ConvertCompletionItem(CompletionItem comp, int offset, double priority = 0)
     {
         var icon = TypeAssistanceIconStore.Instance.Icons.TryGetValue(comp.Kind, out var instanceIcon)
             ? instanceIcon
@@ -701,23 +778,83 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         void AfterComplete()
         {
+            if (comp.AdditionalTextEdits is not null && comp.AdditionalTextEdits.Any())
+                Service.ApplyContainer(CurrentFilePath, comp.AdditionalTextEdits);
+            if (comp.Command != null)
+                _ = Service.ExecuteCommandAsync(comp.Command);
             _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
         }
 
-        var description = comp.Documentation != null
-            ? comp.Documentation.MarkupContent != null
-                ? comp.Documentation.MarkupContent.Value
-                : comp.Documentation.String
-            : null;
+        var description = ExtractDocumentation(comp.Documentation);
+        var insertText = comp.InsertText ?? comp.Label;
+        var isSnippet = comp.InsertTextFormat == InsertTextFormat.Snippet;
+        int? replaceStart = null;
+        int? replaceEnd = null;
 
-        return new CompletionData(comp.InsertText ?? comp.Label, comp.Label, comp.Detail, description, icon,
-            0,
-            comp, offset, CurrentFile, AfterComplete);
+        if (comp.TextEdit != null)
+        {
+            if (comp.TextEdit.IsTextEdit && comp.TextEdit.TextEdit != null)
+            {
+                insertText = comp.TextEdit.TextEdit.NewText;
+                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.Start) - 1;
+                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.End) - 1;
+            }
+            else if (comp.TextEdit.IsInsertReplaceEdit && comp.TextEdit.InsertReplaceEdit != null)
+            {
+                insertText = comp.TextEdit.InsertReplaceEdit.NewText;
+                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.Start) - 1;
+                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.End) - 1;
+            }
+        }
+
+        return new CompletionData(insertText, comp.Label, comp.Detail, description, icon,
+            priority,
+            comp, offset, CurrentFilePath, AfterComplete, isSnippet)
+        {
+            FilterText = comp.FilterText,
+            SortText = comp.SortText,
+            ReplaceStartOffset = replaceStart,
+            ReplaceEndOffset = replaceEnd
+        };
+    }
+
+    private static string? ExtractDocumentation(StringOrMarkupContent? documentation)
+    {
+        if (documentation == null) return null;
+        if (documentation.HasMarkupContent) return documentation.MarkupContent?.Value;
+        if (documentation.HasString) return documentation.String;
+        return null;
+    }
+
+    private static string FormatSignatureLabel(SignatureInformation signature)
+    {
+        var label = signature.Label ?? string.Empty;
+        if (signature.Parameters is null || !signature.ActiveParameter.HasValue) return label;
+
+        var index = signature.ActiveParameter.Value;
+        if (index < 0 || index >= signature.Parameters.Count()) return label;
+
+        var paramLabel = GetParameterLabelText(signature.Parameters.ElementAt(index).Label);
+        if (string.IsNullOrWhiteSpace(paramLabel)) return label;
+
+        var paramIndex = label.IndexOf(paramLabel, StringComparison.Ordinal);
+        if (paramIndex < 0) return label;
+
+        return label.Remove(paramIndex, paramLabel.Length).Insert(paramIndex, $"**{paramLabel}**");
+    }
+
+    private static string? GetParameterLabelText(object? label)
+    {
+        if (label == null) return null;
+        if (label is string text) return text;
+        var asString = label.ToString();
+        return string.IsNullOrWhiteSpace(asString) ? null : asString;
     }
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)
     {
-        foreach (var error in ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFile))
+        foreach (var error in ContainerLocator.Container.Resolve<IErrorService>()
+                     .GetErrorsForFile(CurrentFilePath))
             if (location.Line >= error.StartLine && location.Column >= error.StartColumn &&
                 (location.Line < error.EndLine ||
                  (location.Line == error.EndLine && location.Column <= error.EndColumn)))
@@ -828,7 +965,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
     protected virtual void CodeUpdated()
     {
-        Service.RefreshTextDocument(CurrentFile.FullPath, CodeBox.Text);
+        Service.RefreshTextDocument(CurrentFilePath, CodeBox.Text);
         _ = UpdateSemanticTokensAsync();
     }
 
@@ -847,7 +984,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         if (!IsOpen) return;
 
         base.OnAssistanceActivated();
-        Service.DidOpenTextDocument(CurrentFile.FullPath, Editor.CurrentDocument.Text);
+        Service.DidOpenTextDocument(CurrentFilePath, Editor.CurrentDocument.Text);
 
         _ = UpdateSemanticTokensAsync();
         _ = UpdateInlayHintsAsync();
@@ -868,7 +1005,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var c = ConvertChanges(e);
         var changes = new Container<TextDocumentContentChangeEvent>(c);
-        Service.RefreshTextDocument(CurrentFile.FullPath, changes);
+        Service.RefreshTextDocument(CurrentFilePath, changes);
 
         _lastEditTime = DateTime.Now.TimeOfDay;
     }
@@ -876,7 +1013,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private void FileSaved(object? sender, EventArgs e)
     {
         if (Service.IsLanguageServiceReady)
-            Service.DidSaveTextDocument(CurrentFile.FullPath, Editor.CurrentDocument.Text);
+            Service.DidSaveTextDocument(CurrentFilePath, Editor.CurrentDocument.Text);
     }
 
     public override void Close()
@@ -884,6 +1021,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         CodeBox.Document.Changed -= DocumentChanged;
         Editor.FileSaved -= FileSaved;
         Service.LanguageServiceActivated -= Server_Activated;
+        Service.LanguageServiceDeactivated -= Server_Deactivated;
         if (_dispatcherTimer != null)
         {
             _dispatcherTimer.Tick -= Timer_Tick;
@@ -891,7 +1029,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         }
 
         base.Close();
-        if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(CurrentFile.FullPath);
+        if (Service.IsLanguageServiceReady) Service.DidCloseTextDocument(CurrentFilePath);
     }
 
     #endregion

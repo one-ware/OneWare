@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.ViewModels;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -21,12 +22,12 @@ public class DebuggerModule : OneWareModuleBase
         var dockService = serviceProvider.Resolve<IMainDockService>();
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemViewModel("Debugger")
+            new MenuItemModel("Debugger")
             {
                 Header = "Debugger",
                 Command = new RelayCommand(() =>
                     dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
-                IconObservable = Application.Current!.GetResourceObservable(DebuggerViewModel.IconKey)
+                Icon = new IconModel(DebuggerViewModel.IconKey)
             });
     }
 }

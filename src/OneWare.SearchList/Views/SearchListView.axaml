@@ -10,7 +10,7 @@
              x:Class="OneWare.SearchList.Views.SearchListView" x:DataType="viewModels:SearchListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
-    <Grid RowDefinitions="30,*">
+    <Grid RowDefinitions="30,Auto,*">
 
         <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
             <DockPanel Name="InformationPanel">
@@ -37,6 +37,13 @@
 
                     <Separator />
 
+                    <ToggleButton Classes="RoundButton" Width="24" IsChecked="{Binding IsReplaceVisible}"
+                                  ToolTip.Tip="Replace">
+                        <TextBlock Text="R" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </ToggleButton>
+
+                    <Separator />
+
                     <ComboBox
                         SelectedIndex="{Binding SearchListFilterMode}"
                         Width="140">
@@ -46,25 +53,54 @@
                     </ComboBox>
 
                 </StackPanel>
-
+                
                 <Border DockPanel.Dock="Left" Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}"
                         Height="24" Margin="0 0 5 0">
-                    <controls:SearchBox SearchText="{Binding SearchString}"
-                                        HorizontalAlignment="Stretch">
-                        <Interaction.Behaviors>
-                            <FocusOnAttachedToVisualTreeBehavior />
-                            <behaviors:DataGridNavigationBehavior AssociatedDataGrid="{Binding #SearchList}" />
-                            <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
-                                                                   Command="{Binding OpenSelectedResult}" />
-                        </Interaction.Behaviors>
-                    </controls:SearchBox>
+                    <Panel>
+                        <controls:SearchBox SearchText="{Binding SearchString}"
+                                            HorizontalAlignment="Stretch">
+                            <Interaction.Behaviors>
+                                <FocusOnAttachedToVisualTreeBehavior />
+                                <behaviors:DataGridNavigationBehavior AssociatedDataGrid="{Binding #SearchList}" />
+                                <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
+                                                                       Command="{Binding OpenSelectedResult}" />
+                            </Interaction.Behaviors>
+                        </controls:SearchBox>
+                        <controls:Spinner HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 50 0" Height="12" Width="12" IsVisible="{Binding IsLoading}" />
+                    </Panel>
+                   
+                </Border>
+            </DockPanel>
+        </Border>
+
+        
+        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" Padding="2"
+                IsVisible="{Binding IsReplaceVisible}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                    <Button Classes="RoundButton" MinWidth="70"
+                            Command="{Binding ReplaceSelectedCommand}">
+                        <TextBlock Text="Replace" />
+                    </Button>
+                    <Button Classes="RoundButton" MinWidth="80"
+                            Command="{Binding ReplaceAllCommand}">
+                        <TextBlock Text="Replace All" />
+                    </Button>
+                </StackPanel>
+
+                <Border DockPanel.Dock="Left" Classes="RoundBorder"
+                        Background="{DynamicResource ThemeControlMidBrush}"
+                        Height="24" Margin="0 0 5 0">
+                    <TextBox Background="Transparent" BorderThickness="0"
+                             Watermark="Replace..." Text="{Binding ReplaceString}"
+                             Padding="6,0,0,0" VerticalContentAlignment="Center" />
                 </Border>
             </DockPanel>
         </Border>
 
         <DataGrid Padding="2, 0, 2, 2" BorderThickness="0" VerticalGridLinesBrush="Transparent"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                  Grid.Row="1" Background="Transparent"
+                  Grid.Row="2" Background="Transparent"
                   RowBackground="Transparent" IsReadOnly="True"
                   x:Name="SearchList" ItemsSource="{Binding Items}"
                   SelectedItem="{Binding SelectedItem}"
@@ -77,16 +113,11 @@
                 <DataGridTemplateColumn CanUserResize="True" Width="4*" SortMemberPath="Description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="models:SearchResultModel">
-                            <Border Padding="5 0">
-                                <StackPanel Orientation="Horizontal" Height="18">
-                                    <TextBlock Text="{Binding DescriptionLeft}"
-                                               ToolTip.Tip="{Binding Description}" />
-                                    <TextBlock Background="{DynamicResource ThemeAccentBrush2}"
-                                               Text="{Binding DescriptionMid}"
-                                               ToolTip.Tip="{Binding Description}" />
-                                    <TextBlock Text="{Binding DescriptionRight}" ToolTip.Tip="{Binding Description}" />
-                                </StackPanel>
-                            </Border>
+                            <TextBlock Padding="5 0" ToolTip.Tip="{Binding Description}">
+                                <Run Text="{Binding DescriptionLeft}" /><!--
+                                --><Run Text="{Binding DescriptionMid}" FontWeight="Bold" Background="{DynamicResource ThemeAccentBrush2}" /><!--
+                                --><Run Text="{Binding DescriptionRight}" />
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -106,11 +137,11 @@
                     </DataGridTemplateColumn.Header>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="File.Header">
+                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="FileName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="models:SearchResultModel">
                             <TextBlock Padding="5 0" VerticalAlignment="Center"
-                                       Text="{Binding File.Name, FallbackValue={x:Null}}" />
+                                       Text="{Binding FileName, FallbackValue={x:Null}}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.Header>
@@ -131,12 +162,5 @@
 
             </DataGrid.Columns>
         </DataGrid>
-
-        <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Right"
-                    VerticalAlignment="Top">
-            <controls:Spinner Height="14" Width="14" Margin="0, 8, 295, 0"
-                              IsVisible="{Binding IsLoading}"
-                              Foreground="{DynamicResource DarkBlue}" />
-        </StackPanel>
     </Grid>
 </UserControl>

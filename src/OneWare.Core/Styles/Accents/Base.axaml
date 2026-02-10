@@ -118,9 +118,6 @@
                              Color="{StaticResource ThemeBackgroundColor}" />
 
             <SolidColorBrush x:Key="IconContrastColor" Opacity="1" Color="#424040" />
-            <ResourceDictionary.MergedDictionaries>
-                <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
-            </ResourceDictionary.MergedDictionaries>
             
             <!--from fluent theme to prevent markdown crashes-->
             <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{DynamicResource ThemeAccentColor}" Opacity="0.2" />
@@ -182,7 +179,7 @@
                     </DrawingGroup>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
-
+            
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -246,10 +243,11 @@
                     </DrawingGroup>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
-
+            
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://OneWare.Core/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            
         </ResourceDictionary>
 
     </ResourceDictionary.ThemeDictionaries>

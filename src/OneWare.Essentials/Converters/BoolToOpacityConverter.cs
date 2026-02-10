@@ -7,7 +7,8 @@ public class BoolToOpacityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool t && t) return 1d;
+        if (value is true) return 1d;
+        if(parameter != null && double.TryParse(parameter.ToString(), out var opacity)) return opacity;
         return 0d;
     }
 

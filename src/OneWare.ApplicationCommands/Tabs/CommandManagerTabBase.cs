@@ -9,6 +9,8 @@ namespace OneWare.ApplicationCommands.Tabs;
 
 public abstract partial class CommandManagerTabBase : ObservableObject
 {
+    private readonly ILogical _logical;
+
     [ObservableProperty] private string _searchText = string.Empty;
 
     [ObservableProperty] private CommandManagerItemModel? _selectedItem;
@@ -17,23 +19,10 @@ public abstract partial class CommandManagerTabBase : ObservableObject
 
     protected CommandManagerTabBase(string title, ILogical logical)
     {
+        _logical = logical;
         Title = title;
 
-        this.WhenValueChanged(x => x.SearchText).Subscribe(x =>
-        {
-            List<CommandManagerItemModel> newList = [];
-
-            if (!string.IsNullOrWhiteSpace(x))
-                newList = Items.Where(i => i.Name.Contains(x, StringComparison.OrdinalIgnoreCase))
-                    .Select(c => new CommandManagerItemModel(c, c.CanExecute(logical)))
-                    .OrderByDescending(c => c.IsEnabled)
-                    .ThenByDescending(c => c.Command.Name.StartsWith(x, StringComparison.OrdinalIgnoreCase))
-                    .ThenByDescending(c => c.Command.Name)
-                    .ToList();
-
-            VisibleItems = newList;
-            SelectedItem = VisibleItems.FirstOrDefault();
-        });
+        this.WhenValueChanged(x => x.SearchText).Subscribe(_ => RefreshVisibleItems());
     }
 
     public string Title { get; }
@@ -41,4 +30,22 @@ public abstract partial class CommandManagerTabBase : ObservableObject
     public ObservableCollection<IApplicationCommand> Items { get; init; } = new();
 
     public abstract string SearchBarText { get; }
+
+    public void RefreshVisibleItems()
+    {
+        var query = SearchText ?? string.Empty;
+        List<CommandManagerItemModel> newList = [];
+
+        if (!string.IsNullOrWhiteSpace(query))
+            newList = Items.Where(i => i.Name.Contains(query, StringComparison.OrdinalIgnoreCase) 
+                                       || (i.Detail?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
+                .Select(c => new CommandManagerItemModel(c, c.CanExecute(_logical)))
+                .OrderByDescending(c => c.IsEnabled)
+                .ThenByDescending(c => c.Command.Name.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(c => c.Command.Name)
+                .ToList();
+
+        VisibleItems = newList;
+        SelectedItem = VisibleItems.FirstOrDefault();
+    }
 }

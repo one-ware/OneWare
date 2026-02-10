@@ -13,10 +13,11 @@
         <DockPanel>
             <Border Classes="RoundBorder" DockPanel.Dock="Left" Height="24"
                     Background="{DynamicResource ThemeControlMidBrush}">
-                <StackPanel Orientation="Horizontal" Classes="ToolBar">
+                <StackPanel Classes="ToolBar" Spacing="0">
 
                     <ComboBox Width="100" BorderThickness="0" Background="Transparent"
-                              SelectedItem="{Binding SelectedSimulator}" ItemsSource="{Binding Simulators}">
+                              SelectedItem="{Binding SelectedSimulator}" ItemsSource="{Binding Simulators}"
+                              Padding="5 0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Name}" Margin="5 0" VerticalAlignment="Center" />
@@ -27,7 +28,8 @@
                     <Separator />
 
                     <Button Command="{Binding SimulateCurrentAsync, FallbackValue={x:Null}}"
-                            IsEnabled="{Binding SelectedSimulator, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            IsEnabled="{Binding SelectedSimulator, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Padding="5 0">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <Image Source="{DynamicResource VsImageLib.StartWithoutDebug16X}" Height="13" />
                             <TextBlock Text="Simulate" VerticalAlignment="Center" />

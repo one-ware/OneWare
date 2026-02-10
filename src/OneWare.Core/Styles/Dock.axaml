@@ -274,11 +274,11 @@
                                     </DataTriggerBehavior>
                                 </Interaction.Behaviors>
 
-                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="15" Width="15" />
+                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="12" Width="12" VerticalAlignment="Center" HorizontalAlignment="Center" />
 
-                                <Image
+                                <controls:LayeredIconPresenter
                                     Height="17" Width="17"
-                                    Source="{Binding CurrentFile.Icon, FallbackValue={x:Null}}"
+                                    Value="{Binding Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" IsVisible="{Binding !IsLoading}" />
                                 <TextBlock Name="Title"
                                            Margin="3 0 0 0"

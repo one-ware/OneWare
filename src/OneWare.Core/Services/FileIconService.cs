@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
@@ -57,5 +58,13 @@ public class FileIconService : IFileIconService
     {
         if (_iconStore.TryGetValue(extension, out var observable)) return observable;
         return _iconStore[".*"];
+    }
+
+    public IconModel GetFileIconModel(string extension)
+    {
+        return new IconModel()
+        {
+            IconObservable = GetFileIcon(extension)
+        };
     }
 }

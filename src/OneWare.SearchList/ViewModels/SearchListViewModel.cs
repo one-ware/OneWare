@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
+using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using DynamicData;
@@ -15,28 +16,15 @@ using ReactiveUI;
 
 namespace OneWare.SearchList.ViewModels;
 
-public class SearchListViewModel : ExtendedTool
+public partial class SearchListViewModel : ExtendedTool
 {
     public const string IconKey = "VsImageLib.Search16XMd";
+    private const long MaxTextFileBytes = 2 * 1024 * 1024;
 
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
-    private bool _caseSensitive;
-
-    private bool _isLoading;
-
     private CancellationTokenSource? _lastCancellationToken;
-
-    private int _searchListFilterMode = 1;
-
-    private string _searchString = string.Empty;
-
-    private SearchResultModel? _selectedItem;
-
-    private bool _useRegex;
-
-    private bool _wholeWord;
 
     public SearchListViewModel(IMainDockService mainDockService, IProjectExplorerService projectExplorerService) :
         base(IconKey)
@@ -44,7 +32,7 @@ public class SearchListViewModel : ExtendedTool
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
-        Title = "Search";
+        Title = "Find in files";
         Id = "Search";
 
         this.WhenAnyValue(x => x.SearchString)
@@ -55,129 +43,227 @@ public class SearchListViewModel : ExtendedTool
 
     public string SearchString
     {
-        get => _searchString;
-        set => SetProperty(ref _searchString, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     public ObservableCollection<SearchResultModel> Items { get; } = new();
 
     public SearchResultModel? SelectedItem
     {
-        get => _selectedItem;
-        set => SetProperty(ref _selectedItem, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        get;
+        set => SetProperty(ref field, value);
     }
+
+    [DataMember]
+    public bool IsReplaceVisible
+    {
+        get;
+        set
+        {
+            SetProperty(ref field, value);
+            Title = value ? "Replace" : "Find";
+        }
+    }
+
+    [DataMember]
+    public string ReplaceString
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = string.Empty;
 
     [DataMember]
     public bool CaseSensitive
     {
-        get => _caseSensitive;
-        set => SetProperty(ref _caseSensitive, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool WholeWord
     {
-        get => _wholeWord;
-        set => SetProperty(ref _wholeWord, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public bool UseRegex
     {
-        get => _useRegex;
-        set => SetProperty(ref _useRegex, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     [DataMember]
     public int SearchListFilterMode
     {
-        get => _searchListFilterMode;
-        set => SetProperty(ref _searchListFilterMode, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1;
 
     private void Search(string searchText)
     {
         Items.Clear();
         _lastCancellationToken?.Cancel();
-        if (searchText.Length < 3) return;
+        if (searchText.Length < 3)
+        {
+            IsLoading = false;
+            return;
+        }
         _ = SearchAsync(searchText);
     }
 
     private async Task SearchAsync(string searchText)
     {
         IsLoading = true;
-
         _lastCancellationToken = new CancellationTokenSource();
+        var token = _lastCancellationToken.Token;
 
-        switch (SearchListFilterMode)
+        try
         {
-            case 0:
-                await SearchFolderRecursiveAsync(_projectExplorerService.Projects, searchText,
-                    _lastCancellationToken.Token);
-                break;
-            case 1 when _projectExplorerService.ActiveProject != null:
-                await SearchFolderRecursiveAsync(_projectExplorerService.ActiveProject.Entities, searchText,
-                    _lastCancellationToken.Token);
-                break;
-            case 2 when _mainDockService.CurrentDocument is IEditor editor:
-                var currentFile = editor.CurrentFile;
-                if (currentFile != null)
-                    Items.AddRange(await FindAllIndexesAsync(currentFile,
-                        searchText, CaseSensitive, UseRegex, WholeWord, _lastCancellationToken.Token));
-                break;
-        }
-
-        IsLoading = false;
-    }
-
-    private async Task SearchFolderRecursiveAsync(IEnumerable<IProjectEntry> folderItems, string searchText,
-        CancellationToken cancel)
-    {
-        var result = new List<SearchResultModel>();
-        if (cancel.IsCancellationRequested) return;
-        foreach (var i in folderItems)
-            switch (i)
+            switch (SearchListFilterMode)
             {
-                case IProjectFile file:
-                {
-                    if (file.Header.Contains(searchText,
-                            CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
+                case 0:
+                    foreach (var project in _projectExplorerService.Projects)
                     {
-                        var sI = file.Header.IndexOf(searchText,
-                            CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                        var dL = file.Header[..sI].TrimStart();
-                        var dM = searchText;
-                        var dR = file.Header[(sI + searchText.Length)..].TrimEnd();
-                        Items.Add(new SearchResultModel(file.Header, dL, dM, dR, searchText,
-                            file.Root, file));
+                        await SearchProjectFilesAsync(project, searchText, token);
+                        if (token.IsCancellationRequested) return;
                     }
-
-                    Items.AddRange(await FindAllIndexesAsync(file, searchText, CaseSensitive, WholeWord, UseRegex,
-                        cancel));
                     break;
-                }
-                case IProjectFolder folder:
-                    await SearchFolderRecursiveAsync(folder.Entities, searchText, cancel);
+                case 1 when _projectExplorerService.ActiveProject != null:
+                    await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, searchText, token);
+                    break;
+                case 2 when _mainDockService.CurrentDocument is IEditor editor:
+                    Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, searchText, CaseSensitive, UseRegex,
+                        WholeWord, token));
                     break;
             }
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
-    private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(IFile file, string search,
-        bool caseSensitive, bool regex, bool words, CancellationToken cancellationToken)
+    private async Task SearchProjectFilesAsync(IProjectFolder folder, string searchText, CancellationToken cancel)
     {
-        if (string.IsNullOrEmpty(search) || !File.Exists(file.FullPath)) return new List<SearchResultModel>();
+        if (cancel.IsCancellationRequested) return;
 
-        var text = await File.ReadAllTextAsync(file.FullPath, cancellationToken);
+        var comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        foreach (var relativePath in folder.GetFiles("*", true))
+        {
+            if (cancel.IsCancellationRequested) return;
+
+            var displayPath = relativePath;
+            var fullPath = Path.Combine(folder.FullPath, relativePath);
+
+            if (!IsBinaryFile(fullPath) && !IsTooLarge(fullPath))
+            {
+                Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, searchText, CaseSensitive,
+                    UseRegex, WholeWord, cancel));
+            }
+        }
+    }
+
+    private static bool IsTooLarge(string fullPath)
+    {
+        try
+        {
+            return new FileInfo(fullPath).Length > MaxTextFileBytes;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private static bool IsBinaryFile(string fullPath)
+    {
+        var extension = Path.GetExtension(fullPath);
+        if (!string.IsNullOrEmpty(extension))
+        {
+            switch (extension.ToLowerInvariant())
+            {
+                case ".png":
+                case ".jpg":
+                case ".jpeg":
+                case ".gif":
+                case ".bmp":
+                case ".tiff":
+                case ".ico":
+                case ".svg":
+                case ".webp":
+                case ".mp3":
+                case ".wav":
+                case ".flac":
+                case ".ogg":
+                case ".mp4":
+                case ".mkv":
+                case ".mov":
+                case ".avi":
+                case ".wmv":
+                case ".zip":
+                case ".7z":
+                case ".rar":
+                case ".gz":
+                case ".tar":
+                case ".tgz":
+                case ".pdf":
+                case ".exe":
+                case ".dll":
+                case ".so":
+                case ".dylib":
+                case ".bin":
+                case ".dat":
+                case ".class":
+                case ".jar":
+                case ".pdb":
+                case ".o":
+                case ".obj":
+                case ".a":
+                case ".lib":
+                case ".woff":
+                case ".woff2":
+                case ".ttf":
+                case ".otf":
+                    return true;
+            }
+        }
+
+        try
+        {
+            using var stream = File.OpenRead(fullPath);
+            var buffer = new byte[1024];
+            var read = stream.Read(buffer, 0, buffer.Length);
+            for (var i = 0; i < read; i++)
+            {
+                if (buffer[i] == 0) return true;
+            }
+        }
+        catch
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(string fullPath, IProjectRoot? root,
+        string search, bool caseSensitive, bool regex, bool words, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(search) || !File.Exists(fullPath)) return new List<SearchResultModel>();
+
+        var text = await File.ReadAllTextAsync(fullPath, cancellationToken);
         var lines = text.Split('\n');
         var lastIndex = 0;
         var lastLineNr = 0;
-
         return await Task.Run(() =>
         {
             var indexes = new List<SearchResultModel>();
@@ -200,7 +286,7 @@ public class SearchListViewModel : ExtendedTool
                     var dM = line[sI..(sI + lineM.Length)];
                     var dR = line[(sI + lineM.Length)..].TrimEnd();
                     indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        file is IProjectFile pf ? pf.Root : null, file, lineNr + 1, index, search.Length));
+                        root, fullPath, lineNr + 1, index, search.Length));
                     lastIndex = index;
                     lastLineNr = lineNr;
                 }
@@ -215,7 +301,6 @@ public class SearchListViewModel : ExtendedTool
                     if (index == -1) return indexes;
                     var lineNr = text[lastIndex..index].Split('\n').Length + lastLineNr - 1;
                     var line = lines[lineNr];
-
 
                     var sI = line.IndexOf(search,
                         caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
@@ -233,12 +318,19 @@ public class SearchListViewModel : ExtendedTool
                     }
 
                     indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        file is IProjectFile pf ? pf.Root : null, file, lineNr + 1, index, search.Length));
+                        root, fullPath, lineNr + 1, index, search.Length));
                 }
             }
 
             return indexes;
         }, cancellationToken);
+    }
+
+    private string BuildSearchPattern(string searchText)
+    {
+        var pattern = UseRegex ? searchText : Regex.Escape(searchText);
+        if (WholeWord) pattern = $@"\b(?:{pattern})\b";
+        return pattern;
     }
 
     public void OpenSelectedResult()
@@ -247,11 +339,72 @@ public class SearchListViewModel : ExtendedTool
         _ = GoToSearchResultAsync(SelectedItem);
     }
 
+    [RelayCommand]
+    private async Task ReplaceSelectedAsync()
+    {
+        var result = SelectedItem;
+        if (result == null) return;
+        if (string.IsNullOrWhiteSpace(result.FilePath)) return;
+        if (result.EndOffset <= result.StartOffset) return;
+        if (IsBinaryFile(result.FilePath) || IsTooLarge(result.FilePath)) return;
+
+        var text = await File.ReadAllTextAsync(result.FilePath);
+        if (result.StartOffset < 0 || result.EndOffset > text.Length) return;
+
+        var replacement = ReplaceString ?? string.Empty;
+        var newText = text.Remove(result.StartOffset, result.EndOffset - result.StartOffset)
+            .Insert(result.StartOffset, replacement);
+
+        await File.WriteAllTextAsync(result.FilePath, newText);
+        Search(SearchString);
+    }
+
+    [RelayCommand]
+    private async Task ReplaceAllAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SearchString)) return;
+        if (Items.Count == 0) return;
+
+        var files = Items
+            .Select(x => x.FilePath)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        if (files.Count == 0) return;
+
+        var pattern = BuildSearchPattern(SearchString);
+        var options = CaseSensitive ? RegexOptions.Multiline : RegexOptions.Multiline | RegexOptions.IgnoreCase;
+        var replacement = ReplaceString ?? string.Empty;
+        Regex regex;
+        try
+        {
+            regex = new Regex(pattern, options);
+        }
+        catch
+        {
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            if (file == null) continue;
+            if (IsBinaryFile(file) || IsTooLarge(file)) continue;
+
+            var text = await File.ReadAllTextAsync(file);
+            var replaced = regex.Replace(text, replacement);
+            if (!ReferenceEquals(text, replaced) && text != replaced)
+                await File.WriteAllTextAsync(file, replaced);
+        }
+
+        Search(SearchString);
+    }
+
     private async Task GoToSearchResultAsync(SearchResultModel resultModel)
     {
-        if (resultModel?.File == null) return;
+        if (string.IsNullOrWhiteSpace(resultModel?.FilePath)) return;
 
-        if (await _mainDockService.OpenFileAsync(resultModel.File) is not IEditor evb) return;
+        if (await _mainDockService.OpenFileAsync(resultModel.FilePath) is not IEditor evb) return;
 
         if (_mainDockService.GetWindowOwner(this) is IHostWindow)
             _mainDockService.CloseDockable(this);

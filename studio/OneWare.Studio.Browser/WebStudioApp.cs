@@ -56,9 +56,9 @@ public class WebStudioApp : StudioApp
             Services.Resolve<IProjectExplorerService>().Projects.Add(dummy);
             Services.Resolve<IProjectExplorerService>().ActiveProject = dummy;
 
-            foreach (var file in dummy!.Files)
+            foreach (var path in dummy!.GetFiles())
             {
-                var vm = await Services.Resolve<IMainDockService>().OpenFileAsync(file);
+                var vm = await Services.Resolve<IMainDockService>().OpenFileAsync(path);
 
                 if (vm is VcdViewModel vcdViewModel)
                 {

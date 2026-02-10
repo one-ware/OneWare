@@ -1,69 +1,62 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Media;
-using OneWare.Essentials.Models;
 
-namespace OneWare.FolderProjectSystem.Models;
+namespace OneWare.Essentials.Models;
 
 public class LoadingDummyNode : IProjectExplorerNode
 {
-    private IBrush _background = Brushes.Transparent;
-    private FontWeight _fontWeight = FontWeight.Regular;
-    private bool _isExpanded;
-    private float _textOpacity = 1f;
-
-    public IImage? Icon { get; } = null;
-
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public IconModel? Icon { get; } = null;
+    
     public string Header => "Loading...";
     public IProjectExplorerNode? Parent { get; } = null;
     public ObservableCollection<IProjectExplorerNode> Children { get; } = new();
-    public ObservableCollection<IImage> IconOverlays { get; } = new();
-    public ObservableCollection<IImage> RightIcons { get; } = new();
 
     public bool IsExpanded
     {
-        get => _isExpanded;
+        get;
         set
         {
-            if (_isExpanded == value) return;
-            _isExpanded = value;
+            if (field == value) return;
+            field = value;
             OnPropertyChanged(nameof(IsExpanded));
         }
     }
 
     public IBrush Background
     {
-        get => _background;
+        get;
         set
         {
-            if (Equals(_background, value)) return;
-            _background = value;
+            if (Equals(field, value)) return;
+            field = value;
             OnPropertyChanged(nameof(Background));
         }
-    }
+    } = Brushes.Transparent;
 
     public FontWeight FontWeight
     {
-        get => _fontWeight;
+        get;
         set
         {
-            if (_fontWeight == value) return;
-            _fontWeight = value;
+            if (field == value) return;
+            field = value;
             OnPropertyChanged(nameof(FontWeight));
         }
-    }
+    } = FontWeight.Regular;
 
     public float TextOpacity
     {
-        get => _textOpacity;
+        get;
         set
         {
-            if (Math.Abs(_textOpacity - value) < float.Epsilon) return;
-            _textOpacity = value;
+            if (Math.Abs(field - value) < float.Epsilon) return;
+            field = value;
             OnPropertyChanged(nameof(TextOpacity));
         }
-    }
+    } = 1f;
 
     private void OnPropertyChanged(string propertyName)
     {

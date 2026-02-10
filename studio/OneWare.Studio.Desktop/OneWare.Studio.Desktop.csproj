@@ -21,6 +21,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\OneWare.CSharp\OneWare.CSharp.csproj" />
         <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Python\OneWare.Python.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj"/>

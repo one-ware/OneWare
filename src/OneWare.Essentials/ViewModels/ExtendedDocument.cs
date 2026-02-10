@@ -1,7 +1,10 @@
-﻿using System.Runtime.Serialization;
+﻿using System.IO;
+using System.Runtime.Serialization;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
@@ -12,31 +15,34 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
-
-    private IFile? _currentFile;
-
+    private readonly IFileIconService _fileIconService;
+    
     private string _fullPath;
+    private string? _lastFullPath;
 
-    private bool _isDirty;
-
-    private bool _isLoading = true;
-
-    private bool _isReadOnly;
-
-    private bool _loadingFailed;
-
-    protected ExtendedDocument(string fullPath, IProjectExplorerService projectExplorerService,
+    protected ExtendedDocument(string fullPath, IFileIconService fileIconService, IProjectExplorerService projectExplorerService,
         IMainDockService mainDockService, IWindowService windowService)
     {
         _fullPath = fullPath;
+        _lastFullPath = fullPath;
         _projectExplorerService = projectExplorerService;
+        _fileIconService = fileIconService;
         _mainDockService = mainDockService;
         _windowService = windowService;
     }
 
-    public virtual string CloseWarningMessage => $"Do you want to save changes to the file {CurrentFile?.Name}?";
+    public virtual string CloseWarningMessage =>
+        $"Do you want to save changes to the file {Path.GetFileName(FullPath)}?";
     public IRelayCommand? Undo { get; protected set; }
     public IRelayCommand? Redo { get; protected set; }
+    
+    public IconModel? Icon
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+    
+    public string Extension => Path.GetExtension(FullPath);
 
     [DataMember]
     public string FullPath
@@ -49,48 +55,53 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
         }
     }
 
-    public IFile? CurrentFile
+    public string? UiExtensionContext
     {
-        get => _currentFile;
-        private set => SetProperty(ref _currentFile, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = true;
 
     public bool LoadingFailed
     {
-        get => _loadingFailed;
-        set => SetProperty(ref _loadingFailed, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsReadOnly
     {
-        get => _isReadOnly;
-        set => SetProperty(ref _isReadOnly, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsDirty
     {
-        get => _isDirty;
-        set => SetProperty(ref _isDirty, value);
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public DateTime LastSaveTime
+    {
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public override bool OnClose()
     {
         if (IsDirty)
         {
-            if (CurrentFile != null) _ = _mainDockService.CloseFileAsync(CurrentFile);
+            _ = _mainDockService.CloseFileAsync(FullPath);
             return false;
         }
 
-        if (CurrentFile != null) _mainDockService.OpenFiles.Remove(CurrentFile);
-        if (CurrentFile is ExternalFile externalFile)
-            _projectExplorerService.RemoveTemporaryFile(externalFile);
-
+        _mainDockService.OpenFiles.Remove(FullPath.ToPathKey());
+        _mainDockService.UnregisterOpenFile(FullPath);
+        
         Reset();
         return true;
     }
@@ -122,17 +133,23 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
 
     public virtual void InitializeContent()
     {
-        var oldCurrentFile = CurrentFile;
+        var oldPath = _lastFullPath;
+        var isExternal = _projectExplorerService.GetRootFromFile(FullPath) == null;
+        
+        Title = isExternal ? $"[{Path.GetFileName(FullPath)}]" : Path.GetFileName(FullPath);
+        Icon = ContainerLocator.Container.Resolve<IFileIconService>().GetFileIconModel(Extension);
+        
+        if (File.Exists(FullPath)) LastSaveTime = File.GetLastWriteTime(FullPath);
 
-        CurrentFile = _projectExplorerService.SearchFullPath(FullPath) as IFile ??
-                      _projectExplorerService.GetTemporaryFile(FullPath);
-        Title = CurrentFile is ExternalFile ? $"[{CurrentFile.Name}]" : CurrentFile.Name;
+        if (!string.IsNullOrWhiteSpace(oldPath) && !oldPath.EqualPaths(FullPath))
+            _mainDockService.OpenFiles.Remove(oldPath.ToPathKey());
 
-        if (CurrentFile != oldCurrentFile && oldCurrentFile != null) _mainDockService.OpenFiles.Remove(oldCurrentFile);
+        _mainDockService.OpenFiles.TryAdd(FullPath.ToPathKey(), this);
 
-        _mainDockService.OpenFiles.TryAdd(CurrentFile, this);
-
-        UpdateCurrentFile(oldCurrentFile);
+        _lastFullPath = FullPath;
+        UpdateCurrentFile(oldPath);
+        
+        UiExtensionContext = FullPath;
     }
 
     public virtual void GoToDiagnostic(ErrorListItem item)
@@ -143,5 +160,5 @@ public abstract class ExtendedDocument : Document, IExtendedDocument
     {
     }
 
-    protected abstract void UpdateCurrentFile(IFile? oldFile);
+    protected abstract void UpdateCurrentFile(string? oldPath);
 }

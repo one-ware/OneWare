@@ -1,7 +1,9 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime">
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+        xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials">
 
     <Design.PreviewWith>
         <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">
@@ -124,7 +126,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="viewModels:MenuItemViewModel">
+    <Style Selector="Menu.BindMainMenu MenuItem" x:DataType="models:MenuItemModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
@@ -134,7 +136,7 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding Icon}" />
+                    <controls:LayeredIconPresenter Value="{Binding Icon}" />
                 </Template>
             </Setter.Value>
         </Setter>
@@ -142,7 +144,7 @@
 
     <Style
         Selector="Menu.BindMenu > MenuItem > MenuItem, ContextMenu.BindMenu MenuItem, MenuFlyoutPresenter.BindMenu > MenuItem"
-        x:DataType="viewModels:MenuItemViewModel">
+        x:DataType="models:MenuItemModel">
         <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
         <Setter Property="Header" Value="{Binding Header}" />
         <Setter Property="ItemsSource" Value="{Binding Items}" />
@@ -152,7 +154,7 @@
         <Setter Property="Icon">
             <Setter.Value>
                 <Template>
-                    <Image Source="{Binding Icon}" />
+                    <controls:LayeredIconPresenter Value="{Binding Icon}" />
                 </Template>
             </Setter.Value>
         </Setter>

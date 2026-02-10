@@ -19,8 +19,7 @@ public abstract class TypeAssistanceBase : ITypeAssistance
     protected IEditor Editor { get; }
     protected TextEditor CodeBox => Editor.Editor;
 
-    protected IFile CurrentFile =>
-        Editor.CurrentFile ?? throw new NullReferenceException(nameof(Editor.CurrentFile));
+    protected string CurrentFilePath => Editor.FullPath;
 
     protected IIndentationStrategy? IndentationStrategy { get; init; }
 
@@ -76,9 +75,9 @@ public abstract class TypeAssistanceBase : ITypeAssistance
     {
     }
 
-    public virtual Task<List<MenuItemViewModel>?> GetQuickMenuAsync(int offset)
+    public virtual Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
     {
-        return Task.FromResult<List<MenuItemViewModel>?>(null);
+        return Task.FromResult<List<MenuItemModel>?>(null);
     }
 
     public virtual Task<string?> GetHoverInfoAsync(int offset)
@@ -91,7 +90,7 @@ public abstract class TypeAssistanceBase : ITypeAssistance
         return Task.FromResult<Action?>(null);
     }
 
-    public virtual IEnumerable<MenuItemViewModel>? GetTypeAssistanceQuickOptions()
+    public virtual IEnumerable<MenuItemModel>? GetTypeAssistanceQuickOptions()
     {
         return null;
     }

@@ -7,7 +7,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Views;
@@ -36,47 +35,55 @@ public class UniversalFpgaProjectManager : IProjectManager
 
     public async Task<IProjectRoot?> LoadProjectAsync(string path)
     {
-        var root = await UniversalFpgaProjectParser.DeserializeAsync(path);
+        var root = new UniversalFpgaProjectRoot(path);
+        
+        await root.LoadAsync();
 
-        if (root == null) return root;
+        foreach (var entryModification in _fpgaService.ProjectEntryModificationHandlers)
+        {
+            root.RegisterProjectEntryModification(entryModification);
+        }
 
-        ProjectHelper.ImportEntries(root.FullPath, root);
-
-        //Load Properties
-        var top = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.TopEntity));
-        if (top != null && root.SearchRelativePath(top.ToPlatformPath()) is { } entity) root.TopEntity = entity;
-
-        var toolchain = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Toolchain));
-        if (toolchain != null && _fpgaService.Toolchains.FirstOrDefault(x => x.Name == toolchain) is { } tc)
-            root.Toolchain = tc;
-
-        var loader = root.GetProjectProperty(nameof(UniversalFpgaProjectRoot.Loader));
-        if (loader != null && _fpgaService.Loaders.FirstOrDefault(x => x.Name == loader) is { } l) root.Loader = l;
-
-        var testBenches = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.TestBenches));
-        if (testBenches != null)
-            foreach (var testBench in testBenches)
-                if (root.SearchRelativePath(testBench.ToPlatformPath()) is IProjectFile file)
-                    root.RegisterTestBench(file);
-
-        var compileExcluded = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.CompileExcluded));
-        if (compileExcluded != null)
-            foreach (var exclude in compileExcluded)
-                if (root.SearchRelativePath(exclude.ToPlatformPath()) is IProjectFile file)
-                    root.RegisterCompileExcluded(file);
-
-        var preCompileSteps = root.GetProjectPropertyArray(nameof(UniversalFpgaProjectRoot.PreCompileSteps));
-        if (preCompileSteps != null)
-            foreach (var preCompileStep in preCompileSteps)
-                if (_fpgaService.GetPreCompileStep(preCompileStep) is { } pre)
-                    root.RegisterPreCompileStep(pre);
-
+        await root.InitializeAsync();
+        
         return root;
+    }
+
+    public async Task ReloadProjectAsync(IProjectRoot project)
+    {
+        if (project is not UniversalFpgaProjectRoot root) return;
+        
+        await root.LoadAsync();
+        await root.InitializeAsync();
+        
+        //TODO reload open files
+        var filesOpenInProject = _mainDockService.OpenFiles
+            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
+            .Select(x => new { Key = x.Key, ViewModel = x.Value })
+            .ToList();
+        
+        // foreach (var refreshed in filesOpenInProject)
+        //     if (_mainDockService.OpenFiles.TryGetValue(refreshed.Key, out var vm))
+        //         vm.InitializeContent();
+    }
+    
+    private static bool IsUnderRoot(string rootPath, string filePath)
+    {
+        var relative = Path.GetRelativePath(rootPath, filePath);
+        return !relative.StartsWith("..", StringComparison.Ordinal)
+               && !Path.IsPathRooted(relative);
     }
 
     public async Task<bool> SaveProjectAsync(IProjectRoot root)
     {
-        return root is UniversalFpgaProjectRoot uFpga && await UniversalFpgaProjectParser.SerializeAsync(uFpga);
+        if (root is not UniversalFpgaProjectRoot fpgaProject) return false;
+        
+        var result = await fpgaProject.SaveAsync();
+
+        if(result)
+            fpgaProject.LastSaveTime = DateTime.Now;
+        
+        return result;
     }
 
     public async Task NewProjectDialogAsync()
@@ -87,45 +94,43 @@ public class UniversalFpgaProjectManager : IProjectManager
         });
     }
 
-    private void ConstructContextMenu(IReadOnlyList<IProjectExplorerNode> selected, IList<MenuItemViewModel> menuItems)
+    private void ConstructContextMenu(IReadOnlyList<IProjectExplorerNode> selected, IList<MenuItemModel> menuItems)
     {
         if (selected.Count == 1)
             switch (selected.First())
             {
                 case UniversalFpgaProjectRoot root:
-                    menuItems.Add(new MenuItemViewModel("Save")
+                    menuItems.Add(new MenuItemModel("Save")
                     {
                         Header = "Save",
                         Command = new AsyncRelayCommand(() => SaveProjectAsync(root)),
-                        IconObservable = Application.Current!.GetResourceObservable("VsImageLib.Save16XMd")
+                        Icon = new IconModel("VsImageLib.Save16XMd")
                     });
-                    menuItems.Add(new MenuItemViewModel("Reload")
+                    menuItems.Add(new MenuItemModel("Reload")
                     {
                         Header = "Reload",
-                        Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadAsync(root)),
-                        IconObservable = Application.Current!.GetResourceObservable("VsImageLib.RefreshGrey16X")
+                        Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadProjectAsync(root)),
+                        Icon = new IconModel("VsImageLib.RefreshGrey16X")
                     });
-                    menuItems.Add(new MenuItemViewModel("ProjectSettings")
+                    menuItems.Add(new MenuItemModel("ProjectSettings")
                     {
                         Header = "Project Settings",
                         Command = new RelayCommand(() => _ = OpenProjectSettingsDialogAsync(root)),
-                        IconObservable = Application.Current!.GetResourceObservable("Material.SettingsOutline")
+                        Icon = new IconModel("Material.SettingsOutline")
                     });
-                    menuItems.Add(new MenuItemViewModel("Edit")
+                    menuItems.Add(new MenuItemModel("Edit")
                     {
                         Header = $"Edit {Path.GetFileName(root.ProjectFilePath)}",
                         Command = new AsyncRelayCommand(() =>
-                            _mainDockService.OpenFileAsync(root.SearchFullPath(root.ProjectFilePath) as IProjectFile ??
-                                                           _projectExplorerService.GetTemporaryFile(
-                                                               root.ProjectFilePath)))
+                            _mainDockService.OpenFileAsync(root.ProjectFilePath))
                     });
                     break;
                 case FpgaProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
                     if (file.Extension is ".vhd" or ".vhdl" or ".v" or ".sv")
                     {
                         //Set Top
-                        if (universalFpgaProjectRoot.TopEntity == file)
-                            menuItems.Add(new MenuItemViewModel("Unset Top Entity")
+                        if (universalFpgaProjectRoot.TopEntity == file.RelativePath)
+                            menuItems.Add(new MenuItemModel("Unset Top Entity")
                             {
                                 Header = "Unset Top Entity",
                                 Command = new RelayCommand(() =>
@@ -135,61 +140,60 @@ public class UniversalFpgaProjectManager : IProjectManager
                                 })
                             });
                         else
-                            menuItems.Add(new MenuItemViewModel("Set Top Entity")
+                            menuItems.Add(new MenuItemModel("Set Top Entity")
                             {
                                 Header = "Set Top Entity",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.TopEntity = file;
+                                    universalFpgaProjectRoot.TopEntity = file.RelativePath;
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
 
                         //Exclude from compile
-                        if (!universalFpgaProjectRoot.CompileExcluded.Contains(file))
-                            menuItems.Add(new MenuItemViewModel("ExcludeCompilation")
+                        if (!universalFpgaProjectRoot.IsCompileExcluded(file.RelativePath))
+                            menuItems.Add(new MenuItemModel("ExcludeCompilation")
                             {
                                 Header = "Exclude from compile",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.RegisterCompileExcluded(file);
+                                    universalFpgaProjectRoot.AddCompileExcluded(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
                         else
-                            menuItems.Add(new MenuItemViewModel("IncludeCompilation")
+                            menuItems.Add(new MenuItemModel("IncludeCompilation")
                             {
                                 Header = "Include into compile",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.UnregisterCompileExcluded(file);
+                                    universalFpgaProjectRoot.RemoveCompileExcluded(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
 
                         //Testbenches
-                        if (!universalFpgaProjectRoot.TestBenches.Contains(file))
-                            menuItems.Add(new MenuItemViewModel("MarkTestBench")
+                        if (!universalFpgaProjectRoot.IsTestBench(file.RelativePath))
+                            menuItems.Add(new MenuItemModel("MarkTestBench")
                             {
                                 Header = "Mark as TestBench",
                                 Command = new RelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.RegisterTestBench(file);
+                                    universalFpgaProjectRoot.AddTestBench(file.RelativePath);
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
-                                IconObservable = Application.Current!.GetResourceObservable("VSImageLib.AddTest_16x")
+                                Icon = new IconModel("VSImageLib.AddTest_16x")
                             });
                         else
-                            menuItems.Add(new MenuItemViewModel("UnmarkTestBench")
+                            menuItems.Add(new MenuItemModel("UnmarkTestBench")
                             {
                                 Header = "Unmark as TestBench",
-                                Command = new RelayCommand(() =>
+                                Command = new AsyncRelayCommand(() =>
                                 {
-                                    universalFpgaProjectRoot.UnregisterTestBench(file);
-                                    _ = SaveProjectAsync(universalFpgaProjectRoot);
+                                    universalFpgaProjectRoot.RemoveTestBench(file.RelativePath);
+                                    return SaveProjectAsync(universalFpgaProjectRoot);
                                 }),
-                                IconObservable =
-                                    Application.Current!.GetResourceObservable("VSImageLib.RemoveSingleDriverTest_16x")
+                                Icon = new IconModel("VSImageLib.RemoveSingleDriverTest_16x")
                             });
                     }
 

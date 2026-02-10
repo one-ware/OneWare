@@ -7,6 +7,7 @@ using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Views;
@@ -36,28 +37,28 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _applicationStateService = applicationStateService;
 
         PackageCategories.Add(new PackageCategoryViewModel("Plugins",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularExtension")));
+            new IconModel("BoxIcons.RegularExtension")));
         PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Languages",
-            Application.Current!.GetResourceObservable("FluentIcons.ProofreadLanguageRegular")));
+            new IconModel("FluentIcons.ProofreadLanguageRegular")));
         PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Toolchains",
-            Application.Current!.GetResourceObservable("FeatherIcons.Tool")));
+            new IconModel("FeatherIcons.Tool")));
         PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
-            Application.Current!.GetResourceObservable("Material.Pulse")));
+            new IconModel("Material.Pulse")));
         PackageCategories[0].SubCategories
-            .Add(new PackageCategoryViewModel("Tools", Application.Current!.GetResourceObservable("Module")));
+            .Add(new PackageCategoryViewModel("Tools", new IconModel("Module")));
 
         var hardwareCategory =
-            new PackageCategoryViewModel("Hardware", Application.Current!.GetResourceObservable("NiosIcon"));
+            new PackageCategoryViewModel("Hardware", new IconModel("NiosIcon"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
         hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
 
         PackageCategories.Add(hardwareCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularLibrary")));
+            new IconModel("BoxIcons.RegularLibrary")));
         PackageCategories.Add(new PackageCategoryViewModel("Binaries",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularCode")));
+            new IconModel("BoxIcons.RegularCode")));
         PackageCategories.Add(new PackageCategoryViewModel("Drivers",
-            Application.Current!.GetResourceObservable("BoxIcons.RegularUsb")));
+            new IconModel("BoxIcons.RegularUsb")));
 
         SelectedCategory = PackageCategories.First();
 

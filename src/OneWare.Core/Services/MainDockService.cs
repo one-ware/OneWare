@@ -16,10 +16,12 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.ProjectExplorer.Services;
 
 namespace OneWare.Core.Services;
 
@@ -28,9 +30,10 @@ public class MainDockService : Factory, IMainDockService
     private readonly IDockSerializer _serializer;
     private readonly Dictionary<string, ObservableCollection<OneWareUiExtension>> _documentViewExtensions = new();
     private readonly Dictionary<string, Type> _documentViewRegistrations = new();
-    private readonly Dictionary<string, Func<IFile, bool>> _fileOpenOverwrites = new();
+    private readonly Dictionary<string, Func<string, bool>> _fileOpenOverwrites = new();
     private readonly MainDocumentDockViewModel _mainDocumentDockViewModel;
-
+    
+    private readonly IFileWatchService _fileWatchService;
     private readonly IPaths _paths;
     private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
 
@@ -38,22 +41,21 @@ public class MainDockService : Factory, IMainDockService
 
     private IDisposable? _lastSub;
 
-    private RootDock? _layout;
-
     public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService,
         IApplicationStateService applicationStateService,
-        WelcomeScreenViewModel welcomeScreenViewModel,
+        WelcomeScreenViewModel welcomeScreenViewModel, IFileWatchService fileWatchService,
         MainDocumentDockViewModel mainDocumentDockViewModel)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
+        _fileWatchService = fileWatchService;
         _serializer = new OneWareDockSerializer(serviceProvider);
 
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/View",
-            new MenuItemViewModel("ResetLayout")
+            new MenuItemModel("ResetLayout")
             {
                 Header = "Reset Layout",
                 Command = new RelayCommand(ResetLayout)
@@ -83,22 +85,22 @@ public class MainDockService : Factory, IMainDockService
         });
     }
 
-    public Dictionary<IFile, IExtendedDocument> OpenFiles { get; } = new();
+    public Dictionary<string, IExtendedDocument> OpenFiles { get; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public RootDock? Layout
     {
-        get => _layout;
+        get;
         set
         {
-            if (value == _layout) return;
-            _layout = value;
+            if (value == field) return;
+            field = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Layout)));
 
             _lastSub?.Dispose();
-            _lastSub = _layout?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
+            _lastSub = field?.WhenValueChanged(c => c.FocusedDockable).Subscribe(y =>
             {
-                if (_layout.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
+                if (field.FocusedDockable is IExtendedDocument ed) CurrentDocument = ed;
             });
         }
     }
@@ -119,7 +121,7 @@ public class MainDockService : Factory, IMainDockService
         foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
     }
 
-    public void RegisterFileOpenOverwrite(Func<IFile, bool> action, params string[] extensions)
+    public void RegisterFileOpenOverwrite(Func<string, bool> action, params string[] extensions)
     {
         foreach (var extension in extensions) _fileOpenOverwrites.TryAdd(extension, action);
     }
@@ -130,24 +132,26 @@ public class MainDockService : Factory, IMainDockService
         LayoutRegistrations[location].Add(typeof(T));
     }
 
-    public async Task<IExtendedDocument?> OpenFileAsync(IFile pf)
+    public async Task<IExtendedDocument?> OpenFileAsync(string fullPath)
     {
-        if (_fileOpenOverwrites.TryGetValue(pf.Extension, out var overwrite))
+        var extension = Path.GetExtension(fullPath);
+        if (_fileOpenOverwrites.TryGetValue(extension, out var overwrite))
             // If overwrite executes successfully, return null
             // This means that the file is open in an external program
-            if (overwrite.Invoke(pf))
+            if (overwrite.Invoke(fullPath))
                 return null;
 
-        if (OpenFiles.ContainsKey(pf))
+        var fileKey = fullPath.ToPathKey();
+        if (OpenFiles.ContainsKey(fileKey))
         {
-            Show(OpenFiles[pf]);
+            Show(OpenFiles[fileKey]);
 
-            return OpenFiles[pf];
+            return OpenFiles[fileKey];
         }
 
-        _documentViewRegistrations.TryGetValue(pf.Extension, out var type);
+        _documentViewRegistrations.TryGetValue(extension, out var type);
         type ??= typeof(EditViewModel);
-        var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), pf.FullPath)) as IExtendedDocument;
+        var viewModel = ContainerLocator.Current.Resolve(type, (typeof(string), fullPath)) as IExtendedDocument;
 
         if (viewModel == null) throw new NullReferenceException($"{type} could not be resolved!");
 
@@ -161,17 +165,24 @@ public class MainDockService : Factory, IMainDockService
         return viewModel;
     }
 
-    public async Task<bool> CloseFileAsync(IFile pf)
+    public async Task<bool> CloseFileAsync(string fullPath)
     {
-        if (OpenFiles.ContainsKey(pf))
+        var fileKey = fullPath.ToPathKey();
+        if (OpenFiles.ContainsKey(fileKey))
         {
-            var vm = OpenFiles[pf];
+            var vm = OpenFiles[fileKey];
             if (vm.IsDirty && !await vm.TryCloseAsync()) return false;
-            OpenFiles.Remove(pf);
+            OpenFiles.Remove(fileKey);
             CloseDockable(vm);
+            _fileWatchService.UnregisterSingleFile(fullPath);
         }
 
         return true;
+    }
+
+    public void UnregisterOpenFile(string fullPath)
+    {
+        _fileWatchService.UnregisterSingleFile(fullPath);
     }
 
     public Window? GetWindowOwner(IDockable? dockable)

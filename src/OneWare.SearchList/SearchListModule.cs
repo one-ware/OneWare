@@ -4,6 +4,7 @@ using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.ViewModels;
@@ -22,17 +23,31 @@ public class SearchListModule : OneWareModuleBase
         var windowService = serviceProvider.Resolve<IWindowService>();
         var dockService = serviceProvider.Resolve<IMainDockService>();
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("Search")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Find")
         {
-            Header = "Search",
+            Header = "Find",
             Command = new RelayCommand(() =>
             {
                 var vm = serviceProvider.Resolve<SearchListViewModel>();
                 vm.SearchString = string.Empty;
                 dockService.Show(vm);
             }),
-            IconObservable = Application.Current!.GetResourceObservable(SearchListViewModel.IconKey),
+            Icon = new IconModel(SearchListViewModel.IconKey),
             InputGesture = new KeyGesture(Key.F, KeyModifiers.Shift | PlatformHelper.ControlKey)
+        });
+        
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Find and Replace")
+        {
+            Header = "Find and Replace",
+            Command = new RelayCommand(() =>
+            {
+                var vm = serviceProvider.Resolve<SearchListViewModel>();
+                vm.IsReplaceVisible = true;
+                vm.SearchString = string.Empty;
+                dockService.Show(vm);
+            }),
+            Icon = new IconModel(SearchListViewModel.IconKey),
+            InputGesture = new KeyGesture(Key.H, KeyModifiers.Shift | PlatformHelper.ControlKey)
         });
     }
 }

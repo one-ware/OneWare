@@ -7,14 +7,7 @@ public class ProjectSettingsService : IProjectSettingsService
 {
     public List<ProjectSetting> ProjectSettings { get; } = new();
     private Dictionary<string, List<ProjectSetting>> ProjectSettingsByCategory { get; } = new();
-
-    /// <inheritdoc />
-    public void AddProjectSetting(string key, TitledSetting projectSetting,
-        Func<IProjectRootWithFile, bool> activationFunction)
-    {
-        AddProjectSetting(new ProjectSetting(key, projectSetting, activationFunction));
-    }
-
+    
     /// <inheritdoc />
     public void AddProjectSetting(ProjectSetting projectSetting)
     {
@@ -49,16 +42,6 @@ public class ProjectSettingsService : IProjectSettingsService
     public string GetDefaultProjectCategory()
     {
         return "General";
-    }
-
-    public void Load(string path)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Save(string path)
-    {
-        throw new NotImplementedException();
     }
 
     public List<ProjectSetting> GetProjectSettingsList()

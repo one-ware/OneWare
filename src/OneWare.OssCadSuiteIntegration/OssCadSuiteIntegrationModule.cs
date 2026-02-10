@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Logging;
 using Avalonia.Media;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -291,20 +292,6 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         var fpgaService = serviceProvider.Resolve<FpgaService>();
 
         fpgaService.RegisterNodeProvider<YosysNodeProvider>();
-
-        projectExplorerService.Projects.CollectionChanged += (sender, e) =>
-        {
-            if (sender is ObservableCollection<IProjectRoot> collection)
-            {
-                if (e.Action == NotifyCollectionChangedAction.Add)
-                {
-                    foreach (var project in collection)
-                    {
-                        YosysSettingHelper.SetConstraintOverlay(project);
-                    }
-                }
-            }
-        };
         
         var toolService = serviceProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
@@ -325,9 +312,6 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         toolService.Register(new ToolContext("gmupack", "Packing", "gmupack"), new NativeStrategy());
         
         toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
-        
-        
-        
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
@@ -349,7 +333,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new OneWareUiExtension(x =>
             {
-                if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain } root) return null;
+                if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain.ToolChainId } root) return null;
 
                 var name = root.Properties["Fpga"]?.ToString();
                 var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
@@ -502,18 +486,18 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x, l) =>
         {
             if (x is [IProjectFile { Extension: ".v" } verilog])
-                l.Add(new MenuItemViewModel("YosysNetList")
+                l.Add(new MenuItemModel("YosysNetList")
                 {
                     Header = "Generate Json Netlist",
                     Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
                 });
             if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or "fst" } wave] &&
                 IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting)))
-                l.Add(new MenuItemViewModel("GtkWaveOpen")
+                l.Add(new MenuItemModel("GtkWaveOpen")
                 {
                     Header = "Open with GTKWave",
                     Command = new AsyncRelayCommand(async () =>
-                        await serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(wave))
+                        await serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(wave.FullPath))
                 });
             if (x is [IProjectFile { Extension: ".pcf" } pcf])
             {
@@ -521,18 +505,18 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 {
                     if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == pcf.RelativePath)
                     {
-                        l.Add(new MenuItemViewModel("pcf")
+                        l.Add(new MenuItemModel("pcf")
                         {
                             Header = "Unset as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf.Root, null)),
                         });
                     }
                     else
                     {
-                        l.Add(new MenuItemViewModel("pcf")
+                        l.Add(new MenuItemModel("pcf")
                         {
                             Header = "Set as Projects Constraint File",
-                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf)),
+                            Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf.Root, pcf)),
                         });
                     }
                 }
@@ -544,6 +528,20 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
             return true;
         }, ".ghw", ".fst");
+        
+        fpgaService.RegisterProjectEntryModification(x =>
+        {
+            if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
+            
+            if (x is IProjectFile file && YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == file.RelativePath)
+            {
+                x.Icon?.AddOverlay("ConstraintFile", "ForkAwesome.Check");
+            }
+            else
+            {
+                x.Icon?.RemoveOverlay("ConstraintFile");
+            }
+        });
     }
 
     private static bool IsOssPathValid(string path)

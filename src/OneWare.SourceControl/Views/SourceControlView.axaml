@@ -22,7 +22,7 @@
                         <DockPanel Margin="14, 0, 4, 0">
                             <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
                                 <Image Margin="1, 0, 0, 0" Height="16" Width="16"
-                                       Source="{Binding ProjectFile.Icon}" HorizontalAlignment="Center"
+                                       HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                             </Grid>
                             <Grid DockPanel.Dock="Right" Width="11">
@@ -238,9 +238,8 @@
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="View in Project Explorer"
-                                                      IsEnabled="{Binding ProjectFile, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                       Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).ViewInProjectExplorer}"
-                                                      CommandParameter="{Binding ProjectFile}" />
+                                                      CommandParameter="{Binding FullPath}" />
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>
@@ -288,9 +287,8 @@
                                                       CommandParameter="{Binding Status.FilePath}" />
                                             <Separator />
                                             <MenuItem Header="View in Project Explorer"
-                                                      IsEnabled="{Binding ProjectFile, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                       Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).ViewInProjectExplorer}"
-                                                      CommandParameter="{Binding ProjectFile}" />
+                                                      CommandParameter="{Binding FullPath}" />
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>
@@ -346,9 +344,8 @@
                                             </MenuItem>
                                             <Separator />
                                             <MenuItem Header="View in Project Explorer"
-                                                      IsEnabled="{Binding ProjectFile, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                       Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).ViewInProjectExplorer}"
-                                                      CommandParameter="{Binding ProjectFile}" />
+                                                      CommandParameter="{Binding FullPath}" />
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>

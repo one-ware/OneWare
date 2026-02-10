@@ -37,7 +37,7 @@ public class YosysCompileWindowExtensionViewModel : ObservableObject
                 disposable?.Dispose();
                 disposable = fpgaProjectRoot.WhenValueChanged(y => y.Toolchain).Subscribe(z =>
                 {
-                    IsVisible = z is YosysToolchain;
+                    IsVisible = z is YosysToolchain.ToolChainId;
                 });
             }
         });

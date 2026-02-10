@@ -1,3 +1,4 @@
+using System.IO;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Helpers;
@@ -5,7 +6,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.FolderProjectSystem;
-using OneWare.ProjectExplorer.Services;
 using OneWare.ProjectExplorer.ViewModels;
 
 namespace OneWare.LibraryExplorer.ViewModels;
@@ -14,19 +14,17 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 {
     public const string IconKey = "BoxIcons.RegularLibrary";
 
-    private readonly IFileWatchService _fileWatchService;
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
 
     private readonly string _libraryFolderPath;
 
-    public LibraryExplorerViewModel(IPaths paths, IFileWatchService fileWatchService, IMainDockService mainDockService,
+    public LibraryExplorerViewModel(IPaths paths, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
         Title = "Library Explorer";
 
-        _fileWatchService = fileWatchService;
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
 
@@ -35,18 +33,17 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         _ = LoadAsync();
     }
 
-    public override void Insert(IProjectRoot project)
+    public override void AddProject(IProjectRoot project)
     {
-        base.Insert(project);
-        _fileWatchService.Register(project);
+        base.AddProject(project);
     }
 
-    public void DoubleTab(IProjectEntry entry)
+    public void DoubleTab()
     {
-        if (entry is IProjectFile file)
+        if (SelectedItems is [IProjectFile file])
             _ = PreviewFileAsync(file);
-        else
-            entry.IsExpanded = !entry.IsExpanded;
+        else if (SelectedItems is [IProjectFolder folder])
+            folder.IsExpanded = !folder.IsExpanded;
     }
 
     public async Task LoadAsync()
@@ -61,19 +58,19 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         foreach (var dir in directories)
         {
             var root = await manager.LoadProjectAsync(dir);
-            Insert(root!);
+            AddProject(root!);
         }
     }
 
     public void ConstructContextMenu(TopLevel topLevel)
     {
-        var menuItems = new List<MenuItemViewModel>();
+        var menuItems = new List<MenuItemModel>();
 
         if (SelectedItems is [{ } item])
             switch (item)
             {
                 case IProjectFile file:
-                    menuItems.Add(new MenuItemViewModel("Open")
+                    menuItems.Add(new MenuItemModel("Open")
                     {
                         Header = "Open",
                         Command = new AsyncRelayCommand(() => PreviewFileAsync(file))
@@ -83,7 +80,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
         if (SelectedItems.Count > 0)
         {
-            menuItems.Add(new MenuItemViewModel("Copy to Project")
+            menuItems.Add(new MenuItemModel("Copy to Project")
             {
                 Header = "Copy to Active Project",
                 Command = new AsyncRelayCommand(() => CopyLibraryAsync(SelectedItems.Cast<IProjectEntry>()
@@ -92,12 +89,12 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         }
         else
         {
-            menuItems.Add(new MenuItemViewModel("Refresh")
+            menuItems.Add(new MenuItemModel("Refresh")
             {
                 Header = "Refresh",
                 Command = new AsyncRelayCommand(async () => await LoadAsync())
             });
-            menuItems.Add(new MenuItemViewModel("Open Library Folder")
+            menuItems.Add(new MenuItemModel("Open Library Folder")
             {
                 Header = "Open Library Folder",
                 Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(_libraryFolderPath))
@@ -109,11 +106,11 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
 
     private async Task PreviewFileAsync(IProjectFile file)
     {
-        var extendedDocument = await _mainDockService.OpenFileAsync(file);
+        var extendedDocument = await _mainDockService.OpenFileAsync(file.FullPath);
         if (extendedDocument != null)
         {
             extendedDocument.IsReadOnly = true;
-            extendedDocument.Title = "PREVIEW: " + extendedDocument.CurrentFile?.Name;
+            extendedDocument.Title = "PREVIEW: " + Path.GetFileName(extendedDocument.FullPath);
         }
     }
 

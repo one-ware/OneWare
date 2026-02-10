@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OneWare.Chat.Services;
 using OneWare.Chat.ViewModels;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -33,11 +34,11 @@ public class ChatModule : OneWareModuleBase
         
         dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.Right);
 
-        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemViewModel("AI Chat")
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("AI Chat")
         {
             Header = "AI Chat",
             Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>())),
-            IconObservable = Application.Current!.GetResourceObservable(ChatViewModel.IconKey),
+            Icon = new IconModel(ChatViewModel.IconKey),
         });
     }
 }

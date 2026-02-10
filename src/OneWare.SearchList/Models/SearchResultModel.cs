@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Essentials.Models;
 
 namespace OneWare.SearchList.Models;
@@ -6,7 +7,7 @@ namespace OneWare.SearchList.Models;
 public class SearchResultModel : ObservableObject
 {
     public SearchResultModel(string description, string descriptionL, string descriptionM, string descriptionR,
-        string search, IProjectRoot? project, IFile? file = null, int line = 0, int startOffset = 0,
+        string search, IProjectRoot? project, string? filePath = null, int line = 0, int startOffset = 0,
         int length = 0)
     {
         Description = description;
@@ -14,7 +15,7 @@ public class SearchResultModel : ObservableObject
         DescriptionMid = descriptionM;
         DescriptionRight = descriptionR;
         Project = project;
-        File = file;
+        FilePath = filePath;
         Line = line;
         StartOffset = startOffset;
         EndOffset = startOffset + length;
@@ -25,7 +26,9 @@ public class SearchResultModel : ObservableObject
     public string DescriptionMid { get; set; }
     public string DescriptionRight { get; set; }
 
-    public IFile? File { get; set; }
+    public string? FilePath { get; set; }
+
+    public string? FileName => FilePath == null ? null : Path.GetFileName(FilePath);
 
     public IProjectRoot? Project { get; set; }
 
@@ -46,8 +49,8 @@ public class SearchResultModel : ObservableObject
 
     public override bool Equals(object? obj)
     {
-        return obj is SearchResultModel e && e.Description == Description && e.File == File && e.Line == Line &&
-               e.StartOffset == StartOffset && e.EndOffset == EndOffset;
+        return obj is SearchResultModel e && e.Description == Description && e.FilePath == FilePath &&
+               e.Line == Line && e.StartOffset == StartOffset && e.EndOffset == EndOffset;
     }
 
     public override int GetHashCode()

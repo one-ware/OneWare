@@ -25,66 +25,21 @@ public class DesktopDemoApp : DemoApp
         moduleCatalog.AddModule<PackageManagerModule>();
         moduleCatalog.AddModule<TerminalManagerModule>();
         moduleCatalog.AddModule<SourceControlModule>();
-
-        try
-        {
-            var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Services.Resolve<IPluginService>().AddPlugin(module);
-        }
-        catch (Exception e)
-        {
-            Services.Resolve<ILogger>().Error(e.Message, e);
-        }
-
-        if (Environment.GetEnvironmentVariable("MODULES") is { } pluginPath)
-            Services.Resolve<IPluginService>().AddPlugin(pluginPath);
     }
 
     protected override async Task LoadContentAsync()
     {
         await base.LoadContentAsync();
-
-        var arguments = Environment.GetCommandLineArgs();
-
-        // Window? splashWindow = null;
-        // if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-        // {
-        //     splashWindow = new SplashWindow
-        //     {
-        //         DataContext = Container.Resolve<SplashWindowViewModel>()
-        //     };
-        //     splashWindow.Show();
-        // }
-
-        if (arguments.Length > 1 && !arguments[1].StartsWith("--"))
+        
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            var fileName = arguments[1];
-            //Check file exists
-            if (File.Exists(fileName))
-            {
-                if (Path.GetExtension(fileName).StartsWith(".", StringComparison.OrdinalIgnoreCase))
-                {
-                    var file = Services.Resolve<IProjectExplorerService>().GetTemporaryFile(fileName);
-                    _ = Services.Resolve<IMainDockService>().OpenFileAsync(file);
-                }
-                else
-                {
-                    Services.Resolve<ILogger>()?.Log("Could not load file " + fileName);
-                }
-            }
+            var key = Services.Resolve<IApplicationStateService>()
+                .AddState("Loading last projects...", AppState.Loading);
+            await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
+            Services.Resolve<IMainDockService>().InitializeContent();
+            Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
         }
-        else
-        {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            {
-                var key = Services.Resolve<IApplicationStateService>()
-                    .AddState("Loading last projects...", AppState.Loading);
-                await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-                Services.Resolve<IMainDockService>().InitializeContent();
-                Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-            }
-        }
-
+        
         try
         {
             var settingsService = Services.Resolve<ISettingsService>();
@@ -99,11 +54,6 @@ public class DesktopDemoApp : DemoApp
                     () => { Services.Resolve<IWindowService>().Show(new ChangelogView()); },
                     Current?.FindResource("VsImageLib2019.StatusUpdateGrey16X") as IImage);
             }
-
-            //await Task.Factory.StartNew(() =>
-            //{
-            //_ = Global.PackageManagerViewModel.CheckForUpdateAsync();
-            //}, new CancellationToken(), TaskCreationOptions.None, PriorityScheduler.BelowNormal);
         }
         catch (Exception e)
         {

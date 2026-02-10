@@ -12,13 +12,13 @@ public interface IMainDockService : INotifyPropertyChanged
 {
     public RootDock? Layout { get; }
 
-    public Dictionary<IFile, IExtendedDocument> OpenFiles { get; }
+    public Dictionary<string, IExtendedDocument> OpenFiles { get; }
 
     public IExtendedDocument? CurrentDocument { get; }
 
     public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument;
 
-    public void RegisterFileOpenOverwrite(Func<IFile, bool> action, params string[] extensions);
+    public void RegisterFileOpenOverwrite(Func<string, bool> action, params string[] extensions);
 
     public void RegisterLayoutExtension<T>(DockShowLocation location);
 
@@ -28,9 +28,11 @@ public interface IMainDockService : INotifyPropertyChanged
 
     public void CloseDockable(IDockable dockable);
 
-    public Task<IExtendedDocument?> OpenFileAsync(IFile pf);
+    public Task<IExtendedDocument?> OpenFileAsync(string fullPath);
 
-    public Task<bool> CloseFileAsync(IFile pf);
+    public Task<bool> CloseFileAsync(string fullPath);
+
+    public void UnregisterOpenFile(string fullPath);
 
     public Window? GetWindowOwner(IDockable dockable);
 

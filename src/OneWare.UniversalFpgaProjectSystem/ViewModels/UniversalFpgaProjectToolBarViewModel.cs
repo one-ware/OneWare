@@ -78,31 +78,23 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
         LongTermProgramming = !LongTermProgramming;
     }
 
-    private (UniversalFpgaProjectRoot? project, FpgaModel? fpga) EnsureProjectAndFpga()
+    private UniversalFpgaProjectRoot? EnsureProject()
     {
         if (ProjectExplorerService.ActiveProject is not UniversalFpgaProjectRoot project)
         {
             ContainerLocator.Container.Resolve<ILogger>().Warning("No Active Project");
-            return (null, null);
+            return null;
         }
 
-        var name = project.Properties["Fpga"]?.ToString();
-        var fpgaPackage = FpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
-        if (fpgaPackage == null)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Warning("No FPGA Selected, open Pin Planner first");
-            return (project, null);
-        }
-
-        return (project, new FpgaModel(fpgaPackage.LoadFpga()));
+        return project;
     }
 
     public async Task CompileAsync()
     {
-        if (EnsureProjectAndFpga() is not { project: not null, fpga: not null } data) return;
+        if (EnsureProject() is not { } project) return;
 
-        await ProjectExplorerService.SaveOpenFilesForProjectAsync(data.project);
-        await data.project.RunToolchainAsync(data.fpga);
+        await ProjectExplorerService.SaveOpenFilesForProjectAsync(project);
+        await FpgaService.RunToolchainAsync(project);
     }
 
     public async Task OpenPinPlannerAsync()
@@ -134,6 +126,12 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     public async Task DownloadAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project)
-            await project.Loader.DownloadAsync(project);
+        {
+            var loader = FpgaService.Loaders.FirstOrDefault(x => x.Id == project.Loader);
+
+            if (loader == null) return;
+            
+            await loader.DownloadAsync(project);
+        }
     }
 }

@@ -25,7 +25,7 @@ public class UpdaterModule : OneWareModuleBase
         
         if (PlatformHelper.Platform is PlatformId.WinArm64 or PlatformId.WinX64 or PlatformId.OsxX64
             or PlatformId.OsxArm64)
-            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemViewModel("Update")
+            windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("Update")
             {
                 Header = "Studio Update",
                 Command = new RelayCommand(() =>
@@ -36,7 +36,7 @@ public class UpdaterModule : OneWareModuleBase
                     });
                     if (vm.Status == UpdaterStatus.UpdateUnavailable) _ = vm.CheckForUpdateAsync();
                 }),
-                IconObservable = Application.Current!.GetResourceObservable("VsImageLib.DownloadDefault16X")
+                Icon = new IconModel("VsImageLib.DownloadDefault16X")
             });
     }
 }

@@ -12,37 +12,28 @@ public interface IProjectExplorerService : IDockable, INotifyPropertyChanged
     public ObservableCollection<IProjectRoot> Projects { get; }
     public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
     public IProjectRoot? ActiveProject { get; set; }
-    public event EventHandler<IFile>? FileRemoved;
     public event EventHandler<IProjectRoot>? ProjectRemoved;
-    public void Insert(IProjectRoot project);
-    public Task RemoveAsync(params IProjectEntry[] entries);
-    public Task DeleteAsync(params IProjectEntry[] entries);
-    public IProjectEntry? SearchName(string path, bool recursive = true);
-    public IProjectEntry? SearchFullPath(string path, bool recursive = true);
+    public void AddProject(IProjectRoot project);
+    public Task TryCloseProjectAsync(IProjectRoot project);
+    public IProjectRoot? GetRootFromFile(string filePath);
+    
+    /// <summary>
+    /// Shows or constructs the file (if included in the project)
+    /// Should not be used except for Show file in Explorer scenarios
+    /// </summary>
+    public IProjectEntry? GetEntryFromFullPath(string path);
     public Task<IProjectRoot?> LoadProjectFolderDialogAsync(IProjectManager manager);
-
-    public Task<IProjectRoot?>
-        LoadProjectFileDialogAsync(IProjectManager manager, params FilePickerFileType[]? filters);
-
+    public Task<IProjectRoot?> LoadProjectFileDialogAsync(IProjectManager manager, params FilePickerFileType[]? filters);
     public Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true,
         bool setActive = true);
-
-    public IFile GetTemporaryFile(string path);
-    public void RemoveTemporaryFile(IFile file);
-    public Task<IProjectEntry> RenameAsync(IProjectEntry entry, string newName);
     public void ExpandToRoot(IProjectExplorerNode node);
-    public Task ImportFolderDialogAsync(IProjectFolder? destination = null);
     public Task ImportAsync(IProjectFolder destination, bool copy, bool askForInclude, params string[] paths);
-    public Task<IProjectEntry> ReloadAsync(IProjectEntry entry);
+    public Task ReloadProjectAsync(IProjectRoot entry);
     public Task SaveProjectAsync(IProjectRoot project);
-    public Task SaveRecentProjectsFileAsync();
-    public Task SaveLastProjectsFileAsync();
     public Task OpenLastProjectsFileAsync();
     public Task<bool> SaveOpenFilesForProjectAsync(IProjectRoot project);
-
     public void RegisterConstructContextMenu(
-        Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemViewModel>> construct);
-
+        Action<IReadOnlyList<IProjectExplorerNode>, IList<MenuItemModel>> construct);
     public void ClearSelection();
     public void AddToSelection(IProjectExplorerNode node);
     public IEnumerable<string> LoadRecentProjects();
