@@ -137,7 +137,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     private void SetupMenu()
     {
         var value = _root.Properties.GetString("vhdlStandard") ?? "";
-        var vhdlStandard = new ComboBoxSetting("vhdlStandard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
+        var vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
 
         var includes = _root.Properties.GetStringArray("include")?.ToArray() ?? [];
         var exclude = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
