@@ -27,17 +27,9 @@ public static class ProjectHelper
     {
         var normalizedPath = path.ToUnixPath();
 
-        var normalizedInclude = include
-            .Select(x => x.ToUnixPath())
-            .ToArray();
-
-        var normalizedExclude = exclude?
-            .Select(x => x.ToUnixPath())
-            .ToArray();
-
-        return normalizedInclude.Any(pattern =>
+        return include.Any(pattern =>
                    FileSystemName.MatchesSimpleExpression(pattern, normalizedPath))
-               && (normalizedExclude is null || !normalizedExclude.Any(pattern =>
+               && (exclude is null || !exclude.Any(pattern =>
                    FileSystemName.MatchesSimpleExpression(pattern, normalizedPath)
                    || normalizedPath
                        .Split('/', StringSplitOptions.RemoveEmptyEntries)
