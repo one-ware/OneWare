@@ -20,6 +20,11 @@ public class ProjectPropertyChangedEventArgs(
     public object? NewValue { get; } = newValue;
 }
 
+public record ProjectPropertyMigration(
+    string FromPath,
+    string ToPath,
+    Func<JsonNode?, JsonNode?>? Transform = null);
+
 public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonNode?>>
 {
     private JsonObject _data;
@@ -73,7 +78,7 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
         return RemoveNodeInternal(key, out _);
     }
 
-    public async Task<bool> LoadAsync(string path)
+    public async Task<bool> LoadAsync(string path, IEnumerable<ProjectPropertyMigration>? migrations = null)
     {
         try
         {
@@ -84,9 +89,12 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
                 AllowTrailingCommas = true
             });
 
-            if (node == null) return false;
+            if (node == null)
+                return false;
 
             _data = node.AsObject();
+
+            ApplyMigrations(migrations);
 
             return true;
         }
@@ -159,6 +167,48 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
     {
         RemoveNodeInternal(key, out oldValue);
         return key;
+    }
+
+    public bool ApplyMigration(ProjectPropertyMigration migration)
+    {
+        if (!TryGetNode(migration.FromPath, out var value))
+            return false;
+
+        if (string.Equals(migration.FromPath, migration.ToPath, StringComparison.OrdinalIgnoreCase))
+        {
+            if (migration.Transform == null)
+                return false;
+
+            var transformed = migration.Transform(value?.DeepClone());
+            SetNode(migration.ToPath, transformed);
+            return true;
+        }
+
+        if (!TryGetNode(migration.ToPath, out _))
+        {
+            var transformed = migration.Transform == null
+                ? value?.DeepClone()
+                : migration.Transform(value?.DeepClone());
+            SetNode(migration.ToPath, transformed);
+        }
+
+        RemoveValue(migration.FromPath, out _);
+        return true;
+    }
+
+    public int ApplyMigrations(IEnumerable<ProjectPropertyMigration>? migrations)
+    {
+        if (migrations == null)
+            return 0;
+
+        var applied = 0;
+        foreach (var migration in migrations)
+        {
+            if (ApplyMigration(migration))
+                applied++;
+        }
+
+        return applied;
     }
 
     public string AddToStringArray(string key, params string[] newItems)

@@ -37,7 +37,7 @@ public class UniversalFpgaProjectManager : IProjectManager
     {
         var root = new UniversalFpgaProjectRoot(path);
         
-        await root.LoadAsync();
+        await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
 
         foreach (var entryModification in _fpgaService.ProjectEntryModificationHandlers)
         {
@@ -53,7 +53,7 @@ public class UniversalFpgaProjectManager : IProjectManager
     {
         if (project is not UniversalFpgaProjectRoot root) return;
         
-        await root.LoadAsync();
+        await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
         await root.InitializeAsync();
         
         //TODO reload open files

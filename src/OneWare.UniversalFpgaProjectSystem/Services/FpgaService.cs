@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Microsoft.Extensions.Logging;
+using System.Text.Json.Nodes;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -54,9 +55,24 @@ public class FpgaService
 
     public ObservableCollection<Action<IProjectEntry>> ProjectEntryModificationHandlers { get; } = new();
 
+    public IList<ProjectPropertyMigration> ProjectPropertyMigrations { get; } = new List<ProjectPropertyMigration>();
+
     public void RegisterProjectEntryModification(Action<IProjectEntry> modificationAction)
     {
         ProjectEntryModificationHandlers.Add(modificationAction);
+    }
+
+    public void RegisterProjectPropertyMigration(ProjectPropertyMigration migration)
+    {
+        ProjectPropertyMigrations.Add(migration);
+    }
+
+    public void RegisterProjectPropertyMigration(
+        string fromPath,
+        string toPath,
+        Func<JsonNode?, JsonNode?>? transform = null)
+    {
+        ProjectPropertyMigrations.Add(new ProjectPropertyMigration(fromPath, toPath, transform));
     }
 
     public void RegisterLanguage(string language, string[] extensions)

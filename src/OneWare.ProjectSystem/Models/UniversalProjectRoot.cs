@@ -54,9 +54,9 @@ public abstract class UniversalProjectRoot : ProjectRoot, IProjectRootWithFile
         _entryModificationHandlers.ForEach(handler => handler(entry));
     }
 
-    public Task<bool> LoadAsync()
+    public Task<bool> LoadAsync(IEnumerable<ProjectPropertyMigration>? migrations = null)
     {
-        return Properties.LoadAsync(ProjectFilePath);
+        return Properties.LoadAsync(ProjectFilePath, migrations);
     }
     
     public async Task<bool> SaveAsync()
