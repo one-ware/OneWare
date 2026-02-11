@@ -14,6 +14,8 @@ using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OneWare.Chat;
+using OneWare.Copilot;
 using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.ViewModels.Windows;
@@ -60,6 +62,8 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<ToolEngineModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
         moduleCatalog.AddModule<PythonModule>();
+        moduleCatalog.AddModule<ChatModule>();
+        moduleCatalog.AddModule<CopilotModule>();
     }
 
     protected override void LoadStartupPlugins()

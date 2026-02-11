@@ -11,10 +11,6 @@ using OneWare.Settings;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using Microsoft.Extensions.DependencyInjection;
-using OneWare.Chat;
-using OneWare.Copilot;
-using OneWare.Core.ModuleLogic;
 
 namespace OneWare.Studio;
 
@@ -74,7 +70,5 @@ public class StudioApp : App
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
-        moduleCatalog.AddModule<ChatModule>();
-        moduleCatalog.AddModule<CopilotModule>();
     }
 }

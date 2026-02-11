@@ -34,7 +34,7 @@ internal class LanguageManager : ObservableObject, ILanguageManager
         _currentEditorTheme = _textMateRegistryOptions.GetDefaultTheme();
 
         IDisposable? sub = null;
-        var generalTheme = settingsService.GetSettingObservable<string>("General_SelectedTheme")
+        settingsService.GetSettingObservable<string>("General_SelectedTheme")
             .Select(x => x == "Dark"
                 ? "Editor_SyntaxTheme_Dark"
                 : "Editor_SyntaxTheme_Light")
@@ -165,14 +165,6 @@ internal class LanguageManager : ObservableObject, ILanguageManager
 
         _ = service.ActivateAsync();
         return service.GetTypeAssistance(editor);
-    }
-
-    public void AddProject(IProjectRoot project)
-    {
-    }
-
-    public void RemoveProject(IProjectRoot project)
-    {
     }
 
     private void UpdateThemeColors()

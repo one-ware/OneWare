@@ -661,45 +661,31 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         await clipboard.SetDataAsync(dataTransfer);
     }
 
-    private static readonly DataFormat<string> CustomFileCopyFormat =
-        DataFormat.CreateStringApplicationFormat("application/oneware-projectexplorer-copy");
-
     private static async Task<DataTransfer?> GetDataTransferFromItemsAsync(TopLevel topLevel,
         IEnumerable<IProjectExplorerNode> items)
     {
         var dataTransfer = new DataTransfer();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var storageItems = (await items
-                    .Where(x => x is IProjectEntry)
-                    .Cast<IProjectEntry>()
-                    .SelectAsync<IProjectEntry, IStorageItem?>(async x =>
-                    {
-                        return x switch
-                        {
-                            IProjectFile => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath),
-                            IProjectFolder => await topLevel.StorageProvider.TryGetFolderFromPathAsync(x.FullPath),
-                            _ => null
-                        };
-                    }))
-                .Where(x => x != null)
-                .Cast<IStorageItem>()
-                .ToArray();
-
-            if (!storageItems.Any()) return null;
-
-            foreach (var storageItem in storageItems)
-                dataTransfer.Add(DataTransferItem.CreateFile(storageItem));
-        }
-        else
-        {
-            var paths = string.Join('|', items
+        var storageItems = (await items
                 .Where(x => x is IProjectEntry)
                 .Cast<IProjectEntry>()
-                .Select(x => x.FullPath));
-            dataTransfer.Add(DataTransferItem.Create(CustomFileCopyFormat, paths));
-        }
+                .SelectAsync<IProjectEntry, IStorageItem?>(async x =>
+                {
+                    return x switch
+                    {
+                        IProjectFile => await topLevel.StorageProvider.TryGetFileFromPathAsync(x.FullPath),
+                        IProjectFolder => await topLevel.StorageProvider.TryGetFolderFromPathAsync(x.FullPath),
+                        _ => null
+                    };
+                }))
+            .Where(x => x != null)
+            .Cast<IStorageItem>()
+            .ToArray();
+
+        if (!storageItems.Any()) return null;
+
+        foreach (var storageItem in storageItems)
+            dataTransfer.Add(DataTransferItem.CreateFile(storageItem));
 
         return dataTransfer;
     }
@@ -715,31 +701,17 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (data == null) return;
         try
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                var storageItems = await data.TryGetFilesAsync();
-                if (storageItems != null)
-                    await ImportAsync(target, true, true, storageItems
-                        .Select(x => x.TryGetLocalPath())
-                        .Where(x => x != null)
-                        .Cast<string>()
-                        .ToArray());
-            }
-            else
-            {
-                var copyContext = await data.TryGetValueAsync(CustomFileCopyFormat);
-                if (!string.IsNullOrEmpty(copyContext))
-                {
-                    var files = copyContext.Split('|');
-                    await ImportAsync(target, true, true, files);
-                }
-            }
+            var storageItems = await data.TryGetFilesAsync();
+            if (storageItems != null)
+                await ImportAsync(target, true, true, storageItems
+                    .Select(x => x.TryGetLocalPath())
+                    .Where(x => x != null)
+                    .Cast<string>()
+                    .ToArray());
         }
         finally
         {
-            if (data is IAsyncDisposable asyncDisposable)
-                await asyncDisposable.DisposeAsync();
-            else if (data is IDisposable disposable)
+            if (data is IDisposable disposable)
                 disposable.Dispose();
         }
 

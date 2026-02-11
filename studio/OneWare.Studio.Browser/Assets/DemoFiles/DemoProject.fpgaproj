@@ -1,5 +1,5 @@
 {
-  "Include": [
+  "include": [
     "*.vhd",
     "*.vhdl",
     "*.v",
@@ -7,8 +7,8 @@
     "*.vcd",
     "*.svg"
   ],
-  "Exclude": [
+  "exclude": [
     "bin"
   ],
-  "TopEntity": "VhdlTest.vhd"
+  "topEntity": "VhdlTest.vhd"
 }
