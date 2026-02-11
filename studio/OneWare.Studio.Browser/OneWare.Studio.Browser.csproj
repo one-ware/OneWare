@@ -8,6 +8,7 @@
         <Version>$(StudioVersion)</Version>
         <TargetFramework>net10.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <!--Enable Threading once dotnet runtime issues are resolved
         <WasmEnableThreads>false</WasmEnableThreads>-->
     </PropertyGroup>
@@ -25,6 +26,10 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.Vhdl\OneWare.Vhdl.csproj"/>
         <ProjectReference Include="..\OneWare.Studio\OneWare.Studio.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <TrimmerRootDescriptor Include="linker.xml" />
     </ItemGroup>
 
     <ItemGroup>

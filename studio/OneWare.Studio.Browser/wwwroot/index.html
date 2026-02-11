@@ -21,6 +21,17 @@
         </div>
     </div>
 </div>
+<script>
+    if (navigator.permissions && navigator.permissions.query) {
+        const originalQuery = navigator.permissions.query.bind(navigator.permissions);
+        navigator.permissions.query = (descriptor) => {
+            if (descriptor && descriptor.name === "window-management") {
+                return Promise.resolve({ state: "denied", onchange: null });
+            }
+            return originalQuery(descriptor);
+        };
+    }
+</script>
 <script src="./main.js" type="module"></script>
 </body>
 </html>

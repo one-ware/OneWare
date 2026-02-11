@@ -1,0 +1,26 @@
+<linker>
+  <assembly fullname="OneWare.ApplicationCommands" preserve="all" />
+  <assembly fullname="OneWare.Chat" preserve="all" />
+  <assembly fullname="OneWare.CloudIntegration" preserve="all" />
+  <assembly fullname="OneWare.Copilot" preserve="all" />
+  <assembly fullname="OneWare.Core" preserve="all" />
+  <assembly fullname="OneWare.Debugger" preserve="all" />
+  <assembly fullname="OneWare.ErrorList" preserve="all" />
+  <assembly fullname="OneWare.ImageViewer" preserve="all" />
+  <assembly fullname="OneWare.LibraryExplorer" preserve="all" />
+  <assembly fullname="OneWare.OssCadSuiteIntegration" preserve="all" />
+  <assembly fullname="OneWare.Output" preserve="all" />
+  <assembly fullname="OneWare.PackageManager" preserve="all" />
+  <assembly fullname="OneWare.ProjectExplorer" preserve="all" />
+  <assembly fullname="OneWare.SearchList" preserve="all" />
+  <assembly fullname="OneWare.SerialMonitor" preserve="all" />
+  <assembly fullname="OneWare.Settings" preserve="all" />
+  <assembly fullname="OneWare.SourceControl" preserve="all" />
+  <assembly fullname="OneWare.Studio" preserve="all" />
+  <assembly fullname="OneWare.Terminal" preserve="all" />
+  <assembly fullname="OneWare.TerminalManager" preserve="all" />
+  <assembly fullname="OneWare.UniversalFpgaProjectSystem" preserve="all" />
+  <assembly fullname="OneWare.Updater" preserve="all" />
+  <assembly fullname="OneWare.Vcd.Viewer" preserve="all" />
+  <assembly fullname="OneWare.WaveFormViewer" preserve="all" />
+</linker>

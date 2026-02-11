@@ -57,7 +57,7 @@ public class StudioApp : App
     {
         var themeManager = new ThemeManager(SettingsService, Paths);
         base.Initialize();
-
+        
         Styles.Add(new StyleInclude(new Uri("avares://OneWare.Studio"))
         {
             Source = new Uri("avares://OneWare.Studio/Styles/Theme.axaml")

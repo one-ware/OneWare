@@ -15,7 +15,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
-using OneWare.CloudIntegration;
 using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
@@ -23,7 +22,6 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Extensions;
 using OneWare.Core.Views.Windows;
-using OneWare.Debugger;
 using OneWare.ErrorList;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Helpers;
@@ -429,8 +427,6 @@ public class App : Application
         moduleCatalog.AddModule<ImageViewerModule>();
         moduleCatalog.AddModule<JsonModule>();
         moduleCatalog.AddModule<TomlModule>();
-        moduleCatalog.AddModule<DebuggerModule>();
-        moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
     }
 
     protected virtual string GetLogFilePath()

@@ -90,8 +90,11 @@ public class Wave : Control
         _compositeDisposable = new CompositeDisposable();
         if (DataContext is WaveModel model)
         {
-            Observable.FromEventPattern<EventArgs>(model.Signal, nameof(model.Signal.RequestRedraw))
-                .Subscribe(x => { Redraw(); }).DisposeWith(_compositeDisposable);
+            Observable.FromEventPattern<EventHandler, EventArgs>(
+                    h => model.Signal.RequestRedraw += h,
+                    h => model.Signal.RequestRedraw -= h)
+                .Subscribe(_ => { Redraw(); })
+                .DisposeWith(_compositeDisposable);
 
             model.WhenValueChanged(x => x.DataType).Subscribe(x => { Redraw(); }).DisposeWith(_compositeDisposable);
 

@@ -9,8 +9,6 @@ namespace OneWare.Core;
 
 public class ViewLocator : IDataTemplate
 {
-    public bool SupportsRecycling => false;
-
     public Control Build(object? data)
     {
         var name = data?.GetType()?.AssemblyQualifiedName?.Replace("ViewModel", "View");

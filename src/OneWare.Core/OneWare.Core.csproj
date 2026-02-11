@@ -26,8 +26,6 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
         <ProjectReference Include="..\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj"/>
-        <ProjectReference Include="..\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj"/>
-        <ProjectReference Include="..\OneWare.Debugger\OneWare.Debugger.csproj"/>
         <ProjectReference Include="..\OneWare.ErrorList\OneWare.ErrorList.csproj"/>
         <ProjectReference Include="..\OneWare.FolderProjectSystem\OneWare.FolderProjectSystem.csproj"/>
         <ProjectReference Include="..\OneWare.ImageViewer\OneWare.ImageViewer.csproj"/>
@@ -39,12 +37,6 @@
         <ProjectReference Include="..\OneWare.SearchList\OneWare.SearchList.csproj"/>
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj"/>
         <ProjectReference Include="..\OneWare.Toml\OneWare.Toml.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="ColorTextBlock.Avalonia">
-        <HintPath>..\..\..\..\.homes\ubuntu-dev\.nuget\packages\oneware.colortextblock.avalonia\11.3.3\lib\net9.0\ColorTextBlock.Avalonia.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>

@@ -70,8 +70,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         //     ClearFile(x.EventArgs);
         // });
 
-        Observable.FromEventPattern<IProjectRoot>(projectExplorerExplorerViewModel,
-            nameof(projectExplorerExplorerViewModel.ProjectRemoved)).Subscribe(x => { Clear(x.EventArgs); });
+        Observable.FromEventPattern<IProjectRoot>(
+                h => projectExplorerExplorerViewModel.ProjectRemoved += h,
+                h => projectExplorerExplorerViewModel.ProjectRemoved -= h)
+            .Subscribe(x => { Clear(x.EventArgs); });
 
         _settingsService.Bind(ErrorListModule.KeyErrorListFilterMode, this.WhenValueChanged(x => x.ErrorListFilterMode))
             .Subscribe(x => ErrorListFilterMode = x);
