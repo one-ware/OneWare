@@ -27,6 +27,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private bool _initialized;
     private string? _pendingChatServiceName;
+    private bool _isRestoringState;
 
     private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
     {
@@ -138,7 +139,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     value.StatusChanged += OnStatusChanged;
                     value.SessionReset += OnSessionReset;
 
-                    InitializeCurrentCommand.Execute(null);
+                    if (!_isRestoringState)
+                        InitializeCurrentCommand.Execute(null);
                 }
             }
         }
@@ -161,11 +163,20 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (_initialized) return;
         _initialized = true;
 
+        _isRestoringState = true;
         LoadState();
 
         if (SelectedChatService == null && string.IsNullOrWhiteSpace(_pendingChatServiceName))
         {
+            _isRestoringState = false;
             SelectedChatService = ChatServices.FirstOrDefault();
+            return;
+        }
+
+        if (SelectedChatService != null)
+        {
+            _isRestoringState = false;
+            _ = InitializeCurrentAsync();
         }
     }
 
@@ -460,6 +471,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             _pendingChatServiceName = null;
             SelectedChatService = chatService;
+            _isRestoringState = false;
+            _ = InitializeCurrentAsync();
             return;
         }
 
@@ -552,6 +565,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 {
                     _pendingChatServiceName = null;
                     SelectedChatService = match;
+                    _isRestoringState = false;
+                    _ = InitializeCurrentAsync();
                 }
             }
         }
