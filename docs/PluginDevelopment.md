@@ -133,62 +133,211 @@ integration points.
 
 ### Services
 
-- `IOneWareModule` (src/OneWare.Essentials/Services/IOneWareModule.cs): module lifecycle interface.
-- `IPluginService` (src/OneWare.Essentials/Services/IPluginService.cs): install/remove plugins.
-- `IPaths` (src/OneWare.Essentials/Services/IPaths.cs): app data paths (projects, packages, plugins,
-  settings, temp, etc.). Use this instead of hard-coded paths.
-- `IWindowService` (src/OneWare.Essentials/Services/IWindowService.cs): main UI integration
-  (menus, UI extensions, dialogs, notifications). Menu paths are string keys such as
-  `MainWindow_MainMenu/FPGA`.
-- `IMainDockService` (src/OneWare.Essentials/Services/IMainDockService.cs): document/tool docking,
-  open files, layout management, and document views.
-- `IProjectExplorerService` (src/OneWare.Essentials/Services/IProjectExplorerService.cs): manage
-  project roots, load/save, project dialogs, selection, and context menus.
-- `IProjectManagerService` (src/OneWare.Essentials/Services/IProjectManagerService.cs): register
-  project managers by project type ID or file extension.
-- `IProjectSettingsService` (src/OneWare.Essentials/Services/IProjectSettingsService.cs): register
-  custom project settings and categories for project settings UI.
-- `ISettingsService` (src/OneWare.Essentials/Services/ISettingsService.cs): settings registry,
-  storage, binding, and default values for app settings.
-- `IApplicationCommandService` (src/OneWare.Essentials/Services/IApplicationCommandService.cs):
-  register commands and persist key bindings.
-- `ILanguageManager` (src/OneWare.Essentials/Services/ILanguageManager.cs): language support
-  registration (TextMate grammars, LSP services, and file extension mapping).
-- `IErrorService` (src/OneWare.Essentials/Services/IErrorService.cs): error list UI (register
-  sources and publish diagnostics).
-- `IOutputService` (src/OneWare.Essentials/Services/IOutputService.cs): output panel writes with
-  optional color and project ownership.
-- `IFileIconService` (src/OneWare.Essentials/Services/IFileIconService.cs): register per-extension
-  file icons (resources or `IImage`).
-- `IChildProcessService` (src/OneWare.Essentials/Services/IChildProcessService.cs): spawn and track
-  external processes; `ExecuteShellAsync` runs tools with status reporting.
-- `ITerminalManagerService` (src/OneWare.Essentials/Services/ITerminalManagerService.cs): execute
-  commands in the terminal UI.
-- `IToolService` (src/OneWare.Essentials/Services/IToolService.cs): register tool configurations
-  and multiple execution strategies per tool.
-- `IToolExecutionStrategy` / `IToolExecutionDispatcherService`
-  (src/OneWare.Essentials/Services/IToolExecutionStrategy.cs,
-  src/OneWare.Essentials/Services/IToolExecutionDispatcherService.cs): plug in custom tool runners.
-- `IPackageService` / `IPackageWindowService` (src/OneWare.Essentials/Services/IPackageService.cs,
-  src/OneWare.Essentials/Services/IPackageWindowService.cs): manage package repositories and the
-  extension manager UI.
-- `IApplicationStateService` (src/OneWare.Essentials/Services/IApplicationStateService.cs):
-  application state, notifications, and shutdown hooks.
-- `IEnvironmentService` (src/OneWare.Essentials/Services/IEnvironmentService.cs): modify
-  environment variables and PATH.
-- `IHttpService` (src/OneWare.Essentials/Services/IHttpService.cs): download helper for files,
-  archives, images, and text.
-- `IChatService` / `IChatManagerService` (src/OneWare.Essentials/Services/IChatService.cs,
-  src/OneWare.Essentials/Services/IChatManagerService.cs): optional chat integration.
-- `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs): register AI tools.
-- `ISerialMonitorService` (src/OneWare.Essentials/Services/ISerialMonitorService.cs): dockable
-  serial monitor tool.
-- `IWelcomeScreenService` (src/OneWare.Essentials/Services/IWelcomeScreenService.cs): add items to
-  the welcome screen.
-- `IWelcomeScreenItem` (src/OneWare.Essentials/Services/IWelcomeScreenService.cs): model for
-  custom welcome screen items.
-- `ICompositeServiceProvider` (src/OneWare.Essentials/Services/ICompositeServiceProvider.cs):
-  combined service provider used to resolve app and plugin services.
+The following sections document the core services and their key functions.
+
+#### `IOneWareModule` (src/OneWare.Essentials/Services/IOneWareModule.cs)
+
+- `Id`: module identifier (defaults to class name in `OneWareModuleBase`).
+- `Dependencies`: other module IDs that must load before this one.
+- `RegisterServices(IServiceCollection)`: add services to the DI container.
+- `Initialize(IServiceProvider)`: run after services are registered.
+
+#### `IPluginService` (src/OneWare.Essentials/Services/IPluginService.cs)
+
+- `InstalledPlugins`: current plugin list.
+- `AddPlugin(string path)`: loads a plugin folder and registers any modules.
+- `RemovePlugin(IPlugin plugin)`: removes a plugin from the session.
+
+#### `IPaths` (src/OneWare.Essentials/Services/IPaths.cs)
+
+Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `PackagesDirectory`,
+`PluginsDirectory`, `SettingsPath`, `TempDirectory`, and more. Use these instead of hard-coded paths.
+
+#### `IWindowService` (src/OneWare.Essentials/Services/IWindowService.cs)
+
+- `RegisterUiExtension(string key, OneWareUiExtension)`: add UI by key.
+- `GetUiExtensions(string key)`: retrieve registered UI extensions.
+- `RegisterMenuItem(string key, params MenuItemModel[])`: inject menu items by path.
+- `GetMenuItems(string key)`: read menu entries for a path.
+- `Show(...)`, `ShowDialogAsync(...)`: open windows/dialogs.
+- `ShowMessageBoxAsync`, `ShowMessageAsync`, `ShowYesNoAsync`, `ShowYesNoCancelAsync`,
+  `ShowProceedWarningAsync`, `ShowInputAsync`, `ShowFolderSelectAsync`, `ShowInputSelectAsync`:
+  common dialogs and prompts.
+- `ShowNotification(...)`, `ShowNotificationWithButton(...)`: toast notifications.
+- `ActivateMainWindow()`: bring the main window to foreground.
+
+#### `IMainDockService` (src/OneWare.Essentials/Services/IMainDockService.cs)
+
+- `RegisterDocumentView<T>(extensions)`: map file extensions to document view models.
+- `RegisterFileOpenOverwrite(action, extensions)`: override open behavior for extensions.
+- `RegisterLayoutExtension<T>(location)`: add dockable layout extensions.
+- `Show<T>()` / `Show(IDockable)`: display dockable views.
+- `OpenFileAsync(fullPath)` / `CloseFileAsync(fullPath)`: open/close documents.
+- `LoadLayout(name, reset)` / `SaveLayout()`: manage layout persistence.
+- `SearchView(...)`: find a dockable in the layout.
+- `InitializeContent()`: initialize dock content when needed.
+
+#### `IProjectExplorerService` (src/OneWare.Essentials/Services/IProjectExplorerService.cs)
+
+- `AddProject`, `TryCloseProjectAsync`, `ReloadProjectAsync`, `SaveProjectAsync`: project lifecycle.
+- `LoadProjectFolderDialogAsync`, `LoadProjectFileDialogAsync`, `LoadProjectAsync`: load projects.
+- `GetRootFromFile(filePath)`: map a file to its project root.
+- `GetEntryFromFullPath(path)`: resolve or construct nodes for UI navigation.
+- `RegisterConstructContextMenu(...)`: extend project explorer context menus.
+- `ImportAsync(...)`: import files/folders into a project.
+- `LoadRecentProjects()`, `OpenLastProjectsFileAsync()`: recent project helpers.
+- Selection helpers: `ClearSelection`, `AddToSelection`.
+
+#### `IProjectManagerService` (src/OneWare.Essentials/Services/IProjectManagerService.cs)
+
+- `RegisterProjectManager(id, manager)`: register a project type.
+- `GetManager(id)` / `GetManagerByExtension(extension)`: resolve project manager by ID/extension.
+
+#### `IProjectSettingsService` (src/OneWare.Essentials/Services/IProjectSettingsService.cs)
+
+- `AddProjectSetting`, `AddProjectSettingIfNotExists`: register project-specific settings.
+- `GetProjectSettingsList(...)`, `GetProjectCategories()`: enumerate settings.
+- `GetDefaultProjectCategory()`: default category name.
+
+#### `ISettingsService` (src/OneWare.Essentials/Services/ISettingsService.cs)
+
+- `RegisterSettingCategory`, `RegisterSettingSubCategory`: group settings.
+- `Register<T>(key, defaultValue)`: register a plain setting.
+- `RegisterSetting(...)`, `RegisterCustom(...)`: register richer settings.
+- `GetSetting`, `HasSetting`, `GetSettingValue<T>`, `SetSettingValue(...)`: access values.
+- `Bind<T>(key, observable)`, `GetSettingObservable<T>(key)`: reactive settings.
+- `Load(path)`, `Save(path, autoSave)`, `Reset(key)`, `ResetAll()`: storage and reset.
+
+#### `IApplicationCommandService` (src/OneWare.Essentials/Services/IApplicationCommandService.cs)
+
+- `RegisterCommand(IApplicationCommand)`: add an application command.
+- `LoadKeyConfiguration()`, `SaveKeyConfiguration()`: key binding persistence.
+
+#### `ILanguageManager` (src/OneWare.Essentials/Services/ILanguageManager.cs)
+
+- `RegisterTextMateLanguage(id, grammarPath, extensions)`: syntax highlighting.
+- `RegisterLanguageExtensionLink(source, target)`: map extension to another language.
+- `RegisterService(type, workspaceDependent, supportedFileTypes)`: LSP service registration.
+- `RegisterStandaloneTypeAssistance(type, supportedFileTypes)`: editor assistance only.
+- `GetLanguageService(fullPath)`, `GetTypeAssistance(IEditor)`: resolve per-file services.
+
+#### `IErrorService` (src/OneWare.Essentials/Services/IErrorService.cs)
+
+- `RegisterErrorSource(source)`: add a diagnostic source.
+- `RefreshErrors(errors, source, filePath)`: replace diagnostics for a file.
+- `Clear(source)`, `ClearFile(filePath)`: remove diagnostics.
+- `GetErrors()`, `GetErrorsForFile(filePath)`: enumerate diagnostics.
+- `ErrorRefresh` event: notify listeners to update.
+
+#### `IOutputService` (src/OneWare.Essentials/Services/IOutputService.cs)
+
+- `WriteLine(text, color, owner)`: append line with optional color/project owner.
+- `Write(text, color, owner)`: append inline text.
+
+#### `IFileIconService` (src/OneWare.Essentials/Services/IFileIconService.cs)
+
+- `RegisterFileIcon(IObservable<IImage>, extensions)` / `RegisterFileIcon(resourceName, extensions)`.
+- `GetFileIcon(extension)`: resolve `IImage` observable.
+- `GetFileIconModel(extension)`: resolve `IconModel`.
+
+#### `IChildProcessService` (src/OneWare.Essentials/Services/IChildProcessService.cs)
+
+- `StartChildProcess(startInfo)`, `GetChildProcesses(path)`, `Kill(...)`: process control.
+- `ExecuteShellAsync(path, arguments, workingDirectory, status, ...)`: run a tool with UI status.
+- `StartWeakProcess(path, arguments, workingDirectory)`: launch and track a weak process.
+
+#### `ITerminalManagerService` (src/OneWare.Essentials/Services/ITerminalManagerService.cs)
+
+- `ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, cancellationToken)`:
+  run a command in a terminal pane and return the result.
+
+#### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
+
+- `Register(toolContext, strategy)`: add a tool + default strategy.
+- `RegisterStrategy(toolKey, strategy)`: add a strategy for an existing tool.
+- `Unregister(toolContext)` / `Unregister(toolKey)` / `UnregisterStrategy(strategyKey)`: remove.
+- `GetAllTools()`, `GetStrategies(toolKey)`, `GetStrategy(toolKey)`, `GetStrategyKeys(toolKey)`:
+  query registered tools and strategies.
+
+#### `IToolExecutionStrategy` (src/OneWare.Essentials/Services/IToolExecutionStrategy.cs)
+
+- `ExecuteAsync(ToolCommand)`: run a tool.
+- `GetStrategyName()`: display name.
+- `GetStrategyKey()`: unique key.
+
+#### `IToolExecutionDispatcherService` (src/OneWare.Essentials/Services/IToolExecutionDispatcherService.cs)
+
+- `ExecuteAsync(ToolCommand)`: dispatch a tool command through configured strategy.
+
+#### `IPackageService` (src/OneWare.Essentials/Services/IPackageService.cs)
+
+- `RegisterPackage(Package)` / `RegisterPackageRepository(url)`: add packages/repositories.
+- `RefreshAsync()`: refresh package metadata.
+- `InstallAsync(...)`, `UpdateAsync(...)`, `RemoveAsync(packageId)`: package lifecycle.
+- `CheckCompatibilityAsync(packageId, version)`: compatibility check.
+- `DownloadLicenseAsync(package)`, `DownloadPackageIconAsync(package)`: metadata downloads.
+- `PackagesUpdated`, `PackageProgress` events: UI refresh and progress.
+
+#### `IPackageWindowService` (src/OneWare.Essentials/Services/IPackageWindowService.cs)
+
+- `ShowExtensionManager(...)`, `ShowExtensionManagerAsync(packageId)`: show extension manager UI.
+- `ShowExtensionManagerAndTryInstallAsync(packageId)`, `QuickInstallPackageAsync(packageId)`:
+  open the UI and optionally install.
+
+#### `IApplicationStateService` (src/OneWare.Essentials/Services/IApplicationStateService.cs)
+
+- `AddState(status, state, terminate)`: add a running state/process.
+- `RemoveState(process, finishMessage)`: mark a state as completed.
+- `RegisterAutoLaunchAction`, `RegisterPathLaunchAction`, `RegisterUrlLaunchAction`:
+  add custom launch handlers.
+- `ExecuteAutoLaunchActions`, `ExecutePathLaunchActions`, `ExecuteUrlLaunchActions`:
+  invoke handlers for a launch request.
+- `RegisterShutdownAction`, `RegisterShutdownTask`: lifecycle hooks.
+- `TryShutdownAsync()`, `TryRestartAsync()`: app lifecycle operations.
+- Notification helpers: `AddNotification`, `ClearNotifications`.
+
+#### `IEnvironmentService` (src/OneWare.Essentials/Services/IEnvironmentService.cs)
+
+- `SetEnvironmentVariable(key, value)`: set environment variables for tool execution.
+- `SetPath(key, path)`: modify PATH entries.
+
+#### `IHttpService` (src/OneWare.Essentials/Services/IHttpService.cs)
+
+- `DownloadFileAsync(url, stream/location, progress, timeout, cancellationToken)`.
+- `DownloadAndExtractArchiveAsync(url, location, progress, timeout, cancellationToken)`.
+- `DownloadImageAsync(url, timeout, cancellationToken)`, `DownloadTextAsync(url, timeout, cancellationToken)`.
+
+#### `IChatService` (src/OneWare.Essentials/Services/IChatService.cs)
+
+- `InitializeAsync()`: setup and authenticate.
+- `SendAsync(prompt)`: send a prompt.
+- `AbortAsync()`: cancel current request.
+- `NewChatAsync()`: reset conversation state.
+- Events: `SessionReset`, `EventReceived`, `StatusChanged` for UI updates.
+
+#### `IChatManagerService` (src/OneWare.Essentials/Services/IChatManagerService.cs)
+
+- `RegisterChatService(IChatService)`: add a chat provider.
+- `SelectedChatService`: currently selected provider.
+- `SaveState()`: persist selection.
+
+#### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
+
+- `GetTools()`: register AI tools for chat or automation.
+- `FunctionStarted`, `FunctionCompleted` events.
+
+#### `ISerialMonitorService` (src/OneWare.Essentials/Services/ISerialMonitorService.cs)
+
+Dockable serial monitor placeholder; no additional API surface today.
+
+#### `IWelcomeScreenService` / `IWelcomeScreenItem`
+
+- `RegisterItemToNew`, `RegisterItemToOpen`, `RegisterItemToWalkthrough`: add welcome screen items.
+- `IWelcomeScreenItem` provides `Name`, `Icon`, and `Command` for UI rendering.
+
+#### `ICompositeServiceProvider` (src/OneWare.Essentials/Services/ICompositeServiceProvider.cs)
+
+Aggregates services from the app and plugins via `IServiceProvider` and `IServiceProviderIsService`.
 
 ### Services in practice
 
