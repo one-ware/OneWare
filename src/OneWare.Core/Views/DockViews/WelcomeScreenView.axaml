@@ -17,7 +17,7 @@
                 <HyperlinkButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <Panel Width="18" Height="18" Margin="0,2,6,2">
-                            <controls:LayeredIconPresenter Value="{Binding Icon}" />
+                            <controls:LayeredIconPresenter Width="18" Height="18" Value="{Binding Icon}" />
                         </Panel>
                         <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}" />
                     </StackPanel>

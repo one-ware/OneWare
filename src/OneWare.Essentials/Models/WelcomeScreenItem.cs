@@ -27,9 +27,6 @@ public sealed class WelcomeScreenWalkthroughItem(string id, string name, string?
 
 public abstract class WelcomeScreenItem : ObservableObject, IWelcomeScreenItem
 {
-    private IconModel? _iconModel;
-    private IDisposable? _subscription;
-
     public WelcomeScreenItem(string id, string name, ICommand? command)
     {
         Id = id;
@@ -42,7 +39,7 @@ public abstract class WelcomeScreenItem : ObservableObject, IWelcomeScreenItem
     public IconModel? Icon
     {
         get;
-        set => SetProperty(ref _iconModel, value);
+        set => SetProperty(ref field, value);
     }
 
     public string Name { get; }
