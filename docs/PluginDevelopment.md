@@ -44,6 +44,47 @@ Minimal `compatibility.txt` (one dependency per line):
 OneWare.Essentials : 1.0.0
 ```
 
+### Auto-generate compatibility.txt from your csproj
+
+You can generate `compatibility.txt` automatically during build by marking dependencies with
+`Private="false"` and writing them into the output directory:
+
+```msbuild
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>1.0.0</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <SelfContained>false</SelfContained>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**\*.*" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="OneWare.Essentials" Version="1.0.0" Private="false" ExcludeAssets="runtime;Native" />
+        <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="1.0.0" Private="false" ExcludeAssets="runtime;Native" />
+    </ItemGroup>
+
+    <Target Name="GenerateCompatibilityFile" AfterTargets="Build">
+        <ItemGroup>
+            <FilteredDependencies Include="@(PackageReference)" Condition="'%(Private)' == 'false'" />
+        </ItemGroup>
+
+        <WriteLinesToFile
+                File="$(OutDir)compatibility.txt"
+                Lines="@(FilteredDependencies->'%(Identity) : %(Version)')"
+                Overwrite="true" />
+    </Target>
+    
+</Project>
+```
+
 ## Plugin packaging and loading
 
 - Plugins are loaded through `IPluginService.AddPlugin(path)`, which copies the plugin folder into a
@@ -148,6 +189,19 @@ integration points.
   custom welcome screen items.
 - `ICompositeServiceProvider` (src/OneWare.Essentials/Services/ICompositeServiceProvider.cs):
   combined service provider used to resolve app and plugin services.
+
+### Services in practice
+
+Common extension patterns used across the built-in modules:
+
+- Add project explorer menu items using `IProjectExplorerService.RegisterConstructContextMenu`.
+- Add main menu items using `IWindowService.RegisterMenuItem` with a key path such as
+  `MainWindow_MainMenu/File/New`.
+- Show tools or documents using `IMainDockService.Show<T>()` and `IMainDockService.OpenFileAsync`.
+- Register settings for your module via `ISettingsService.RegisterSetting`.
+- Attach file icons with `IFileIconService.RegisterFileIcon`.
+- Emit build or tool output via `IOutputService.WriteLine` and report errors via `IErrorService`.
+
 
 ### View models and editor integration
 
@@ -315,3 +369,61 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - Verify your module class is public and implements `IOneWareModule`.
 - If your UI does not appear, confirm you used the correct UI extension key.
 - For FPGA tooling, confirm your toolchain ID matches the project `toolchain` property.
+
+## Chatbot integration
+
+To add your own chat service (for example, a Copilot-like integration), implement
+`IChatService` and register it with `IChatManagerService`.
+
+Key points:
+
+- `IChatService.InitializeAsync` should set up any connections, models, or auth.
+- Use `EventReceived` to stream chat content and `StatusChanged` to report activity or errors.
+- Set `BottomUiExtension` to a custom `Avalonia.Controls.Control` if you need extra UI (model
+  selector, provider settings, etc.).
+- Call `IChatManagerService.RegisterChatService` during module initialization.
+
+Skeleton example:
+
+```csharp
+using System.ComponentModel;
+using Avalonia.Controls;
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+
+public sealed class MyChatService : IChatService
+{
+    public string Name => "MyChat";
+    public Control? BottomUiExtension => null;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler? SessionReset;
+    public event EventHandler<ChatEvent>? EventReceived;
+    public event EventHandler<StatusEvent>? StatusChanged;
+
+    public Task<bool> InitializeAsync()
+    {
+        StatusChanged?.Invoke(this, new StatusEvent("Ready"));
+        return Task.FromResult(true);
+    }
+
+    public Task SendAsync(string prompt)
+    {
+        EventReceived?.Invoke(this, new ChatEvent(prompt));
+        return Task.CompletedTask;
+    }
+
+    public Task AbortAsync() => Task.CompletedTask;
+    public Task NewChatAsync() { SessionReset?.Invoke(this, EventArgs.Empty); return Task.CompletedTask; }
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}
+
+public sealed class MyChatModule : OneWareModuleBase
+{
+    public override void Initialize(IServiceProvider serviceProvider)
+    {
+        serviceProvider.Resolve<IChatManagerService>()
+            .RegisterChatService(new MyChatService());
+    }
+}
+```

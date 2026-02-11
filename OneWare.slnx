@@ -81,6 +81,9 @@
     <Project Path="demo/OneWare.Demo.Desktop/OneWare.Demo.Desktop.csproj" />
     <Project Path="demo/OneWare.Demo/OneWare.Demo.csproj" />
   </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/PluginDevelopment.md" />
+  </Folder>
   <Folder Name="/Extensions/">
     <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj" />
     <Project Path="src/OneWare.Copilot/OneWare.Copilot.csproj" />
