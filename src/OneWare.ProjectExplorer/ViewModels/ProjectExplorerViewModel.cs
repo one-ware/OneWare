@@ -182,11 +182,14 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         if (project == null)
             return null;
         
-        if (expand)
-            project.IsExpanded = true;
-        
         AddProject(project);
 
+        if (expand)
+        {
+            await Task.Delay(10);
+            project.IsExpanded = true;
+        }
+        
         if (setActive) ActiveProject = project;
 
         return project;
