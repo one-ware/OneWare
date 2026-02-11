@@ -25,9 +25,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly Dictionary<string, ChatMessageReasoningViewModel> _assistantReasoningById =
         new(StringComparer.Ordinal);
 
+    private readonly Dictionary<string, List<ChatMessageState>> _messagesByService =
+        new(StringComparer.Ordinal);
+
     private bool _initialized;
-    private string? _pendingChatServiceName;
-    private bool _isRestoringState;
 
     private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
     {
@@ -41,22 +42,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         Id = "AI_Chat";
         Title = "AI Chat";
-        
+
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
 
         _mainDockService = mainDockService;
         _statePath = Path.Combine(paths.AppDataDirectory, "Chat", "ChatState.json");
         AiFileEditService = aiFileEditService;
-        
+
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
         SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
-        InitializeCurrentCommand = new AsyncRelayCommand(() =>
-        {
-            Messages.Clear();
-            return InitializeCurrentAsync();
-        });
+        InitializeCurrentCommand = new AsyncRelayCommand(() => { return InitializeCurrentAsync(); });
 
         applicationStateService.RegisterShutdownAction(SaveState);
     }
@@ -128,6 +125,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 if (oldValue != null)
                 {
+                    StoreCurrentMessages(oldValue.Name);
+                }
+
+                if (oldValue != null)
+                {
                     oldValue.EventReceived -= OnEventReceived;
                     oldValue.StatusChanged -= OnStatusChanged;
                     oldValue.SessionReset -= OnSessionReset;
@@ -139,8 +141,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     value.StatusChanged += OnStatusChanged;
                     value.SessionReset += OnSessionReset;
 
-                    if (!_isRestoringState)
-                        InitializeCurrentCommand.Execute(null);
+                    LoadMessagesForService(value.Name);
+
+                    InitializeCurrentCommand.Execute(null);
                 }
             }
         }
@@ -163,27 +166,13 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (_initialized) return;
         _initialized = true;
 
-        _isRestoringState = true;
         LoadState();
-
-        if (SelectedChatService == null && string.IsNullOrWhiteSpace(_pendingChatServiceName))
-        {
-            _isRestoringState = false;
-            SelectedChatService = ChatServices.FirstOrDefault();
-            return;
-        }
-
-        if (SelectedChatService != null)
-        {
-            _isRestoringState = false;
-            _ = InitializeCurrentAsync();
-        }
     }
 
     private async Task<bool> InitializeCurrentAsync()
     {
         if (SelectedChatService == null) return false;
-        
+
         _assistantMessagesById.Clear();
 
         var status = await SelectedChatService.InitializeAsync();
@@ -201,7 +190,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 await InitializeCurrentAsync();
             }
-            
+
             await AbortAsync();
             await SelectedChatService.NewChatAsync();
         }
@@ -223,7 +212,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             });
             return;
         }
-        
+
         if (!IsInitialized)
         {
             await InitializeCurrentAsync();
@@ -246,10 +235,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         AddMessage(userMessage);
         AddMessage(assistantMessage);
-        
+
         CurrentMessage = string.Empty;
         IsBusy = true;
-        
+
         ContentAdded?.Invoke(this, EventArgs.Empty);
 
         try
@@ -417,10 +406,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatButtonEvent x:
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    AddMessage(new ChatMessageWithButtonViewModel(x));
-                });
+                Dispatcher.UIThread.Post(() => { AddMessage(new ChatMessageWithButtonViewModel(x)); });
                 break;
             }
             case ChatErrorEvent x:
@@ -454,32 +440,25 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             StatusText = e.StatusText;
         });
     }
-    
+
     private void OnSessionReset(object? sender, EventArgs e)
     {
         Dispatcher.UIThread.Post(() =>
         {
             Messages.Clear();
+            _assistantMessagesById.Clear();
+            _assistantReasoningById.Clear();
+
+            if (SelectedChatService != null)
+            {
+                _messagesByService[SelectedChatService.Name] = new List<ChatMessageState>();
+            }
         });
     }
 
     public void RegisterChatService(IChatService chatService)
     {
         ChatServices.Add(chatService);
-        if (!string.IsNullOrWhiteSpace(_pendingChatServiceName)
-            && string.Equals(chatService.Name, _pendingChatServiceName, StringComparison.Ordinal))
-        {
-            _pendingChatServiceName = null;
-            SelectedChatService = chatService;
-            _isRestoringState = false;
-            _ = InitializeCurrentAsync();
-            return;
-        }
-
-        if (SelectedChatService == null)
-        {
-            SelectedChatService = chatService;
-        }
     }
 
     private void OnFunctionStarted(object? sender, AiFunctionStartedEvent function)
@@ -517,6 +496,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     public void SaveState()
     {
+        if (SelectedChatService != null)
+        {
+            StoreCurrentMessages(SelectedChatService.Name);
+        }
+
         var state = BuildChatState();
 
         try
@@ -545,30 +529,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             var state = JsonSerializer.Deserialize<ChatState>(stream, ChatStateSerializerOptions);
             if (state == null) return;
 
-            _pendingChatServiceName = state.SelectedChatServiceName;
-
             Messages.Clear();
             _assistantMessagesById.Clear();
             _assistantReasoningById.Clear();
+            _messagesByService.Clear();
 
-            foreach (var messageState in state.Messages)
+            foreach (var kvp in state.MessagesByService)
             {
-                if (TryCreateMessage(messageState, out var message))
-                    Messages.Add(message);
+                _messagesByService[kvp.Key] = kvp.Value;
             }
 
-            if (!string.IsNullOrWhiteSpace(_pendingChatServiceName))
-            {
-                var match = ChatServices.FirstOrDefault(x =>
-                    string.Equals(x.Name, _pendingChatServiceName, StringComparison.Ordinal));
-                if (match != null)
-                {
-                    _pendingChatServiceName = null;
-                    SelectedChatService = match;
-                    _isRestoringState = false;
-                    _ = InitializeCurrentAsync();
-                }
-            }
+            SelectedChatService = ChatServices.FirstOrDefault(x => x.Name == state.SelectedChatServiceName) ??
+                                  ChatServices.FirstOrDefault();
         }
         catch (Exception e)
         {
@@ -579,17 +551,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private ChatState BuildChatState()
     {
-        var messages = new List<ChatMessageState>(Messages.Count);
-        foreach (var message in Messages)
-        {
-            var state = BuildMessageState(message);
-            if (state != null) messages.Add(state);
-        }
-
         return new ChatState
         {
             SelectedChatServiceName = SelectedChatService?.Name,
-            Messages = messages
+            MessagesByService = _messagesByService
         };
     }
 
@@ -670,7 +635,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         public string? SelectedChatServiceName { get; set; }
 
-        public List<ChatMessageState> Messages { get; set; } = new();
+        public Dictionary<string, List<ChatMessageState>> MessagesByService { get; set; } = new(StringComparer.Ordinal);
     }
 
     private sealed class ChatMessageState
@@ -699,5 +664,33 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Assistant,
         Reasoning,
         Tool
+    }
+
+    private void StoreCurrentMessages(string serviceName)
+    {
+        var messages = new List<ChatMessageState>(Messages.Count);
+        foreach (var message in Messages)
+        {
+            var state = BuildMessageState(message);
+            if (state != null) messages.Add(state);
+        }
+
+        _messagesByService[serviceName] = messages;
+    }
+
+    private void LoadMessagesForService(string serviceName)
+    {
+        Messages.Clear();
+        _assistantMessagesById.Clear();
+        _assistantReasoningById.Clear();
+
+        if (_messagesByService.TryGetValue(serviceName, out var states))
+        {
+            foreach (var messageState in states)
+            {
+                if (TryCreateMessage(messageState, out var message))
+                    Messages.Add(message);
+            }
+        }
     }
 }
