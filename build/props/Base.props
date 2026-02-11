@@ -5,7 +5,7 @@
         <CoreVersion>$(StudioVersion)</CoreVersion>
         <UniversalFpgaProjectSystemVersion>$(StudioVersion)</UniversalFpgaProjectSystemVersion>
         <EssentialsVersion>$(StudioVersion)</EssentialsVersion>
-        <Version>$(CoreVersion)</Version>
+        <Version>$(StudioVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Description>Next Generation IDE for Electronics Development</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
