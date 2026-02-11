@@ -24,26 +24,7 @@ if (-not $files) {
 
 $errors = 0
 
-# Common runtime/framework prefixes to skip
-$frameworkPatterns = @(
-    '^System\.', '^Microsoft\.', '^WindowsBase$', '^Presentation', '^runtime\.', '^clrcompression', '^mscordaccore'
-)
-
 foreach ($f in $files) {
-    $name = $f.BaseName
-
-    # Skip framework or runtime assemblies
-    if ($frameworkPatterns | Where-Object { $name -match $_ }) {
-        Write-Host ("[SKIP] {0} - framework/runtime assembly" -f $f.FullName)
-        continue
-    }
-
-    # Skip if not under your namespace or not your executable
-    if ($name -notmatch "^$companyPrefix" -and $f.Extension -eq '.dll') {
-        Write-Host ("[SKIP] {0} - not a {1} binary" -f $f.FullName, $companyPrefix)
-        continue
-    }
-
     # Check signature
     try {
         $sig = Get-AuthenticodeSignature -FilePath $f.FullName
