@@ -638,13 +638,12 @@ public class MainDockService : Factory, IMainDockService
                 {
                     // Check if any existing dockable is assignable to this type
                     // This handles both concrete types and interfaces/base classes
-                    var existsInLayout = existingDockables.Any(d => type.IsAssignableFrom(d.GetType()));
+                    var existsInLayout = existingDockables.Any(d => type.IsInstanceOfType(d));
                     
                     if (!existsInLayout)
                     {
                         // Resolve and add the dockable
-                        var dockable = ContainerLocator.Container.Resolve(type) as IDockable;
-                        if (dockable != null)
+                        if (ContainerLocator.Container.Resolve(type) is IDockable dockable)
                         {
                             toolDock.VisibleDockables?.Add(dockable);
                             InitActiveDockable(dockable, toolDock);
@@ -669,12 +668,11 @@ public class MainDockService : Factory, IMainDockService
                         foreach (var type in types)
                         {
                             // Check if any existing dockable is assignable to this type
-                            var existsInLayout = existingDockables.Any(d => type.IsAssignableFrom(d.GetType()));
+                            var existsInLayout = existingDockables.Any(d => type.IsInstanceOfType(d));
                             
                             if (!existsInLayout)
                             {
-                                var dockable = ContainerLocator.Container.Resolve(type) as IDockable;
-                                if (dockable != null)
+                                if (ContainerLocator.Container.Resolve(type) is IDockable dockable)
                                 {
                                     dockable.Proportion = 0.3;
                                     dockable.PinnedBounds = null;
