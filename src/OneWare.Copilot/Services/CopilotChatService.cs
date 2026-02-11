@@ -47,7 +47,7 @@ public sealed class CopilotChatService(
             if (SetProperty(ref field, value) && value != null)
             {
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
-                if (oldValue != null)
+                if (oldValue != null && oldValue.Id != value.Id)
                 {
                     // When a model is changed we reset the session and force a new one on next init
                     SessionReset?.Invoke(this, EventArgs.Empty);
