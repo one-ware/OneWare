@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using DynamicData;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -50,8 +51,6 @@ public abstract class ProjectViewModelBase : ExtendedTool
 
     public IReadOnlyList<IProjectExplorerNode> SelectedItems { get; }
 
-    public ObservableCollection<IProjectExplorerNode> SearchResult { get; } = new();
-
     public HierarchicalTreeDataGridSource<IProjectExplorerNode> Source { get; }
 
 
@@ -74,10 +73,6 @@ public abstract class ProjectViewModelBase : ExtendedTool
     }
 
     #region Searching, Sort and Binding
-
-    public void ResetSearch()
-    {
-    }
 
     public void ClearSelection()
     {
@@ -107,7 +102,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
     private List<int> GetIndexPathFromNode(IProjectExplorerNode node)
     {
         List<int> indexPath = [];
-        if (node.Parent != null)
+        if (node.Parent?.Children != null)
         {
             indexPath.Add(node.Parent.Children.IndexOf(node));
             indexPath.AddRange(GetIndexPathFromNode(node.Parent));
@@ -119,16 +114,56 @@ public abstract class ProjectViewModelBase : ExtendedTool
     public void OnSearch()
     {
         ClearSelection();
-        ResetSearch();
-        foreach (var s in SearchResult) s.Background = Brushes.Transparent;
-        SearchResult.Clear();
-        if (SearchString.Length < 3) return;
+        if (string.IsNullOrWhiteSpace(SearchString)) return;
 
-        //SearchResult.AddRange(DeepSearchName(SearchString));
+        var searchText = SearchString.Trim();
+        if (searchText.Length < 3) return;
 
-        foreach (var r in SearchResult)
-            r.Background = Application.Current?.FindResource(ThemeVariant.Dark, "SearchResultBrush") as IBrush ??
-                           Brushes.Transparent;
+        var bestScore = -1;
+        IProjectRoot? bestProject = null;
+        string? bestRelativePath = null;
+        var comparison = StringComparison.OrdinalIgnoreCase;
+
+        foreach (var project in Projects)
+        {
+            foreach (var relativePath in project.GetFiles())
+            {
+                if (!relativePath.Contains(searchText, comparison)) continue;
+
+                var score = ScoreFileMatch(relativePath, searchText);
+                if (score <= 0) continue;
+
+                if (score > bestScore ||
+                    (score == bestScore && bestRelativePath != null &&
+                     ExplorerNameComparer.Instance.Compare(relativePath, bestRelativePath) < 0))
+                {
+                    bestScore = score;
+                    bestProject = project;
+                    bestRelativePath = relativePath;
+                }
+            }
+        }
+
+        if (bestProject == null || bestRelativePath == null) return;
+
+        var file = bestProject.GetFile(bestRelativePath);
+        if (file == null) return;
+
+        ExpandToRoot(file);
+        AddToSelection(file);
+    }
+
+    private static int ScoreFileMatch(string relativePath, string searchText)
+    {
+        var fileName = Path.GetFileName(relativePath);
+        var comparison = StringComparison.OrdinalIgnoreCase;
+        var score = 0;
+
+        if (fileName.StartsWith(searchText, comparison)) score += 3;
+        else if (fileName.Contains(searchText, comparison)) score += 2;
+        else if (relativePath.Contains(searchText, comparison)) score += 1;
+
+        return score;
     }
 
     public void ExpandToRoot(IProjectExplorerNode node)

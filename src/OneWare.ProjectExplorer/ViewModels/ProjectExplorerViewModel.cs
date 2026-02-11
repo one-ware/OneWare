@@ -62,7 +62,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _recentProjectsFile = Path.Combine(_paths.AppDataDirectory, "RecentProjects.json");
 
         Id = "ProjectExplorer";
-        Title = "Project Explorer";
+        Title = "Explorer";
 
         ApplicationStateService.RegisterShutdownTask(ShutdownAsync);
     }

@@ -62,7 +62,7 @@ public class SourceControlViewModel : ExtendedTool
         _projectExplorerService = projectExplorerService;
 
         Id = "SourceControl";
-        Title = "Source Control";
+        Title = "Git";
 
         InitializeRepositoryCommand =
             new RelayCommand(InitializeRepository, () => _projectExplorerService.ActiveProject != null);

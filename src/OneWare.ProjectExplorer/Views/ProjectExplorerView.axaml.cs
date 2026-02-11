@@ -18,8 +18,7 @@ public partial class ProjectExplorerView : UserControl
 
             AddHandler(SearchBox.SearchEvent, (o, i) => { vm.OnSearch(); }, RoutingStrategies.Bubble);
         });
-
-
+        
         TreeViewContextMenu.Opening += (sender, args) =>
         {
             var topLevel = TopLevel.GetTopLevel(this);

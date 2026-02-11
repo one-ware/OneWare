@@ -23,7 +23,7 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
-        Title = "Library Explorer";
+        Title = "Libraries";
 
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
