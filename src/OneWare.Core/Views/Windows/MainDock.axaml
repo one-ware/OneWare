@@ -76,58 +76,65 @@
                                     <Border Background="{DynamicResource ThemeControlLowBrush}" Grid.Row="1"
                                             BorderThickness="0 1 0 0" Padding="5">
                                         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-                                            <ItemsControl
-                                                ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Vertical" Spacing="5" />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Button Height="NaN" Command="{Binding Command}"
-                                                                HorizontalContentAlignment="Stretch"
-                                                                VerticalContentAlignment="Stretch">
-                                                            <Button.Styles>
-                                                                <Style Selector="Button:disabled">
-                                                                    <Setter Property="Opacity" Value="1" />
-                                                                </Style>
-                                                            </Button.Styles>
-                                                            <Border>
-                                                                <Grid ColumnDefinitions="Auto,*,Auto"
-                                                                      ColumnSpacing="10">
+                                            <Panel>
+                                                <ItemsControl
+                                                    ItemsSource="{Binding ApplicationStateService.CurrentNotifications}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Vertical" Spacing="5" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Button Height="NaN" Command="{Binding Command}"
+                                                                    HorizontalContentAlignment="Stretch"
+                                                                    VerticalContentAlignment="Stretch">
+                                                                <Button.Styles>
+                                                                    <Style Selector="Button:disabled">
+                                                                        <Setter Property="Opacity" Value="1" />
+                                                                    </Style>
+                                                                </Button.Styles>
+                                                                <Border>
+                                                                    <Grid ColumnDefinitions="Auto,*,Auto"
+                                                                          ColumnSpacing="10">
 
-                                                                    <!-- Severity indicator -->
-                                                                    <Border Width="3"
-                                                                            Background="{DynamicResource HighlightBrush}"
-                                                                            CornerRadius="2"
-                                                                            Classes.Warning="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Warning}}"
-                                                                            Classes.Error="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Error}}">
-                                                                        <Border.Styles>
-                                                                            <Style Selector="Border.Warning">
-                                                                                <Setter Property="Background" Value="Orange" />
-                                                                            </Style>
-                                                                            <Style Selector="Border.Error">
-                                                                                <Setter Property="Background" Value="Red" />
-                                                                            </Style>
-                                                                        </Border.Styles>
-                                                                    </Border>
+                                                                        <!-- Severity indicator -->
+                                                                        <Border Width="3"
+                                                                                Background="{DynamicResource HighlightBrush}"
+                                                                                CornerRadius="2"
+                                                                                Classes.Warning="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Warning}}"
+                                                                                Classes.Error="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Error}}">
+                                                                            <Border.Styles>
+                                                                                <Style Selector="Border.Warning">
+                                                                                    <Setter Property="Background"
+                                                                                        Value="Orange" />
+                                                                                </Style>
+                                                                                <Style Selector="Border.Error">
+                                                                                    <Setter Property="Background"
+                                                                                        Value="Red" />
+                                                                                </Style>
+                                                                            </Border.Styles>
+                                                                        </Border>
 
-                                                                    <TextBlock Grid.Column="1"
-                                                                               Text="{Binding Message}"
-                                                                               TextWrapping="Wrap" />
+                                                                        <TextBlock Grid.Column="1"
+                                                                                Text="{Binding Message}"
+                                                                                TextWrapping="Wrap" />
 
-                                                                    <!-- Timestamp -->
-                                                                    <TextBlock Grid.Column="2"
-                                                                               Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}"
-                                                                               FontSize="11"
-                                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                                                </Grid>
-                                                            </Border>
-                                                        </Button>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
+                                                                        <!-- Timestamp -->
+                                                                        <TextBlock Grid.Column="2"
+                                                                                Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}"
+                                                                                FontSize="11"
+                                                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                                    </Grid>
+                                                                </Border>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                
+                                                <TextBlock Foreground="{DynamicResource ThemeForegroundLowBrush}" Text="No notifications at the moment. Check back later" TextWrapping="Wrap" IsVisible="{Binding !ApplicationStateService.CurrentNotifications.Count}" />
+                                            </Panel>
+
                                         </ScrollViewer>
                                     </Border>
                                 </Grid>
@@ -139,9 +146,9 @@
                 <Button ToolTip.Tip="Settings">
                     <Button.Flyout>
                         <MenuFlyout Placement="BottomEdgeAlignedRight">
-                            <MenuItem Header="Run..." Command="{Binding OpenCommandManager}">
+                            <MenuItem Header="Find..." Command="{Binding OpenCommandManager}">
                                 <MenuItem.Icon>
-                                    <Image Source="{DynamicResource VSCodeLight.run}" />
+                                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator />
