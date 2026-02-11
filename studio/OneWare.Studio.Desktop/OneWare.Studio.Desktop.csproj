@@ -13,17 +13,25 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <AssemblyName>OneWareStudio</AssemblyName>
-        <InvariantGlobalization>true</InvariantGlobalization>
-        <PublishReadyToRun>true</PublishReadyToRun>
-        <SelfContained>true</SelfContained>
-        <PublishTrimmed>false</PublishTrimmed>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <!--
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+        <PublishTrimmed>false</PublishTrimmed>
+        -->
+    </PropertyGroup>
+
     <ItemGroup>
-        <ProjectReference Include="..\..\src\OneWare.Chat\OneWare.Chat.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.Copilot\OneWare.Copilot.csproj" />
-        <ProjectReference Include="..\..\src\OneWare.CSharp\OneWare.CSharp.csproj" />
+        <ProjectReference Include="..\..\src\OneWare.Chat\OneWare.Chat.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.Copilot\OneWare.Copilot.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.CSharp\OneWare.CSharp.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.PackageManager\OneWare.PackageManager.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Python\OneWare.Python.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.SourceControl\OneWare.SourceControl.csproj"/>
@@ -40,7 +48,7 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\Startup.png"/>
     </ItemGroup>
-
+    
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64'">
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>

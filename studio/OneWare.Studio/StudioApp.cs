@@ -8,6 +8,7 @@ using OneWare.CruviAdapterExtensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Settings;
+using OneWare.Studio.Styles;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
@@ -58,10 +59,7 @@ public class StudioApp : App
         var themeManager = new ThemeManager(SettingsService, Paths);
         base.Initialize();
         
-        Styles.Add(new StyleInclude(new Uri("avares://OneWare.Studio"))
-        {
-            Source = new Uri("avares://OneWare.Studio/Styles/Theme.axaml")
-        });
+        Styles.Add(new StudioStyles());
     }
 
     protected override void ConfigureModuleCatalog(OneWareModuleCatalog moduleCatalog)
