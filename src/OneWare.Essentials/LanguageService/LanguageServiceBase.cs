@@ -26,6 +26,7 @@ public abstract class LanguageServiceBase : ILanguageService
     public bool IsLanguageServiceReady { get; protected set; }
     public event EventHandler? LanguageServiceActivated;
     public event EventHandler? LanguageServiceDeactivated;
+    public event EventHandler? InlineValueRefreshRequested;
 
     public abstract ITypeAssistance GetTypeAssistance(IEditor editor);
 
@@ -39,6 +40,11 @@ public abstract class LanguageServiceBase : ILanguageService
     {
         Dispatcher.UIThread.Post(() => LanguageServiceDeactivated?.Invoke(this, EventArgs.Empty));
         return Task.CompletedTask;
+    }
+
+    protected void RaiseInlineValueRefreshRequested()
+    {
+        Dispatcher.UIThread.Post(() => InlineValueRefreshRequested?.Invoke(this, EventArgs.Empty));
     }
 
     public virtual async Task RestartAsync()
@@ -156,7 +162,81 @@ public abstract class LanguageServiceBase : ILanguageService
         return Task.FromResult<Container<ColorInformation>?>(null);
     }
 
+    public virtual Task<DocumentLinkContainer?> RequestDocumentLinksAsync(string fullPath)
+    {
+        return Task.FromResult<DocumentLinkContainer?>(null);
+    }
+
+    public virtual Task<DocumentLink?> ResolveDocumentLinkAsync(DocumentLink documentLink)
+    {
+        return Task.FromResult<DocumentLink?>(null);
+    }
+
+    public virtual Task<CodeLensContainer?> RequestCodeLensAsync(string fullPath)
+    {
+        return Task.FromResult<CodeLensContainer?>(null);
+    }
+
+    public virtual Task<CodeLens?> ResolveCodeLensAsync(CodeLens codeLens)
+    {
+        return Task.FromResult<CodeLens?>(null);
+    }
+
+    public virtual Task<Container<SelectionRange>?> RequestSelectionRangeAsync(string fullPath,
+        IEnumerable<Position> positions)
+    {
+        return Task.FromResult<Container<SelectionRange>?>(null);
+    }
+
+    public virtual Task<Container<CallHierarchyItem>?> RequestCallHierarchyPrepareAsync(string fullPath, Position pos)
+    {
+        return Task.FromResult<Container<CallHierarchyItem>?>(null);
+    }
+
+    public virtual Task<Container<CallHierarchyIncomingCall>?> RequestCallHierarchyIncomingAsync(
+        CallHierarchyItem item)
+    {
+        return Task.FromResult<Container<CallHierarchyIncomingCall>?>(null);
+    }
+
+    public virtual Task<Container<CallHierarchyOutgoingCall>?> RequestCallHierarchyOutgoingAsync(
+        CallHierarchyItem item)
+    {
+        return Task.FromResult<Container<CallHierarchyOutgoingCall>?>(null);
+    }
+
+    public virtual Task<Container<TypeHierarchyItem>?> RequestTypeHierarchyPrepareAsync(string fullPath, Position pos)
+    {
+        return Task.FromResult<Container<TypeHierarchyItem>?>(null);
+    }
+
+    public virtual Task<Container<TypeHierarchyItem>?> RequestTypeHierarchySupertypesAsync(TypeHierarchyItem item)
+    {
+        return Task.FromResult<Container<TypeHierarchyItem>?>(null);
+    }
+
+    public virtual Task<Container<TypeHierarchyItem>?> RequestTypeHierarchySubtypesAsync(TypeHierarchyItem item)
+    {
+        return Task.FromResult<Container<TypeHierarchyItem>?>(null);
+    }
+
+    public virtual Task<LinkedEditingRange?> RequestLinkedEditingRangeAsync(string fullPath, Position pos)
+    {
+        return Task.FromResult<LinkedEditingRange?>(null);
+    }
+
+    public virtual Task<Container<InlineValue>?> RequestInlineValuesAsync(string fullPath, Range range,
+        InlineValueContext context)
+    {
+        return Task.FromResult<Container<InlineValue>?>(null);
+    }
+
     public virtual Task<IEnumerable<SemanticToken>?> RequestSemanticTokensFullAsync(string fullPath)
+    {
+        return Task.FromResult<IEnumerable<SemanticToken>?>(null);
+    }
+
+    public virtual Task<IEnumerable<SemanticToken>?> RequestSemanticTokensRangeAsync(string fullPath, Range range)
     {
         return Task.FromResult<IEnumerable<SemanticToken>?>(null);
     }
@@ -172,6 +252,12 @@ public abstract class LanguageServiceBase : ILanguageService
     }
 
     public virtual Task<TextEditContainer?> RequestRangeFormattingAsync(string fullPath, Range range)
+    {
+        return Task.FromResult<TextEditContainer?>(null);
+    }
+
+    public virtual Task<TextEditContainer?> RequestOnTypeFormattingAsync(string fullPath, Position pos,
+        string triggerChar)
     {
         return Task.FromResult<TextEditContainer?>(null);
     }

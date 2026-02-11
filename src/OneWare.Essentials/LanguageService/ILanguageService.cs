@@ -13,6 +13,7 @@ public interface ILanguageService
 
     public event EventHandler? LanguageServiceActivated;
     public event EventHandler? LanguageServiceDeactivated;
+    public event EventHandler? InlineValueRefreshRequested;
 
     public ITypeAssistance GetTypeAssistance(IEditor editor);
 
@@ -63,10 +64,27 @@ public interface ILanguageService
     public Task<IEnumerable<LocationOrLocationLink>?> RequestDeclarationAsync(string fullPath, Position pos);
     public Task<SymbolInformationOrDocumentSymbolContainer?> RequestSymbolsAsync(string fullPath);
     public Task<Container<ColorInformation>?> RequestDocumentColorAsync(string fullPath);
+    public Task<DocumentLinkContainer?> RequestDocumentLinksAsync(string fullPath);
+    public Task<DocumentLink?> ResolveDocumentLinkAsync(DocumentLink documentLink);
+    public Task<CodeLensContainer?> RequestCodeLensAsync(string fullPath);
+    public Task<CodeLens?> ResolveCodeLensAsync(CodeLens codeLens);
+    public Task<Container<SelectionRange>?> RequestSelectionRangeAsync(string fullPath,
+        IEnumerable<Position> positions);
+    public Task<Container<CallHierarchyItem>?> RequestCallHierarchyPrepareAsync(string fullPath, Position pos);
+    public Task<Container<CallHierarchyIncomingCall>?> RequestCallHierarchyIncomingAsync(CallHierarchyItem item);
+    public Task<Container<CallHierarchyOutgoingCall>?> RequestCallHierarchyOutgoingAsync(CallHierarchyItem item);
+    public Task<Container<TypeHierarchyItem>?> RequestTypeHierarchyPrepareAsync(string fullPath, Position pos);
+    public Task<Container<TypeHierarchyItem>?> RequestTypeHierarchySupertypesAsync(TypeHierarchyItem item);
+    public Task<Container<TypeHierarchyItem>?> RequestTypeHierarchySubtypesAsync(TypeHierarchyItem item);
+    public Task<LinkedEditingRange?> RequestLinkedEditingRangeAsync(string fullPath, Position pos);
+    public Task<Container<InlineValue>?> RequestInlineValuesAsync(string fullPath, Range range,
+        InlineValueContext context);
     public Task<IEnumerable<SemanticToken>?> RequestSemanticTokensFullAsync(string fullPath);
+    public Task<IEnumerable<SemanticToken>?> RequestSemanticTokensRangeAsync(string fullPath, Range range);
     public Task<InlayHintContainer?> RequestInlayHintsAsync(string fullPath, Range range);
     public Task<TextEditContainer?> RequestFormattingAsync(string fullPath);
     public Task<TextEditContainer?> RequestRangeFormattingAsync(string fullPath, Range range);
+    public Task<TextEditContainer?> RequestOnTypeFormattingAsync(string fullPath, Position pos, string triggerChar);
     public Task ExecuteCommandAsync(Command cmd);
     public Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param);
     public Task ApplyWorkspaceEditAsync(WorkspaceEdit? param);

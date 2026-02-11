@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
 using Avalonia.Threading;
@@ -25,6 +26,7 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class LanguageServiceLsp(string name, string? workspace) : LanguageServiceBase(name, workspace)
 {
     private readonly Dictionary<ProgressToken, (ApplicationProcess, string)> _tokenRegister = new();
+    private readonly Dictionary<string, SemanticTokensCacheEntry> _semanticTokensCache = new();
 
     private CancellationTokenSource? _cancellation;
     private IChildProcess? _process;
@@ -33,6 +35,12 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     private LanguageClient? Client { get; set; }
     protected string? Arguments { get; set; }
     protected string? ExecutablePath { get; set; }
+
+    private sealed class SemanticTokensCacheEntry
+    {
+        public string? ResultId { get; set; }
+        public List<int> Data { get; } = [];
+    }
 
     public virtual IReadOnlyCollection<KeyValuePair<string, string>> GetExtraEnvironmentVariables()
     {
@@ -167,6 +175,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 options.OnApplyWorkspaceEdit(ApplyWorkspaceEditAsync);
                 options.OnShowMessage(ShowMessage);
                 options.OnTelemetryEvent(TelemetryEvent);
+                options.OnInlineValueRefresh(InlineValueRefresh);
 
                 options.WithCapability(new TextSynchronizationCapability
                 {
@@ -190,25 +199,40 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 {
                     LinkSupport = false
                 });
-                // options.WithCapability(new SemanticTokensCapability()
-                // {
-                //     OverlappingTokenSupport = false,
-                //     ServerCancelSupport = true,
-                //     Requests = new SemanticTokensCapabilityRequests()
-                //     {
-                //         Range = new Supports<SemanticTokensCapabilityRequestRange?>(false),
-                //         Full = new Supports<SemanticTokensCapabilityRequestFull?>(true)
-                //     },
-                //     TokenTypes = new Container<SemanticTokenType>(SemanticTokenType.Type, SemanticTokenType.Function, SemanticTokenType.Variable, SemanticTokenType.Class, SemanticTokenType.Keyword),
-                //     Formats = new Container<SemanticTokenFormat>(SemanticTokenFormat.Relative),
-                //     AugmentsSyntaxTokens = true,
-                //     MultilineTokenSupport = true
-                // });
+                options.WithCapability(new SemanticTokensCapability
+                {
+                    OverlappingTokenSupport = false,
+                    ServerCancelSupport = true,
+                    Requests = new SemanticTokensCapabilityRequests
+                    {
+                        Range = new Supports<SemanticTokensCapabilityRequestRange?>(true),
+                        Full = new Supports<SemanticTokensCapabilityRequestFull?>(
+                            new SemanticTokensCapabilityRequestFull { Delta = true })
+                    },
+                    TokenTypes = new Container<SemanticTokenType>(
+                        (SemanticTokenType[])Enum.GetValues(typeof(SemanticTokenType))),
+                    TokenModifiers = new Container<SemanticTokenModifier>(
+                        (SemanticTokenModifier[])Enum.GetValues(typeof(SemanticTokenModifier))),
+                    Formats = new Container<SemanticTokenFormat>(SemanticTokenFormat.Relative),
+                    AugmentsSyntaxTokens = true,
+                    MultilineTokenSupport = true
+                });
                 // options.WithCapability(new DidChangeWatchedFilesCapability()
                 // {
                 //     
                 // });
                 options.WithCapability(new ReferenceCapability());
+                options.WithCapability(new DocumentLinkCapability
+                {
+                    TooltipSupport = true
+                });
+                options.WithCapability(new CodeLensCapability());
+                options.WithCapability(new SelectionRangeCapability());
+                options.WithCapability(new CallHierarchyCapability());
+                options.WithCapability(new TypeHierarchyCapability());
+                options.WithCapability(new LinkedEditingRangeClientCapabilities());
+                options.WithCapability(new DocumentOnTypeFormattingCapability());
+                options.WithCapability(new InlineValueClientCapabilities());
                 options.WithCapability(new SignatureHelpCapability
                 {
                     SignatureInformation = new SignatureInformationCapabilityOptions
@@ -385,6 +409,11 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         LogLspEvent("telemetry", "event", LogLevel.Debug, telemetry);
     }
 
+    private void InlineValueRefresh(InlineValueRefreshParams param)
+    {
+        RaiseInlineValueRefreshRequested();
+    }
+
     private void LogLspEvent(string eventName, string message, LogLevel level, object? payload = null)
     {
         var logger = ContainerLocator.Container.Resolve<ILogger>();
@@ -442,6 +471,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
     public override void DidCloseTextDocument(string fullPath)
     {
+        _semanticTokensCache.Remove(fullPath);
         Client?.DidCloseTextDocument(new DidCloseTextDocumentParams
         {
             TextDocument = new TextDocumentIdentifier
@@ -514,12 +544,94 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         if (Client?.ServerSettings.Capabilities.SemanticTokensProvider == null) return null;
         try
         {
+            var legend = Client.ServerSettings.Capabilities.SemanticTokensProvider.Legend;
+            if (_semanticTokensCache.TryGetValue(fullPath, out var cache) && !string.IsNullOrWhiteSpace(cache.ResultId))
+            {
+                var delta = await Client.RequestSemanticTokensDelta(new SemanticTokensDeltaParams
+                {
+                    TextDocument = new TextDocumentIdentifier
+                    {
+                        Uri = fullPath
+                    },
+                    PreviousResultId = cache.ResultId
+                });
+
+                if (delta != null && TryUpdateSemanticTokensCache(cache, delta))
+                    return SemanticTokenHelper.ParseSemanticTokens(cache.Data.ToImmutableArray(), legend);
+            }
+
             var semanticTokens = await Client.RequestSemanticTokensFull(new SemanticTokensParams
             {
                 TextDocument = new TextDocumentIdentifier
                 {
                     Uri = fullPath
                 }
+            });
+            if (semanticTokens == null) return null;
+
+            cache = _semanticTokensCache.GetValueOrDefault(fullPath) ?? new SemanticTokensCacheEntry();
+            cache.Data.Clear();
+            cache.Data.AddRange(semanticTokens.Data);
+            cache.ResultId = semanticTokens.ResultId;
+            _semanticTokensCache[fullPath] = cache;
+
+            return SemanticTokenHelper.ParseSemanticTokens(semanticTokens.Data, legend);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    private static bool TryUpdateSemanticTokensCache(SemanticTokensCacheEntry cache, SemanticTokensFullOrDelta delta)
+    {
+        if (delta.IsFull && delta.Full != null)
+        {
+            cache.Data.Clear();
+            cache.Data.AddRange(delta.Full.Data);
+            cache.ResultId = delta.Full.ResultId;
+            return true;
+        }
+
+        if (delta.IsDelta && delta.Delta != null)
+        {
+            var edits = delta.Delta.Edits;
+            if (edits != null)
+            {
+                foreach (var edit in edits)
+                {
+                    var start = Math.Clamp(edit.Start, 0, cache.Data.Count);
+                    var deleteCount = Math.Max(0, edit.DeleteCount);
+                    var removeCount = Math.Min(deleteCount, cache.Data.Count - start);
+                    if (removeCount > 0)
+                        cache.Data.RemoveRange(start, removeCount);
+
+                    if (edit.Data != null)
+                        cache.Data.InsertRange(start, edit.Data);
+                }
+            }
+
+            cache.ResultId = delta.Delta.ResultId;
+            return true;
+        }
+
+        return false;
+    }
+
+    public override async Task<IEnumerable<SemanticToken>?> RequestSemanticTokensRangeAsync(string fullPath, Range range)
+    {
+        if (Client?.ServerSettings.Capabilities.SemanticTokensProvider == null) return null;
+        try
+        {
+            var semanticTokens = await Client.RequestSemanticTokensRange(new SemanticTokensRangeParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Range = range
             });
             if (semanticTokens == null) return null;
 
@@ -875,6 +987,268 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         return null;
     }
 
+    public override async Task<DocumentLinkContainer?> RequestDocumentLinksAsync(string fullPath)
+    {
+        if (Client?.ServerSettings.Capabilities.DocumentLinkProvider == null) return null;
+        try
+        {
+            return await Client.RequestDocumentLink(new DocumentLinkParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<DocumentLink?> ResolveDocumentLinkAsync(DocumentLink documentLink)
+    {
+        if (Client?.ServerSettings.Capabilities.DocumentLinkProvider?.ResolveProvider != true) return null;
+        try
+        {
+            return await Client.ResolveDocumentLink(documentLink);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<CodeLensContainer?> RequestCodeLensAsync(string fullPath)
+    {
+        if (Client?.ServerSettings.Capabilities.CodeLensProvider == null) return null;
+        try
+        {
+            return await Client.RequestCodeLens(new CodeLensParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<CodeLens?> ResolveCodeLensAsync(CodeLens codeLens)
+    {
+        if (Client?.ServerSettings.Capabilities.CodeLensProvider?.ResolveProvider != true) return null;
+        try
+        {
+            return await Client.ResolveCodeLens(codeLens);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<SelectionRange>?> RequestSelectionRangeAsync(string fullPath,
+        IEnumerable<Position> positions)
+    {
+        if (Client?.ServerSettings.Capabilities.SelectionRangeProvider == null) return null;
+        try
+        {
+            return await Client.RequestSelectionRange(new SelectionRangeParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Positions = new Container<Position>(positions)
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<CallHierarchyItem>?> RequestCallHierarchyPrepareAsync(string fullPath,
+        Position pos)
+    {
+        if (Client?.ServerSettings.Capabilities.CallHierarchyProvider == null) return null;
+        try
+        {
+            return await Client.RequestCallHierarchyPrepare(new CallHierarchyPrepareParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Position = pos
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<CallHierarchyIncomingCall>?> RequestCallHierarchyIncomingAsync(
+        CallHierarchyItem item)
+    {
+        if (Client?.ServerSettings.Capabilities.CallHierarchyProvider == null) return null;
+        try
+        {
+            return await Client.RequestCallHierarchyIncoming(new CallHierarchyIncomingCallsParams
+            {
+                Item = item
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<CallHierarchyOutgoingCall>?> RequestCallHierarchyOutgoingAsync(
+        CallHierarchyItem item)
+    {
+        if (Client?.ServerSettings.Capabilities.CallHierarchyProvider == null) return null;
+        try
+        {
+            return await Client.RequestCallHierarchyOutgoing(new CallHierarchyOutgoingCallsParams
+            {
+                Item = item
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<TypeHierarchyItem>?> RequestTypeHierarchyPrepareAsync(string fullPath,
+        Position pos)
+    {
+        if (Client?.ServerSettings.Capabilities.TypeHierarchyProvider == null) return null;
+        try
+        {
+            return await Client.RequestTypeHierarchyPrepare(new TypeHierarchyPrepareParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Position = pos
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<TypeHierarchyItem>?> RequestTypeHierarchySupertypesAsync(
+        TypeHierarchyItem item)
+    {
+        if (Client?.ServerSettings.Capabilities.TypeHierarchyProvider == null) return null;
+        try
+        {
+            return await Client.RequestTypeHierarchySupertypes(new TypeHierarchySupertypesParams
+            {
+                Item = item
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<TypeHierarchyItem>?> RequestTypeHierarchySubtypesAsync(TypeHierarchyItem item)
+    {
+        if (Client?.ServerSettings.Capabilities.TypeHierarchyProvider == null) return null;
+        try
+        {
+            return await Client.RequestTypeHierarchySubtypes(new TypeHierarchySubtypesParams
+            {
+                Item = item
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<LinkedEditingRange?> RequestLinkedEditingRangeAsync(string fullPath, Position pos)
+    {
+        if (Client?.ServerSettings.Capabilities.LinkedEditingRangeProvider == null) return null;
+        try
+        {
+            return await Client.RequestLinkedEditingRange(new LinkedEditingRangeParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Position = pos
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
+    public override async Task<Container<InlineValue>?> RequestInlineValuesAsync(string fullPath, Range range,
+        InlineValueContext context)
+    {
+        if (Client?.ServerSettings.Capabilities.InlineValueProvider == null) return null;
+        try
+        {
+            return await Client.RequestInlineValues(new InlineValueParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Range = range,
+                Context = context
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
+    }
+
     public override async Task<DocumentHighlightContainer?> RequestDocumentHighlightAsync(string fullPath, Position pos)
     {
         if (Client == null || Client.ServerSettings.Capabilities.DocumentHighlightProvider == null) return null;
@@ -993,6 +1367,30 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         });
 
         return formatting;
+    }
+
+    public override async Task<TextEditContainer?> RequestOnTypeFormattingAsync(string fullPath, Position pos,
+        string triggerChar)
+    {
+        if (Client?.ServerSettings.Capabilities.DocumentOnTypeFormattingProvider == null) return null;
+        try
+        {
+            return await Client.RequestDocumentOnTypeFormatting(new DocumentOnTypeFormattingParams
+            {
+                TextDocument = new TextDocumentIdentifier
+                {
+                    Uri = fullPath
+                },
+                Position = pos,
+                Ch = triggerChar
+            });
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+
+        return null;
     }
 
     #region Capability Check

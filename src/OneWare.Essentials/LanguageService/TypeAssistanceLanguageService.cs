@@ -50,6 +50,8 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     private TimeSpan _lastDocumentChangedRefreshTime = DateTime.Now.TimeOfDay;
 
     private TimeSpan _lastEditTime = DateTime.Now.TimeOfDay;
+    private InlineValueContext? _inlineValueContext;
+    private Range? _inlineValueRange;
 
     protected TypeAssistanceLanguageService(IEditor evm, ILanguageService langService) : base(evm)
     {
@@ -191,6 +193,18 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var typeDefinitionMenuItem =
             CreateLocationMenuItem("GoToTypeDefinition", "Go to Type Definition", typeDefinition);
         if (typeDefinitionMenuItem != null && IsOpen) menuItems.Add(typeDefinitionMenuItem);
+
+        var callHierarchyMenuItem = await CreateCallHierarchyMenuItemAsync(pos);
+        if (callHierarchyMenuItem != null && IsOpen) menuItems.Add(callHierarchyMenuItem);
+
+        var typeHierarchyMenuItem = await CreateTypeHierarchyMenuItemAsync(pos);
+        if (typeHierarchyMenuItem != null && IsOpen) menuItems.Add(typeHierarchyMenuItem);
+
+        var codeLensMenuItem = await CreateCodeLensMenuItemAsync(location.Line - 1);
+        if (codeLensMenuItem != null && IsOpen) menuItems.Add(codeLensMenuItem);
+
+        var documentLinkMenuItem = await CreateDocumentLinkMenuItemAsync(pos);
+        if (documentLinkMenuItem != null && IsOpen) menuItems.Add(documentLinkMenuItem);
         return menuItems;
     }
 
@@ -258,7 +272,235 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 return () => _ = GoToLocationAsync(normalized[0]);
         }
 
+        var docLink = await GetDocumentLinkAtPositionAsync(new Position(location.Line - 1, location.Column - 1));
+        if (docLink != null && IsOpen)
+            return () => _ = OpenDocumentLinkAsync(docLink);
+
         return null;
+    }
+
+    public void SetInlineValueContext(InlineValueContext context, Range? range = null)
+    {
+        _inlineValueContext = context;
+        _inlineValueRange = range;
+        if (IsOpen) _ = UpdateInlineValuesAsync();
+    }
+
+    private async Task<MenuItemModel?> CreateDocumentLinkMenuItemAsync(Position position)
+    {
+        var link = await GetDocumentLinkAtPositionAsync(position);
+        if (link == null) return null;
+
+        var target = link.Target?.ToString();
+        return new MenuItemModel("DocumentLink")
+        {
+            Header = string.IsNullOrWhiteSpace(target) ? "Open Link" : $"Open Link: {target}",
+            Command = new AsyncRelayCommand<DocumentLink>(OpenDocumentLinkAsync),
+            CommandParameter = link
+        };
+    }
+
+    private async Task<DocumentLink?> GetDocumentLinkAtPositionAsync(Position position)
+    {
+        var links = await Service.RequestDocumentLinksAsync(CurrentFilePath);
+        if (links == null) return null;
+
+        foreach (var link in links)
+            if (RangeContainsPosition(link.Range, position))
+                return link;
+
+        return null;
+    }
+
+    private async Task OpenDocumentLinkAsync(DocumentLink link)
+    {
+        var resolved = link.Target != null ? link : await Service.ResolveDocumentLinkAsync(link) ?? link;
+        if (resolved.Target == null) return;
+
+        var targetPath = resolved.Target.GetFileSystemPath();
+        if (!string.IsNullOrWhiteSpace(targetPath) && File.Exists(targetPath))
+        {
+            await ContainerLocator.Container.Resolve<IMainDockService>().OpenFileAsync(targetPath);
+            return;
+        }
+
+        var targetString = resolved.Target.ToString();
+        if (!string.IsNullOrWhiteSpace(targetString))
+            PlatformHelper.OpenHyperLink(targetString);
+    }
+
+    private async Task<MenuItemModel?> CreateCodeLensMenuItemAsync(int line)
+    {
+        var codeLens = await Service.RequestCodeLensAsync(CurrentFilePath);
+        if (codeLens == null || codeLens.Count == 0) return null;
+
+        var items = new ObservableCollection<MenuItemModel>();
+        foreach (var lens in codeLens.Where(x => RangeContainsLine(x.Range, line)))
+        {
+            var resolved = lens.Command != null ? lens : await Service.ResolveCodeLensAsync(lens) ?? lens;
+            if (resolved.Command == null) continue;
+
+            items.Add(new MenuItemModel("CodeLensItem")
+            {
+                Header = resolved.Command.Title ?? "Code Lens",
+                Command = new AsyncRelayCommand<Command>(Service.ExecuteCommandAsync),
+                CommandParameter = resolved.Command
+            });
+        }
+
+        if (items.Count == 0) return null;
+        return new MenuItemModel("CodeLens")
+        {
+            Header = "Code Lens",
+            Items = items
+        };
+    }
+
+    private async Task<MenuItemModel?> CreateCallHierarchyMenuItemAsync(Position position)
+    {
+        var prepared = await Service.RequestCallHierarchyPrepareAsync(CurrentFilePath, position);
+        if (prepared == null || prepared.Count == 0) return null;
+
+        var root = prepared.First();
+        var incoming = await Service.RequestCallHierarchyIncomingAsync(root);
+        var outgoing = await Service.RequestCallHierarchyOutgoingAsync(root);
+
+        var items = new ObservableCollection<MenuItemModel>();
+        if (incoming != null && incoming.Count > 0)
+        {
+            var incomingItems = BuildCallHierarchyItems(incoming.Select(x =>
+                (x.From, x.FromRanges?.FirstOrDefault())));
+            if (incomingItems.Count > 0)
+                items.Add(new MenuItemModel("IncomingCalls") { Header = "Incoming Calls", Items = incomingItems });
+        }
+
+        if (outgoing != null && outgoing.Count > 0)
+        {
+            var outgoingItems = BuildCallHierarchyItems(outgoing.Select(x =>
+                (x.To, (Range?)null)));
+            if (outgoingItems.Count > 0)
+                items.Add(new MenuItemModel("OutgoingCalls") { Header = "Outgoing Calls", Items = outgoingItems });
+        }
+
+        if (items.Count == 0) return null;
+        return new MenuItemModel("CallHierarchy")
+        {
+            Header = "Call Hierarchy",
+            Items = items
+        };
+    }
+
+    private async Task<MenuItemModel?> CreateTypeHierarchyMenuItemAsync(Position position)
+    {
+        var prepared = await Service.RequestTypeHierarchyPrepareAsync(CurrentFilePath, position);
+        if (prepared == null || prepared.Count == 0) return null;
+
+        var root = prepared.First();
+        var supertypes = await Service.RequestTypeHierarchySupertypesAsync(root);
+        var subtypes = await Service.RequestTypeHierarchySubtypesAsync(root);
+
+        var items = new ObservableCollection<MenuItemModel>();
+        if (supertypes != null && supertypes.Count > 0)
+        {
+            var superItems = BuildTypeHierarchyItems(supertypes);
+            if (superItems.Count > 0)
+                items.Add(new MenuItemModel("Supertypes") { Header = "Supertypes", Items = superItems });
+        }
+
+        if (subtypes != null && subtypes.Count > 0)
+        {
+            var subItems = BuildTypeHierarchyItems(subtypes);
+            if (subItems.Count > 0)
+                items.Add(new MenuItemModel("Subtypes") { Header = "Subtypes", Items = subItems });
+        }
+
+        if (items.Count == 0) return null;
+        return new MenuItemModel("TypeHierarchy")
+        {
+            Header = "Type Hierarchy",
+            Items = items
+        };
+    }
+
+    private ObservableCollection<MenuItemModel> BuildCallHierarchyItems(
+        IEnumerable<(CallHierarchyItem Item, Range? Range)> items)
+    {
+        var result = new ObservableCollection<MenuItemModel>();
+        var index = 1;
+        foreach (var entry in items)
+        {
+            var location = CreateHierarchyLocation(entry.Item, entry.Range);
+            if (location == null) continue;
+
+            result.Add(new MenuItemModel("CallHierarchyItem")
+            {
+                Header = FormatHierarchyLocationHeader(entry.Item.Name, location, index++),
+                Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
+                CommandParameter = location
+            });
+        }
+
+        return result;
+    }
+
+    private ObservableCollection<MenuItemModel> BuildTypeHierarchyItems(IEnumerable<TypeHierarchyItem> items)
+    {
+        var result = new ObservableCollection<MenuItemModel>();
+        var index = 1;
+        foreach (var entry in items)
+        {
+            var location = CreateHierarchyLocation(entry);
+            if (location == null) continue;
+
+            result.Add(new MenuItemModel("TypeHierarchyItem")
+            {
+                Header = FormatHierarchyLocationHeader(entry.Name, location, index++),
+                Command = new AsyncRelayCommand<Location>(GoToLocationAsync),
+                CommandParameter = location
+            });
+        }
+
+        return result;
+    }
+
+    private static Location? CreateHierarchyLocation(CallHierarchyItem item, Range? overrideRange = null)
+    {
+        if (item.Uri == null) return null;
+        var range = overrideRange ?? item.SelectionRange ?? item.Range;
+        if (range == null) return null;
+        return new Location { Uri = item.Uri, Range = range };
+    }
+
+    private static Location? CreateHierarchyLocation(TypeHierarchyItem item, Range? overrideRange = null)
+    {
+        if (item.Uri == null) return null;
+        var range = overrideRange ?? item.SelectionRange ?? item.Range;
+        if (range == null) return null;
+        return new Location { Uri = item.Uri, Range = range };
+    }
+
+    private static string FormatHierarchyLocationHeader(string? name, Location location, int index)
+    {
+        var path = location.Uri?.GetFileSystemPath();
+        var fileName = string.IsNullOrWhiteSpace(path) ? location.Uri?.ToString() ?? "Unknown" : Path.GetFileName(path);
+        var line = location.Range.Start.Line + 1;
+        var column = location.Range.Start.Character + 1;
+        var header = $"{index}. {fileName}:{line}:{column}";
+        return string.IsNullOrWhiteSpace(name) ? header : $"{index}. {name} ({fileName}:{line}:{column})";
+    }
+
+    private static bool RangeContainsPosition(Range range, Position position)
+    {
+        if (position.Line < range.Start.Line || position.Line > range.End.Line) return false;
+        if (position.Line == range.Start.Line && position.Character < range.Start.Character) return false;
+        if (position.Line == range.End.Line && position.Character >= range.End.Character) return false;
+        return true;
+    }
+
+    private static bool RangeContainsLine(Range? range, int line)
+    {
+        if (range == null) return false;
+        return line >= range.Start.Line && line <= range.End.Line;
     }
 
     protected virtual async Task GoToLocationAsync(Location? location)
@@ -549,6 +791,65 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             }));
         else
             Editor.Editor.InlayHintGenerator.ClearInlineHints();
+    }
+
+    protected virtual async Task UpdateInlineValuesAsync()
+    {
+        if (_inlineValueContext == null || CodeBox.Document.LineCount == 0) return;
+
+        var range = _inlineValueRange ?? new Range(0, 0, CodeBox.Document.LineCount,
+            CodeBox.Document.GetLineByNumber(CodeBox.Document.LineCount).Length);
+
+        var inlineValues = await Service.RequestInlineValuesAsync(CurrentFilePath, range, _inlineValueContext);
+        if (inlineValues != null)
+        {
+            var hints = new List<InlineValueHint>();
+            foreach (var inlineValue in inlineValues)
+            {
+                if (!TryGetInlineValueHint(inlineValue, out var hint)) continue;
+                hints.Add(hint);
+            }
+
+            Editor.Editor.InlineValueGenerator.SetInlineValues(hints);
+        }
+        else
+        {
+            Editor.Editor.InlineValueGenerator.ClearInlineValues();
+        }
+    }
+
+    private bool TryGetInlineValueHint(InlineValue inlineValue, out InlineValueHint hint)
+    {
+        hint = null!;
+
+        var rangeProp = inlineValue.GetType().GetProperty("Range");
+        var range = rangeProp?.GetValue(inlineValue) as Range;
+        if (range == null) return false;
+
+        var text = ExtractInlineValueText(inlineValue);
+        if (string.IsNullOrWhiteSpace(text)) return false;
+
+        var offset = Editor.CurrentDocument.GetOffsetFromPosition(range.Start) - 1;
+        if (offset < 0) return false;
+
+        hint = new InlineValueHint
+        {
+            Offset = offset,
+            Text = text
+        };
+        return true;
+    }
+
+    private static string? ExtractInlineValueText(InlineValue inlineValue)
+    {
+        var text = inlineValue.GetType().GetProperty("Text")?.GetValue(inlineValue) as string;
+        if (!string.IsNullOrWhiteSpace(text)) return text;
+
+        var expression = inlineValue.GetType().GetProperty("Expression")?.GetValue(inlineValue) as string;
+        if (!string.IsNullOrWhiteSpace(expression)) return expression;
+
+        var variableName = inlineValue.GetType().GetProperty("VariableName")?.GetValue(inlineValue) as string;
+        return string.IsNullOrWhiteSpace(variableName) ? null : variableName;
     }
 
     protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar,
@@ -905,6 +1206,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         Service.LanguageServiceActivated += Server_Activated;
         Service.LanguageServiceDeactivated += Server_Deactivated;
+        Service.InlineValueRefreshRequested += InlineValueRefreshRequested;
 
         if (Service.IsLanguageServiceReady) Server_Activated(this, EventArgs.Empty);
 
@@ -979,6 +1281,12 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         OnAssistanceDeactivated();
     }
 
+    private void InlineValueRefreshRequested(object? sender, EventArgs e)
+    {
+        if (!IsOpen) return;
+        _ = UpdateInlineValuesAsync();
+    }
+
     protected override void OnAssistanceActivated()
     {
         if (!IsOpen) return;
@@ -988,6 +1296,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         _ = UpdateSemanticTokensAsync();
         _ = UpdateInlayHintsAsync();
+        _ = UpdateInlineValuesAsync();
     }
 
     protected override void OnAssistanceDeactivated()
@@ -997,6 +1306,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         Editor.Editor.ModificationService.ClearModification("caretHighlight");
         Editor.Editor.ModificationService.ClearModification("semanticTokens");
         Editor.Editor.InlayHintGenerator.ClearInlineHints();
+        Editor.Editor.InlineValueGenerator.ClearInlineValues();
     }
 
     protected virtual void DocumentChanged(object? sender, DocumentChangeEventArgs e)
@@ -1022,6 +1332,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         Editor.FileSaved -= FileSaved;
         Service.LanguageServiceActivated -= Server_Activated;
         Service.LanguageServiceDeactivated -= Server_Deactivated;
+        Service.InlineValueRefreshRequested -= InlineValueRefreshRequested;
         if (_dispatcherTimer != null)
         {
             _dispatcherTimer.Tick -= Timer_Tick;
