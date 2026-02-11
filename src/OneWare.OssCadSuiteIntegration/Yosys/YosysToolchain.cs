@@ -10,7 +10,7 @@ public class YosysToolchain(YosysService yosysService) : IFpgaToolchain
 {
     public const string ToolChainId = "yosys";
 
-    public string Id => ToolChainId;
+    public virtual string Id => ToolChainId;
     
     public virtual string Name => "Yosys";
 
