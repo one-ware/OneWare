@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using OneWare.CloudIntegration.Services;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -107,7 +108,7 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 
             ContainerLocator.Current.Resolve<IWindowService>().ActivateMainWindow();
             ContainerLocator.Current.Resolve<IMainDockService>()
-                .Show(ContainerLocator.Current.Resolve<IOutputService>());
+                .Show(ContainerLocator.Current.Resolve<IOutputService>(), DockShowLocation.Bottom);
             ContainerLocator.Current.Resolve<ILogger>()
                 .Log("Successfully logged in to OneWare Cloud via browser authentication.", true, Brushes.Lime);
         }

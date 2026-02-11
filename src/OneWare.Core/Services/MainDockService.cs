@@ -339,31 +339,224 @@ public class MainDockService : Factory, IMainDockService
             InitActiveDockable(dockable, _mainDocumentDockViewModel);
             SetActiveDockable(dockable);
         }
+        else if (location == DockShowLocation.Left || location == DockShowLocation.Right || location == DockShowLocation.Bottom)
+        {
+            // Find the appropriate tool dock based on location
+            var toolDock = FindOrCreateToolDock(location);
+            if (toolDock != null)
+            {
+                toolDock.VisibleDockables?.Add(dockable);
+                InitActiveDockable(dockable, toolDock);
+                SetActiveDockable(dockable);
+            }
+            else
+            {
+                // Fallback to window if tool dock not found
+                ShowAsWindow(dockable);
+            }
+        }
+        else if (location == DockShowLocation.LeftPinned || location == DockShowLocation.RightPinned)
+        {
+            // Handle pinned dockables
+            AddPinnedDockable(dockable, location);
+        }
         else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                var window = CreateWindowFrom(dockable);
-
-                if (Layout == null) throw new NullReferenceException(nameof(Layout));
-
-                if (window != null)
-                {
-                    var mainWindow = ContainerLocator.Current.Resolve<MainWindow>();
-                    AddWindow(Layout, window);
-                    window.Height = 400;
-                    window.Width = 600;
-                    window.X = mainWindow.Position.X + mainWindow.Width / 2 - window.Width / 2;
-                    window.Y = mainWindow.Position.Y + mainWindow.Height / 2 - window.Height / 2;
-                    window.Topmost = false;
-                    window.Present(false);
-                    SetActiveDockable(dockable);
-                    if (window.Host is Window win) win.Topmost = false;
-                }
-            });
+            ShowAsWindow(dockable);
         }
 
         if (dockable is IWaitForContent wC) wC.InitializeContent();
+    }
+
+    private void ShowAsWindow(IDockable dockable)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var window = CreateWindowFrom(dockable);
+
+            if (Layout == null) throw new NullReferenceException(nameof(Layout));
+
+            if (window != null)
+            {
+                var mainWindow = ContainerLocator.Current.Resolve<MainWindow>();
+                AddWindow(Layout, window);
+                window.Height = 400;
+                window.Width = 600;
+                window.X = mainWindow.Position.X + mainWindow.Width / 2 - window.Width / 2;
+                window.Y = mainWindow.Position.Y + mainWindow.Height / 2 - window.Height / 2;
+                window.Topmost = false;
+                window.Present(false);
+                SetActiveDockable(dockable);
+                if (window.Host is Window win) win.Topmost = false;
+            }
+        });
+    }
+
+    private ToolDock? FindOrCreateToolDock(DockShowLocation location)
+    {
+        if (Layout == null) return null;
+
+        // Map location to dock ID
+        var dockId = location switch
+        {
+            DockShowLocation.Left => "LeftPaneTop",
+            DockShowLocation.Bottom => "BottomPaneOne",
+            DockShowLocation.Right => "RightPaneTop",
+            _ => null
+        };
+
+        if (dockId == null) return null;
+
+        // Search for the tool dock
+        var toolDock = SearchView<ToolDock>().FirstOrDefault(t => t.Id == dockId);
+
+        // If not found, try to create it
+        if (toolDock == null)
+        {
+            toolDock = CreateToolDockForLocation(location, dockId);
+        }
+
+        return toolDock;
+    }
+
+    private ToolDock? CreateToolDockForLocation(DockShowLocation location, string dockId)
+    {
+        if (Layout == null) return null;
+
+        var alignment = location switch
+        {
+            DockShowLocation.Left => Alignment.Left,
+            DockShowLocation.Bottom => Alignment.Bottom,
+            DockShowLocation.Right => Alignment.Right,
+            _ => Alignment.Unset
+        };
+
+        if (alignment == Alignment.Unset) return null;
+
+        var toolDock = new ToolDock
+        {
+            Id = dockId,
+            Title = dockId,
+            VisibleDockables = CreateList<IDockable>(),
+            Alignment = alignment
+        };
+
+        // Find the parent proportional dock
+        var parentDockId = location switch
+        {
+            DockShowLocation.Left => "LeftPane",
+            DockShowLocation.Bottom => "BottomRow",
+            DockShowLocation.Right => "RightPane",
+            _ => null
+        };
+
+        if (parentDockId != null)
+        {
+            var parentDock = SearchView<ProportionalDock>().FirstOrDefault(p => p.Id == parentDockId);
+            if (parentDock == null)
+            {
+                // Create the parent proportional dock if it doesn't exist
+                parentDock = CreateProportionalDockForLocation(location, parentDockId);
+            }
+
+            if (parentDock != null)
+            {
+                parentDock.VisibleDockables?.Add(toolDock);
+                InitActiveDockable(toolDock, parentDock);
+                return toolDock;
+            }
+        }
+
+        return null;
+    }
+
+    private ProportionalDock? CreateProportionalDockForLocation(DockShowLocation location, string dockId)
+    {
+        if (Layout == null) return null;
+
+        var proportion = location switch
+        {
+            DockShowLocation.Left => 0.25,
+            DockShowLocation.Bottom => 0.3,
+            DockShowLocation.Right => 0.25,
+            _ => double.NaN
+        };
+
+        Orientation? orientation = location switch
+        {
+            DockShowLocation.Left => Orientation.Vertical,
+            DockShowLocation.Bottom => Orientation.Horizontal,
+            DockShowLocation.Right => Orientation.Vertical,
+            _ => null
+        };
+
+        if (orientation == null) return null;
+
+        var proportionalDock = new ProportionalDock
+        {
+            Id = dockId,
+            Title = dockId,
+            Proportion = proportion,
+            Orientation = orientation.Value,
+            VisibleDockables = CreateList<IDockable>()
+        };
+
+        // Try to insert into main layout
+        var mainLayout = SearchView<ProportionalDock>().FirstOrDefault(p => p.Id == "MainLayout");
+        if (mainLayout != null)
+        {
+            if (location == DockShowLocation.Left)
+            {
+                // Insert at the beginning
+                mainLayout.VisibleDockables?.Insert(0, proportionalDock);
+                if (mainLayout.VisibleDockables?.Count > 1)
+                {
+                    mainLayout.VisibleDockables.Insert(1, new ProportionalDockSplitter());
+                }
+            }
+            else if (location == DockShowLocation.Bottom || location == DockShowLocation.Right)
+            {
+                // Find RightPane and add bottom dock to it
+                var rightPane = SearchView<ProportionalDock>().FirstOrDefault(p => p.Id == "RightPane");
+                if (rightPane != null && location == DockShowLocation.Bottom)
+                {
+                    rightPane.VisibleDockables?.Add(new ProportionalDockSplitter());
+                    rightPane.VisibleDockables?.Add(proportionalDock);
+                }
+                else if (location == DockShowLocation.Right)
+                {
+                    mainLayout.VisibleDockables?.Add(new ProportionalDockSplitter());
+                    mainLayout.VisibleDockables?.Add(proportionalDock);
+                }
+            }
+
+            InitActiveDockable(proportionalDock, mainLayout);
+            return proportionalDock;
+        }
+
+        return null;
+    }
+
+    private void AddPinnedDockable(IDockable dockable, DockShowLocation location)
+    {
+        if (Layout is not RootDock rootDock) return;
+
+        dockable.Proportion = 0.3;
+        dockable.PinnedBounds = null;
+
+        switch (location)
+        {
+            case DockShowLocation.LeftPinned:
+                rootDock.LeftPinnedDockables?.Add(dockable);
+                break;
+            case DockShowLocation.RightPinned:
+                rootDock.RightPinnedDockables?.Add(dockable);
+                break;
+        }
+        
+        //InitActiveDockable(dockable, rootDock);
+        SetActiveDockable(dockable);
+        PreviewPinnedDockable(dockable);
     }
 
     #endregion
@@ -374,6 +567,7 @@ public class MainDockService : Factory, IMainDockService
     public void LoadLayout(string name, bool reset = false)
     {
         RootDock? layout = null;
+        var wasLoadedFromFile = false;
 
         if (!reset && layout == null) //Docking system load
             try
@@ -383,6 +577,7 @@ public class MainDockService : Factory, IMainDockService
                 {
                     using var stream = File.OpenRead(layoutPath);
                     layout = _serializer.Load<RootDock>(stream);
+                    wasLoadedFromFile = true;
                 }
             }
             catch (Exception e)
@@ -406,6 +601,138 @@ public class MainDockService : Factory, IMainDockService
         InitLayout(layout);
 
         Layout = layout;
+        
+        // Only merge registrations if layout was loaded from file (to add new plugins)
+        // Skip if it's a fresh default layout (already has everything)
+        if (wasLoadedFromFile)
+        {
+            MergeLayoutRegistrations();
+        }
+    }
+    
+    private void MergeLayoutRegistrations()
+    {
+        if (Layout == null) return;
+
+        // Get all existing dockables in the layout to avoid duplicates
+        var existingDockables = SearchAllDockables(Layout).ToList();
+
+        // Process each location registration
+        foreach (var (location, types) in LayoutRegistrations)
+        {
+            if (types.Count == 0) continue;
+
+            // Find the appropriate tool dock for this location
+            var toolDock = location switch
+            {
+                DockShowLocation.Left => SearchView<ToolDock>().FirstOrDefault(t => t.Id == "LeftPaneTop"),
+                DockShowLocation.Bottom => SearchView<ToolDock>().FirstOrDefault(t => t.Id == "BottomPaneOne"),
+                DockShowLocation.Right => SearchView<ToolDock>().FirstOrDefault(t => t.Id == "RightPaneTop"),
+                _ => null
+            };
+
+            if (toolDock != null)
+            {
+                // Check which registered types are not already in the layout
+                foreach (var type in types)
+                {
+                    // Check if any existing dockable is assignable to this type
+                    // This handles both concrete types and interfaces/base classes
+                    var existsInLayout = existingDockables.Any(d => type.IsInstanceOfType(d));
+                    
+                    if (!existsInLayout)
+                    {
+                        // Resolve and add the dockable
+                        if (ContainerLocator.Container.Resolve(type) is IDockable dockable)
+                        {
+                            toolDock.VisibleDockables?.Add(dockable);
+                            InitActiveDockable(dockable, toolDock);
+                            
+                            // Add to our tracking list to avoid duplicate adds in same session
+                            existingDockables.Add(dockable);
+                        }
+                    }
+                }
+            }
+            else if (location == DockShowLocation.LeftPinned || location == DockShowLocation.RightPinned)
+            {
+                // Handle pinned dockables
+                if (Layout is RootDock rootDock)
+                {
+                    var pinnedList = location == DockShowLocation.LeftPinned 
+                        ? rootDock.LeftPinnedDockables 
+                        : rootDock.RightPinnedDockables;
+
+                    if (pinnedList != null)
+                    {
+                        foreach (var type in types)
+                        {
+                            // Check if any existing dockable is assignable to this type
+                            var existsInLayout = existingDockables.Any(d => type.IsInstanceOfType(d));
+                            
+                            if (!existsInLayout)
+                            {
+                                if (ContainerLocator.Container.Resolve(type) is IDockable dockable)
+                                {
+                                    dockable.Proportion = 0.3;
+                                    dockable.PinnedBounds = null;
+                                    pinnedList.Add(dockable);
+                                    InitActiveDockable(dockable, rootDock);
+                                    
+                                    // Add to our tracking list to avoid duplicate adds in same session
+                                    existingDockables.Add(dockable);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private IEnumerable<IDockable> SearchAllDockables(IDockable? layout)
+    {
+        if (layout is IDock { VisibleDockables: not null } dock)
+        {
+            foreach (var dockable in dock.VisibleDockables)
+            {
+                yield return dockable;
+                if (dockable is IDock sub)
+                {
+                    foreach (var child in SearchAllDockables(sub))
+                        yield return child;
+                }
+            }
+        }
+
+        if (layout is IRootDock rootDock)
+        {
+            if (rootDock.LeftPinnedDockables != null)
+                foreach (var dockable in rootDock.LeftPinnedDockables)
+                    yield return dockable;
+
+            if (rootDock.TopPinnedDockables != null)
+                foreach (var dockable in rootDock.TopPinnedDockables)
+                    yield return dockable;
+
+            if (rootDock.RightPinnedDockables != null)
+                foreach (var dockable in rootDock.RightPinnedDockables)
+                    yield return dockable;
+
+            if (rootDock.BottomPinnedDockables != null)
+                foreach (var dockable in rootDock.BottomPinnedDockables)
+                    yield return dockable;
+
+            if (rootDock.Windows != null)
+            {
+                foreach (var win in rootDock.Windows)
+                {
+                    if (win.Layout != null)
+                        foreach (var child in SearchAllDockables(win.Layout))
+                            yield return child;
+                }
+            }
+        }
     }
 
     public void SaveLayout()

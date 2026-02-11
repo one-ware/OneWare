@@ -31,7 +31,7 @@ public class OutputModule : OneWareModuleBase
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Output")
         {
             Header = "Output",
-            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IOutputService>())),
+            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IOutputService>(), DockShowLocation.Bottom)),
             Icon = new IconModel(OutputViewModel.IconKey)
         });
     }

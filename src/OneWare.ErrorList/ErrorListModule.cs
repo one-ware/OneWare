@@ -41,7 +41,7 @@ public class ErrorListModule : OneWareModuleBase
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("Problems")
         {
             Header = "Problems",
-            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IErrorService>())),
+            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IErrorService>(), DockShowLocation.Bottom)),
             Icon = new IconModel(ErrorListViewModel.IconKey)
         });
     }

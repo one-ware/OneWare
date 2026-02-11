@@ -18,10 +18,10 @@
 
     <PropertyGroup>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <PublishReadyToRun>true</PublishReadyToRun>
-        <!--
+        <!-- TODO we can experiment with this to improve startup performance and size, but it causes issues with reflection and we need to make sure to test all features if we enable it.
+        <PublishSingleFile>true</PublishSingleFile>
         <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
         <PublishTrimmed>false</PublishTrimmed>
         -->

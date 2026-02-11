@@ -37,7 +37,7 @@ public class ChatModule : OneWareModuleBase
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("AI Chat")
         {
             Header = "AI Chat",
-            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>())),
+            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IChatManagerService>(), DockShowLocation.RightPinned)),
             Icon = new IconModel(ChatViewModel.IconKey),
         });
     }
