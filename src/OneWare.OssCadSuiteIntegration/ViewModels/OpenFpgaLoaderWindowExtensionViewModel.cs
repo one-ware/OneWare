@@ -26,7 +26,7 @@ public class OpenFpgaLoaderWindowExtensionViewModel : ObservableObject
         _fpga = fpgaService.FpgaPackages.FirstOrDefault(x => x.Name == projectRoot.Properties.GetString("fpga"))
             ?.LoadFpga();
 
-        IsVisible = projectRoot.Loader is OpenFpgaLoader;
+        IsVisible = projectRoot.Loader is OpenFpgaLoader.LoaderId;
         IsEnabled = _fpga != null;
     }
 

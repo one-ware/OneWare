@@ -14,7 +14,8 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
     IToolExecutionDispatcherService toolExecutionDispatcherService)
     : IFpgaLoader
 {
-    public string Id => "openFpgaLoader";
+    public const string LoaderId = "openFpgaLoader";
+    public string Id => LoaderId;
     public string Name => "OpenFpgaLoader";
 
     public async Task DownloadAsync(UniversalFpgaProjectRoot project)
