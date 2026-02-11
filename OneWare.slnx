@@ -82,6 +82,8 @@
     <Project Path="demo/OneWare.Demo/OneWare.Demo.csproj" />
   </Folder>
   <Folder Name="/docs/">
+    <File Path="docs/DockingSystemTestScenarios.md" />
+    <File Path="docs/DuplicateDockablesFix.md" />
     <File Path="docs/PluginDevelopment.md" />
   </Folder>
   <Folder Name="/Extensions/">

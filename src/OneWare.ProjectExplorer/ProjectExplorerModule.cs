@@ -63,7 +63,7 @@ public class ProjectExplorerModule : OneWareModuleBase
             new MenuItemModel("Project Explorer")
             {
                 Header = "Project Explorer",
-                Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IProjectExplorerService>())),
+                Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IProjectExplorerService>(), DockShowLocation.Left)),
                 Icon = new IconModel(ProjectExplorerViewModel.IconKey)
             });
     }

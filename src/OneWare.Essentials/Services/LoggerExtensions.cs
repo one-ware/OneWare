@@ -43,7 +43,7 @@ public static class LoggerExtensions
 
         if (LayoutLoaded)
             ContainerLocator.Current.Resolve<IMainDockService>()
-                .Show(ContainerLocator.Current.Resolve<IOutputService>());
+                .Show(ContainerLocator.Current.Resolve<IOutputService>(), DockShowLocation.Bottom);
     }
 
     private static void ShowDialog(string message, Exception? exception, bool showDialog, string title,

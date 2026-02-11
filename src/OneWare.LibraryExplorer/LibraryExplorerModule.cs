@@ -28,7 +28,7 @@ public class LibraryExplorerModule : OneWareModuleBase
             new MenuItemModel("Library Explorer")
             {
                 Header = "Library Explorer",
-                Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<LibraryExplorerViewModel>())),
+                Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<LibraryExplorerViewModel>(), DockShowLocation.Left)),
                 Icon = new IconModel(LibraryExplorerViewModel.IconKey)
             });
     }

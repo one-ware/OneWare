@@ -6,11 +6,11 @@
              xmlns:viewModels1="clr-namespace:OneWare.CloudIntegration.ViewModels"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:client="clr-namespace:Microsoft.AspNetCore.SignalR.Client;assembly=Microsoft.AspNetCore.SignalR.Client.Core"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Margin="5 0"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.CloudIntegration.Views.CloudIntegrationMainWindowBottomRightExtension"
              x:DataType="viewModels1:CloudIntegrationMainWindowBottomRightExtensionViewModel">
 
-    <Button Cursor="Hand"
+    <Button Cursor="Hand" IsVisible="{Binding AccountSetting.IsLoggedIn}"
             ToolTip.Tip="{Binding ConnectionState, StringFormat='OneWare Cloud - {0}'}">
         <Button.Flyout>
             <MenuFlyout Placement="Top">

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.Core.Models;
 using OneWare.Core.ModuleLogic;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager.Compatibility;
@@ -16,6 +17,7 @@ public class PluginService : IPluginService
     private readonly OneWareModuleCatalog _moduleCatalog;
     private readonly OneWareModuleManager _moduleManager;
     private readonly ModuleServiceRegistry _moduleServiceRegistry;
+    private readonly IApplicationStateService _applicationStateService;
 
     private readonly string _pluginDirectory;
     private readonly HashSet<string> _resolverSetAssemblies = new();
@@ -23,12 +25,13 @@ public class PluginService : IPluginService
     private List<Assembly> _initAssemblies;
 
     public PluginService(OneWareModuleCatalog moduleCatalog, OneWareModuleManager moduleManager,
-        ModuleServiceRegistry moduleServiceRegistry, IPaths paths)
+        ModuleServiceRegistry moduleServiceRegistry, IPaths paths, IApplicationStateService applicationStateService)
     {
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
         _moduleServiceRegistry = moduleServiceRegistry;
-
+        _applicationStateService = applicationStateService;
+        
         _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
@@ -48,7 +51,12 @@ public class PluginService : IPluginService
         if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
-            ContainerLocator.Container?.Resolve<ILogger>().Error($"Plugin {path} failed loading:\n{test.Report}");
+            ContainerLocator.Container?.Resolve<ILogger>().Error($"Plugin {path} failed loading:\n{test.Report}", null, false);
+            _applicationStateService.AddNotification(new ApplicationNotification()
+            {
+                Kind = ApplicationNotificationKind.Error,
+                Message = $"Plugin {Path.GetFileName(path)} is not compatible with your version of OneWare."
+            });
             return plugin;
         }
 

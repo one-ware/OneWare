@@ -28,7 +28,7 @@ public class TerminalManagerModule : OneWareModuleBase
                 Header = "Terminal",
                 Command = new RelayCommand(() =>
                     serviceProvider.Resolve<IMainDockService>()
-                        .Show(serviceProvider.Resolve<ITerminalManagerService>())),
+                        .Show(serviceProvider.Resolve<ITerminalManagerService>(), DockShowLocation.Bottom)),
                 Icon = new IconModel(TerminalManagerViewModel.IconKey)
             });
     }

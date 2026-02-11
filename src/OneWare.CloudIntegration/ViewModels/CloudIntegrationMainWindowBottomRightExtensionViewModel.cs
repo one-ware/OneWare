@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.AspNetCore.SignalR.Client;
 using OneWare.CloudIntegration.Services;
+using OneWare.CloudIntegration.Settings;
 
 namespace OneWare.CloudIntegration.ViewModels;
 
@@ -10,13 +11,16 @@ public class CloudIntegrationMainWindowBottomRightExtensionViewModel : Observabl
 
     private HubConnectionState _connectionState;
 
-    public CloudIntegrationMainWindowBottomRightExtensionViewModel(OneWareCloudNotificationService service)
+    public CloudIntegrationMainWindowBottomRightExtensionViewModel(OneWareCloudAccountSetting accountSetting, OneWareCloudNotificationService service)
     {
         _notificationService = service;
-
+        AccountSetting = accountSetting;
+        
         service.ConnectionStateChanged += (sender, args) => { ConnectionState = args; };
     }
 
+    public OneWareCloudAccountSetting AccountSetting { get; }
+    
     public HubConnectionState ConnectionState
     {
         get => _connectionState;

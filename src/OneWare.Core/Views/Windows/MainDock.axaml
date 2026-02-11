@@ -88,6 +88,11 @@
                                                         <Button Height="NaN" Command="{Binding Command}"
                                                                 HorizontalContentAlignment="Stretch"
                                                                 VerticalContentAlignment="Stretch">
+                                                            <Button.Styles>
+                                                                <Style Selector="Button:disabled">
+                                                                    <Setter Property="Opacity" Value="1" />
+                                                                </Style>
+                                                            </Button.Styles>
                                                             <Border>
                                                                 <Grid ColumnDefinitions="Auto,*,Auto"
                                                                       ColumnSpacing="10">

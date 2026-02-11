@@ -62,7 +62,7 @@ public class SourceControlModule : OneWareModuleBase
         windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows", new MenuItemModel("SourceControl")
         {
             Header = "Source Control",
-            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<SourceControlViewModel>())),
+            Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<SourceControlViewModel>(), DockShowLocation.Left)),
             Icon = new IconModel(SourceControlViewModel.IconKey)
         });
 
