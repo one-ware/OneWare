@@ -4,15 +4,17 @@
         xmlns:core="using:Dock.Model.Core"
         xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials"
         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime">
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:controls1="clr-namespace:Dock.Model.Controls;assembly=Dock.Model"
+        xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials">
 
     <Styles.Resources>
-        
+
         <!--Fixes for simple theme, can be removed once Dock #1026 is merges-->
         <system:Double x:Key="ScrollBarButtonArrowIconFontSize">10</system:Double>
         <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{DynamicResource ThemeForegroundColor}" />
         <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{DynamicResource ThemeAccentColor}" />
-        
+
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6"
@@ -246,7 +248,7 @@
         <Setter Property="Margin" Value="0" />
         <Setter Property="Padding" Value="4 1 4 0" />
     </Style>
-    
+
     <Style Selector="StackPanel#HeaderContainer.LoadingFailed">
         <Setter Property="ToolTip.Tip" Value="Loading failed" />
     </Style>
@@ -274,7 +276,8 @@
                                     </DataTriggerBehavior>
                                 </Interaction.Behaviors>
 
-                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="12" Width="12" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <controls:Spinner IsVisible="{Binding IsLoading}" Height="12" Width="12"
+                                                  VerticalAlignment="Center" HorizontalAlignment="Center" />
 
                                 <controls:LayeredIconPresenter
                                     Height="17" Width="17"
@@ -296,12 +299,12 @@
             </DataTemplate>
         </Setter>
     </Style>
-    
+
     <Style Selector="DocumentTabStripItem:not(:active):selected">
         <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource DockThemeForegroundBrush}" />
     </Style>
-    
+
     <Style Selector="ToolControl">
         <Setter Property="HeaderTemplate">
             <DataTemplate DataType="viewModels:IExtendedTool">
@@ -312,5 +315,21 @@
                 </StackPanel>
             </DataTemplate>
         </Setter>
+    </Style>
+
+    <Style Selector="PinnedDockControl" x:DataType="PinnedDockControl">
+        <Setter Property="Classes.MarginLeft"
+                Value="{Binding $self.PinnedDockAlignment, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static core:Alignment.Right}}">
+        </Setter>
+        <Setter Property="Classes.MarginRight"
+                Value="{Binding $self.PinnedDockAlignment, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static core:Alignment.Left}}">
+        </Setter>
+    </Style>
+
+    <Style Selector="PinnedDockControl.MarginLeft">
+        <Setter Property="Margin" Value="2 0 0 0" />
+    </Style>
+    <Style Selector="PinnedDockControl.MarginRight">
+        <Setter Property="Margin" Value="0 0 2 0" />
     </Style>
 </Styles>
