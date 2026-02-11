@@ -10,8 +10,14 @@ public interface IProjectSettingsService
     /// <param name="projectSetting">The project setting to add.</param>
     public void AddProjectSetting(ProjectSetting projectSetting);
 
+    /// <summary>
+    ///     Adds a project setting if no setting with the same key exists.
+    /// </summary>
     public void AddProjectSettingIfNotExists(ProjectSetting projectSetting);
 
+    /// <summary>
+    ///     Returns all registered project settings.
+    /// </summary>
     public List<ProjectSetting> GetProjectSettingsList();
 
     /// <summary>
