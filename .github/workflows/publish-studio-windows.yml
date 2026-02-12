@@ -56,7 +56,8 @@ jobs:
           name: windows-artifacts
           path: |
             ./out/*.msi
-            ./out/*.htm
+            ./out/WinDownload-arm64.htm
+            ./out/WinDownload-x64.htm
             ./out/win-x64.txt
             ./out/win-arm64.txt
 
@@ -94,6 +95,7 @@ jobs:
             set cmd:fail-exit true
             put OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi
             put OneWareStudio-${{ needs.build.outputs.version }}-win-arm64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-arm64.msi
-            put WinDownload.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload.htm
+            put WinDownload-arm64.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload-arm64.htm
+            put WinDownload-x64.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload-x64.htm
             put win-x64.txt -o ./cdn.one-ware.com/onewarestudio/win-x64.txt
             put win-arm64.txt -o ./cdn.one-ware.com/onewarestudio/win-arm64.txt
