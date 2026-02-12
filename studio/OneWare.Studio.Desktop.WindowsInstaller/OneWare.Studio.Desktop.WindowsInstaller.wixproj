@@ -2,10 +2,10 @@
   <PropertyGroup>
     <OutputName>OneWareStudio.WindowsInstaller</OutputName>
     <OutputType>Package</OutputType>
-
+    <Platform>$(InstallerPlatform)</Platform>
     <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
     <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
-    <StudioPublish>./publish</StudioPublish>
+    <StudioPublish>./publish-$(InstallerPlatform)</StudioPublish>
 
     <!-- Enable WiX signing hook -->
     <SignOutput>true</SignOutput>
