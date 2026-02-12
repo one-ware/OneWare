@@ -34,10 +34,10 @@ jobs:
       - name: Publish win-arm64
         run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-arm64 -o ./publish/win-arm64
       - name: Create Button HTML x64
-        shell: pwsh
+        shell: powershell
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate-x64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload-x64.htm -Encoding UTF8
       - name: Create Button HTML arm64
-        shell: pwsh
+        shell: powershell
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate-arm64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload-arm64.htm -Encoding UTF8
       # Version info for win-x64
       - name: Create VersionInfo win-x64
@@ -56,7 +56,8 @@ jobs:
           name: windows-artifacts
           path: |
             ./out/*.msi
-            ./out/*.htm
+            ./out/WinDownload-arm64.htm
+            ./out/WinDownload-x64.htm
             ./out/win-x64.txt
             ./out/win-arm64.txt
 
@@ -94,6 +95,7 @@ jobs:
             set cmd:fail-exit true
             put OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-x64.msi
             put OneWareStudio-${{ needs.build.outputs.version }}-win-arm64.msi -o ./cdn.one-ware.com/onewarestudio/${{ needs.build.outputs.version }}/OneWareStudio-${{ needs.build.outputs.version }}-win-arm64.msi
-            put WinDownload.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload.htm
+            put WinDownload-arm64.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload-arm64.htm
+            put WinDownload-x64.htm -o ./cdn.one-ware.com/onewarestudio/WinDownload-x64.htm
             put win-x64.txt -o ./cdn.one-ware.com/onewarestudio/win-x64.txt
             put win-arm64.txt -o ./cdn.one-ware.com/onewarestudio/win-arm64.txt

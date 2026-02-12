@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Chat.Services;
@@ -44,6 +45,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Title = "AI Chat";
 
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
+        aiFunctionProvider.FunctionPermissionRequested += OnFunctionPermissionRequested;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
 
         _mainDockService = mainDockService;
@@ -53,7 +55,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
         SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
-        InitializeCurrentCommand = new AsyncRelayCommand(() => { return InitializeCurrentAsync(); });
+        InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
 
         applicationStateService.RegisterShutdownAction(SaveState);
     }
@@ -409,6 +411,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() => { AddMessage(new ChatMessageWithButtonViewModel(x)); });
                 break;
             }
+            case ChatPermissionRequestEvent x:
+            {
+                Dispatcher.UIThread.Post(() => { AddMessage(new ChatMessagePermissionRequestViewModel(x)); });
+                break;
+            }
             case ChatErrorEvent x:
             {
                 Dispatcher.UIThread.Post(() =>
@@ -470,6 +477,34 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         };
         AddMessage(newMessage);
         ContentAdded?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnFunctionPermissionRequested(object? sender, AiFunctionPermissionRequestEvent request)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var allowCommand = new RelayCommand<Control?>(_ =>
+                request.DecisionSource.TrySetResult(AiFunctionPermissionDecision.AllowOnce));
+            var denyCommand = new RelayCommand<Control?>(_ =>
+                request.DecisionSource.TrySetResult(AiFunctionPermissionDecision.Deny));
+            var allowForSessionCommand = new RelayCommand<Control?>(_ =>
+                request.DecisionSource.TrySetResult(AiFunctionPermissionDecision.AllowForSession));
+
+            var message = request.Question;
+            if (!string.IsNullOrWhiteSpace(request.Detail))
+                message = $"{request.Question}\n\n{request.Detail}";
+
+            AddMessage(new ChatMessagePermissionRequestViewModel(new ChatPermissionRequestEvent(
+                message,
+                "Allow",
+                "Deny",
+                allowCommand,
+                denyCommand,
+                "Allow for session",
+                allowForSessionCommand)));
+
+            ContentAdded?.Invoke(this, EventArgs.Empty);
+        });
     }
 
     private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)

@@ -69,6 +69,31 @@ public sealed class ChatButtonEvent(string message, string buttonText, IRelayCom
     public IRelayCommand<Control?> OnClickCommand { get; init; } = command;
 }
 
+public sealed class ChatPermissionRequestEvent(
+    string message,
+    string allowButtonText,
+    string denyButtonText,
+    IRelayCommand<Control?> allowCommand,
+    IRelayCommand<Control?> denyCommand,
+    string? allowForSessionButtonText = null,
+    IRelayCommand<Control?>? allowForSessionCommand = null)
+    : ChatEvent()
+{
+    public string Message { get; } = message;
+
+    public string AllowButtonText { get; } = allowButtonText;
+
+    public string DenyButtonText { get; } = denyButtonText;
+
+    public IRelayCommand<Control?> AllowCommand { get; } = allowCommand;
+
+    public IRelayCommand<Control?> DenyCommand { get; } = denyCommand;
+
+    public string? AllowForSessionButtonText { get; } = allowForSessionButtonText;
+
+    public IRelayCommand<Control?>? AllowForSessionCommand { get; } = allowForSessionCommand;
+}
+
 public sealed class ChatIdleEvent()
     : ChatEvent()
 {

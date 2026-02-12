@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <StudioVersion>1.0.0</StudioVersion>
+        <StudioVersion>1.0.1</StudioVersion>
         <CoreVersion>$(StudioVersion)</CoreVersion>
         <UniversalFpgaProjectSystemVersion>$(StudioVersion)</UniversalFpgaProjectSystemVersion>
         <EssentialsVersion>$(StudioVersion)</EssentialsVersion>
@@ -9,5 +9,11 @@
         <Authors>Hendrik Mennen</Authors>
         <Description>Next Generation IDE for Electronics Development</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>package-icon.png</PackageIcon>
+        <PackageTags>oneware;oneware-studio</PackageTags>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../../package-icon.png" Pack="true" PackagePath="/" />
+    </ItemGroup>
 </Project>

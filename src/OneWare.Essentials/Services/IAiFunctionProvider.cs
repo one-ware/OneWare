@@ -10,6 +10,10 @@ public interface IAiFunctionProvider
     /// </summary>
     event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
     /// <summary>
+    /// Fired when an AI function requires user approval before execution.
+    /// </summary>
+    event EventHandler<AiFunctionPermissionRequestEvent>? FunctionPermissionRequested;
+    /// <summary>
     /// Fired when an AI function completes.
     /// </summary>
     event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
