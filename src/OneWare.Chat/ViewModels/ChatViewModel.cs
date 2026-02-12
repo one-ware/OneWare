@@ -55,7 +55,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
         SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
-        InitializeCurrentCommand = new AsyncRelayCommand(() => { return InitializeCurrentAsync(); });
+        InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
 
         applicationStateService.RegisterShutdownAction(SaveState);
     }

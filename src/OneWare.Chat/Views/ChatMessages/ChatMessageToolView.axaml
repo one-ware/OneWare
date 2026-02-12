@@ -26,7 +26,7 @@
         </Expander.Header>
         <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
                 MaxHeight="200" Padding="5">
-            <TextBlock TextWrapping="Wrap" Text="{Binding ToolOutput}" />
+            <SelectableTextBlock TextWrapping="Wrap" Text="{Binding ToolOutput}" />
         </Border>
     </Expander>
 

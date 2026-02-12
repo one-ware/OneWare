@@ -106,7 +106,7 @@ public class AiFunctionProvider(
                     };
                 },
                 requiresPermission: true,
-                permissionScope: "editFile",
+                permissionScope: "edit",
                 permissionQuestion: "Allow editing this file?",
                 permissionDetail: $"File: `{path}`"),
             "editFile",
@@ -205,7 +205,7 @@ public class AiFunctionProvider(
                         }
 
                         return new { moved = false, source = (string?)resolvedSource, destination = (string?)resolvedDestination, kind = (string?)null, error = (string?)$"Source path does not exist: {resolvedSource}" };
-                    }),
+                    }, true, "edit", "Move or rename a file/directory.", $"{sourcePath} -> {destinationPath}"),
             "movePath",
             "Moves or renames a file/directory."
         );
@@ -234,7 +234,7 @@ public class AiFunctionProvider(
                         }
 
                         return new { deleted = false, path = (string?)resolvedPath, kind = (string?)null, error = (string?)"Path does not exist." };
-                    }),
+                    }, true, "edit", "Delete a file or directory.", $"{path}"),
             "deletePath",
             "Deletes a file or directory."
         );

@@ -10,7 +10,7 @@
 
     <Border Margin="0 2" HorizontalAlignment="Right" CornerRadius="6" Padding="8" BorderThickness="0"
             Background="{DynamicResource ThemeControlMidBrush}">
-        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13" />
+        <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13" />
     </Border>
 
 </UserControl>
