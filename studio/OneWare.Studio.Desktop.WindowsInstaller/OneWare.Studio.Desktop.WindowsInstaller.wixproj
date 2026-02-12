@@ -1,120 +1,106 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2" InitialTargets="BeforeBuild">
 
-    <!-- ========================================================= -->
-    <!-- Global Properties                                         -->
-    <!-- ========================================================= -->
+  <!-- ========================================================= -->
+  <!-- Global Properties                                         -->
+  <!-- ========================================================= -->
+  <PropertyGroup>
+
+    <!-- Output MSI name -->
+    <OutputName>OneWareStudio.WindowsInstaller</OutputName>
+    <OutputType>Package</OutputType>
+
+    <!-- Project paths -->
+    <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
+    <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
+
+    <!-- Runtime selection (NO whitespace/newlines!) -->
+    <PublishRuntime Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</PublishRuntime>
+    <PublishRuntime Condition="'$(RuntimeIdentifier)' == ''">win-x64</PublishRuntime>
+
+    <!-- IMPORTANT: Publish folder per architecture -->
+    <StudioPublish>./publish/$(PublishRuntime)</StudioPublish>
+
+    <!-- Enable WiX signing hook -->
+    <SignOutput>true</SignOutput>
+
+  </PropertyGroup>
+
+  <!-- ========================================================= -->
+  <!-- Platform Detection for WiX Logic                           -->
+  <!-- ========================================================= -->
+  <PropertyGroup>
+    <InstallerPlatform Condition="'$(PublishRuntime)' == 'win-arm64'">arm64</InstallerPlatform>
+    <InstallerPlatform Condition="'$(PublishRuntime)' == 'win-x64' OR '$(PublishRuntime)' == ''">x64</InstallerPlatform>
+  </PropertyGroup>
+
+  <!-- ========================================================= -->
+  <!-- Content + Extensions                                      -->
+  <!-- ========================================================= -->
+  <ItemGroup>
+    <Content Include="res/**/**" />
+    <None Include="SignIfUnsigned.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+  <!-- ========================================================= -->
+  <!-- Bind Published Output into MSI                            -->
+  <!-- ========================================================= -->
+  <ItemGroup>
+    <BindPath Include="$(StudioPublish)">
+      <BindName>publish</BindName>
+    </BindPath>
+  </ItemGroup>
+
+  <!-- ========================================================= -->
+  <!-- 1. Publish + Sign Before MSI Build                        -->
+  <!-- ========================================================= -->
+  <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
+
+    <!-- Logging -->
+    <Message Importance="High" Text="Publishing Studio for runtime: $(PublishRuntime)" />
+    <Message Importance="High" Text="Publish folder: $(StudioPublish)" />
+
+    <!-- Clean only this runtime folder -->
+    <Exec Command='rd /s /q "$(StudioPublish)"'
+          IgnoreExitCode="true" />
+
+    <!-- Publish Studio -->
+    <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r $(PublishRuntime) -o "$(StudioPublish)"' />
+
+    <!-- Sign all published binaries -->
+    <Exec Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)SignIfUnsigned.ps1" "$(StudioPublish)"'
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High" />
+
+    <!-- Extract assembly version -->
+    <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)\OneWareStudio.dll">
+      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+    </GetAssemblyIdentity>
+
+    <!-- Pass version + platform into WiX defines -->
     <PropertyGroup>
-        <!-- Output MSI name -->
-        <OutputName>OneWareStudio.WindowsInstaller</OutputName>
-        <OutputType>Package</OutputType>
-
-        <!-- Project paths -->
-        <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
-        <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
-
-        <!-- Runtime selection -->
-        <PublishRuntime Condition="'$(RuntimeIdentifier)' != ''">
-            $(RuntimeIdentifier)
-        </PublishRuntime>
-
-        <PublishRuntime Condition="'$(RuntimeIdentifier)' == ''">
-            win-x64
-        </PublishRuntime>
-
-        <!-- ===================================================== -->
-        <!-- IMPORTANT FIX: Publish folder per architecture         -->
-        <!-- ===================================================== -->
-        <StudioPublish>./publish/$(PublishRuntime)</StudioPublish>
-
-        <!-- Enable WiX signing hook -->
-        <SignOutput>true</SignOutput>
+      <DefineConstants>BuildVersion=%(AssemblyVersion.Version);InstallerPlatform=$(InstallerPlatform)</DefineConstants>
     </PropertyGroup>
 
-    <!-- ========================================================= -->
-    <!-- Platform Detection for Installer Logic                    -->
-    <!-- ========================================================= -->
-    <PropertyGroup>
-        <InstallerPlatform Condition="'$(PublishRuntime)' == 'win-arm64'">
-            arm64
-        </InstallerPlatform>
+  </Target>
 
-        <InstallerPlatform Condition="'$(PublishRuntime)' == 'win-x64' OR '$(PublishRuntime)' == ''">
-            x64
-        </InstallerPlatform>
-    </PropertyGroup>
+  <!-- ========================================================= -->
+  <!-- 2. Sign MSI Output Automatically                          -->
+  <!-- ========================================================= -->
+  <Target Name="SignMsi">
 
-    <!-- ========================================================= -->
-    <!-- Content + Extensions                                      -->
-    <!-- ========================================================= -->
-    <ItemGroup>
-        <Content Include="res/**/**"/>
-        <None Include="SignIfUnsigned.ps1"/>
-    </ItemGroup>
+    <Message Importance="High" Text="Signing MSI: @(SignMsi)" />
 
-    <ItemGroup>
-        <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2"/>
-        <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2"/>
-    </ItemGroup>
+    <!-- IMPORTANT: Exec must be single-line -->
+    <Exec Command='signtool.exe sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(SignMsi.FullPath)"'
+          StandardOutputImportance="High"
+          StandardErrorImportance="High" />
 
-    <!-- ========================================================= -->
-    <!-- Bind Published Output into MSI                            -->
-    <!-- ========================================================= -->
-    <ItemGroup>
-        <BindPath Include="$(StudioPublish)">
-            <BindName>publish</BindName>
-        </BindPath>
-    </ItemGroup>
-
-    <!-- ========================================================= -->
-    <!-- 1. Publish + Sign Before MSI Build                        -->
-    <!-- ========================================================= -->
-    <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
-
-        <Message Importance="High"
-                 Text="Publishing Studio for runtime: $(PublishRuntime)"/>
-
-        <!-- Clean only this runtime folder -->
-        <Exec Command='rd /s /q "$(StudioPublish)"'
-              IgnoreExitCode="true"/>
-
-        <!-- Publish Studio -->
-        <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r $(PublishRuntime) -o "$(StudioPublish)"'/>
-
-        <!-- Sign published binaries -->
-        <Exec Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)SignIfUnsigned.ps1" "$(StudioPublish)"'
-              ConsoleToMSBuild="true"
-              StandardOutputImportance="High"
-              StandardErrorImportance="High"/>
-
-        <!-- Extract version -->
-        <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)\OneWareStudio.dll">
-            <Output TaskParameter="Assemblies" ItemName="AssemblyVersion"/>
-        </GetAssemblyIdentity>
-
-        <PropertyGroup>
-            <DefineConstants>
-                BuildVersion=%(AssemblyVersion.Version);
-                InstallerPlatform=$(InstallerPlatform)
-            </DefineConstants>
-        </PropertyGroup>
-
-    </Target>
-
-
-    <!-- ========================================================= -->
-    <!-- 2. Sign MSI Output Automatically                          -->
-    <!-- ========================================================= -->
-    <Target Name="SignMsi">
-        <Message Importance="High" Text="Signing MSI: @(SignMsi)"/>
-
-        <Exec Command="signtool.exe sign
-                   /tr http://timestamp.digicert.com
-                   /td sha256
-                   /fd sha256
-                   /a
-                   &quot;%(SignMsi.FullPath)&quot;"
-              StandardOutputImportance="High"
-              StandardErrorImportance="High"/>
-    </Target>
+  </Target>
 
 </Project>
