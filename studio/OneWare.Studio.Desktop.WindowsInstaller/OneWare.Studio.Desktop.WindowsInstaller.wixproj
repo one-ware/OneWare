@@ -13,24 +13,12 @@
     <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
     <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
 
-    <!-- Runtime selection (NO whitespace/newlines!) -->
-    <PublishRuntime Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</PublishRuntime>
-    <PublishRuntime Condition="'$(RuntimeIdentifier)' == ''">win-x64</PublishRuntime>
-
     <!-- IMPORTANT: Publish folder per architecture -->
-    <StudioPublish>./publish/$(PublishRuntime)</StudioPublish>
+    <StudioPublish>./publish/$(RuntimeIdentifier)</StudioPublish>
 
     <!-- Enable WiX signing hook -->
     <SignOutput>true</SignOutput>
 
-  </PropertyGroup>
-
-  <!-- ========================================================= -->
-  <!-- Platform Detection for WiX Logic                           -->
-  <!-- ========================================================= -->
-  <PropertyGroup>
-    <InstallerPlatform Condition="'$(PublishRuntime)' == 'win-arm64'">arm64</InstallerPlatform>
-    <InstallerPlatform Condition="'$(PublishRuntime)' == 'win-x64' OR '$(PublishRuntime)' == ''">x64</InstallerPlatform>
   </PropertyGroup>
 
   <!-- ========================================================= -->
@@ -61,7 +49,7 @@
   <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
 
     <!-- Logging -->
-    <Message Importance="High" Text="Publishing Studio for runtime: $(PublishRuntime)" />
+    <Message Importance="High" Text="Publishing Studio for runtime: $(RuntimeIdentifier)" />
     <Message Importance="High" Text="Publish folder: $(StudioPublish)" />
 
     <!-- Clean only this runtime folder -->
@@ -69,7 +57,7 @@
           IgnoreExitCode="true" />
 
     <!-- Publish Studio -->
-    <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r $(PublishRuntime) -o "$(StudioPublish)"' />
+    <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r $(RuntimeIdentifier) -o "$(StudioPublish)"' />
 
     <!-- Sign all published binaries -->
     <Exec Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)SignIfUnsigned.ps1" "$(StudioPublish)"'
@@ -84,7 +72,7 @@
 
     <!-- Pass version + platform into WiX defines -->
     <PropertyGroup>
-      <DefineConstants>BuildVersion=%(AssemblyVersion.Version);InstallerPlatform=$(InstallerPlatform)</DefineConstants>
+      <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
     </PropertyGroup>
 
   </Target>
