@@ -9,5 +9,11 @@
         <Authors>Hendrik Mennen</Authors>
         <Description>Next Generation IDE for Electronics Development</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>package-icon.png</PackageIcon>
+        <PackageTags>oneware;oneware-studio</PackageTags>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../../package-icon.png" Pack="true" PackagePath="/" />
+    </ItemGroup>
 </Project>
