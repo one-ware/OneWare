@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessagePermissionRequestView"
+             x:DataType="chatMessages:ChatMessagePermissionRequestViewModel">
+
+    <Border>
+        <StackPanel Spacing="6">
+            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Event.Message}" />
+
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button Height="NaN"
+                        Classes="RoundButton PrimaryButton"
+                        Command="{Binding Event.AllowCommand}"
+                        CommandParameter="{Binding $self}"
+                        Padding="5"
+                        Content="{Binding Event.AllowButtonText}" />
+
+                <Button Height="NaN"
+                        Classes="RoundButton"
+                        Command="{Binding Event.DenyCommand}"
+                        CommandParameter="{Binding $self}"
+                        Padding="5"
+                        Content="{Binding Event.DenyButtonText}" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+
+</UserControl>

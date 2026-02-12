@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -244,6 +245,9 @@ public sealed class CopilotChatService(
                     Content = CopilotModule.SystemMessage
                 },
                 Tools = toolProvider.GetTools(),
+                OnPermissionRequest = OnPermissionRequestAsync,
+                OnUserInputRequest = OnUserInputRequestAsync,
+                
             });
 
             _forceNewSession = false;
@@ -362,6 +366,65 @@ public sealed class CopilotChatService(
                 EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
         }
+    }
+
+    private Task<PermissionRequestResult> OnPermissionRequestAsync(
+        PermissionRequest request,
+        PermissionInvocation invocation)
+    {
+        var responseSource = new TaskCompletionSource<PermissionRequestResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var requestDetails = request.ExtensionData is { Count: > 0 }
+            ? JsonSerializer.Serialize(request.ExtensionData, new JsonSerializerOptions { WriteIndented = true })
+            : null;
+
+        var prompt = "Copilot requests permission to execute a tool action.";
+        if (!string.IsNullOrWhiteSpace(requestDetails))
+        {
+            prompt += $"\n\n```json\n{requestDetails}\n```";
+        }
+
+        var allowCommand = new RelayCommand<Control?>(_ =>
+        {
+            responseSource.TrySetResult(new PermissionRequestResult
+            {
+                Kind = "allow",
+                Rules = []
+            });
+        });
+
+        var denyCommand = new RelayCommand<Control?>(_ =>
+        {
+            responseSource.TrySetResult(new PermissionRequestResult
+            {
+                Kind = "deny",
+                Rules = []
+            });
+        });
+
+        EventReceived?.Invoke(this, new ChatPermissionRequestEvent(
+            prompt,
+            "Allow",
+            "Deny",
+            allowCommand,
+            denyCommand));
+
+        return responseSource.Task;
+    }
+
+    private Task<UserInputResponse> OnUserInputRequestAsync(
+        UserInputRequest request,
+        UserInputInvocation invocation)
+    {
+        var message = $"Copilot requested user input: {request.Question}";
+        EventReceived?.Invoke(this, new ChatMessageEvent(message));
+
+        return Task.FromResult(new UserInputResponse
+        {
+            Answer = string.Empty,
+            WasFreeform = true
+        });
     }
 
     private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,
