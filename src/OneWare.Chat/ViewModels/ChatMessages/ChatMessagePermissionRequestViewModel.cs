@@ -8,6 +8,7 @@ public class ChatMessagePermissionRequestViewModel : ObservableObject, IChatMess
     public ChatMessagePermissionRequestViewModel(ChatPermissionRequestEvent permissionRequestEvent)
     {
         Event = permissionRequestEvent;
+        IsVisible = true;
     }
 
     public ChatPermissionRequestEvent Event { get; }

@@ -107,7 +107,7 @@ public class AiFunctionProvider(
                 },
                 requiresPermission: true,
                 permissionScope: "editFile",
-                permissionQuestion: "Allow edit this file?",
+                permissionQuestion: "Allow editing this file?",
                 permissionDetail: $"File: `{path}`"),
             "editFile",
             "Edit file contents with new text (optionally by line range). Creates missing files automatically. Relative paths are resolved against the active project."
@@ -338,7 +338,7 @@ public class AiFunctionProvider(
 
                     var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
                         command,
-                        "Copilot",
+                        "AI Chat",
                         resolvedWorkDir,
                         true,
                         TimeSpan.FromMinutes(1));

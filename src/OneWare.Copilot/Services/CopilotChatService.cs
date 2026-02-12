@@ -247,8 +247,9 @@ public sealed class CopilotChatService(
                 },
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
-                OnPermissionRequest = OnPermissionRequestAsync,
-                OnUserInputRequest = OnUserInputRequestAsync
+                //OnPermissionRequest = OnPermissionRequestAsync, AS OF NOW (FEB 2026), these don't work! 
+                //Hooks = BuildPermissionHooks(),
+                //OnUserInputRequest = OnUserInputRequestAsync
             });
 
             _forceNewSession = false;
@@ -260,6 +261,7 @@ public sealed class CopilotChatService(
                 Streaming = true,
                 Tools = toolProvider.GetTools(),
                 OnPermissionRequest = OnPermissionRequestAsync,
+                Hooks = BuildPermissionHooks(),
                 OnUserInputRequest = OnUserInputRequestAsync
             });
         }
@@ -384,25 +386,16 @@ public sealed class CopilotChatService(
         var responseSource = new TaskCompletionSource<PermissionRequestResult>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var title = "Copilot wants to use a tool.";
-        var question = "Allow this action?";
-        if (!string.IsNullOrWhiteSpace(request.Kind))
-        {
-            var kind = request.Kind.ToLowerInvariant();
-            if (kind.Contains("edit", StringComparison.Ordinal) || kind.Contains("write", StringComparison.Ordinal))
-            {
-                title = "Copilot wants to edit something.";
-                question = "Copilot wants to edit this file.";
-            }
-            else if (kind.Contains("terminal", StringComparison.Ordinal) ||
-                     kind.Contains("shell", StringComparison.Ordinal) ||
-                     kind.Contains("exec", StringComparison.Ordinal) ||
-                     kind.Contains("command", StringComparison.Ordinal))
-            {
-                title = "Copilot wants to execute in terminal.";
-                question = "Allow this command?";
-            }
-        }
+        var title = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
+            ? "Copilot wants to edit something."
+            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
+                ? "Copilot wants to execute in terminal."
+                : "Copilot wants to use a tool.";
+        var question = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
+            ? "Copilot wants to edit this file."
+            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
+                ? "Allow this command?"
+                : "Allow this action?";
 
         var prompt = $"**{title}**\n\n{question}";
 
@@ -432,6 +425,26 @@ public sealed class CopilotChatService(
             allowForSessionCommand));
 
         return responseSource.Task;
+    }
+
+    private static SessionHooks BuildPermissionHooks()
+    {
+        return new SessionHooks
+        {
+            OnPreToolUse = (input, invocation) =>
+            {
+                if (input.ToolName is "runTerminalCommand" or "editFile")
+                {
+                    return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput
+                    {
+                        PermissionDecision = "ask",
+                        PermissionDecisionReason = $"Awaiting user approval for '{input.ToolName}'."
+                    });
+                }
+
+                return Task.FromResult<PreToolUseHookOutput?>(null);
+            }
+        };
     }
 
     private static PermissionRequestResult CreateAllowPermissionResult()
