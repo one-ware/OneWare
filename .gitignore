@@ -369,3 +369,4 @@ MigrationBackup/
 .avalonia-build-tasks
 
 studio/OneWare.Studio.Desktop.MacOSInstaller/build-macos-dev/
+studio/OneWare.Studio.Desktop.WindowsInstaller/publishInstaller/
