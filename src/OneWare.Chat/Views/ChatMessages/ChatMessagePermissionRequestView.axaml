@@ -6,7 +6,8 @@
              xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
              mc:Ignorable="d"
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessagePermissionRequestView"
-             x:DataType="chatMessages:ChatMessagePermissionRequestViewModel">
+             x:DataType="chatMessages:ChatMessagePermissionRequestViewModel" 
+             IsVisible="{Binding IsVisible}">
 
     <Border>
         <StackPanel Spacing="6">
@@ -15,17 +16,25 @@
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <Button Height="NaN"
                         Classes="RoundButton PrimaryButton"
-                        Command="{Binding Event.AllowCommand}"
+                        Command="{Binding Allow}"
                         CommandParameter="{Binding $self}"
                         Padding="5"
                         Content="{Binding Event.AllowButtonText}" />
 
                 <Button Height="NaN"
                         Classes="RoundButton"
-                        Command="{Binding Event.DenyCommand}"
+                        Command="{Binding Deny}"
                         CommandParameter="{Binding $self}"
                         Padding="5"
                         Content="{Binding Event.DenyButtonText}" />
+
+                <Button Height="NaN"
+                        Classes="RoundButton"
+                        IsVisible="{Binding HasAllowForSession}"
+                        Command="{Binding AllowForSession}"
+                        CommandParameter="{Binding $self}"
+                        Padding="5"
+                        Content="{Binding Event.AllowForSessionButtonText}" />
             </StackPanel>
         </StackPanel>
     </Border>

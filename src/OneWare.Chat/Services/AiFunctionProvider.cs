@@ -18,7 +18,11 @@ public class AiFunctionProvider(
     IWindowService windowService,
     AiFileEditService aiFileEditService) : IAiFunctionProvider
 {
+    private readonly HashSet<string> _allowedForSession = new(StringComparer.Ordinal);
+
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
+    
+    public event EventHandler<AiFunctionPermissionRequestEvent>? FunctionPermissionRequested;
 
     public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
 
@@ -100,7 +104,11 @@ public class AiFunctionProvider(
                         result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount),
                         error = (string?)null
                     };
-                }),
+                },
+                requiresPermission: true,
+                permissionScope: "editFile",
+                permissionQuestion: "Allow edit this file?",
+                permissionDetail: $"File: `{path}`"),
             "editFile",
             "Edit file contents with new text (optionally by line range). Creates missing files automatically. Relative paths are resolved against the active project."
         );
@@ -339,7 +347,11 @@ public class AiFunctionProvider(
                     {
                         result = terminalResult
                     };
-                }),
+                },
+                requiresPermission: true,
+                permissionScope: "runTerminalCommand",
+                permissionQuestion: "Allow this command?",
+                permissionDetail: $"```bash\n{command}\n```"),
             "runTerminalCommand",
             """
             Executes a command in the terminal. It will return the result
@@ -368,10 +380,39 @@ public class AiFunctionProvider(
         ];
     }
 
+    private async Task<AiFunctionPermissionDecision> RequestPermissionAsync(
+        string functionName,
+        string question,
+        string? detail)
+    {
+        var requestId = Guid.NewGuid().ToString();
+        var decisionSource =
+            new TaskCompletionSource<AiFunctionPermissionDecision>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            FunctionPermissionRequested?.Invoke(this, new AiFunctionPermissionRequestEvent
+            {
+                Id = requestId,
+                FunctionName = functionName,
+                Question = question,
+                Detail = detail,
+                DecisionSource = decisionSource
+            }));
+
+        return await decisionSource.Task.ConfigureAwait(false);
+    }
+
     private async Task<T> WrapWithNotificationUiThread<T>(
         string friendlyName,
-        Func<T> handler)
+        Func<T> handler,
+        bool requiresPermission = false,
+        string? permissionScope = null,
+        string? permissionQuestion = null,
+        string? permissionDetail = null)
     {
+        await EnsurePermissionAsync(friendlyName, requiresPermission, permissionScope, permissionQuestion,
+            permissionDetail);
+
         var id = Guid.NewGuid().ToString();
 
         return await Dispatcher.UIThread.InvokeAsync(() =>
@@ -407,8 +448,15 @@ public class AiFunctionProvider(
 
     private async Task<T> WrapWithNotificationTask<T>(
         string friendlyName,
-        Func<Task<T>> handler)
+        Func<Task<T>> handler,
+        bool requiresPermission = false,
+        string? permissionScope = null,
+        string? permissionQuestion = null,
+        string? permissionDetail = null)
     {
+        await EnsurePermissionAsync(friendlyName, requiresPermission, permissionScope, permissionQuestion,
+            permissionDetail);
+
         var id = Guid.NewGuid().ToString();
 
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -443,8 +491,15 @@ public class AiFunctionProvider(
     
     private async Task<T> WrapWithNotificationTaskUiThread<T>(
         string friendlyName, string detail,
-        Func<Task<T>> handler)
+        Func<Task<T>> handler,
+        bool requiresPermission = false,
+        string? permissionScope = null,
+        string? permissionQuestion = null,
+        string? permissionDetail = null)
     {
+        await EnsurePermissionAsync(friendlyName, requiresPermission, permissionScope, permissionQuestion,
+            permissionDetail ?? detail);
+
         var id = Guid.NewGuid().ToString();
 
         return await Dispatcher.UIThread.InvokeAsync(async () =>
@@ -478,6 +533,37 @@ public class AiFunctionProvider(
                 });
             }
         });
+    }
+
+    private async Task EnsurePermissionAsync(
+        string friendlyName,
+        bool requiresPermission,
+        string? permissionScope,
+        string? permissionQuestion,
+        string? permissionDetail)
+    {
+        if (!requiresPermission) return;
+
+        var scope = string.IsNullOrWhiteSpace(permissionScope) ? friendlyName : permissionScope;
+        if (_allowedForSession.Contains(scope))
+            return;
+
+        var question = string.IsNullOrWhiteSpace(permissionQuestion)
+            ? $"Allow {friendlyName}?"
+            : permissionQuestion;
+        var detail = string.IsNullOrWhiteSpace(permissionDetail) ? null : permissionDetail;
+        var decision = await RequestPermissionAsync(friendlyName, question, detail);
+
+        switch (decision)
+        {
+            case AiFunctionPermissionDecision.AllowForSession:
+                _allowedForSession.Add(scope);
+                return;
+            case AiFunctionPermissionDecision.AllowOnce:
+                return;
+            default:
+                throw new InvalidOperationException($"{friendlyName} was denied by user.");
+        }
     }
     
     private static async Task<IReadOnlyList<SearchMatch>> SearchInFilesAsync(

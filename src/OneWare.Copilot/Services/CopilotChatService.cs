@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -32,6 +31,7 @@ public sealed class CopilotChatService(
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private bool _forceNewSession;
+    private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
@@ -236,6 +236,7 @@ public sealed class CopilotChatService(
 
         if (sessionId == null)
         {
+            var tools = toolProvider.GetTools();
             _session = await _client.CreateSessionAsync(new SessionConfig
             {
                 Model = SelectedModel.Id,
@@ -244,10 +245,10 @@ public sealed class CopilotChatService(
                 {
                     Content = CopilotModule.SystemMessage
                 },
-                Tools = toolProvider.GetTools(),
+                Tools = tools,
+                AvailableTools = tools.Select(x => x.Name).ToList(),
                 OnPermissionRequest = OnPermissionRequestAsync,
-                OnUserInputRequest = OnUserInputRequestAsync,
-                
+                OnUserInputRequest = OnUserInputRequestAsync
             });
 
             _forceNewSession = false;
@@ -257,7 +258,9 @@ public sealed class CopilotChatService(
             _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
             {
                 Streaming = true,
-                Tools = toolProvider.GetTools()
+                Tools = toolProvider.GetTools(),
+                OnPermissionRequest = OnPermissionRequestAsync,
+                OnUserInputRequest = OnUserInputRequestAsync
             });
         }
         
@@ -372,35 +375,51 @@ public sealed class CopilotChatService(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
+        var scope = string.IsNullOrWhiteSpace(request.Kind) ? "tool" : request.Kind;
+        if (_allowedPermissionScopes.Contains(scope))
+        {
+            return Task.FromResult(CreateAllowPermissionResult());
+        }
+
         var responseSource = new TaskCompletionSource<PermissionRequestResult>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var requestDetails = request.ExtensionData is { Count: > 0 }
-            ? JsonSerializer.Serialize(request.ExtensionData, new JsonSerializerOptions { WriteIndented = true })
-            : null;
-
-        var prompt = "Copilot requests permission to execute a tool action.";
-        if (!string.IsNullOrWhiteSpace(requestDetails))
+        var title = "Copilot wants to use a tool.";
+        var question = "Allow this action?";
+        if (!string.IsNullOrWhiteSpace(request.Kind))
         {
-            prompt += $"\n\n```json\n{requestDetails}\n```";
+            var kind = request.Kind.ToLowerInvariant();
+            if (kind.Contains("edit", StringComparison.Ordinal) || kind.Contains("write", StringComparison.Ordinal))
+            {
+                title = "Copilot wants to edit something.";
+                question = "Copilot wants to edit this file.";
+            }
+            else if (kind.Contains("terminal", StringComparison.Ordinal) ||
+                     kind.Contains("shell", StringComparison.Ordinal) ||
+                     kind.Contains("exec", StringComparison.Ordinal) ||
+                     kind.Contains("command", StringComparison.Ordinal))
+            {
+                title = "Copilot wants to execute in terminal.";
+                question = "Allow this command?";
+            }
         }
+
+        var prompt = $"**{title}**\n\n{question}";
 
         var allowCommand = new RelayCommand<Control?>(_ =>
         {
-            responseSource.TrySetResult(new PermissionRequestResult
-            {
-                Kind = "allow",
-                Rules = []
-            });
+            responseSource.TrySetResult(CreateAllowPermissionResult());
         });
 
         var denyCommand = new RelayCommand<Control?>(_ =>
         {
-            responseSource.TrySetResult(new PermissionRequestResult
-            {
-                Kind = "deny",
-                Rules = []
-            });
+            responseSource.TrySetResult(CreateDenyPermissionResult());
+        });
+
+        var allowForSessionCommand = new RelayCommand<Control?>(_ =>
+        {
+            _allowedPermissionScopes.Add(scope);
+            responseSource.TrySetResult(CreateAllowPermissionResult());
         });
 
         EventReceived?.Invoke(this, new ChatPermissionRequestEvent(
@@ -408,9 +427,29 @@ public sealed class CopilotChatService(
             "Allow",
             "Deny",
             allowCommand,
-            denyCommand));
+            denyCommand,
+            "Allow for session",
+            allowForSessionCommand));
 
         return responseSource.Task;
+    }
+
+    private static PermissionRequestResult CreateAllowPermissionResult()
+    {
+        return new PermissionRequestResult
+        {
+            Kind = "allow",
+            Rules = []
+        };
+    }
+
+    private static PermissionRequestResult CreateDenyPermissionResult()
+    {
+        return new PermissionRequestResult
+        {
+            Kind = "deny",
+            Rules = []
+        };
     }
 
     private Task<UserInputResponse> OnUserInputRequestAsync(

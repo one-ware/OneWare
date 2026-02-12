@@ -11,4 +11,32 @@ public class ChatMessagePermissionRequestViewModel : ObservableObject, IChatMess
     }
 
     public ChatPermissionRequestEvent Event { get; }
+
+    public bool HasAllowForSession =>
+        Event.AllowForSessionCommand != null &&
+        !string.IsNullOrWhiteSpace(Event.AllowForSessionButtonText);
+
+    public bool IsVisible
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public void Allow()
+    {
+        Event.AllowCommand?.Execute(null);
+        IsVisible = false;
+    }
+    
+    public void AllowForSession()
+    {
+        Event.AllowForSessionCommand?.Execute(null);
+        IsVisible = false;
+    }
+    
+    public void Deny()
+    {
+        Event.DenyCommand?.Execute(null);
+        IsVisible = false;
+    }
 }
