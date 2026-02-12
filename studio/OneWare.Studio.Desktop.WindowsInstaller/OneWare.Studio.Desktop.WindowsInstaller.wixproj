@@ -1,31 +1,18 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2" InitialTargets="BeforeBuild">
-
-  <!-- ========================================================= -->
-  <!-- Global Properties                                         -->
-  <!-- ========================================================= -->
   <PropertyGroup>
-
-    <!-- Output MSI name -->
     <OutputName>OneWareStudio.WindowsInstaller</OutputName>
     <OutputType>Package</OutputType>
 
-    <!-- Project paths -->
     <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
     <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
-
-    <!-- IMPORTANT: Publish folder per architecture -->
-    <StudioPublish>./publish/$(RuntimeIdentifier)</StudioPublish>
+    <StudioPublish>./publish</StudioPublish>
 
     <!-- Enable WiX signing hook -->
     <SignOutput>true</SignOutput>
-
   </PropertyGroup>
 
-  <!-- ========================================================= -->
-  <!-- Content + Extensions                                      -->
-  <!-- ========================================================= -->
   <ItemGroup>
-    <Content Include="res/**/**" />
+    <Content Include="res/**/**"/>
     <None Include="SignIfUnsigned.ps1" />
   </ItemGroup>
 
@@ -34,9 +21,6 @@
     <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 
-  <!-- ========================================================= -->
-  <!-- Bind Published Output into MSI                            -->
-  <!-- ========================================================= -->
   <ItemGroup>
     <BindPath Include="$(StudioPublish)">
       <BindName>publish</BindName>
@@ -44,51 +28,40 @@
   </ItemGroup>
 
   <!-- ========================================================= -->
-  <!-- 1. Publish + Sign Before MSI Build                        -->
+  <!-- 1. Publish and sign before building the MSI               -->
   <!-- ========================================================= -->
   <Target Name="CustomBeforeBuild" BeforeTargets="BeforeBuild">
+    <!-- Clean previous build folder -->
+    <Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
 
-    <!-- Logging -->
-    <Message Importance="High" Text="Publishing Studio for runtime: $(RuntimeIdentifier)" />
-    <Message Importance="High" Text="Publish folder: $(StudioPublish)" />
+    <!-- Publish OneWare Studio -->
+    <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r win-$(InstallerPlatform) -o "$(StudioPublish)"' />
 
-    <!-- Clean only this runtime folder -->
-    <Exec Command='rd /s /q "$(StudioPublish)"'
-          IgnoreExitCode="true" />
+    <!-- Sign all published binaries using PowerShell script -->
+    <Exec
+      Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)SignIfUnsigned.ps1" "$(StudioPublish)"'
+      ConsoleToMSBuild="true"
+      StandardOutputImportance="High"
+      StandardErrorImportance="High" />
 
-    <!-- Publish Studio -->
-    <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r $(RuntimeIdentifier) -o "$(StudioPublish)"' />
-
-    <!-- Sign all published binaries -->
-    <Exec Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)SignIfUnsigned.ps1" "$(StudioPublish)"'
-          ConsoleToMSBuild="true"
-          StandardOutputImportance="High"
-          StandardErrorImportance="High" />
-
-    <!-- Extract assembly version -->
+    <!-- Get assembly version -->
     <GetAssemblyIdentity AssemblyFiles="$(StudioPublish)\OneWareStudio.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
 
-    <!-- Pass version + platform into WiX defines -->
     <PropertyGroup>
       <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
     </PropertyGroup>
-
   </Target>
 
   <!-- ========================================================= -->
-  <!-- 2. Sign MSI Output Automatically                          -->
+  <!-- 2. Sign MSI automatically via SignMsi hook                 -->
   <!-- ========================================================= -->
   <Target Name="SignMsi">
-
     <Message Importance="High" Text="Signing MSI: @(SignMsi)" />
-
-    <!-- IMPORTANT: Exec must be single-line -->
-    <Exec Command='signtool.exe sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(SignMsi.FullPath)"'
-          StandardOutputImportance="High"
-          StandardErrorImportance="High" />
-
+    <Exec
+      Command='signtool.exe sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "%(SignMsi.FullPath)"'
+      StandardOutputImportance="High"
+      StandardErrorImportance="High" />
   </Target>
-
 </Project>
