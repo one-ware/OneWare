@@ -26,4 +26,13 @@ jobs:
           xml-file: "./build/props/Base.props"
           xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
       - name: Publish to Winget
-        run: wingetcreate update OneWare.OneWareStudio -u https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi -v ${{ steps.get-oneware-version.outputs.info }} -t ${{ secrets.HENDRIK_PERSONAL_TOKEN }} --submit
+        shell: pwsh
+        run: >
+          wingetcreate update OneWare.OneWareStudio
+          --version "${{ steps.get-oneware-version.outputs.info }}"
+          --urls
+          "https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi|x64"
+          "https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi|arm64"
+          --token "${{ secrets.HENDRIK_PERSONAL_TOKEN }}"
+          --submit
+   
