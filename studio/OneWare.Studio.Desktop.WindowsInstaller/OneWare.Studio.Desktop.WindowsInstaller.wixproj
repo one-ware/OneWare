@@ -1,12 +1,17 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2" InitialTargets="BeforeBuild">
   <PropertyGroup>
-    <InstallerPlatform>x64</InstallerPlatform>
+    <InstallerPlatform Condition="'$(RuntimeIdentifier)' == 'win-arm64'">arm64</InstallerPlatform>
+    <InstallerPlatform Condition="'$(RuntimeIdentifier)' == '' OR '$(RuntimeIdentifier)' == 'win-x64'">x64</InstallerPlatform>
     <OutputName>OneWareStudio.WindowsInstaller</OutputName>
     <OutputType>Package</OutputType>
 
     <StudioFolder>../OneWare.Studio.Desktop</StudioFolder>
     <StudioProj>../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj</StudioProj>
     <StudioPublish>./publish</StudioPublish>
+    
+    <!-- Set publish runtime based on RuntimeIdentifier, default to win-x64 -->
+    <PublishRuntime Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</PublishRuntime>
+    <PublishRuntime Condition="'$(RuntimeIdentifier)' == ''">win-x64</PublishRuntime>
 
     <!-- Enable WiX signing hook -->
     <SignOutput>true</SignOutput>
@@ -36,7 +41,7 @@
     <Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
 
     <!-- Publish OneWare Studio -->
-    <Exec Command="dotnet publish $(StudioProj) -f net10.0 -c Release -r win-x64 -o $(StudioPublish)" />
+    <Exec Command="dotnet publish $(StudioProj) -f net10.0 -c Release -r $(PublishRuntime) -o $(StudioPublish)" />
 
     <!-- Sign all published binaries using PowerShell script -->
     <Exec
