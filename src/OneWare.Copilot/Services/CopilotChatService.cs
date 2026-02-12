@@ -31,6 +31,7 @@ public sealed class CopilotChatService(
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private bool _forceNewSession;
+    private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
@@ -235,6 +236,7 @@ public sealed class CopilotChatService(
 
         if (sessionId == null)
         {
+            var tools = toolProvider.GetTools();
             _session = await _client.CreateSessionAsync(new SessionConfig
             {
                 Model = SelectedModel.Id,
@@ -243,7 +245,11 @@ public sealed class CopilotChatService(
                 {
                     Content = CopilotModule.SystemMessage
                 },
-                Tools = toolProvider.GetTools()
+                Tools = tools,
+                AvailableTools = tools.Select(x => x.Name).ToList(),
+                //OnPermissionRequest = OnPermissionRequestAsync, AS OF NOW (FEB 2026), these don't work! 
+                //Hooks = BuildPermissionHooks(),
+                //OnUserInputRequest = OnUserInputRequestAsync
             });
 
             _forceNewSession = false;
@@ -253,7 +259,10 @@ public sealed class CopilotChatService(
             _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
             {
                 Streaming = true,
-                Tools = toolProvider.GetTools()
+                Tools = toolProvider.GetTools(),
+                OnPermissionRequest = OnPermissionRequestAsync,
+                Hooks = BuildPermissionHooks(),
+                OnUserInputRequest = OnUserInputRequestAsync
             });
         }
         
@@ -362,6 +371,112 @@ public sealed class CopilotChatService(
                 EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
         }
+    }
+
+    private Task<PermissionRequestResult> OnPermissionRequestAsync(
+        PermissionRequest request,
+        PermissionInvocation invocation)
+    {
+        var scope = string.IsNullOrWhiteSpace(request.Kind) ? "tool" : request.Kind;
+        if (_allowedPermissionScopes.Contains(scope))
+        {
+            return Task.FromResult(CreateAllowPermissionResult());
+        }
+
+        var responseSource = new TaskCompletionSource<PermissionRequestResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var title = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
+            ? "Copilot wants to edit something."
+            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
+                ? "Copilot wants to execute in terminal."
+                : "Copilot wants to use a tool.";
+        var question = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
+            ? "Copilot wants to edit this file."
+            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
+                ? "Allow this command?"
+                : "Allow this action?";
+
+        var prompt = $"**{title}**\n\n{question}";
+
+        var allowCommand = new RelayCommand<Control?>(_ =>
+        {
+            responseSource.TrySetResult(CreateAllowPermissionResult());
+        });
+
+        var denyCommand = new RelayCommand<Control?>(_ =>
+        {
+            responseSource.TrySetResult(CreateDenyPermissionResult());
+        });
+
+        var allowForSessionCommand = new RelayCommand<Control?>(_ =>
+        {
+            _allowedPermissionScopes.Add(scope);
+            responseSource.TrySetResult(CreateAllowPermissionResult());
+        });
+
+        EventReceived?.Invoke(this, new ChatPermissionRequestEvent(
+            prompt,
+            "Allow",
+            "Deny",
+            allowCommand,
+            denyCommand,
+            "Allow for session",
+            allowForSessionCommand));
+
+        return responseSource.Task;
+    }
+
+    private static SessionHooks BuildPermissionHooks()
+    {
+        return new SessionHooks
+        {
+            OnPreToolUse = (input, invocation) =>
+            {
+                if (input.ToolName is "runTerminalCommand" or "editFile")
+                {
+                    return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput
+                    {
+                        PermissionDecision = "ask",
+                        PermissionDecisionReason = $"Awaiting user approval for '{input.ToolName}'."
+                    });
+                }
+
+                return Task.FromResult<PreToolUseHookOutput?>(null);
+            }
+        };
+    }
+
+    private static PermissionRequestResult CreateAllowPermissionResult()
+    {
+        return new PermissionRequestResult
+        {
+            Kind = "allow",
+            Rules = []
+        };
+    }
+
+    private static PermissionRequestResult CreateDenyPermissionResult()
+    {
+        return new PermissionRequestResult
+        {
+            Kind = "deny",
+            Rules = []
+        };
+    }
+
+    private Task<UserInputResponse> OnUserInputRequestAsync(
+        UserInputRequest request,
+        UserInputInvocation invocation)
+    {
+        var message = $"Copilot requested user input: {request.Question}";
+        EventReceived?.Invoke(this, new ChatMessageEvent(message));
+
+        return Task.FromResult(new UserInputResponse
+        {
+            Answer = string.Empty,
+            WasFreeform = true
+        });
     }
 
     private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,
