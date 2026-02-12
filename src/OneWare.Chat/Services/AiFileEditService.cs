@@ -20,7 +20,7 @@ public class AiFileEditService(IMainDockService mainDockService)
         var openEditTab = mainDockService.OpenFiles.FirstOrDefault(x => x.Value.FullPath == filePath).Value as IEditor;
 
         if (startLine is null && lineCount is null)
-            return openEditTab?.CurrentDocument.Text ?? await File.ReadAllTextAsync(filePath);
+            return openEditTab?.CurrentDocument.Text ?? (File.Exists(filePath) ? await File.ReadAllTextAsync(filePath) : null);
 
         if (startLine is null || startLine < 1)
             return null;
@@ -30,6 +30,9 @@ public class AiFileEditService(IMainDockService mainDockService)
 
         if (openEditTab?.CurrentDocument is { } document)
             return ReadFromDocument(document, startLine.Value, lineCount);
+
+        if (!File.Exists(filePath))
+            return null;
 
         return await ReadFromFileAsync(filePath, startLine.Value, lineCount);
     }
@@ -42,7 +45,7 @@ public class AiFileEditService(IMainDockService mainDockService)
         {
             var openEditTab = mainDockService.OpenFiles.FirstOrDefault(x => x.Value.FullPath == filePath).Value as IEditor;
             
-            var original = openEditTab?.CurrentDocument.Text ?? await File.ReadAllTextAsync(filePath);
+            var original = openEditTab?.CurrentDocument.Text ?? (File.Exists(filePath) ? await File.ReadAllTextAsync(filePath) : string.Empty);
             openTab = new AiEditViewModel(filePath, original);
             
             ActiveEdits.Add(openTab);
@@ -57,6 +60,8 @@ public class AiFileEditService(IMainDockService mainDockService)
 
         try
         {
+            EnsureParentDirectoryExists(filePath);
+
             if (startLine is null && lineCount is null)
             {
                 await File.WriteAllTextAsync(filePath, newContent);
@@ -187,6 +192,13 @@ public class AiFileEditService(IMainDockService mainDockService)
         if (index < 0)
             return null;
         return index > 0 && content[index - 1] == '\r' ? "\r\n" : "\n";
+    }
+
+    private static void EnsureParentDirectoryExists(string filePath)
+    {
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
     }
 
 }

@@ -243,7 +243,7 @@ public sealed class CopilotChatService(
                 {
                     Content = CopilotModule.SystemMessage
                 },
-                Tools = toolProvider.GetTools()
+                Tools = toolProvider.GetTools(),
             });
 
             _forceNewSession = false;

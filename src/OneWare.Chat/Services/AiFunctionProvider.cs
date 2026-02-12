@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
@@ -36,7 +35,7 @@ public class AiFunctionProvider(
                     "Search Files",
                     async () =>
                     {
-                        var resolvedRoot = rootPath ?? projectExplorerService.ActiveProject?.FullPath;
+                        var resolvedRoot = ResolvePath(rootPath);
                         if (string.IsNullOrWhiteSpace(resolvedRoot))
                             return new { results = Array.Empty<SearchMatch>(), error = "No active project and no root path provided." };
 
@@ -66,12 +65,20 @@ public class AiFunctionProvider(
                 [Description("number of lines to read from startLine (omit for full file)")] int? lineCount = null) =>
                 WrapWithNotificationTaskUiThread(
                     $"Read File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}", "",
-                    async () => new
+                    async () =>
                     {
-                        result = await aiFileEditService.ReadFileAsync(path, startLine, lineCount)
+                        var resolvedPath = ResolvePath(path);
+                        if (string.IsNullOrWhiteSpace(resolvedPath))
+                            return new { result = (string?)null, error = (string?)"No active project and no path provided." };
+
+                        return new
+                        {
+                            result = await aiFileEditService.ReadFileAsync(resolvedPath, startLine, lineCount),
+                            error = (string?)null
+                        };
                     }),
             "readFile",
-            "Read the specified file (optionally by line range). This is the only way to read files in the application."
+            "Read the specified file (optionally by line range). Relative paths are resolved against the active project."
         );
 
         var editFile = AIFunctionFactory.Create(
@@ -82,12 +89,146 @@ public class AiFunctionProvider(
             WrapWithNotificationTaskUiThread(
                 $"Edit File {Path.GetFileName(path)}{((startLine != null && lineCount != null) ? $" Line: {startLine} - {startLine + lineCount - 1}" : "")}",
                 "",
-                async () => new
+                async () =>
                 {
-                    result = await aiFileEditService.EditFileAsync(path, content, startLine, lineCount)
+                    var resolvedPath = ResolvePath(path);
+                    if (string.IsNullOrWhiteSpace(resolvedPath))
+                        return new { result = false, error = (string?)"No active project and no path provided." };
+
+                    return new
+                    {
+                        result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount),
+                        error = (string?)null
+                    };
                 }),
             "editFile",
-            "Edit file contents with new text (optionally by line range). This is the only way to edit files in the application."
+            "Edit file contents with new text (optionally by line range). Creates missing files automatically. Relative paths are resolved against the active project."
+        );
+
+        var listDirectory = AIFunctionFactory.Create(
+            ([Description("directory path (optional, defaults to active project root)")] string? path = null,
+                [Description("include nested files and folders recursively")] bool recursive = false,
+                [Description("include hidden entries")] bool includeHidden = false,
+                [Description("maximum number of entries to return")] int maxEntries = 500) =>
+                WrapWithNotificationTask(
+                    "List Directory",
+                    () =>
+                    {
+                        var resolvedPath = ResolvePath(path);
+                        if (string.IsNullOrWhiteSpace(resolvedPath))
+                            return Task.FromResult<object>(new { entries = Array.Empty<DirectoryEntry>(), error = "No active project and no path provided." });
+
+                        if (!Directory.Exists(resolvedPath))
+                            return Task.FromResult<object>(new { entries = Array.Empty<DirectoryEntry>(), error = $"Directory does not exist: {resolvedPath}" });
+
+                        var entries = EnumerateDirectoryEntries(resolvedPath, recursive, includeHidden, Math.Max(1, maxEntries));
+                        return Task.FromResult<object>(new { root = resolvedPath, entries });
+                    }),
+            "listDirectory",
+            "Lists files and folders for a directory. Use this before reading/editing unknown paths."
+        );
+
+        var pathExists = AIFunctionFactory.Create(
+            ([Description("path to check")] string path) => WrapWithNotificationUiThread(
+                $"Check Path {Path.GetFileName(path)}",
+                () =>
+                {
+                    var resolvedPath = ResolvePath(path);
+                    if (string.IsNullOrWhiteSpace(resolvedPath))
+                        return new { path = (string?)null, exists = false, isFile = false, isDirectory = false, error = (string?)"No active project and no path provided." };
+
+                    var isFile = File.Exists(resolvedPath);
+                    var isDirectory = Directory.Exists(resolvedPath);
+                    return new
+                    {
+                        path = (string?)resolvedPath,
+                        exists = isFile || isDirectory,
+                        isFile,
+                        isDirectory,
+                        error = (string?)null
+                    };
+                }),
+            "pathExists",
+            "Checks whether a path exists and whether it is a file or directory."
+        );
+
+        var createDirectory = AIFunctionFactory.Create(
+            ([Description("directory path to create")] string path) => WrapWithNotificationUiThread(
+                $"Create Directory {Path.GetFileName(path)}",
+                () =>
+                {
+                    var resolvedPath = ResolvePath(path);
+                    if (string.IsNullOrWhiteSpace(resolvedPath))
+                        return new { created = false, path = (string?)null, error = (string?) "No active project and no path provided." };
+
+                    Directory.CreateDirectory(resolvedPath);
+                    return new { created = true, path = (string?) resolvedPath, error = (string?)null };
+                }),
+            "createDirectory",
+            "Creates a directory and any missing parent directories."
+        );
+
+        var movePath = AIFunctionFactory.Create(
+            ([Description("source file or directory path")] string sourcePath,
+                [Description("destination file or directory path")] string destinationPath,
+                [Description("overwrite destination if it already exists")] bool overwrite = false) =>
+                WrapWithNotificationUiThread(
+                    $"Move Path {Path.GetFileName(sourcePath)}",
+                    () =>
+                    {
+                        var resolvedSource = ResolvePath(sourcePath);
+                        var resolvedDestination = ResolvePath(destinationPath);
+                        if (string.IsNullOrWhiteSpace(resolvedSource) || string.IsNullOrWhiteSpace(resolvedDestination))
+                            return new { moved = false, source = resolvedSource, destination = resolvedDestination, kind = (string?)null, error = (string?)"No active project and no path provided." };
+
+                        if (File.Exists(resolvedSource))
+                        {
+                            EnsureParentDirectory(resolvedDestination);
+                            File.Move(resolvedSource, resolvedDestination, overwrite);
+                            return new { moved = true, source = (string?)resolvedSource, destination = (string?)resolvedDestination, kind = (string?)"file", error = (string?)null };
+                        }
+
+                        if (Directory.Exists(resolvedSource))
+                        {
+                            if (Directory.Exists(resolvedDestination) && overwrite)
+                                Directory.Delete(resolvedDestination, true);
+                            Directory.Move(resolvedSource, resolvedDestination);
+                            return new { moved = true, source = (string?)resolvedSource, destination = (string?)resolvedDestination, kind = (string?)"directory", error = (string?)null };
+                        }
+
+                        return new { moved = false, source = (string?)resolvedSource, destination = (string?)resolvedDestination, kind = (string?)null, error = (string?)$"Source path does not exist: {resolvedSource}" };
+                    }),
+            "movePath",
+            "Moves or renames a file/directory."
+        );
+
+        var deletePath = AIFunctionFactory.Create(
+            ([Description("file or directory path to delete")] string path,
+                [Description("for directories: delete recursively")] bool recursive = true) =>
+                WrapWithNotificationUiThread(
+                    $"Delete Path {Path.GetFileName(path)}",
+                    () =>
+                    {
+                        var resolvedPath = ResolvePath(path);
+                        if (string.IsNullOrWhiteSpace(resolvedPath))
+                            return new { deleted = false, path = (string?)null, kind = (string?)null, error = (string?)"No active project and no path provided." };
+
+                        if (File.Exists(resolvedPath))
+                        {
+                            File.Delete(resolvedPath);
+                            return new { deleted = true, path = (string?)resolvedPath, kind = (string?)"file", error = (string?)null };
+                        }
+
+                        if (Directory.Exists(resolvedPath))
+                        {
+                            Directory.Delete(resolvedPath, recursive);
+                            return new { deleted = true, path = (string?)resolvedPath, kind = (string?)"directory", error = (string?)null };
+                        }
+
+                        return new { deleted = false, path = (string?)resolvedPath, kind = (string?)null, error = (string?)"Path does not exist." };
+                    }),
+            "deletePath",
+            "Deletes a file or directory."
         );
 
         var getActiveProject = AIFunctionFactory.Create(
@@ -135,14 +276,20 @@ public class AiFunctionProvider(
                 $"Get Errors for {Path.GetFileName(path)}",
                 () =>
                 {
+                    var resolvedPath = ResolvePath(path);
+                    if (string.IsNullOrWhiteSpace(resolvedPath))
+                        return new { path = (string?)null, errorsForFile = Array.Empty<string>(), error = (string?)"No active project and no path provided." };
+
                     var errors = errorService.GetErrors();
                     var errorStrings = errors
-                        .Where(x => x.FilePath.EqualPaths(path))
+                        .Where(x => x.FilePath.EqualPaths(resolvedPath))
                         .Select(x => x.ToString()).ToArray();
 
                     return new
                     {
-                        errorsForFile = errorStrings
+                        path = (string?)resolvedPath,
+                        errorsForFile = errorStrings,
+                        error = (string?)null
                     };
                 }),
             "getErrorsForFile",
@@ -173,16 +320,18 @@ public class AiFunctionProvider(
             (
                 [Description("Shell command to execute")]
                 string command,
-                [Description("Working directory for execution")]
-                string workDir
+                [Description("Working directory for execution (WARNING!, only works the first time for every session, after that it needs to be adjusted manually)")]
+                string? workDir = null
             ) => WrapWithNotificationTaskUiThread(
                 $"Execute In Terminal", command,
                 async () =>
                 {
+                    var resolvedWorkDir = ResolvePath(workDir);
+
                     var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
                         command,
                         "Copilot",
-                        workDir,
+                        resolvedWorkDir,
                         true,
                         TimeSpan.FromMinutes(1));
 
@@ -214,8 +363,8 @@ public class AiFunctionProvider(
 
         return
         [
-            getActiveProject, getOpenFile, getOpenFiles, searchFiles, readFile, editFile, getErrorsForFile, getErrors,
-            executeInTerminal, openSettings
+            getActiveProject, getOpenFile, getOpenFiles, listDirectory, pathExists, createDirectory, movePath, deletePath,
+            searchFiles, readFile, editFile, getErrorsForFile, getErrors, executeInTerminal, openSettings
         ];
     }
 
@@ -416,5 +565,72 @@ public class AiFunctionProvider(
         return false;
     }
 
+    private string? ResolvePath(string? path)
+    {
+        var activeProjectPath = projectExplorerService.ActiveProject?.FullPath;
+        if (string.IsNullOrWhiteSpace(path))
+            return activeProjectPath;
+
+        if (Path.IsPathRooted(path))
+            return Path.GetFullPath(path);
+
+        if (!string.IsNullOrWhiteSpace(activeProjectPath))
+            return Path.GetFullPath(Path.Combine(activeProjectPath, path));
+
+        return Path.GetFullPath(path);
+    }
+
+    private static IReadOnlyList<DirectoryEntry> EnumerateDirectoryEntries(
+        string rootPath,
+        bool recursive,
+        bool includeHidden,
+        int maxEntries)
+    {
+        var entries = new List<DirectoryEntry>(Math.Min(maxEntries, 256));
+        var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
+        foreach (var entryPath in Directory.EnumerateFileSystemEntries(rootPath, "*", option))
+        {
+            if (entries.Count >= maxEntries)
+                break;
+
+            if (!includeHidden && IsHidden(entryPath))
+                continue;
+
+            var isDirectory = Directory.Exists(entryPath);
+            var sizeBytes = isDirectory ? 0 : new FileInfo(entryPath).Length;
+            entries.Add(new DirectoryEntry(entryPath, isDirectory, sizeBytes));
+        }
+
+        return entries;
+    }
+
+    private static bool IsHidden(string path)
+    {
+        var name = Path.GetFileName(path);
+        if (!string.IsNullOrEmpty(name) && name.StartsWith('.'))
+            return true;
+
+        try
+        {
+            return (File.GetAttributes(path) & FileAttributes.Hidden) != 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void EnsureParentDirectory(string path)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+    }
+
+    // Records are serialized to JSON and sent to AI - properties accessed via serialization
+#pragma warning disable IDE0051, IDE0052, IDE0044, CS9113
+    private sealed record DirectoryEntry(string Path, bool IsDirectory, long? SizeBytes);
     private sealed record SearchMatch(string File, int Line, int Column, string LineText, string Match);
+#pragma warning restore IDE0051, IDE0052, IDE0044, CS9113
 }
