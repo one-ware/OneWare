@@ -29,10 +29,10 @@ jobs:
         run: mkdir ./out
       # Build win-x64
       - name: Publish win-x64
-        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./publish/win-x64
+        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-x64 -o ./publishInstaller/win-x64
       # Build win-arm64
       - name: Publish win-arm64
-        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-arm64 -o ./publish/win-arm64
+        run: dotnet build ./studio/OneWare.Studio.Desktop.WindowsInstaller/OneWare.Studio.Desktop.WindowsInstaller.wixproj -c Release -r win-arm64 -o ./publishInstaller/win-arm64
       - name: Create Button HTML x64
         shell: powershell
         run: ((Get-Content -path ./studio/OneWare.Studio.Desktop.WindowsInstaller/WinDownloadTemplate-x64.htm -Raw) -replace '\$version\$', '${{ steps.get-oneware-version.outputs.info }}') | Set-Content -NoNewline -Path ./out/WinDownload-x64.htm -Encoding UTF8
@@ -47,9 +47,9 @@ jobs:
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi" > ./out/win-arm64.txt
       # Rename installers
       - name: Rename Installer win-x64
-        run: mv ./publish/win-x64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
+        run: mv ./publishInstaller/win-x64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
       - name: Rename Installer win-arm64
-        run: mv ./publish/win-arm64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi
+        run: mv ./publishInstaller/win-arm64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
