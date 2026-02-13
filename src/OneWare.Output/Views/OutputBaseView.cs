@@ -62,11 +62,7 @@ public abstract class OutputBaseView : UserControl
 
     private void InitializeEditor()
     {
-        _output!.TextArea.TextView.LinkTextForegroundBrush =
-            new BrushConverter().ConvertFrom("#f5cd56") as IBrush
-            ?? throw new InvalidOperationException("Invalid brush color");
-
-        _output.Document = _viewModel!.OutputDocument;
+        _output!.Document = _viewModel!.OutputDocument;
         _output.Document.UndoStack.SizeLimit = 0;
 
         _output.TextArea.TextView.LineTransformers.Clear();

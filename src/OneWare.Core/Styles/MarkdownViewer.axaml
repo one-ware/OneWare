@@ -95,6 +95,13 @@
                                 <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
                             </Style.Setters>
                         </Style>
+                        
+                        <Style Selector="TextBlock.CodeBlock">
+                            <Style.Setters>
+                                <Setter Property="FontFamily" Value="menlo,monaco,consolas,droid sans mono,inconsolata,courier new,monospace,dejavu sans mono"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+                            </Style.Setters>
+                        </Style>
 
                         <Style Selector=".ToolTip mdxaml|MarkdownScrollViewer">
                             <Setter Property="MaxWidth" Value="500" />

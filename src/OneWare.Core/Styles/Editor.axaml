@@ -8,7 +8,9 @@
         xmlns:editorEx="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
         xmlns:snippets="clr-namespace:AvaloniaEdit.Snippets;assembly=AvaloniaEdit"
         xmlns:colorTextBlock="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
-        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials">
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+        xmlns:models="clr-namespace:OmniSharp.Extensions.LanguageServer.Protocol.Models;assembly=OmniSharp.Extensions.LanguageProtocol"
+        xmlns:rendering="https://github.com/avaloniaui/avaloniaedit">
 
     <Design.PreviewWith>
         <Border Padding="20">
@@ -26,6 +28,10 @@
                 Value="{DynamicResource ThemeControlLowBrush}" />
         <Setter Property="snippets:ReplaceableActiveElement.ReplaceableActiveElementBackgroundBrush"
                 Value="{DynamicResource ThemeAccentBrush4}" />
+    </Style>
+    
+    <Style Selector="rendering|TextView">
+        <Setter Property="LinkTextForegroundBrush" Value="Orange" />
     </Style>
 
     <!--Code completion-->
