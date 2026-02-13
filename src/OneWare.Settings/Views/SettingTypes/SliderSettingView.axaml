@@ -47,7 +47,6 @@
                     IsSnapToTickEnabled="True"
                     TickPlacement="None" />
         </DockPanel>
-        <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
-                   IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="setting-validation" />
     </StackPanel>
 </UserControl>

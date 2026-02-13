@@ -7,6 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Settings.Views.SettingTypes.TextBoxSettingView"
              x:DataType="settingTypes:TextBoxSettingViewModel">
+    
     <StackPanel Orientation="Vertical" Spacing="2">
         <StackPanel.ContextMenu>
             <ContextMenu>
@@ -31,7 +32,6 @@
         <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                  Watermark="{Binding Watermark}"
                  Text="{Binding Setting.Value, Mode=TwoWay}" />
-        <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
-                   IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="setting-validation" />
     </StackPanel>
 </UserControl>

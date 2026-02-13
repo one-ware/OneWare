@@ -31,7 +31,6 @@
         <ComboBox ItemsSource="{Binding Setting.Options}"
                   IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                   SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
-        <TextBlock Text="{Binding Setting.ValidationMessage}" FontSize="11" Foreground="Orange"
-                   IsVisible="{Binding Setting.ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="setting-validation" />
     </StackPanel>
 </UserControl>
