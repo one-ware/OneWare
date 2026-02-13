@@ -29,14 +29,14 @@
                              Maximum="100" Value="{Binding Progress}" IsIndeterminate="{Binding IsIndeterminate}" />
 
                 <Button DockPanel.Dock="Left" Classes="RoundButton PrimaryButton" Content="Download Update"
-                        Padding="10 5"
+                        Padding="10 5" Height="NaN"
                         IsEnabled="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.UpdateAvailable}}"
                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
                         Command="{Binding DownloadUpdateAsync}"
                         CommandParameter="{Binding $self}"
                         HorizontalAlignment="Center" />
 
-                <Button DockPanel.Dock="Left" Content="Restart"
+                <Button DockPanel.Dock="Left" Content="Restart" Height="NaN"
                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
                         Command="{Binding TryRestart}"
                         HorizontalAlignment="Center" />
