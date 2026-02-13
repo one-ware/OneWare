@@ -1,0 +1,15 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes">
+    <Design.PreviewWith>
+    </Design.PreviewWith>
+    
+    <Style Selector="TextBlock.setting-validation" x:DataType="settingTypes:TitledSettingViewModel">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Foreground" Value="Orange"/>
+        <Setter Property="Text" Value="{Binding Setting.ValidationMessage}"/>
+        <Setter Property="IsVisible" Value="{Binding $self.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </Style>
+    
+</Styles>

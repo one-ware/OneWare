@@ -67,25 +67,30 @@ public abstract class TitledSetting : CollectionSetting
 
     public string? MarkdownDocumentation { get; init; }
 
-    public ISettingValidation? Validator { get; init; }
+    public ISettingValidation? Validator
+    {
+        get;
+        init
+        {
+            field = value;
+            RefreshValidation();
+        }
+    }
 
     public string? ValidationMessage
     {
         get;
         set => SetProperty(ref field, value);
     }
-
-    protected override void SetValue(object value)
+    
+    public void RefreshValidation()
     {
         if (Validator is null)
-        {
-            base.SetValue(value);
             return;
-        }
 
         try
         {
-            ValidationMessage = !Validator.Validate(value, out var validationMsg)
+            ValidationMessage = !Validator.Validate(Value, out var validationMsg)
                 ? validationMsg ?? ValidationFallbackMessage
                 : null;
         }
@@ -97,14 +102,13 @@ public abstract class TitledSetting : CollectionSetting
         {
             ValidationMessage = ValidationFallbackMessage;
         }
-
-        base.SetValue(value);
     }
-}
 
-public interface ISettingValidation
-{
-    bool Validate(object? value, out string? warningMessage);
+    protected override void SetValue(object value)
+    {
+        base.SetValue(value);
+        RefreshValidation();
+    }
 }
 
 public class CheckBoxSetting : TitledSetting
