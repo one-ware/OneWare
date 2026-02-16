@@ -21,6 +21,45 @@
 
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
                             IsVisible="{Binding SelectedChatService, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Button Name="HistoryButton">
+                        <Button.Flyout>
+                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="Bottom">
+                                <ListBox ItemsSource="{Binding HistoryItems}" BorderThickness="0" MinWidth="300"
+                                         MaxHeight="320">
+                                    <Interaction.Behaviors>
+                                        <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                            <HideFlyoutAction Flyout="{Binding #HistoryButton.Flyout}" />
+                                        </behaviors1:PointerPressedHandledEventTrigger>
+                                    </Interaction.Behaviors>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).LoadHistoryCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
+                                                    HorizontalAlignment="Stretch" Background="Transparent"
+                                                    Padding="8 6">
+                                                <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, Auto"
+                                                      ColumnSpacing="6">
+                                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding UpdatedText}"
+                                                               FontSize="11"
+                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                    <TextBlock Grid.Row="1"
+                                                               Text="{Binding ChatServiceName}"
+                                                               FontSize="11"
+                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                </Grid>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ListBox>
+                            </Flyout>
+                        </Button.Flyout>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Source="{DynamicResource FluentIcons.history_regular}" Height="12" Width="12"
+                                   VerticalAlignment="Center" />
+                            <TextBlock Text="History" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Command="{Binding InitializeCurrentCommand}"
                             IsVisible="{Binding !IsInitialized}">
                         <StackPanel Orientation="Horizontal" Spacing="5">

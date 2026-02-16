@@ -14,6 +14,10 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     /// Optional UI extension displayed under the chat input area.
     /// </summary>
     public Control? BottomUiExtension { get; }
+    /// <summary>
+    /// Current provider-specific chat/session id, if available.
+    /// </summary>
+    public string? ChatId { get; }
 
     /// <summary>
     /// Fired when the chat session is reset.
@@ -44,4 +48,8 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     /// Starts a new chat session.
     /// </summary>
     Task NewChatAsync();
+    /// <summary>
+    /// Restores a specific chat session by provider-specific id.
+    /// </summary>
+    Task RestoreChatAsync(string chatId);
 }

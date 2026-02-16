@@ -59,6 +59,14 @@ public sealed class CopilotChatService(
     }
 
     public string Name { get; } = "Copilot";
+    public string? ChatId
+    {
+        get;
+        private set
+        {
+            SetProperty(ref field, value);
+        }
+    }
 
     public Control BottomUiExtension => new CopilotChatExtensionView()
     {
@@ -265,6 +273,8 @@ public sealed class CopilotChatService(
                 OnUserInputRequest = OnUserInputRequestAsync
             });
         }
+
+        ChatId = await _client.GetLastSessionIdAsync();
         
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
         
@@ -299,6 +309,36 @@ public sealed class CopilotChatService(
     {
         _forceNewSession = true;
         await InitializeSessionAsync();
+    }
+
+    public async Task RestoreChatAsync(string chatId)
+    {
+        if (_client == null || string.IsNullOrWhiteSpace(chatId)) return;
+
+        await DisposeSessionAsync();
+
+        if (SelectedModel == null)
+        {
+            EventReceived?.Invoke(this, new ChatErrorEvent("No Model Selected"));
+            return;
+        }
+
+        StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
+
+        _session = await _client.ResumeSessionAsync(chatId, new ResumeSessionConfig()
+        {
+            Streaming = true,
+            Tools = toolProvider.GetTools(),
+            OnPermissionRequest = OnPermissionRequestAsync,
+            Hooks = BuildPermissionHooks(),
+            OnUserInputRequest = OnUserInputRequestAsync
+        });
+
+        ChatId = chatId;
+        _forceNewSession = false;
+
+        StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
+        _subscription = _session.On(HandleSessionEvent);
     }
 
     public async ValueTask DisposeAsync()
