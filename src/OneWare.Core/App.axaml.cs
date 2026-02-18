@@ -437,9 +437,8 @@ public class App : Application
     protected virtual void ConfigureLogging(ILoggingBuilder builder)
     {
         var logPath = GetLogFilePath();
-        var logDirectory = Path.GetDirectoryName(logPath);
-        if (!string.IsNullOrWhiteSpace(logDirectory))
-            Directory.CreateDirectory(logDirectory);
+        if (!string.IsNullOrWhiteSpace(logPath))
+            Directory.CreateDirectory(logPath);
 
         var onewareTheme = new SystemConsoleTheme(new Dictionary<ConsoleThemeStyle, SystemConsoleThemeStyle>
         {
