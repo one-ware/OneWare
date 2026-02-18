@@ -47,6 +47,12 @@ public class PluginCompatibilityChecker
             foreach (var dep in depsList)
             {
                 var parts = dep.Split(':');
+
+                if (parts.Length < 2)
+                {
+                    isCompatible = false;
+                    break;
+                }
                 var dependencyName = parts[0].Trim();
                 var versionString = parts[1].Trim();
 

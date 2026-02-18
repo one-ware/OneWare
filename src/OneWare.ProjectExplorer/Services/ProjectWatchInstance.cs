@@ -240,7 +240,7 @@ public class ProjectWatchInstance : IDisposable
             var relativePath = SafeRelative(path);
             if (relativePath != null && _root.GetLoadedEntry(relativePath) is IProjectRootWithFile project)
             {
-                if (File.Exists(project.FullPath))
+                if (File.Exists(project.ProjectFilePath))
                 {
                     var lastWrite = File.GetLastWriteTime(project.FullPath);
                     if (lastWrite > project.LastSaveTime)
