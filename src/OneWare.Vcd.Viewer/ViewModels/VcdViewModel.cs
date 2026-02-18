@@ -135,7 +135,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             LoadingFailed = !await LoadInternalAsync(token);
 
             WaveFormViewer.LoadingMarkerOffset = long.MaxValue;
-            
+
             SetTitle(0);
 
             if (live)
@@ -144,6 +144,10 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 _isLiveExecution = false;
                 SetTitle(0);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
         }
         catch (Exception e)
         {
