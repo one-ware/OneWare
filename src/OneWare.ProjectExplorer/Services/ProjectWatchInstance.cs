@@ -244,7 +244,10 @@ public class ProjectWatchInstance : IDisposable
                 {
                     var lastWrite = File.GetLastWriteTime(project.FullPath);
                     if (lastWrite > project.LastSaveTime)
-                        await _projectExplorerService.ReloadProjectAsync(project);
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                            _projectExplorerService.ReloadProjectAsync(project));
+                    }
                 }
             }
 

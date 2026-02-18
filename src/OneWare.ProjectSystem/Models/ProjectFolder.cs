@@ -315,7 +315,10 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         _loadCancellation = new CancellationTokenSource();
         var cancellationToken = _loadCancellation.Token;
 
-        Children?.Clear();
+        if (Children?.Count > 0)
+        {
+            Children.Clear();
+        }
 
         if (!Directory.Exists(FullPath))
         {
@@ -328,7 +331,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
         // Batch size (tweakable)
         const int batchSize = 50;
 
-        if (Children == null) Children = new ObservableCollection<IProjectExplorerNode>();
+        Children ??= [];
 
         // Load folders first
         await foreach (var folder in EnumerateFoldersAsync(batchSize, cancellationToken))
