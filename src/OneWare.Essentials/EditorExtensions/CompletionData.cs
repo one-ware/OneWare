@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+﻿﻿using System.Text.RegularExpressions;
 using Avalonia.Media;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
@@ -78,18 +78,20 @@ public partial class CompletionData : ICompletionData
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
     {
         var segmentStart = completionSegment.Offset;
-        var segmentLength = completionSegment.Length;
+        var segmentEnd = completionSegment.EndOffset;
 
-        if (ReplaceStartOffset.HasValue && ReplaceEndOffset.HasValue)
+        // Use LSP's ReplaceStartOffset if available, but always use the completion segment's end
+        // because the user may have typed additional characters after the completion window opened
+        if (ReplaceStartOffset.HasValue && ReplaceStartOffset.Value >= 0)
         {
-            var start = ReplaceStartOffset.Value;
-            var end = ReplaceEndOffset.Value;
-            if (start >= 0 && end >= start)
-            {
-                segmentStart = start;
-                segmentLength = end - start;
-            }
+            segmentStart = ReplaceStartOffset.Value;
         }
+
+        // Ensure segmentEnd is at least at the completion segment's end position
+        // This handles the case where user types more characters after completion opened
+        segmentEnd = Math.Max(segmentEnd, completionSegment.EndOffset);
+        
+        var segmentLength = segmentEnd - segmentStart;
 
         var segmentLine = textArea.Document.GetLineByOffset(segmentStart);
 
