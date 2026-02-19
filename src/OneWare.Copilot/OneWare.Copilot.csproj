@@ -5,9 +5,9 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
-
+    
     <ItemGroup>
-        <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.20" />
+        <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.25" />
     </ItemGroup>
 
 </Project>

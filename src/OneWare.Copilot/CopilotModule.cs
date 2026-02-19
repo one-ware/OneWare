@@ -249,15 +249,7 @@ public class CopilotModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
-        
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
-            new FilePathSetting("Copilot CLI Path", "copilot", null,
-                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
-                PlatformHelper.ExeFile)
-            {
-                HoverDescription = "Path for Copilot CLI"
-            });
+        //serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
 

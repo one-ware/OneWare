@@ -146,25 +146,14 @@ public sealed class CopilotChatService(
 
     public async Task<bool> InitializeAsync()
     {
-        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
         
         try
         {
-            if (!PlatformHelper.ExistsOnPath(cliPath))
-            {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
-                EventReceived?.Invoke(this, new ChatButtonEvent(
-                    "Copilot CLI not found.", "Install Copilot CLI", new AsyncRelayCommand<Control?>(InstallCopilotCLiAsync)));
-                return false;
-            }
-
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 Cwd = paths.ProjectsDirectory,
-                CliPath = cliPath
             });
 
             var authStatus = await _client.GetAuthStatusAsync();
