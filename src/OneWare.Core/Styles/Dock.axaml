@@ -316,20 +316,9 @@
             </DataTemplate>
         </Setter>
     </Style>
-
-    <Style Selector="PinnedDockControl" x:DataType="PinnedDockControl">
-        <Setter Property="Classes.MarginLeft"
-                Value="{Binding $self.PinnedDockAlignment, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static core:Alignment.Right}}">
-        </Setter>
-        <Setter Property="Classes.MarginRight"
-                Value="{Binding $self.PinnedDockAlignment, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static core:Alignment.Left}}">
-        </Setter>
+    
+    <Style Selector="PinnedDockControl > Grid > GridSplitter">
+        <Setter Property="Width" Value="5" />
     </Style>
-
-    <Style Selector="PinnedDockControl.MarginLeft">
-        <Setter Property="Margin" Value="2 0 0 0" />
-    </Style>
-    <Style Selector="PinnedDockControl.MarginRight">
-        <Setter Property="Margin" Value="0 0 2 0" />
-    </Style>
+    
 </Styles>
