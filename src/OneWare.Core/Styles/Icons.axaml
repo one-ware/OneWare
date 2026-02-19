@@ -1082,6 +1082,26 @@
                              Geometry="F1M3.9699,2.9698L1.9999,0.999799999999999 0.9399,2.0608 2.9089,4.0298 0.9399,5.9998 1.9999,7.0598 3.9699,5.0908 5.9389,7.0598 6.9999,5.9998 5.0299,4.0298 6.9999,2.0608 5.9389,0.999799999999999z" />
         </DrawingGroup>
     </DrawingImage>
+    
+    <DrawingImage x:Key="VsImageLib.Connect16XWhite">
+        <DrawingGroup>
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="White"
+                             Geometry="F1M13,3L13,8C13,10.199,11.546,12.107,9.5,12.75L9.5,16 6.5,16 6.5,12.75C4.454,12.107,3,10.199,3,8L3,3 5,3 5,0 11,0 11,3z" />
+            <GeometryDrawing Brush="#FF388934"
+                             Geometry="F1M8,11C6.346,11,5,9.654,5,8L5,5 11,5 11,8C11,9.654,9.654,11,8,11 M10,4L10,1 9,1 9,4 7,4 7,1 6,1 6,4 4,4 4,8C4,10.035,5.532,11.7,7.5,11.949L7.5,15 8.5,15 8.5,11.949C10.468,11.7,12,10.035,12,8L12,4z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="VsImageLib.Disconnect16XWhite">
+        <DrawingGroup>
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="White"
+                             Geometry="F1M11,12C9.896,12,9,11.103,9,10L9,8 13,8 13,10C13,11.103,12.103,12,11,12 M13,7L13,5 12,5 12,7 10,7 10,5 9,5 9,7 8,7 8,10C8,11.483,9.084,12.71,10.5,12.949L10.5,15 11.5,15 11.5,12.949C12.916,12.71,14,11.483,14,10L14,7z" />
+            <GeometryDrawing Brush="#FFc25b46"
+                             Geometry="F1M3.9699,2.9698L1.9999,0.999799999999999 0.9399,2.0608 2.9089,4.0298 0.9399,5.9998 1.9999,7.0598 3.9699,5.0908 5.9389,7.0598 6.9999,5.9998 5.0299,4.0298 6.9999,2.0608 5.9389,0.999799999999999z" />
+        </DrawingGroup>
+    </DrawingImage>
 
 
     <DrawingImage x:Key="VsImageLib2019.RunOverlay16X">

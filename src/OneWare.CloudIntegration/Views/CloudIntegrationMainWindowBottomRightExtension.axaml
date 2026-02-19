@@ -23,10 +23,10 @@
             </MenuFlyout>
         </Button.Flyout>
         <Panel>
-            <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="16" Height="16"
+            <Image Source="{DynamicResource VsImageLib.Disconnect16XWhite}" Width="16" Height="16"
                    IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Disconnected}}" />
 
-            <Image Source="{DynamicResource VsImageLib.Connect16X}" Width="16" Height="16"
+            <Image Source="{DynamicResource VsImageLib.Connect16XWhite}" Width="16" Height="16"
                    IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Connected}}" />
 
             <controls:Spinner Foreground="White" Height="13"

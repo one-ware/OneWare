@@ -22,7 +22,12 @@
         <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush">#F0F0F0</SolidColorBrush>
         <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockTabActiveBackgroundBrush" Color="{DynamicResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="DockTabActiveForegroundBrush" Color="White" />
+        <SolidColorBrush x:Key="DockTabHoverBackgroundBrush" Color="{DynamicResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="DockTabHoverForegroundBrush" Color="{DynamicResource ThemeForegroundColor}" />
         <SolidColorBrush x:Key="DockTabActiveIndicatorBrush" Color="{DynamicResource ThemeAccentColor}" />
+        <system:Double x:Key="DockDocumentTabItemSeparatorOpacity">0</system:Double>
+        
 
         <ContextMenu x:Key="DocumentTabStripItemContextMenu" x:DataType="core:IDockable">
             <MenuItem Header="{DynamicResource DocumentTabStripItemFloatString}"
