@@ -273,6 +273,83 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                     }
                 ]
             },
+            new PackageVersion
+            {
+                Version = "2026.02.19",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url =
+                            "https://github.com/hendrikmennen/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-windows-x64-20260219.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-linux-x64-20260219.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-arm64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-linux-arm64-20260219.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-darwin-x64-20260219.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-arm64",
+                        Url =
+                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-darwin-arm64-20260219.tgz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "oss-cad-suite",
+                                SettingKey = OssPathSetting
+                            }
+                        ]
+                    }
+                ]
+            },
         ]
     };
     
