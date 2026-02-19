@@ -156,13 +156,13 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "0.0.405",
+                Version = "0.0.411",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-win32-x64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-win32-x64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -175,7 +175,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-win32-arm64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-win32-arm64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -188,7 +188,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-linux-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-linux-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -201,7 +201,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-linux-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-linux-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -214,7 +214,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-darwin-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-darwin-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -227,7 +227,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.405/copilot-darwin-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-darwin-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -249,7 +249,15 @@ public class CopilotModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        //serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
+        
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
+            new FilePathSetting("Copilot CLI Path", "", null,
+                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
+                PlatformHelper.ExeFile)
+            {
+                HoverDescription = "Path for Copilot CLI"
+            });
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
 

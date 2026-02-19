@@ -18,8 +18,8 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
     {
         Package = package;
         _packageService = packageService;
-
-        Title = $"Install {Package.Package.Name}";
+        
+        Title = $"{(package.Status is PackageStatus.UpdateAvailable ? "Update" : "Install")} {Package.Package.Name}";
 
         _ = ResolveAsync();
     }

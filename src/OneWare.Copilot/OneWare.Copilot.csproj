@@ -5,6 +5,10 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
+
+    <PropertyGroup>
+        <CopilotSkipCliDownload>true</CopilotSkipCliDownload>
+    </PropertyGroup>
     
     <ItemGroup>
         <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.25" />

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Copilot.Models;
 using OneWare.Copilot.ViewModels;
 using OneWare.Copilot.Views;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -21,7 +22,8 @@ namespace OneWare.Copilot.Services;
 public sealed class CopilotChatService(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
-    IPackageWindowService packageService,
+    IPackageService packageService,
+    IPackageWindowService packageWindowService,
     IWindowService windowService,
     IPaths paths)
     : ObservableObject, IChatService
@@ -78,7 +80,7 @@ public sealed class CopilotChatService(
 
         if (!autoDownload) return false;
         
-        var installResult = await packageService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
+        var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
 
         if (!installResult) return false;
         
@@ -146,14 +148,37 @@ public sealed class CopilotChatService(
 
     public async Task<bool> InitializeAsync()
     {
+        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
         
         try
         {
+            if (!PlatformHelper.ExistsOnPath(cliPath))
+            {
+                StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
+                EventReceived?.Invoke(this, new ChatButtonEvent(
+                    "Copilot CLI not found.", "Install Copilot CLI", new AsyncRelayCommand<Control?>(InstallCopilotCLiAsync)));
+                return false;
+            }
+
+            if (packageService.IsLoaded || await packageService.RefreshAsync())
+            {
+                if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
+                    state.Status is PackageStatus.UpdateAvailable)
+                {
+                    StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
+                    EventReceived?.Invoke(this, new ChatButtonEvent(
+                        "Copilot CLI update found", "Update Copilot CLI", new AsyncRelayCommand<Control?>(InstallCopilotCLiAsync)));
+                    return false;
+                }
+            }
+
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 Cwd = paths.ProjectsDirectory,
+                CliPath = cliPath
             });
 
             var authStatus = await _client.GetAuthStatusAsync();

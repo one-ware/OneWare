@@ -12,6 +12,8 @@ public interface IPackageService : INotifyPropertyChanged
     /// True while package operations are running.
     /// </summary>
     bool IsUpdating { get; }
+    
+    bool IsLoaded { get; }
 
     /// <summary>
     /// Registered packages keyed by ID.

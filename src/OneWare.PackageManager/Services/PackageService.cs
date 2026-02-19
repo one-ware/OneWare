@@ -49,6 +49,12 @@ public class PackageService : ObservableObject, IPackageService
         private set => SetProperty(ref field, value);
     }
 
+    public bool IsLoaded
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
     private readonly Dictionary<string, PackageState> _packages = new();
 
     public IReadOnlyDictionary<string, IPackageState> Packages =>
@@ -275,6 +281,7 @@ public class PackageService : ObservableObject, IPackageService
             }
 
             PackagesUpdated?.Invoke(this, EventArgs.Empty);
+            IsLoaded = true;
         }
         catch (Exception e)
         {
@@ -326,10 +333,10 @@ public class PackageService : ObservableObject, IPackageService
         {
             _logger.Warning(
                 $"No compatible target found for package {state.Package.Id} version {selectedVersion.Version}");
-            
+
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
         }
-        
+
         return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility);
     }
 
