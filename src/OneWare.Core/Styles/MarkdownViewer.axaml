@@ -135,6 +135,12 @@
                                 <Setter Property="Margin" Value="0" />
                             </Style.Setters>
                         </Style>
+                        
+                        <Style Selector=".ToolTip ctxt|CTextBlock.ListMarker">
+                            <Style.Setters>
+                                <Setter Property="Margin" Value="0,0,5, 0"/>
+                            </Style.Setters>
+                        </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock Button.CopyButton ContentPresenter">
                             <Setter Property="IsVisible" Value="False" />
