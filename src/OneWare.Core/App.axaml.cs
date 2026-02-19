@@ -227,7 +227,7 @@ public class App : Application
             });
 
         settingsService.RegisterSetting("Editor", "Assistance", "TypeAssistance_DisableLargeFile_Min",
-            new SliderSetting("Disable Assistance for Large Files", 100000, 50000, 1000000, 1000)
+            new SliderSetting("Disable Assistance for Large Files", 1000000, 50000, 10000000, 1000)
             {
                 MarkdownDocumentation =
                     "If a document is larger than the specified amount of chars, assistance will be disabled for performance reasons"
