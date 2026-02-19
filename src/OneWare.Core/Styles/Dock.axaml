@@ -14,13 +14,15 @@
         <system:Double x:Key="ScrollBarButtonArrowIconFontSize">10</system:Double>
         <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{DynamicResource ThemeForegroundColor}" />
         <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{DynamicResource ThemeAccentColor}" />
-
+        
         <SolidColorBrush x:Key="DockApplicationAccentBrushLow" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6"
                          Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush">#F0F0F0</SolidColorBrush>
         <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="DockTabActiveBackgroundBrush" Color="{DynamicResource ThemeAccentColor}" />
+        <SolidColorBrush x:Key="DockTabActiveIndicatorBrush" Color="{DynamicResource ThemeAccentColor}" />
 
         <ContextMenu x:Key="DocumentTabStripItemContextMenu" x:DataType="core:IDockable">
             <MenuItem Header="{DynamicResource DocumentTabStripItemFloatString}"
@@ -283,7 +285,7 @@
                                     Height="17" Width="17"
                                     Value="{Binding Icon, FallbackValue={x:Null}}"
                                     VerticalAlignment="Center" IsVisible="{Binding !IsLoading}" />
-                                <TextBlock Name="Title"
+                                <TextBlock Name="Title" MaxWidth="300" TextTrimming="CharacterEllipsis" 
                                            Margin="3 0 0 0"
                                            Text="{Binding Title}" VerticalAlignment="Center" />
                                 <TextBlock Text="*" IsVisible="{Binding IsDirty, FallbackValue=False}" />
@@ -291,7 +293,7 @@
                         </DataTemplate>
                         <DataTemplate DataType="core:IDockable">
                             <StackPanel Orientation="Horizontal" Margin="0 1">
-                                <TextBlock Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center" />
+                                <TextBlock MaxWidth="100" TextTrimming="CharacterEllipsis" Margin="3 0 0 0" Text="{Binding Title}" VerticalAlignment="Center" />
                             </StackPanel>
                         </DataTemplate>
                     </ContentControl.DataTemplates>
