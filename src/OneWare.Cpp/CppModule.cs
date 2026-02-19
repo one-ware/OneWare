@@ -175,6 +175,52 @@ public class CppModule : OneWareModuleBase
                         ]
                     }
                 ]
+            },
+            new PackageVersion
+            {
+                Version = "21.1.8",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/21.1.8/clangd-windows-21.1.8.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("clangd_21.1.8", "bin", "clangd.exe"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/21.1.8/clangd-linux-21.1.8.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "clangd_21.1.8/bin/clangd",
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/21.1.8/clangd-mac-21.1.8.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "clangd_21.1.8/bin/clangd",
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     };
