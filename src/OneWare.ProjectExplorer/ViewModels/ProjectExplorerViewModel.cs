@@ -62,8 +62,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         _recentProjectsFile = Path.Combine(_paths.AppDataDirectory, "RecentProjects.json");
 
         Id = "ProjectExplorer";
-        Title = "Explorer";
-
+        
         ApplicationStateService.RegisterShutdownTask(ShutdownAsync);
     }
 
@@ -81,6 +80,12 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     }
     
     public event EventHandler<IProjectRoot>? ProjectRemoved;
+
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
+        Title = "Explorer";
+    }
 
     public override void AddProject(IProjectRoot project)
     {

@@ -23,7 +23,6 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         IProjectExplorerService projectExplorerService) : base(IconKey)
     {
         Id = "LibraryExplorer";
-        Title = "Libraries";
 
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
@@ -31,6 +30,12 @@ public class LibraryExplorerViewModel : ProjectViewModelBase
         _libraryFolderPath = Path.Combine(paths.PackagesDirectory, "Libraries");
 
         _ = LoadAsync();
+    }
+
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
+        Title = "Libraries";
     }
 
     public override void AddProject(IProjectRoot project)

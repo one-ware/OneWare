@@ -1,4 +1,5 @@
-﻿using LibGit2Sharp;
+﻿using Avalonia.Media;
+using LibGit2Sharp;
 using OneWare.Essentials.Models;
 
 namespace OneWare.SourceControl.Models;
@@ -11,6 +12,8 @@ public class SourceControlFileModel
         Status = change;
     }
 
+    public IconModel? FileIcon { get; set; }
+    
     public string FullPath { get; }
 
     public StatusEntry Status { get; set; }

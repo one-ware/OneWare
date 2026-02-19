@@ -9,6 +9,11 @@ public class DebuggerViewModel : ExtendedTool
     public DebuggerViewModel() : base(IconKey)
     {
         Id = "Debug";
+    }
+
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
         Title = "Debug";
     }
 }

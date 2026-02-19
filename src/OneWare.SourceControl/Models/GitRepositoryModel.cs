@@ -135,7 +135,10 @@ public class GitRepositoryModel : ObservableObject
             {
                 var fullPath = Path.Combine(Repository.Info.WorkingDirectory, item.FilePath);
 
-                var sModel = new SourceControlFileModel(fullPath, item);
+                var sModel = new SourceControlFileModel(fullPath, item)
+                {
+                    FileIcon = sourceControlViewModel.FileIconService.GetFileIconModel(Path.GetExtension(fullPath))
+                };
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
                     item.State.HasFlag(FileStatus.RenamedInIndex) ||

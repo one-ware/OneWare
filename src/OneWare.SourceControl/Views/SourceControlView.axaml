@@ -10,7 +10,7 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
              x:Class="OneWare.SourceControl.Views.SourceControlView"
-             Name="SourceControlViewView"
+             Name="SourceControlViewView" Background="{DynamicResource ThemeControlLowBrush}"
              x:DataType="viewModels:SourceControlViewModel" x:CompileBindings="True">
 
     <UserControl.Styles>
@@ -21,9 +21,8 @@
                     <DataTemplate DataType="models:SourceControlFileModel">
                         <DockPanel Margin="14, 0, 4, 0">
                             <Grid Margin="2, 0, 5, 0" VerticalAlignment="Center">
-                                <Image Margin="1, 0, 0, 0" Height="16" Width="16"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                                <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
+                                                               Value="{Binding FileIcon}" Height="16" Width="16" />
                             </Grid>
                             <Grid DockPanel.Dock="Right" Width="11">
                                 <TextBlock HorizontalAlignment="Center"
@@ -39,134 +38,112 @@
             </Setter>
         </Style>
     </UserControl.Styles>
-    <Grid RowDefinitions="26, Auto, *">
-        <DockPanel LastChildFill="False">
-            <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton">
-                <MenuItem>
-                    <MenuItem.Header>
-                        <Image VerticalAlignment="Center" Height="10" Width="10" Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" />
-                    </MenuItem.Header>
-                    <MenuItem Header="Account">
-                        <MenuItem Header="Login to Github" Command="{Binding LoginGithubAsync}">
+    <Grid RowDefinitions="30, *, Auto">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                BorderThickness="0 0 0 1">
+            <DockPanel LastChildFill="False">
+                <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton">
+                    <MenuItem>
+                        <MenuItem.Header>
+                            <Image VerticalAlignment="Center" Height="10" Width="10"
+                                   Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" />
+                        </MenuItem.Header>
+                        <MenuItem Header="Account">
+                            <MenuItem Header="Login to Github" Command="{Binding LoginGithubAsync}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource Bootstrap.Github}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                        <MenuItem Header="Clone" Command="{Binding CloneDialogAsyncCommand}">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource Bootstrap.Github}" />
+                                <Image Source="{DynamicResource FontAwesome.DownloadSolid}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Sync">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                            </MenuItem.Icon>
+                            <MenuItem Header="Sync" Command="{Binding SyncAsyncCommand}"
+                                      ToolTip.Tip="Pulls and Pushes changes" />
+                            <MenuItem Header="Pull" Command="{Binding PullAsyncCommand}" />
+                            <MenuItem Header="Push" Command="{Binding PushAsyncCommand}" />
+                            <MenuItem Header="Fetch" Command="{Binding FetchAsyncCommand}" />
+                        </MenuItem>
+                        <MenuItem Header="Commit">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource BoxIcons.RegularGitCommit}" />
+                            </MenuItem.Icon>
+                            <MenuItem Header="Commit Staged" Command="{Binding CommitAsyncCommand}"
+                                      CommandParameter="{x:False}"
+                                      IsEnabled="{Binding CommitMessage.Length}" />
+                            <MenuItem Header="Commit All" Command="{Binding CommitAsyncCommand}"
+                                      CommandParameter="{x:True}"
+                                      IsEnabled="{Binding CommitMessage.Length}" />
+                        </MenuItem>
+                        <MenuItem Header="Branches">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource BoxIcons.RegularGitBranch}" />
+                            </MenuItem.Icon>
+                            <MenuItem Header="Create Branch..." Command="{Binding CreateBranchDialogAsyncCommand}" />
+                            <MenuItem Header="Merge Branch..." Command="{Binding MergeBranchDialogAsyncCommand}" />
+                            <MenuItem Header="Delete Branch..." Command="{Binding DeleteBranchDialogAsyncCommand}" />
+                        </MenuItem>
+                        <MenuItem Header="Changes">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource BoxIcons.RegularGitCompare}" />
+                            </MenuItem.Icon>
+                            <MenuItem Header="Undo All Changes" Command="{Binding DiscardAllAsyncCommand}"
+                                      CommandParameter="{x:Static libgit:ResetMode.Hard}">
+                                <MenuItem.Icon>
+                                    <Image Source="{DynamicResource VsImageLib.Undo16X}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Stage All" Command="{Binding StageAllCommand}" />
+                            <MenuItem Header="Unstage All" Command="{Binding UnStageAllCommand}" />
+                        </MenuItem>
+                        <MenuItem Header="Remotes">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource Material.Web}" />
+                            </MenuItem.Icon>
+                            <MenuItem Header="Add Remote..." Command="{Binding AddRemoteDialogAsyncCommand}" />
+                            <MenuItem Header="Delete Remote..." Command="{Binding DeleteRemoteDialogAsyncCommand}" />
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Set Author Identity..." Command="{Binding SetUserIdentityAsyncCommand}"
+                                  CommandParameter="{x:False}">
+                            <MenuItem.Icon>
+                                <Image Source="{DynamicResource MaterialDesign.PermIdentity}" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
-                    <MenuItem Header="Clone" Command="{Binding CloneDialogAsyncCommand}">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource FontAwesome.DownloadSolid}" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator />
-                    <MenuItem Header="Sync">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
-                        </MenuItem.Icon>
-                        <MenuItem Header="Sync" Command="{Binding SyncAsyncCommand}"
-                                  ToolTip.Tip="Pulls and Pushes changes" />
-                        <MenuItem Header="Pull" Command="{Binding PullAsyncCommand}" />
-                        <MenuItem Header="Push" Command="{Binding PushAsyncCommand}" />
-                        <MenuItem Header="Fetch" Command="{Binding FetchAsyncCommand}" />
-                    </MenuItem>
-                    <MenuItem Header="Commit">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource BoxIcons.RegularGitCommit}" />
-                        </MenuItem.Icon>
-                        <MenuItem Header="Commit Staged" Command="{Binding CommitAsyncCommand}"
-                                  CommandParameter="{x:False}"
-                                  IsEnabled="{Binding CommitMessage.Length}" />
-                        <MenuItem Header="Commit All" Command="{Binding CommitAsyncCommand}"
-                                  CommandParameter="{x:True}"
-                                  IsEnabled="{Binding CommitMessage.Length}" />
-                    </MenuItem>
-                    <MenuItem Header="Branches">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource BoxIcons.RegularGitBranch}" />
-                        </MenuItem.Icon>
-                        <MenuItem Header="Create Branch..." Command="{Binding CreateBranchDialogAsyncCommand}" />
-                        <MenuItem Header="Merge Branch..." Command="{Binding MergeBranchDialogAsyncCommand}" />
-                        <MenuItem Header="Delete Branch..." Command="{Binding DeleteBranchDialogAsyncCommand}" />
-                    </MenuItem>
-                    <MenuItem Header="Changes">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource BoxIcons.RegularGitCompare}" />
-                        </MenuItem.Icon>
-                        <MenuItem Header="Undo All Changes" Command="{Binding DiscardAllAsyncCommand}"
-                                  CommandParameter="{x:Static libgit:ResetMode.Hard}">
-                            <MenuItem.Icon>
-                                <Image Source="{DynamicResource VsImageLib.Undo16X}" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Stage All" Command="{Binding StageAllCommand}" />
-                        <MenuItem Header="Unstage All" Command="{Binding UnStageAllCommand}" />
-                    </MenuItem>
-                    <MenuItem Header="Remotes">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource Material.Web}" />
-                        </MenuItem.Icon>
-                        <MenuItem Header="Add Remote..." Command="{Binding AddRemoteDialogAsyncCommand}" />
-                        <MenuItem Header="Delete Remote..." Command="{Binding DeleteRemoteDialogAsyncCommand}" />
-                    </MenuItem>
-                    <Separator />
-                    <MenuItem Header="Set Author Identity..." Command="{Binding SetUserIdentityAsyncCommand}"
-                              CommandParameter="{StaticResource False}">
-                        <MenuItem.Icon>
-                            <Image Source="{DynamicResource MaterialDesign.PermIdentity}" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </MenuItem>
-            </Menu>
-            <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding RefreshAsyncCommand}">
-                <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Width="15" ToolTip.Tip="Refresh" />
-            </Button>
-            <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding CommitAsyncCommand}"
-                    IsEnabled="{Binding #CommitMessageBox.Text.Length}" CommandParameter="{StaticResource False}"
-                    IsVisible="{Binding !ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
-                <Image Source="{DynamicResource PicolIcons.Accept}" Width="15"
-                       ToolTip.Tip="Stage all changes and commit" />
-            </Button>
-            <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding CommitAsyncCommand}"
-                    IsEnabled="{Binding #CommitMessageBox.Text.Length}" CommandParameter="{StaticResource True}"
-                    IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
-                <Image Source="{DynamicResource PicolIcons.Accept}" Width="15" ToolTip.Tip="Commit staged changes" />
-            </Button>
+                </Menu>
+                <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding RefreshAsyncCommand}">
+                    <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Width="15" ToolTip.Tip="Refresh" />
+                </Button>
 
-            <Menu IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  Name="BranchButton" ToolTip.Tip="{Binding ActiveRepository.WorkingPath}" Classes="BindMenu">
-                <MenuItem ItemsSource="{Binding ActiveRepository.AvailableBranchesMenu}">
-                    <MenuItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock VerticalAlignment="Center" Height="20" Margin="1, 4, 3, 2"
-                                       Text="{Binding ActiveRepository.HeadBranch.FriendlyName}" />
-                            <Image VerticalAlignment="Center" Height="13" Margin="3"
-                                   Source="{DynamicResource BoxIcons.RegularGitBranch}" />
-                        </StackPanel>
-                    </MenuItem.Header>
-                </MenuItem>
-            </Menu>
-        </DockPanel>
-
-        <DockPanel Grid.Row="1">
-            <TextBox IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
-                     Text="{Binding CommitMessage}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                     Name="CommitMessageBox"
-                     BorderThickness="0,1,0,1" Watermark="Message for commit...">
-                <TextBox.Styles>
-                    <Style Selector="TextBox:focus /template/ Border#border">
-                        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-                    </Style>
-                    <Style Selector="TextBox:pointerover /template/ Border#border">
-                        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-                    </Style>
-                </TextBox.Styles>
-            </TextBox>
-        </DockPanel>
-
-        <DockPanel Grid.Row="2">
+                <Menu
+                    IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Name="BranchButton" ToolTip.Tip="{Binding ActiveRepository.WorkingPath}" Classes="BindMenu">
+                    <MenuItem ItemsSource="{Binding ActiveRepository.AvailableBranchesMenu}">
+                        <MenuItem.Header>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock VerticalAlignment="Center" Height="20" Margin="1, 4, 3, 2"
+                                           Text="{Binding ActiveRepository.HeadBranch.FriendlyName}" />
+                                <Image VerticalAlignment="Center" Height="13" Margin="3"
+                                       Source="{DynamicResource BoxIcons.RegularGitBranch}" />
+                            </StackPanel>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </Menu>
+            </DockPanel>
+        </Border>
+        
+        <DockPanel Grid.Row="1" Margin="5">
             <StackPanel DockPanel.Dock="Top" Margin="15" Orientation="Vertical"
                         IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNull}}">
-                <TextBlock TextAlignment="Left"
+                <TextBlock TextAlignment="Center"
                            Text="The currently active project doesn't have a git repository. You can initialize the currently active project as a new git repository"
                            TextWrapping="Wrap" />
                 <Button
@@ -174,16 +151,22 @@
                     Margin="0, 10, 0, 10" Width="180" Classes="RoundButton" Height="30"
                     Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
-                                   Source="{DynamicResource BoxIcons.RegularGitRepoForked}" />
-                            <TextBlock Text="Initialize Repository" VerticalAlignment="Center" />
+                                   Source="{DynamicResource BoxIcons.RegularGitRepoForked}"
+                                   IsVisible="{Binding !InitializeRepositoryCommand.IsRunning}" />
+                            <controls:Spinner Width="14" Height="14" VerticalAlignment="Center"
+                                              IsVisible="{Binding InitializeRepositoryCommand.IsRunning}" />
+                            <TextBlock VerticalAlignment="Center" Text="Initialize Repository"
+                                       IsVisible="{Binding !InitializeRepositoryCommand.IsRunning}" />
+                            <TextBlock VerticalAlignment="Center" Text="Initializing..."
+                                       IsVisible="{Binding InitializeRepositoryCommand.IsRunning}" />
                         </StackPanel>
                     </Button.Content>
                 </Button>
 
                 <TextBlock Margin="0, 20, 0, 0" Text="Alternatively you can clone an existing repository"
-                           TextWrapping="Wrap" />
+                           TextWrapping="Wrap" TextAlignment="Center" />
 
                 <Button Margin="0, 10, 0, 10" Width="180" Classes="RoundButton"
                         Height="30"
@@ -197,15 +180,17 @@
                     </Button.Content>
                 </Button>
 
+                <!--
                 <StackPanel Margin="0, 10, 0, 0" Orientation="Horizontal">
                     <TextBlock Text="Learn how to use the Team Explorer " />
                     <controls:HyperLink Url="https://one-ware/docs/studio/features/teamexplorer" Label="here"
                                         HorizontalAlignment="Left" />
                 </StackPanel>
+                -->
             </StackPanel>
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding ActiveRepository.MergeChanges.Count, FallbackValue={x:False}}">
-                <Expander Header="Merge Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
+                <Expander Header="Merge Changes" IsExpanded="True">
                     <ListBox ItemsSource="{Binding ActiveRepository.MergeChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
@@ -252,7 +237,7 @@
 
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}">
-                <Expander Header="Staged Changes" IsExpanded="True" Background="{DynamicResource ThemeControlLowBrush}">
+                <Expander Header="Staged Changes" IsExpanded="True">
                     <ListBox ItemsSource="{Binding ActiveRepository.StagedChanges}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0"
                              Name="StagedChangeListBox">
@@ -301,7 +286,7 @@
 
             <Grid DockPanel.Dock="Top"
                   IsVisible="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
-                <Expander Background="{DynamicResource ThemeControlLowBrush}" Header="Changes" IsExpanded="True">
+                <Expander Header="Changes" IsExpanded="True">
                     <ListBox ItemsSource="{Binding ActiveRepository.Changes}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              BorderThickness="0"
@@ -356,5 +341,47 @@
                 <TextBlock Text="{Binding ActiveRepository.Changes.Count}" HorizontalAlignment="Right" Margin="3" />
             </Grid>
         </DockPanel>
+
+        <Border Grid.Row="2" Margin="10 6 10 8"
+                Background="{DynamicResource ThemeControlMidBrush}"
+                Classes="RoundBorder">
+            <Grid RowDefinitions="Auto, Auto">
+                <TextBox
+                    IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Text="{Binding CommitMessage}" Name="CommitMessageBox"
+                    BorderThickness="0" Background="Transparent"
+                    Watermark="Describe your changes..." Padding="8 8 8 6"
+                    AcceptsReturn="True" TextWrapping="Wrap" MinHeight="52"
+                    VerticalContentAlignment="Top" />
+
+                <DockPanel Grid.Row="1" Height="24" Margin="6 2 6 6" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                               Text="{Binding ActiveRepository.HeadBranch.FriendlyName, FallbackValue=No repository}" />
+
+                    <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
+                            IsEnabled="{Binding #CommitMessageBox.Text.Length}"
+                            CommandParameter="{x:True}"
+                            IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:True}}"
+                            ToolTip.Tip="Commit staged changes">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                            <TextBlock Text="Commit Staged" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
+                            IsEnabled="{Binding #CommitMessageBox.Text.Length}"
+                            CommandParameter="{x:False}"
+                            IsVisible="{Binding !ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}"
+                            ToolTip.Tip="Stage all changes and commit">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                            <TextBlock Text="Commit" />
+                        </StackPanel>
+                    </Button>
+                </DockPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

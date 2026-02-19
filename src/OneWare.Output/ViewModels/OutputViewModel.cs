@@ -9,6 +9,11 @@ public class OutputViewModel : OutputBaseViewModel, IOutputService
     public OutputViewModel() : base(IconKey)
     {
         Id = "Output";
+    }
+
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
         Title = "Output";
     }
 }

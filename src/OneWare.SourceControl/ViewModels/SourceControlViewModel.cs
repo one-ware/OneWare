@@ -11,6 +11,7 @@ using DynamicData.Binding;
 using GitCredentialManager;
 using LibGit2Sharp;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -47,6 +48,7 @@ public class SourceControlViewModel : ExtendedTool
 
     public SourceControlViewModel(ILogger logger, ISettingsService settingsService,
         IApplicationStateService applicationStateService,
+        IFileIconService fileIconService,
         IMainDockService mainDockService, IWindowService windowService,
         IPaths paths,
         IProjectExplorerService projectExplorerService,
@@ -60,12 +62,12 @@ public class SourceControlViewModel : ExtendedTool
         _projectExplorerService = projectExplorerService;
         _paths = paths;
         _projectExplorerService = projectExplorerService;
-
+        FileIconService = fileIconService;
+        
         Id = "SourceControl";
-        Title = "Git";
 
         InitializeRepositoryCommand =
-            new RelayCommand(InitializeRepository, () => _projectExplorerService.ActiveProject != null);
+            new AsyncRelayCommand(InitializeRepositoryAsync, () => _projectExplorerService.ActiveProject != null);
         RefreshAsyncCommand = new AsyncRelayCommand(RefreshAsync);
         CloneDialogAsyncCommand = new AsyncRelayCommand(CloneDialogAsync);
         SyncAsyncCommand = new AsyncRelayCommand(SyncAsync, () => ActiveRepository != null);
@@ -119,6 +121,8 @@ public class SourceControlViewModel : ExtendedTool
             });
     }
 
+    public IFileIconService FileIconService { get; set; }
+
     public ObservableCollection<GitRepositoryModel> Repositories { get; } = new();
 
     public GitRepositoryModel? ActiveRepository
@@ -139,7 +143,7 @@ public class SourceControlViewModel : ExtendedTool
         set => SetProperty(ref _isLoading, value);
     }
 
-    public RelayCommand InitializeRepositoryCommand { get; }
+    public AsyncRelayCommand InitializeRepositoryCommand { get; }
     public AsyncRelayCommand RefreshAsyncCommand { get; }
     public AsyncRelayCommand CloneDialogAsyncCommand { get; }
     public AsyncRelayCommand SyncAsyncCommand { get; }
@@ -158,6 +162,13 @@ public class SourceControlViewModel : ExtendedTool
     public AsyncRelayCommand AddRemoteDialogAsyncCommand { get; }
     public AsyncRelayCommand DeleteRemoteDialogAsyncCommand { get; }
     public AsyncRelayCommand<bool> SetUserIdentityAsyncCommand { get; }
+
+    public override void InitializeContent()
+    {
+        base.InitializeContent();
+        
+        Title = "Commit";
+    }
 
     private async Task RefreshAsync()
     {
@@ -208,13 +219,15 @@ public class SourceControlViewModel : ExtendedTool
 
     #region Initialize and Clone
 
-    public void InitializeRepository()
+    public async Task InitializeRepositoryAsync()
     {
         if (_projectExplorerService.ActiveProject == null) return;
 
         try
         {
-            Repository.Init(_projectExplorerService.ActiveProject.RootFolderPath);
+            var rootPath = _projectExplorerService.ActiveProject.RootFolderPath;
+            await Task.Run(() => Repository.Init(rootPath));
+            await RefreshAsync();
         }
         catch (Exception e)
         {
