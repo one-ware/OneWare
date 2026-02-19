@@ -115,6 +115,20 @@ public class MainDockService : Factory, IMainDockService
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
         }
     }
+    
+    public override void FloatDockable(IDockable dockable)
+    {
+        // Blocking this for now to make sure we don't float pinned dockables in a way where they get duplicated
+        if (dockable is ToolDock { ActiveDockable: { } ad })
+        {
+            var pinned = Layout?.RightPinnedDockables?.Contains(ad) ?? Layout?.LeftPinnedDockables?.Contains(ad) ??
+                Layout?.TopPinnedDockables?.Contains(ad) ??
+                Layout?.BottomPinnedDockables?.Contains(ad) ?? false;
+
+            if (pinned) return;
+        }
+        base.FloatDockable(dockable);
+    }
 
     public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument
     {
