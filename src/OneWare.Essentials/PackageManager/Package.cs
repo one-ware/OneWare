@@ -26,5 +26,5 @@ public class Package
 
     public PackageLink[]? Links { get; init; }
 
-    public PackageVersion[]? Versions { get; init; }
+    public PackageVersion[]? Versions { get; set; }
 }

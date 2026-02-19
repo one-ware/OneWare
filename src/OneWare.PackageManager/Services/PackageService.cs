@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -269,8 +270,21 @@ public class PackageService : ObservableObject, IPackageService
                     nextStates[installedPackage.Id] = state;
                 }
 
-                state.InstalledVersion =
+                var installedVersion =
                     state.Package.Versions?.FirstOrDefault(x => x.Version == installedPackage.InstalledVersion);
+
+                if (installedVersion == null)
+                {
+                    var newVersion = new PackageVersion { Version = installedPackage.InstalledVersion };
+
+                    state.Package.Versions =
+                        new[] { newVersion }.Concat(state.Package.Versions ?? Enumerable.Empty<PackageVersion>())
+                            .ToArray();
+
+                    installedVersion = newVersion;
+                }
+
+                state.InstalledVersion = installedVersion;
             }
 
             _packages.Clear();

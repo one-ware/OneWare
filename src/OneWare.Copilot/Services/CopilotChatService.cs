@@ -71,14 +71,13 @@ public sealed class CopilotChatService(
     public event EventHandler<ChatEvent>? EventReceived;
     public event EventHandler<StatusEvent>? StatusChanged;
 
-    private async Task<bool> InstallCopilotCLiAsync(Control? owner)
+    private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
     {
-        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-        if (PlatformHelper.ExistsOnPath(cliPath)) return true;
-        
-        var autoDownload = settingsService.GetSettingValue<bool>("Experimental_AutoDownloadBinaries");
-
-        if (!autoDownload) return false;
+        if (!update)
+        {
+            var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+            if (PlatformHelper.ExistsOnPath(cliPath)) return true;
+        }
         
         var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
 
@@ -159,7 +158,7 @@ public sealed class CopilotChatService(
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
                 EventReceived?.Invoke(this, new ChatButtonEvent(
-                    "Copilot CLI not found.", "Install Copilot CLI", new AsyncRelayCommand<Control?>(InstallCopilotCLiAsync)));
+                    "Copilot CLI not found.", "Install Copilot CLI", new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))));
                 return false;
             }
 
@@ -170,7 +169,7 @@ public sealed class CopilotChatService(
                 {
                     StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
                     EventReceived?.Invoke(this, new ChatButtonEvent(
-                        "Copilot CLI update found", "Update Copilot CLI", new AsyncRelayCommand<Control?>(InstallCopilotCLiAsync)));
+                        "Copilot CLI update found", "Update Copilot CLI", new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))));
                     return false;
                 }
             }
@@ -317,11 +316,36 @@ public sealed class CopilotChatService(
 
     public async ValueTask DisposeAsync()
     {
-        await DisposeSessionAsync();
-        if (_client != null)
+        try
         {
-            await _client.StopAsync();
-            await _client.DisposeAsync();
+            await DisposeSessionAsync();
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to dispose Copilot session.");
+        }
+
+        var client = _client;
+        _client = null;
+
+        if (client == null) return;
+
+        try
+        {
+            await client.StopAsync();
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to stop Copilot client.");
+        }
+
+        try
+        {
+            await client.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to dispose Copilot client.");
         }
     }
 
