@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -424,6 +425,7 @@ public sealed class CopilotChatService(
         var responseSource = new TaskCompletionSource<PermissionRequestResult>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
+        var context = BuildPermissionContext(request, invocation);
         var title = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
             ? "Copilot wants to edit something."
             : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
@@ -435,7 +437,9 @@ public sealed class CopilotChatService(
                 ? "Allow this command?"
                 : "Allow this action?";
 
-        var prompt = $"**{title}**\n\n{question}";
+        var prompt = string.IsNullOrWhiteSpace(context)
+            ? $"**{title}**\n\n{question}"
+            : $"**{title}**\n\n{question}\n\n{context}";
 
         var allowCommand = new RelayCommand<Control?>(_ =>
         {
@@ -463,6 +467,73 @@ public sealed class CopilotChatService(
             allowForSessionCommand));
 
         return responseSource.Task;
+    }
+
+    private static string BuildPermissionContext(PermissionRequest request, PermissionInvocation invocation)
+    {
+        var details = new List<string>();
+
+        AddDetail(details, "Kind", request.Kind);
+        AddDetail(details, "Tool call", request.ToolCallId);
+        AddDetail(details, "Session", invocation.SessionId);
+
+        if (request.ExtensionData != null)
+        {
+            AddExtensionValue(details, request.ExtensionData, "toolName", "Tool");
+            AddExtensionValue(details, request.ExtensionData, "name", "Tool");
+            AddExtensionValue(details, request.ExtensionData, "command", "Command");
+            AddExtensionValue(details, request.ExtensionData, "filePath", "File");
+            AddExtensionValue(details, request.ExtensionData, "path", "Path");
+            AddExtensionValue(details, request.ExtensionData, "reason", "Reason");
+
+            var extraKeys = request.ExtensionData.Keys
+                .Where(x => x is not ("toolName" or "name" or "command" or "filePath" or "path" or "reason"))
+                .Take(6)
+                .ToArray();
+
+            if (extraKeys.Length > 0)
+            {
+                details.Add($"Metadata: {string.Join(", ", extraKeys)}");
+            }
+        }
+
+        return details.Count == 0
+            ? string.Empty
+            : string.Join("\n", details.Select(x => $"- {x}"));
+    }
+
+    private static void AddExtensionValue(
+        ICollection<string> details,
+        IReadOnlyDictionary<string, object> extensionData,
+        string key,
+        string label)
+    {
+        if (!extensionData.TryGetValue(key, out var rawValue)) return;
+        var value = NormalizeExtensionValue(rawValue);
+        AddDetail(details, label, value);
+    }
+
+    private static string? NormalizeExtensionValue(object? rawValue)
+    {
+        if (rawValue == null) return null;
+        if (rawValue is JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.String => element.GetString(),
+                JsonValueKind.Array or JsonValueKind.Object => element.GetRawText(),
+                _ => element.ToString()
+            };
+        }
+
+        return rawValue.ToString();
+    }
+
+    private static void AddDetail(ICollection<string> details, string label, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        var trimmed = value.Length > 240 ? value[..240] + "..." : value;
+        details.Add($"{label}: `{trimmed}`");
     }
 
     private static SessionHooks BuildPermissionHooks()

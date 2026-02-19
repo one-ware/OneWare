@@ -111,24 +111,32 @@
         <Border Grid.Row="2" Margin="10 4 10 0" Background="{DynamicResource ThemeControlMidBrush}"
                 Classes="RoundBorder"
                 IsVisible="{Binding !!AiFileEditService.ActiveEdits.Count}">
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
-                <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button
-                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
-                                CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
-                                HorizontalAlignment="Stretch" Background="Transparent">
-                                <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
-                                    <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Text="{Binding AddedLines}" Foreground="Lime" />
-                                    <TextBlock Grid.Column="2" Text="{Binding RemovedLines}" Foreground="OrangeRed" />
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <StackPanel Orientation="Vertical" Spacing="5">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                    <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                    <Button Grid.Column="2" Command="{Binding AiFileEditService.UndoAllAsync}">
+                        <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
+                    </Button>
+                </Grid>
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
+                    <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
+                                    CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
+                                    HorizontalAlignment="Stretch" Background="Transparent">
+                                    <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
+                                        <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Text="{Binding AddedLines}" Foreground="Lime" />
+                                        <TextBlock Grid.Column="2" Text="{Binding RemovedLines}" Foreground="OrangeRed" />
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
         </Border>
 
         <Border Grid.Row="3" Margin="10 4 10 10" Background="{DynamicResource ThemeControlMidBrush}"

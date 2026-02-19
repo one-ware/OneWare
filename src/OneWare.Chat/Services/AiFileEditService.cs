@@ -124,6 +124,14 @@ public class AiFileEditService(IMainDockService mainDockService)
         return Task.CompletedTask;
     }
 
+    public async Task UndoAllAsync()
+    {
+        foreach (var edit in ActiveEdits)
+        {
+            await UndoAsync(edit);
+        }
+    }
+
     private static string ReadFromDocument(AvaloniaEdit.Document.TextDocument document, int startLine, int? lineCount)
     {
         if (startLine > document.LineCount)

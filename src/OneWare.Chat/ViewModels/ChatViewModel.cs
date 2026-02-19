@@ -413,7 +413,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatPermissionRequestEvent x:
             {
-                Dispatcher.UIThread.Post(() => { AddMessage(new ChatMessagePermissionRequestViewModel(x)); });
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var msg = new ChatMessagePermissionRequestViewModel(x);
+                    msg.CloseAction = () => Messages.Remove(msg);
+                    AddMessage(msg);
+                });
                 break;
             }
             case ChatErrorEvent x:
@@ -494,15 +499,17 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (!string.IsNullOrWhiteSpace(request.Detail))
                 message = $"{request.Question}\n\n{request.Detail}";
 
-            AddMessage(new ChatMessagePermissionRequestViewModel(new ChatPermissionRequestEvent(
+            var msg = new ChatMessagePermissionRequestViewModel(new ChatPermissionRequestEvent(
                 message,
                 "Allow",
                 "Deny",
                 allowCommand,
                 denyCommand,
                 "Allow for session",
-                allowForSessionCommand)));
-
+                allowForSessionCommand));
+            
+            msg.CloseAction = () => Messages.Remove(msg);
+            AddMessage(msg);
             ContentAdded?.Invoke(this, EventArgs.Empty);
         });
     }
