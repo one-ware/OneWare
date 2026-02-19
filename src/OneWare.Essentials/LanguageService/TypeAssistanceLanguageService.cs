@@ -400,12 +400,19 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 var beforeTriggerChar = CodeBox.CaretOffset > 1 ? CodeBox.Text[CodeBox.CaretOffset - 2] : ' ';
 
                 var signatureHelpTrigger = Service.GetSignatureHelpTriggerChars();
+                var signatureHelpRetrigger = Service.GetSignatureHelpRetriggerChars();
 
                 if (signatureHelpTrigger.Contains(triggerChar)) //Function Parameter / Overload insight
                 {
                     Completion?.Close();
                     await ShowSignatureHelpAsync(SignatureHelpTriggerKind.TriggerCharacter, triggerChar, false,
                         null);
+                }
+                else if (signatureHelpRetrigger.Contains(triggerChar) && OverloadInsight is { IsOpen: true, Provider: OverloadProvider provider }) 
+                {
+                    // Retrigger signature help to update active parameter (e.g., when typing comma)
+                    await ShowSignatureHelpAsync(SignatureHelpTriggerKind.TriggerCharacter, triggerChar, true,
+                        provider.SignatureHelp);
                 }
 
                 var completionTriggerChars = Service.GetCompletionTriggerChars();
@@ -554,11 +561,17 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual async Task ShowSignatureHelpAsync(SignatureHelpTriggerKind triggerKind, string? triggerChar,
         bool retrigger, SignatureHelp? activeSignatureHelp)
     {
+        var previousSelectedIndex = (OverloadInsight?.Provider as OverloadProvider)?.SelectedIndex ?? 0;
+        
         var signatureHelp = await Service.RequestSignatureHelpAsync(CurrentFilePath,
             new Position(CodeBox.TextArea.Caret.Line - 1, CodeBox.TextArea.Caret.Column - 1), triggerKind,
             triggerChar, retrigger, activeSignatureHelp);
+        
         if (signatureHelp != null && IsOpen)
         {
+            // Close existing overload insight before creating a new one
+            OverloadInsight?.Close();
+            
             var overloadProvider = ConvertOverloadProvider(signatureHelp);
 
             OverloadInsight = new OverloadInsightWindow(CodeBox)
@@ -571,7 +584,18 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             OverloadInsight.SetValue(TextBlock.FontSizeProperty,
                 SettingsService.GetSettingValue<int>("Editor_FontSize"));
             
+            // Restore previous selected index if retriggering and valid
+            if (retrigger && previousSelectedIndex > 0 && previousSelectedIndex < overloadProvider.Count)
+            {
+                overloadProvider.SelectedIndex = previousSelectedIndex;
+            }
+            
             if (overloadProvider.Count > 0) OverloadInsight.Show();
+        }
+        else if (signatureHelp == null && !retrigger)
+        {
+            // If no signature help returned and not retriggering, close the window
+            OverloadInsight?.Close();
         }
     }
 
@@ -667,12 +691,13 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             var calculatedWith = length * SettingsService.GetSettingValue<int>("Editor_FontSize") + 50;
 
             Completion.Width = calculatedWith > 400 ? 500 : calculatedWith;
-
+            
             if (Completion.CompletionList.CompletionData.Count > 0)
             {
                 Completion.Show();
                 if (triggerKind is not CompletionTriggerKind.TriggerCharacter)
                     Completion.CompletionList.SelectItem(triggerChar);
+                else Completion.CompletionList.SelectItem("");
             }
         }
     }
@@ -733,23 +758,46 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual OverloadProvider ConvertOverloadProvider(SignatureHelp signatureHelp)
     {
         var overloadOptions = new List<(string, string?)>();
+        
         foreach (var s in signatureHelp.Signatures)
         {
-            var signature = FormatSignatureLabel(s);
+            var (signature, activeParam) = FormatSignatureLabel(s);
+            
             var docs = ExtractDocumentation(s.Documentation);
+            string? activeParamSection = null;
 
             if (s.Parameters is not null && s.ActiveParameter.HasValue)
             {
                 var index = s.ActiveParameter.Value;
                 if (index >= 0 && index < s.Parameters.Count())
                 {
-                    var paramDoc = ExtractDocumentation(s.Parameters.ElementAt(index).Documentation);
-                    if (!string.IsNullOrWhiteSpace(paramDoc))
-                        docs = string.IsNullOrWhiteSpace(docs) ? paramDoc : docs + "\n\n" + paramDoc;
+                    var param = s.Parameters.ElementAt(index);
+                    var paramDoc = ExtractDocumentation(param.Documentation);
+                    
+                    // Always show active parameter indicator
+                    if (!string.IsNullOrWhiteSpace(activeParam))
+                    {
+                        activeParamSection = !string.IsNullOrWhiteSpace(paramDoc) 
+                            ? $"**{activeParam}**: {paramDoc}" 
+                            : $"**{activeParam}**";
+                    }
+                    else if (!string.IsNullOrWhiteSpace(paramDoc))
+                    {
+                        activeParamSection = paramDoc;
+                    }
                 }
             }
 
-            overloadOptions.Add((signature, string.IsNullOrWhiteSpace(docs) ? null : docs));
+            // Combine documentation sections
+            var combinedDocs = new List<string>();
+            if (!string.IsNullOrWhiteSpace(activeParamSection))
+                combinedDocs.Add(activeParamSection);
+            if (!string.IsNullOrWhiteSpace(docs))
+                combinedDocs.Add(docs);
+            
+            var finalDocs = combinedDocs.Count > 0 ? string.Join("\n\n---\n\n", combinedDocs) : null;
+
+            overloadOptions.Add((signature, finalDocs));
         }
 
         return new OverloadProvider(overloadOptions)
@@ -826,21 +874,53 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         return null;
     }
 
-    private static string FormatSignatureLabel(SignatureInformation signature)
+    protected virtual (string signature, string? activeParam) FormatSignatureLabel(SignatureInformation signature)
     {
         var label = signature.Label ?? string.Empty;
-        if (signature.Parameters is null || !signature.ActiveParameter.HasValue) return label;
+        string? activeParamText = null;
+        
+        if (signature.Parameters is not null && signature.ActiveParameter.HasValue)
+        {
+            var index = signature.ActiveParameter.Value;
+            if (index >= 0 && index < signature.Parameters.Count())
+            {
+                var param = signature.Parameters.ElementAt(index);
+                activeParamText = GetParameterLabelText(param.Label);
+            }
+        }
 
-        var index = signature.ActiveParameter.Value;
-        if (index < 0 || index >= signature.Parameters.Count()) return label;
+        // Format as fenced code block for syntax highlighting
+        var languageId = GetLanguageIdForMarkdown();
+        var formatted = $"```{languageId}\n{label}\n```";
 
-        var paramLabel = GetParameterLabelText(signature.Parameters.ElementAt(index).Label);
-        if (string.IsNullOrWhiteSpace(paramLabel)) return label;
-
-        var paramIndex = label.IndexOf(paramLabel, StringComparison.Ordinal);
-        if (paramIndex < 0) return label;
-
-        return label.Remove(paramIndex, paramLabel.Length).Insert(paramIndex, $"**{paramLabel}**");
+        return (formatted, activeParamText);
+    }
+    
+    /// <summary>
+    /// Gets the language identifier for markdown code blocks based on the current file extension.
+    /// </summary>
+    protected virtual string GetLanguageIdForMarkdown()
+    {
+        var extension = Path.GetExtension(CurrentFilePath)?.TrimStart('.').ToLowerInvariant();
+        return extension switch
+        {
+            "cs" => "csharp",
+            "vhd" or "vhdl" => "vhdl",
+            "v" or "sv" => "verilog",
+            "py" => "python",
+            "js" => "javascript",
+            "ts" => "typescript",
+            "cpp" or "cc" or "cxx" => "cpp",
+            "c" or "h" => "c",
+            "json" => "json",
+            "xml" => "xml",
+            "yaml" or "yml" => "yaml",
+            "toml" => "toml",
+            "rs" => "rust",
+            "go" => "go",
+            "java" => "java",
+            _ => extension ?? ""
+        };
     }
 
     private static string? GetParameterLabelText(object? label)

@@ -148,6 +148,8 @@
                 Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="MaxWidth" Value="800" />
+        <Setter Property="MaxHeight" Value="400" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="Template">
             <ControlTemplate>
@@ -180,7 +182,8 @@
                         </Border>
 
                         <Border Grid.Row="0" Grid.Column="1" Padding="5">
-                            <controls:MarkdownViewer VerticalAlignment="Center" MaxWidth="800"
+                            <controls:MarkdownViewer VerticalAlignment="Center"
+                                                     HorizontalAlignment="Left"
                                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                      SelectionEnabled="True"
                                                      Classes="ToolTip"
@@ -204,10 +207,12 @@
                             IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <controls:MarkdownViewer VerticalAlignment="Center"
+                            <controls:MarkdownViewer VerticalAlignment="Top" MaxHeight="250"
                                                      Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
                                 <controls:MarkdownViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">
+                                        <Setter Property="WordWrap" Value="True" />
+                                        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
                                         <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                                         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                                     </Style>
