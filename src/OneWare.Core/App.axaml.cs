@@ -74,6 +74,8 @@ public class App : Application
 
         //Services
         services.AddSingleton<IPluginService, PluginService>();
+        services.AddSingleton<OnnxRuntimeBootstrapper>();
+        services.AddSingleton<IOnnxRuntimeService, OnnxRuntimeService>();
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IApplicationCommandService, ApplicationCommandService>();
         services.AddSingleton<IProjectManagerService, ProjectManagerService>();
@@ -144,6 +146,7 @@ public class App : Application
 
         //General
         settingsService.RegisterSettingCategory("General", 0, "Material.ToggleSwitchOutline");
+        settingsService.RegisterSettingCategory("AI", 0, "AI_Img");
 
         //Editor settings
         settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
@@ -151,6 +154,18 @@ public class App : Application
         settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
+        settingsService.RegisterSetting("AI", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
+            new ComboBoxSetting("Preferred Runtime (restart required)", "auto", GetOnnxRuntimeOptions(paths))
+            {
+                HoverDescription =
+                    "Select the runtime folder in Packages/OnnxRuntimes. Use 'auto' for OS defaults."
+            });
+        settingsService.RegisterSetting("AI", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingRuntimePathKey,
+            new TextBoxSetting("Custom Runtime Path (restart required)", string.Empty, null)
+            {
+                HoverDescription =
+                    "Optional absolute path that overrides the runtime selection when set."
+            });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
             new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL",
@@ -532,6 +547,8 @@ public class App : Application
         logger.LogInformation(
             $"App Started: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
 
+        compositeProvider.Resolve<OnnxRuntimeBootstrapper>().Initialize();
+
         LoadStartupPlugins();
 
         var shell = CreateShell();
@@ -595,6 +612,28 @@ public class App : Application
         _ = LoadContentAsync();
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static object[] GetOnnxRuntimeOptions(IPaths paths)
+    {
+        var options = new List<string> { "auto", "cpu", "cuda", "directml", "gpu-linux" };
+        try
+        {
+            if (Directory.Exists(paths.OnnxRuntimesDirectory))
+                options.AddRange(Directory.GetDirectories(paths.OnnxRuntimesDirectory)
+                    .Select(Path.GetFileName)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))!
+                    .Cast<string>());
+        }
+        catch
+        {
+            // Ignore IO errors and keep default options.
+        }
+
+        return options
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Cast<object>()
+            .ToArray();
     }
 
     protected virtual Task LoadContentAsync()

@@ -14,6 +14,7 @@ namespace OneWare.Core.Services;
 
 public class PluginService : IPluginService
 {
+    private readonly IPaths _paths;
     private readonly OneWareModuleCatalog _moduleCatalog;
     private readonly OneWareModuleManager _moduleManager;
     private readonly ModuleServiceRegistry _moduleServiceRegistry;
@@ -27,6 +28,7 @@ public class PluginService : IPluginService
     public PluginService(OneWareModuleCatalog moduleCatalog, OneWareModuleManager moduleManager,
         ModuleServiceRegistry moduleServiceRegistry, IPaths paths, IApplicationStateService applicationStateService)
     {
+        _paths = paths;
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
         _moduleServiceRegistry = moduleServiceRegistry;
@@ -170,6 +172,11 @@ public class PluginService : IPluginService
                     if (!File.Exists(libPath))
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
 
+                    // Try 7: look in shared ONNX runtime packages
+                    if (!File.Exists(libPath) &&
+                        TryResolveSharedOnnxRuntimeLibraryPath(libraryName, out var sharedPath))
+                        libPath = sharedPath;
+
                     if (NativeLibrary.TryLoad(libPath, out var customHandle)) return customHandle;
 
                     if (NativeLibrary.TryLoad(libraryName, out var handle)) return handle;
@@ -187,5 +194,33 @@ public class PluginService : IPluginService
                     $"Skipping resolver setup for {assembly.FullName}, resolver already set.");
             }
         }
+    }
+
+    private bool TryResolveSharedOnnxRuntimeLibraryPath(string libraryName, out string fullPath)
+    {
+        fullPath = string.Empty;
+
+        if (!libraryName.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase)) return false;
+        if (!Directory.Exists(_paths.OnnxRuntimesDirectory)) return false;
+
+        var fileName = PlatformHelper.GetLibraryFileName(libraryName);
+        var rid = PlatformHelper.PlatformIdentifier;
+        var candidatePaths = new List<string>();
+
+        foreach (var runtimeDir in Directory.GetDirectories(_paths.OnnxRuntimesDirectory))
+        {
+            candidatePaths.Add(Path.Combine(runtimeDir, fileName));
+            candidatePaths.Add(Path.Combine(runtimeDir, "runtimes", rid, "native", fileName));
+            candidatePaths.Add(Path.Combine(runtimeDir, $"lib{fileName}"));
+            candidatePaths.Add(Path.Combine(runtimeDir, "runtimes", rid, "native", $"lib{fileName}"));
+        }
+
+        foreach (var candidate in candidatePaths.Where(File.Exists))
+        {
+            fullPath = candidate;
+            return true;
+        }
+
+        return false;
     }
 }

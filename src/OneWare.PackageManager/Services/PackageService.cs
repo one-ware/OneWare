@@ -484,6 +484,7 @@ public class PackageService : ObservableObject, IPackageService
         {
             "Plugin" => Path.Combine(_paths.PluginsDirectory, package.Id),
             "NativeTool" => Path.Combine(_paths.NativeToolsDirectory, package.Id),
+            "OnnxRuntime" => Path.Combine(_paths.OnnxRuntimesDirectory, package.Id),
             "Hardware" => Path.Combine(_paths.PackagesDirectory, "Hardware",
                 package.Id),
             "Library" => Path.Combine(_paths.PackagesDirectory, "Libraries",

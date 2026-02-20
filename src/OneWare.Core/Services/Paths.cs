@@ -32,6 +32,7 @@ public class Paths : IPaths
         Directory.CreateDirectory(PackagesDirectory);
         Directory.CreateDirectory(PluginsDirectory);
         Directory.CreateDirectory(NativeToolsDirectory);
+        Directory.CreateDirectory(OnnxRuntimesDirectory);
         Directory.CreateDirectory(CrashReportsDirectory);
         Directory.CreateDirectory(ProjectsDirectory);
         //...
@@ -66,6 +67,7 @@ public class Paths : IPaths
     public string CrashReportsDirectory => Path.Combine(DocumentsDirectory, "CrashReports");
     public string PackagesDirectory => Path.Combine(DocumentsDirectory, "Packages");
     public string NativeToolsDirectory => Path.Combine(PackagesDirectory, "NativeTools");
+    public string OnnxRuntimesDirectory => Path.Combine(PackagesDirectory, "OnnxRuntimes");
     public string PluginsDirectory => Path.Combine(PackagesDirectory, "Plugins");
 
     public string ChangelogUrl =>
