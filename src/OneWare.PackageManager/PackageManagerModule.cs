@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Installers;
@@ -14,6 +15,53 @@ namespace OneWare.PackageManager;
 
 public class PackageManagerModule : OneWareModuleBase
 {
+    public static readonly Package OnnxRuntimeGpuLinuxPackage = new()
+    {
+        Category = "Runtimes",
+        Id = "onnxruntime-gpu-linux",
+        Type = "OnnxRuntime",
+        Name = "ONNX Runtime GPU Linux",
+        Description = "Optional Linux GPU runtime for ONNX Runtime.",
+        License = "MIT",
+        IconUrl = "https://onnxruntime.ai/images/ONNX-Runtime-logo.svg",
+        Links =
+        [
+            new PackageLink
+            {
+                Name = "NuGet",
+                Url = "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.24.2"
+            },
+            new PackageLink
+            {
+                Name = "GitHub",
+                Url = "https://github.com/microsoft/onnxruntime"
+            }
+        ],
+        Tabs =
+        [
+            new PackageTab
+            {
+                Title = "License",
+                ContentUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/main/LICENSE"
+            }
+        ],
+        Versions =
+        [
+            new PackageVersion
+            {
+                Version = "1.24.2",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.24.2"
+                    }
+                ]
+            }
+        ]
+    };
+
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<IPackageRepositoryClient, PackageRepositoryClient>();
@@ -32,6 +80,8 @@ public class PackageManagerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeGpuLinuxPackage);
+
         var windowService = serviceProvider.Resolve<IWindowService>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("Extensions")

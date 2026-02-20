@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/build/" />
+  <Folder Name="/build/">
+    <File Path="Directory.Build.props" />
+  </Folder>
   <Folder Name="/build/actions/">
     <File Path=".github/workflows/publish-nuget.yml" />
     <File Path=".github/workflows/publish-studio-all.yml" />
@@ -49,6 +51,8 @@
     <File Path="build\props\Microsoft.Extensions.DependencyInjection.props" />
     <File Path="build\props\Microsoft.Extensions.Logging.Abstractions.props" />
     <File Path="build\props\Microsoft.Extensions.Logging.props" />
+    <File Path="build\props\Microsoft.ML.OnnxRuntime.Gpu.Linux.props" />
+    <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props" />
     <File Path="build\props\OpenCvSharp4.props" />
     <File Path="build\props\OpenCvSharp4.runtime.props" />
@@ -132,4 +136,5 @@
   </Folder>
   <Project Path="src/OneWare.Core/OneWare.Core.csproj" />
   <Project Path="src/OneWare.Essentials/OneWare.Essentials.csproj" />
+  <File Path="Directory.Build.props" />
 </Solution>

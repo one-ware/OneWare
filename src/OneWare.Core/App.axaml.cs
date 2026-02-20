@@ -155,7 +155,7 @@ public class App : Application
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
         settingsService.RegisterSetting("AI", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
-            new ComboBoxSetting("Preferred Runtime (restart required)", "auto", GetOnnxRuntimeOptions(paths))
+            new ComboBoxSetting("Preferred Runtime (restart required)", "cpu", GetOnnxRuntimeOptions(paths))
             {
                 HoverDescription =
                     "Select the runtime folder in Packages/OnnxRuntimes. Use 'auto' for OS defaults."

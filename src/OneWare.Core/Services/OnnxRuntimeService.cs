@@ -44,12 +44,25 @@ public class OnnxRuntimeService : IOnnxRuntimeService
 
     private string NormalizeRuntime(string value)
     {
-        return value.Trim().ToLowerInvariant() switch
+        var normalized = value.Trim().ToLowerInvariant();
+
+        if (normalized.Contains("directml", StringComparison.Ordinal) ||
+            normalized.Contains("dml", StringComparison.Ordinal))
+            return "directml";
+
+        if (normalized.Contains("gpu-linux", StringComparison.Ordinal) ||
+            normalized.Contains("gpu.linux", StringComparison.Ordinal) ||
+            normalized.Contains("cuda", StringComparison.Ordinal))
+            return "cuda";
+
+        if (normalized.Contains("cpu", StringComparison.Ordinal))
+            return "cpu";
+
+        return normalized switch
         {
-            "gpu-linux" => "cuda",
             "none" => "cpu",
             "disabled" => "cpu",
-            _ => value.Trim().ToLowerInvariant()
+            _ => normalized
         };
     }
 

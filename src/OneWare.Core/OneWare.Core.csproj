@@ -6,6 +6,7 @@
     <Import Project="..\..\build\props\RestSharp.props"/>
     <Import Project="..\..\build\props\SharpCompress.props"/>
     <Import Project="..\..\build\props\Markdown.Avalonia.props"/>
+    <Import Project="..\..\build\props\Microsoft.ML.OnnxRuntime.props"/>
     <Import Project="..\..\build\props\OpenCvSharp4.runtime.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.DependencyInjection.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.Logging.props"/>
