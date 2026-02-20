@@ -229,17 +229,16 @@ public class PackageViewModel : ObservableObject
                     [
                         new MessageBoxButton
                         {
-                            Text = "Decline",
-                            Role = MessageBoxButtonRole.No,
-                            Style = MessageBoxButtonStyle.Secondary,
-                            IsDefault = true
-                        },
-                        new MessageBoxButton
-                        {
                             Text = "Accept",
                             Role = MessageBoxButtonRole.Yes,
                             Style = MessageBoxButtonStyle.Primary,
                             IsDefault = true
+                        },
+                        new MessageBoxButton
+                        {
+                            Text = "Decline",
+                            Role = MessageBoxButtonRole.No,
+                            Style = MessageBoxButtonStyle.Secondary,
                         }
                     ]
                 }, topLevel as Window);
