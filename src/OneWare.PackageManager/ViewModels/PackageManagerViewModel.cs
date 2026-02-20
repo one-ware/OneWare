@@ -55,10 +55,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         PackageCategories.Add(hardwareCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Libraries",
             new IconModel("BoxIcons.RegularLibrary")));
-        PackageCategories.Add(new PackageCategoryViewModel("Binaries",
-            new IconModel("BoxIcons.RegularCode")));
-        PackageCategories.Add(new PackageCategoryViewModel("Runtimes",
-            new IconModel("BoxIcons.RegularCode")));
+        var binaryCategory = new PackageCategoryViewModel("Binaries",
+            new IconModel("BoxIcons.RegularCode"));
+        binaryCategory.SubCategories.Add(new PackageCategoryViewModel("ONNX Runtimes"));
+        PackageCategories.Add(binaryCategory);
         PackageCategories.Add(new PackageCategoryViewModel("Drivers",
             new IconModel("BoxIcons.RegularUsb")));
 
@@ -261,7 +261,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                     "Hardware" => PackageCategories[1],
                     "Library" => PackageCategories[2],
                     "NativeTool" => PackageCategories[3],
-                    "OnnxRuntime" => PackageCategories[4],
+                    "OnnxRuntime" => PackageCategories[3],
                     _ => null
                 };
 

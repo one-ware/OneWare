@@ -10,7 +10,6 @@ namespace OneWare.Core.Services;
 public class OnnxRuntimeBootstrapper
 {
     public const string SettingSelectedRuntimeKey = "OnnxRuntime_SelectedRuntime";
-    public const string SettingRuntimePathKey = "OnnxRuntime_RuntimePath";
     public const string RuntimeProviderEnvironmentKey = "ONEWARE_ONNXRUNTIME_PROVIDER";
 
     private readonly ILogger _logger;

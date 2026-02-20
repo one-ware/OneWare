@@ -146,8 +146,6 @@ public class App : Application
 
         //General
         settingsService.RegisterSettingCategory("General", 0, "Material.ToggleSwitchOutline");
-        settingsService.RegisterSettingCategory("AI", 0, "AI_Img");
-
         //Editor settings
         settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
 
@@ -158,14 +156,7 @@ public class App : Application
         settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
             new ComboBoxSetting("Preferred Runtime (restart required)", "cpu", GetOnnxRuntimeOptions(paths))
             {
-                HoverDescription =
-                    "Select the runtime folder in Packages/OnnxRuntimes. Use 'auto' for OS defaults."
-            });
-        settingsService.RegisterSetting("AI", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingRuntimePathKey,
-            new TextBoxSetting("Custom Runtime Path (restart required)", string.Empty, null)
-            {
-                HoverDescription =
-                    "Optional absolute path that overrides the runtime selection when set."
+                HoverDescription = "Select the runtime to use with ONNX. You can install additional runtimes from the package manager."
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
@@ -617,7 +608,7 @@ public class App : Application
 
     private static object[] GetOnnxRuntimeOptions(IPaths paths)
     {
-        var options = new List<string> { "auto", "cpu", "cuda", "directml", "gpu-linux" };
+        var options = new List<string> { "cpu" };
         try
         {
             if (Directory.Exists(paths.OnnxRuntimesDirectory))

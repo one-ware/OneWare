@@ -17,7 +17,7 @@ public class PackageManagerModule : OneWareModuleBase
 {
     public static readonly Package OnnxRuntimeGpuLinuxPackage = new()
     {
-        Category = "Runtimes",
+        Category = "ONNX Runtimes",
         Id = "onnxruntime-gpu",
         Type = "OnnxRuntime",
         Name = "ONNX Runtime NVIDIA",
