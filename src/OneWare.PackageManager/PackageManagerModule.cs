@@ -18,19 +18,14 @@ public class PackageManagerModule : OneWareModuleBase
     public static readonly Package OnnxRuntimeGpuLinuxPackage = new()
     {
         Category = "Runtimes",
-        Id = "onnxruntime-gpu-linux",
+        Id = "onnxruntime-gpu",
         Type = "OnnxRuntime",
-        Name = "ONNX Runtime GPU Linux",
-        Description = "Optional Linux GPU runtime for ONNX Runtime.",
+        Name = "ONNX Runtime NVIDIA",
+        Description = "Optional GPU runtime for ONNX Runtime. Available for Windows and Linux",
         License = "MIT",
-        IconUrl = "https://onnxruntime.ai/images/ONNX-Runtime-logo.svg",
+        IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
         [
-            new PackageLink
-            {
-                Name = "NuGet",
-                Url = "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.24.2"
-            },
             new PackageLink
             {
                 Name = "GitHub",
@@ -49,14 +44,19 @@ public class PackageManagerModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.24.2",
+                Version = "1.23.2",
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.24.2"
-                    }
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.23.2"
+                    },
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.23.2"
+                    },
                 ]
             }
         ]

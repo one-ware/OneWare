@@ -154,7 +154,8 @@ public class App : Application
         settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
-        settingsService.RegisterSetting("AI", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
+        
+        settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
             new ComboBoxSetting("Preferred Runtime (restart required)", "cpu", GetOnnxRuntimeOptions(paths))
             {
                 HoverDescription =

@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.ML.OnnxRuntime;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
@@ -11,10 +12,11 @@ public class OnnxRuntimeBootstrapper
     public const string SettingSelectedRuntimeKey = "OnnxRuntime_SelectedRuntime";
     public const string SettingRuntimePathKey = "OnnxRuntime_RuntimePath";
     public const string RuntimeProviderEnvironmentKey = "ONEWARE_ONNXRUNTIME_PROVIDER";
-    public const string RuntimePathEnvironmentKey = "ONEWARE_ONNXRUNTIME_PATH";
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;
+    private string? _loadedRuntimeLibraryPath;
+    private bool _resolverInstalled;
 
     public string SelectedRuntime { get; private set; } = "cpu";
 
@@ -30,7 +32,6 @@ public class OnnxRuntimeBootstrapper
 
         try
         {
-            var configuredRuntimePath = ResolveConfiguredValue(SettingRuntimePathKey, RuntimePathEnvironmentKey);
             var selectedRuntime = ResolveConfiguredValue(SettingSelectedRuntimeKey, RuntimeProviderEnvironmentKey)
                                   ?.Trim();
             if (string.IsNullOrWhiteSpace(selectedRuntime)) selectedRuntime = "cpu";
@@ -42,15 +43,15 @@ public class OnnxRuntimeBootstrapper
                 _logger.LogInformation("ONNX Runtime preload disabled by configuration.");
                 return;
             }
-
-            if (!string.IsNullOrWhiteSpace(configuredRuntimePath) &&
-                TryLoadFromRoot(configuredRuntimePath, $"custom path '{configuredRuntimePath}'"))
-                return;
-
+            
             foreach (var runtimeName in ResolveRuntimeCandidates(selectedRuntime))
             {
                 var runtimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, runtimeName);
-                if (TryLoadFromRoot(runtimeRoot, $"runtime '{runtimeName}'")) return;
+                if (TryLoadFromRoot(runtimeRoot, $"runtime '{runtimeName}'"))
+                {
+                    InstallOnnxRuntimeResolver();
+                    return;
+                }
             }
 
             if (NativeLibrary.TryLoad("onnxruntime", out var existingHandle))
@@ -146,11 +147,40 @@ public class OnnxRuntimeBootstrapper
 
             if (!NativeLibrary.TryLoad(fullPath, out var handle)) continue;
 
+            _loadedRuntimeLibraryPath = fullPath;
             _logger.LogInformation("Loaded ONNX Runtime from {Path} ({Source})", fullPath, source);
             return true;
         }
 
         return false;
+    }
+
+    private void InstallOnnxRuntimeResolver()
+    {
+        if (_resolverInstalled || string.IsNullOrWhiteSpace(_loadedRuntimeLibraryPath)) return;
+
+        try
+        {
+            NativeLibrary.SetDllImportResolver(typeof(SessionOptions).Assembly, (libraryName, _, _) =>
+            {
+                if (!libraryName.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase))
+                    return IntPtr.Zero;
+
+                return NativeLibrary.TryLoad(_loadedRuntimeLibraryPath, out var handle) ? handle : IntPtr.Zero;
+            });
+
+            _resolverInstalled = true;
+            _logger.LogInformation("Installed ONNX Runtime resolver for managed bindings: {Path}",
+                _loadedRuntimeLibraryPath);
+        }
+        catch (InvalidOperationException)
+        {
+            _resolverInstalled = true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Failed to install ONNX Runtime DllImportResolver.");
+        }
     }
 
     private IEnumerable<string> EnumerateNativeSearchDirectories(string rootPath)

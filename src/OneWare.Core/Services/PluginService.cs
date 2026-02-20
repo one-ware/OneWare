@@ -82,7 +82,7 @@ public class PluginService : IPluginService
 
             //We should not use that anymore, since it can break compatibility with code signed apps
             //We keep it for now except on MacOS
-            //if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
@@ -171,11 +171,6 @@ public class PluginService : IPluginService
                     // Try 6: Same as 5 but added lib Prefix
                     if (!File.Exists(libPath))
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
-
-                    // Try 7: look in shared ONNX runtime packages
-                    if (!File.Exists(libPath) &&
-                        TryResolveSharedOnnxRuntimeLibraryPath(libraryName, out var sharedPath))
-                        libPath = sharedPath;
 
                     if (NativeLibrary.TryLoad(libPath, out var customHandle)) return customHandle;
 
