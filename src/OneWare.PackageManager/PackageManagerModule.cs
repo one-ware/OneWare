@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -133,10 +134,10 @@ public class PackageManagerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if(PlatformHelper.Platform is PlatformId.LinuxX64 or PlatformId.WinX64)
             serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeNvidiaPackage);
         
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if(PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.WinArm64)
             serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeDirectMlPackage);
 
         var windowService = serviceProvider.Resolve<IWindowService>();
