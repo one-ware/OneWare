@@ -78,7 +78,7 @@ public class PackageManagerModule : OneWareModuleBase
             new PackageLink
             {
                 Name = "NuGet",
-                Url = "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.DirectML/1.23.2"
+                Url = "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.DirectML/1.23.0"
             },
             new PackageLink
             {
@@ -98,18 +98,18 @@ public class PackageManagerModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.23.2",
+                Version = "1.23.0",
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.23.0"
                     },
                     new PackageTarget
                     {
                         Target = "win-arm64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.23.0"
                     }
                 ]
             }
