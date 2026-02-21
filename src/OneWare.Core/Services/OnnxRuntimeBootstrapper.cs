@@ -10,11 +10,10 @@ namespace OneWare.Core.Services;
 public class OnnxRuntimeBootstrapper
 {
     public const string SettingSelectedRuntimeKey = "OnnxRuntime_SelectedRuntime";
-    public const string RuntimeProviderEnvironmentKey = "ONEWARE_ONNXRUNTIME_PROVIDER";
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;
-    private static readonly object ResolverSync = new();
+    private static readonly Lock ResolverSync = new();
     private static string? _resolverNativeDirectory;
     private static IntPtr _resolverOnnxRuntimeHandle;
     private static bool _onnxResolverRegistered;
@@ -33,27 +32,16 @@ public class OnnxRuntimeBootstrapper
 
         try
         {
-            //EnsureBundledCpuRuntimeAvailable();
-
-            var selectedRuntime = ResolveConfiguredValue(SettingSelectedRuntimeKey, RuntimeProviderEnvironmentKey)
-                                  ?.Trim();
-            if (string.IsNullOrWhiteSpace(selectedRuntime)) selectedRuntime = "onnxruntime-cpu";
-            SelectedRuntime = selectedRuntime;
+            var selectedRuntime = ReadStringSetting(SettingSelectedRuntimeKey)?.Trim() ?? "no-runtime";
             
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
-            if (TryLoadFromRoot(selectedRuntimeRoot, $"runtime '{selectedRuntime}'"))
+            
+            if (TryLoadFromRoot(selectedRuntimeRoot))
                 return;
 
-            if (NativeLibrary.TryLoad("onnxruntime", out var existingHandle))
-            {
-                ConfigureOnnxRuntimeDllImportResolver(null, existingHandle);
-                _logger.LogInformation("Loaded default ONNX Runtime from bundled/probing paths: {Handle}",
-                    existingHandle);
-                return;
-            }
-
-            _logger.LogInformation(
-                "ONNX Runtime preload skipped. No matching runtime found in '{Path}'.", _paths.OnnxRuntimesDirectory);
+            SelectedRuntime = "onnxruntime-cpu";
+            
+            _logger.LogInformation("ONNX Runtime preload skipped");
         }
         catch (Exception ex)
         {
@@ -61,52 +49,26 @@ public class OnnxRuntimeBootstrapper
         }
     }
 
-    private void EnsureBundledCpuRuntimeAvailable()
-    {
-        try
-        {
-            var targetPath = Path.Combine(_paths.OnnxRuntimesDirectory, "onnxruntime-cpu");
-            if (Directory.Exists(targetPath)) return;
-
-            var sourcePathCandidates = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BundledOnnxRuntimes", "onnxruntime-cpu"),
-                Path.Combine(Path.GetDirectoryName(typeof(OnnxRuntimeBootstrapper).Assembly.Location) ??
-                             AppDomain.CurrentDomain.BaseDirectory, "BundledOnnxRuntimes", "onnxruntime-cpu")
-            };
-
-            var sourcePath = sourcePathCandidates.FirstOrDefault(Directory.Exists);
-            if (sourcePath == null) return;
-
-            PlatformHelper.CopyDirectory(sourcePath, targetPath);
-            _logger.LogInformation("Seeded bundled ONNX Runtime CPU package to {Path}", targetPath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to seed bundled ONNX Runtime CPU package.");
-        }
-    }
-
-    private bool TryLoadFromRoot(string rootPath, string source)
+    private bool TryLoadFromRoot(string rootPath)
     {
         if (!Directory.Exists(rootPath)) return false;
 
         foreach (var nativeDirectory in EnumerateNativeSearchDirectories(rootPath))
-            if (TryLoadFromNativeDirectory(nativeDirectory, source))
+            if (TryLoadFromNativeDirectory(nativeDirectory))
                 return true;
 
         return false;
     }
 
-    private bool TryLoadFromNativeDirectory(string nativeDirectory, string source)
+    private bool TryLoadFromNativeDirectory(string nativeDirectory)
     {
         if (!Directory.Exists(nativeDirectory)) return false;
 
         var fileNames = GetOnnxRuntimeFileNameCandidates();
         var providersShared = PlatformHelper.GetLibraryFileName("onnxruntime_providers_shared");
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            TrySetDllDirectory(nativeDirectory);
+        // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        //     TrySetDllDirectory(nativeDirectory);
 
         // Ensure provider shared library can be resolved before loading onnxruntime itself.
         var providerSharedPath = Path.Combine(nativeDirectory, providersShared);
@@ -121,7 +83,7 @@ public class OnnxRuntimeBootstrapper
             if (!NativeLibrary.TryLoad(fullPath, out var handle)) continue;
 
             ConfigureOnnxRuntimeDllImportResolver(nativeDirectory, handle);
-            _logger.LogInformation("Loaded ONNX Runtime from {Path} ({Source})", fullPath, source);
+            _logger.LogInformation("Loaded ONNX Runtime from {Path}", fullPath);
             return true;
         }
 
@@ -293,14 +255,6 @@ public class OnnxRuntimeBootstrapper
             PlatformId.OsxArm64 => "-arm64",
             _ => string.Empty
         };
-    }
-
-    private string? ResolveConfiguredValue(string settingKey, string environmentKey)
-    {
-        var envValue = Environment.GetEnvironmentVariable(environmentKey);
-        if (!string.IsNullOrWhiteSpace(envValue)) return envValue;
-
-        return ReadStringSetting(settingKey);
     }
 
     private string? ReadStringSetting(string key)
