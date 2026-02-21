@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
@@ -13,6 +14,10 @@ public class OnnxRuntimeBootstrapper
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;
+    private static readonly object ResolverSync = new();
+    private static string? _resolverNativeDirectory;
+    private static IntPtr _resolverOnnxRuntimeHandle;
+    private static bool _onnxResolverRegistered;
 
     public string SelectedRuntime { get; private set; } = "onnxruntime-cpu";
 
@@ -41,6 +46,7 @@ public class OnnxRuntimeBootstrapper
 
             if (NativeLibrary.TryLoad("onnxruntime", out var existingHandle))
             {
+                ConfigureOnnxRuntimeDllImportResolver(null, existingHandle);
                 _logger.LogInformation("Loaded default ONNX Runtime from bundled/probing paths: {Handle}",
                     existingHandle);
                 return;
@@ -114,6 +120,7 @@ public class OnnxRuntimeBootstrapper
 
             if (!NativeLibrary.TryLoad(fullPath, out var handle)) continue;
 
+            ConfigureOnnxRuntimeDllImportResolver(nativeDirectory, handle);
             _logger.LogInformation("Loaded ONNX Runtime from {Path} ({Source})", fullPath, source);
             return true;
         }
@@ -169,6 +176,82 @@ public class OnnxRuntimeBootstrapper
             candidates.Add($"lib{baseName}");
 
         return candidates;
+    }
+
+    private void ConfigureOnnxRuntimeDllImportResolver(string? nativeDirectory, IntPtr onnxRuntimeHandle)
+    {
+        lock (ResolverSync)
+        {
+            if (!string.IsNullOrWhiteSpace(nativeDirectory))
+                _resolverNativeDirectory = nativeDirectory;
+
+            if (onnxRuntimeHandle != IntPtr.Zero)
+                _resolverOnnxRuntimeHandle = onnxRuntimeHandle;
+
+            if (_onnxResolverRegistered) return;
+
+            try
+            {
+                var onnxAssembly = typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly;
+                NativeLibrary.SetDllImportResolver(onnxAssembly, ResolveOnnxRuntimeNativeLibrary);
+                _onnxResolverRegistered = true;
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogDebug(ex, "ONNX Runtime DllImportResolver already set by another component.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to configure ONNX Runtime DllImportResolver.");
+            }
+        }
+    }
+
+    private static IntPtr ResolveOnnxRuntimeNativeLibrary(string libraryName, Assembly _, DllImportSearchPath? __)
+    {
+        if (!libraryName.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase))
+            return IntPtr.Zero;
+
+        lock (ResolverSync)
+        {
+            if (libraryName.Equals("onnxruntime", StringComparison.OrdinalIgnoreCase) &&
+                _resolverOnnxRuntimeHandle != IntPtr.Zero)
+                return _resolverOnnxRuntimeHandle;
+
+            if (string.IsNullOrWhiteSpace(_resolverNativeDirectory) || !Directory.Exists(_resolverNativeDirectory))
+                return IntPtr.Zero;
+
+            foreach (var candidate in BuildLibraryFileCandidates(libraryName))
+            {
+                var fullPath = Path.Combine(_resolverNativeDirectory, candidate);
+                if (!File.Exists(fullPath)) continue;
+                if (NativeLibrary.TryLoad(fullPath, out var handle))
+                    return handle;
+            }
+
+            return IntPtr.Zero;
+        }
+    }
+
+    private static IEnumerable<string> BuildLibraryFileCandidates(string libraryName)
+    {
+        var candidates = new List<string>();
+        var fileName = Path.GetFileName(libraryName);
+
+        if (!string.IsNullOrWhiteSpace(fileName))
+            candidates.Add(fileName);
+
+        if (!Path.HasExtension(fileName))
+            candidates.Add(PlatformHelper.GetLibraryFileName(fileName));
+
+        if (!fileName.StartsWith("lib", StringComparison.OrdinalIgnoreCase))
+        {
+            candidates.Add($"lib{fileName}");
+            if (!Path.HasExtension(fileName))
+                candidates.Add($"lib{PlatformHelper.GetLibraryFileName(fileName)}");
+        }
+
+        return candidates.Distinct(StringComparer.OrdinalIgnoreCase);
     }
 
     private static IEnumerable<string> GetRidCandidates()
