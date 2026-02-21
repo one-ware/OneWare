@@ -7,7 +7,6 @@ namespace OneWare.Core.Services;
 
 public class OnnxRuntimeService : IOnnxRuntimeService
 {
-    private const string RuntimeCpu = "onnxruntime-cpu";
     private const string RuntimeNvidia = "onnxruntime-nvidia";
     private const string RuntimeDirectMl = "onnxruntime-directml";
 
@@ -22,108 +21,86 @@ public class OnnxRuntimeService : IOnnxRuntimeService
 
     public string SelectedRuntime => _bootstrapper.SelectedRuntime;
 
-    public string SelectedExecutionProvider { get; private set; } = "cpu";
+    // TODO we can add another setting to allow TensorRT instead of cuda
+    public string SelectedExecutionProvider => SelectedRuntime switch
+    {
+        RuntimeNvidia => "cuda",
+        RuntimeDirectMl => "directml",
+        _ => "cpu"
+    };
 
     public SessionOptions CreateSessionOptions()
     {
-        var sessionOptions = new SessionOptions();
-
-        sessionOptions.ExecutionMode = ExecutionMode.ORT_SEQUENTIAL;
-        sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL;
-        sessionOptions.EnableCpuMemArena = true;
-
-        var preferredProvider = SelectedRuntime switch
+        var so = new SessionOptions
         {
-            RuntimeNvidia => "cuda",
-            RuntimeDirectMl => "directml",
-            _ => "cpu"
+            ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
+
+            // Start here for compatibility; move to ORT_ENABLE_ALL once validated.
+            GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_EXTENDED,
+
+            EnableCpuMemArena = true,
+            EnableMemoryPattern = true
         };
 
-        if (preferredProvider != "cpu" && TryConfigureProvider(sessionOptions, preferredProvider))
-        {
-            SelectedExecutionProvider = preferredProvider;
-            return sessionOptions;
-        }
-
-        SelectedExecutionProvider = "cpu";
-        return sessionOptions;
-    }
-
-    private bool TryConfigureProvider(SessionOptions sessionOptions, string provider)
-    {
-        if (provider == "cpu") return true;
-
-        var methodName = provider switch
-        {
-            "cuda" => "AppendExecutionProvider_CUDA",
-            "directml" => "AppendExecutionProvider_DML",
-            _ => string.Empty
-        };
-
-        if (string.IsNullOrWhiteSpace(methodName)) return false;
+        // Threads: good general defaults (tune per app)
+        so.IntraOpNumThreads = Math.Max(1, Environment.ProcessorCount);
+        so.InterOpNumThreads = 1;
 
         try
         {
-            var methods = typeof(SessionOptions).GetMethods()
-                .Where(x => x.Name.Equals(methodName, StringComparison.Ordinal));
-
-            foreach (var method in methods)
+            switch (SelectedExecutionProvider)
             {
-                var args = BuildArgs(method.GetParameters());
-                if (args == null) continue;
+                case "cuda":
+                {
+                    var cudaOpts = new OrtCUDAProviderOptions();
 
-                method.Invoke(sessionOptions, args);
-                return true;
+                    var dict = new Dictionary<string, string>
+                    {
+                        // Pick the NVIDIA GPU you want (0 = first NVIDIA device per CUDA)
+                        ["device_id"] = "0",
+
+                        // Usually best startup/perf tradeoff:
+                        ["cudnn_conv_algo_search"] = "HEURISTIC",
+
+                        // Allow cuDNN to use more workspace for better perf:
+                        ["cudnn_conv_use_max_workspace"] = "1",
+
+                        // Optional: set a cap (bytes). Example: 8 GiB:
+                        // ["gpu_mem_limit"] = (8L * 1024 * 1024 * 1024).ToString(),
+
+                        // Optional: can help stream behavior in some apps:
+                        ["do_copy_in_default_stream"] = "1"
+                    };
+
+                    cudaOpts.UpdateOptions(dict);
+
+                    // Important: MakeSessionOptionWithCudaProvider returns a new instance,
+                    // so re-apply base options AFTER it.
+                    so.Dispose();
+                    so = SessionOptions.MakeSessionOptionWithCudaProvider(cudaOpts);
+
+                    // Re-apply your baseline settings
+                    so.ExecutionMode = ExecutionMode.ORT_SEQUENTIAL;
+                    so.GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_EXTENDED;
+                    so.EnableCpuMemArena = true;
+                    so.EnableMemoryPattern = true;
+                    so.IntraOpNumThreads = Math.Max(1, Environment.ProcessorCount);
+                    so.InterOpNumThreads = 1;
+
+                    break;
+                }
+
+                case "directml":
+                    so.AppendExecutionProvider_DML(0);
+                    so.EnableMemoryPattern = false; // recommended for DML
+                    break;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Failed to configure ONNX Runtime provider '{Provider}'.", provider);
+            _logger.LogWarning(ex, "Failed to configure ONNX Runtime provider '{Provider}'.", SelectedExecutionProvider);
         }
 
-        return false;
-    }
-
-    private static object[]? BuildArgs(ParameterInfo[] parameters)
-    {
-        if (parameters.Length == 0) return [];
-
-        var args = new object[parameters.Length];
-        for (var i = 0; i < parameters.Length; i++)
-        {
-            var parameter = parameters[i];
-            if (parameter.HasDefaultValue)
-            {
-                args[i] = parameter.DefaultValue ?? GetDefaultValue(parameter.ParameterType)!;
-                continue;
-            }
-
-            if (parameter.ParameterType == typeof(int))
-            {
-                args[i] = 0;
-                continue;
-            }
-
-            if (parameter.ParameterType == typeof(long))
-            {
-                args[i] = 0L;
-                continue;
-            }
-
-            if (parameter.ParameterType == typeof(bool))
-            {
-                args[i] = false;
-                continue;
-            }
-
-            return null;
-        }
-
-        return args;
-    }
-
-    private static object? GetDefaultValue(Type type)
-    {
-        return type.IsValueType ? Activator.CreateInstance(type) : null;
+        return so;
     }
 }
