@@ -28,17 +28,12 @@ public class OnnxRuntimeBootstrapper
 
         try
         {
+            //EnsureBundledCpuRuntimeAvailable();
+
             var selectedRuntime = ResolveConfiguredValue(SettingSelectedRuntimeKey, RuntimeProviderEnvironmentKey)
                                   ?.Trim();
             if (string.IsNullOrWhiteSpace(selectedRuntime)) selectedRuntime = "onnxruntime-cpu";
             SelectedRuntime = selectedRuntime;
-
-            if (selectedRuntime.Equals("none", StringComparison.OrdinalIgnoreCase) ||
-                selectedRuntime.Equals("disabled", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("ONNX Runtime preload disabled by configuration.");
-                return;
-            }
             
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
             if (TryLoadFromRoot(selectedRuntimeRoot, $"runtime '{selectedRuntime}'"))
@@ -60,6 +55,32 @@ public class OnnxRuntimeBootstrapper
         }
     }
 
+    private void EnsureBundledCpuRuntimeAvailable()
+    {
+        try
+        {
+            var targetPath = Path.Combine(_paths.OnnxRuntimesDirectory, "onnxruntime-cpu");
+            if (Directory.Exists(targetPath)) return;
+
+            var sourcePathCandidates = new[]
+            {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BundledOnnxRuntimes", "onnxruntime-cpu"),
+                Path.Combine(Path.GetDirectoryName(typeof(OnnxRuntimeBootstrapper).Assembly.Location) ??
+                             AppDomain.CurrentDomain.BaseDirectory, "BundledOnnxRuntimes", "onnxruntime-cpu")
+            };
+
+            var sourcePath = sourcePathCandidates.FirstOrDefault(Directory.Exists);
+            if (sourcePath == null) return;
+
+            PlatformHelper.CopyDirectory(sourcePath, targetPath);
+            _logger.LogInformation("Seeded bundled ONNX Runtime CPU package to {Path}", targetPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Failed to seed bundled ONNX Runtime CPU package.");
+        }
+    }
+
     private bool TryLoadFromRoot(string rootPath, string source)
     {
         if (!Directory.Exists(rootPath)) return false;
@@ -75,14 +96,16 @@ public class OnnxRuntimeBootstrapper
     {
         if (!Directory.Exists(nativeDirectory)) return false;
 
-        var fileNames = new[]
-        {
-            PlatformHelper.GetLibraryFileName("onnxruntime"),
-            $"lib{PlatformHelper.GetLibraryFileName("onnxruntime")}"
-        };
+        var fileNames = GetOnnxRuntimeFileNameCandidates();
+        var providersShared = PlatformHelper.GetLibraryFileName("onnxruntime_providers_shared");
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             TrySetDllDirectory(nativeDirectory);
+
+        // Ensure provider shared library can be resolved before loading onnxruntime itself.
+        var providerSharedPath = Path.Combine(nativeDirectory, providersShared);
+        if (File.Exists(providerSharedPath))
+            _ = NativeLibrary.TryLoad(providerSharedPath, out _);
 
         foreach (var fileName in fileNames.Distinct(StringComparer.OrdinalIgnoreCase))
         {
@@ -101,14 +124,31 @@ public class OnnxRuntimeBootstrapper
     private IEnumerable<string> EnumerateNativeSearchDirectories(string rootPath)
     {
         var directories = new List<string>();
-        var ridNative = Path.Combine(rootPath, "runtimes", PlatformHelper.PlatformIdentifier, "native");
+        var runtimesRoot = Path.Combine(rootPath, "runtimes");
 
         directories.Add(rootPath);
-        directories.Add(ridNative);
+        directories.AddRange(GetRidCandidates()
+            .Select(rid => Path.Combine(runtimesRoot, rid, "native")));
 
         try
         {
-            directories.AddRange(Directory.EnumerateDirectories(rootPath, "native", SearchOption.AllDirectories));
+            if (Directory.Exists(runtimesRoot))
+            {
+                var familyPrefix = GetRidFamilyPrefix();
+                var architectureSuffix = GetRidArchitectureSuffix();
+                directories.AddRange(
+                    Directory.EnumerateDirectories(runtimesRoot)
+                        .Select(path => new
+                        {
+                            Name = Path.GetFileName(path),
+                            NativePath = Path.Combine(path, "native")
+                        })
+                        .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                        .Where(x =>
+                            x.Name.StartsWith(familyPrefix, StringComparison.OrdinalIgnoreCase) &&
+                            x.Name.EndsWith(architectureSuffix, StringComparison.OrdinalIgnoreCase))
+                        .Select(x => x.NativePath));
+            }
         }
         catch (Exception ex)
         {
@@ -118,6 +158,58 @@ public class OnnxRuntimeBootstrapper
         return directories
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
+    }
+
+    private static IEnumerable<string> GetOnnxRuntimeFileNameCandidates()
+    {
+        var baseName = PlatformHelper.GetLibraryFileName("onnxruntime");
+        var candidates = new List<string> { baseName };
+
+        if (!baseName.StartsWith("lib", StringComparison.OrdinalIgnoreCase))
+            candidates.Add($"lib{baseName}");
+
+        return candidates;
+    }
+
+    private static IEnumerable<string> GetRidCandidates()
+    {
+        var candidates = new[]
+        {
+            RuntimeInformation.RuntimeIdentifier,
+            PlatformHelper.PlatformIdentifier
+        };
+
+        return candidates
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string GetRidFamilyPrefix()
+    {
+        return PlatformHelper.Platform switch
+        {
+            PlatformId.WinX64 => "win-",
+            PlatformId.WinArm64 => "win-",
+            PlatformId.LinuxX64 => "linux-",
+            PlatformId.LinuxArm64 => "linux-",
+            PlatformId.OsxX64 => "osx-",
+            PlatformId.OsxArm64 => "osx-",
+            _ => string.Empty
+        };
+    }
+
+    private static string GetRidArchitectureSuffix()
+    {
+        return PlatformHelper.Platform switch
+        {
+            PlatformId.WinX64 => "-x64",
+            PlatformId.LinuxX64 => "-x64",
+            PlatformId.OsxX64 => "-x64",
+            PlatformId.WinArm64 => "-arm64",
+            PlatformId.LinuxArm64 => "-arm64",
+            PlatformId.OsxArm64 => "-arm64",
+            _ => string.Empty
+        };
     }
 
     private string? ResolveConfiguredValue(string settingKey, string environmentKey)

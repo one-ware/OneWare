@@ -82,7 +82,7 @@ public class PluginService : IPluginService
 
             //We should not use that anymore, since it can break compatibility with code signed apps
             //We keep it for now except on MacOS
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
+            //if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
         }
         catch (Exception e)
         {
