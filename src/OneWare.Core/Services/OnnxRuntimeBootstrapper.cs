@@ -35,9 +35,12 @@ public class OnnxRuntimeBootstrapper
             var selectedRuntime = ReadStringSetting(SettingSelectedRuntimeKey)?.Trim() ?? "no-runtime";
             
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
-            
+
             if (TryLoadFromRoot(selectedRuntimeRoot))
+            {
+                SelectedRuntime = selectedRuntime;
                 return;
+            }
 
             SelectedRuntime = "onnxruntime-cpu";
             

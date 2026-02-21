@@ -100,6 +100,8 @@ public class OnnxRuntimeService : IOnnxRuntimeService
         {
             _logger.LogWarning(ex, "Failed to configure ONNX Runtime provider '{Provider}'.", SelectedExecutionProvider);
         }
+        
+        _logger.LogInformation("Created ONNX Runtime provider '{Provider}'.", SelectedExecutionProvider);
 
         return so;
     }
