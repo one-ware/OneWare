@@ -17,7 +17,7 @@ public class OnnxRuntimeBootstrapper
     private string? _loadedRuntimeLibraryPath;
     private bool _resolverInstalled;
 
-    public string SelectedRuntime { get; private set; } = "cpu";
+    public string SelectedRuntime { get; private set; } = "onnxruntime-cpu";
 
     public OnnxRuntimeBootstrapper(IPaths paths, ILogger logger)
     {
@@ -33,7 +33,8 @@ public class OnnxRuntimeBootstrapper
         {
             var selectedRuntime = ResolveConfiguredValue(SettingSelectedRuntimeKey, RuntimeProviderEnvironmentKey)
                                   ?.Trim();
-            if (string.IsNullOrWhiteSpace(selectedRuntime)) selectedRuntime = "cpu";
+            if (string.IsNullOrWhiteSpace(selectedRuntime)) selectedRuntime = "onnxruntime-cpu";
+            selectedRuntime = NormalizeRuntimeId(selectedRuntime);
             SelectedRuntime = selectedRuntime;
 
             if (selectedRuntime.Equals("none", StringComparison.OrdinalIgnoreCase) ||
@@ -43,10 +44,17 @@ public class OnnxRuntimeBootstrapper
                 return;
             }
             
-            foreach (var runtimeName in ResolveRuntimeCandidates(selectedRuntime))
+            var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
+            if (TryLoadFromRoot(selectedRuntimeRoot, $"runtime '{selectedRuntime}'"))
             {
-                var runtimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, runtimeName);
-                if (TryLoadFromRoot(runtimeRoot, $"runtime '{runtimeName}'"))
+                InstallOnnxRuntimeResolver();
+                return;
+            }
+
+            if (!selectedRuntime.Equals("onnxruntime-cpu", StringComparison.OrdinalIgnoreCase))
+            {
+                var cpuRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, "onnxruntime-cpu");
+                if (TryLoadFromRoot(cpuRuntimeRoot, "runtime 'onnxruntime-cpu'"))
                 {
                     InstallOnnxRuntimeResolver();
                     return;
@@ -69,50 +77,17 @@ public class OnnxRuntimeBootstrapper
         }
     }
 
-    private IEnumerable<string> ResolveRuntimeCandidates(string selectedRuntime)
+    private static string NormalizeRuntimeId(string selectedRuntime)
     {
-        var candidates = new List<string>();
-        if (!selectedRuntime.Equals("auto", StringComparison.OrdinalIgnoreCase))
+        var normalized = selectedRuntime.Trim().ToLowerInvariant();
+        return normalized switch
         {
-            candidates.Add(selectedRuntime);
-            return candidates;
-        }
-
-        switch (PlatformHelper.Platform)
-        {
-            case PlatformId.LinuxX64:
-            case PlatformId.LinuxArm64:
-                candidates.Add("gpu-linux");
-                candidates.Add("cuda");
-                candidates.Add("cpu");
-                break;
-            case PlatformId.WinX64:
-            case PlatformId.WinArm64:
-                candidates.Add("directml");
-                candidates.Add("cuda");
-                candidates.Add("cpu");
-                break;
-            default:
-                candidates.Add("cpu");
-                break;
-        }
-
-        try
-        {
-            if (Directory.Exists(_paths.OnnxRuntimesDirectory))
-                candidates.AddRange(Directory.GetDirectories(_paths.OnnxRuntimesDirectory)
-                    .Select(Path.GetFileName)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))!
-                    .Cast<string>());
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to enumerate ONNX runtime folders.");
-        }
-
-        return candidates
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+            "cpu" => "onnxruntime-cpu",
+            "nvidia" => "onnxruntime-nvidia",
+            "cuda" => "onnxruntime-nvidia",
+            "gpu-linux" => "onnxruntime-nvidia",
+            _ => normalized
+        };
     }
 
     private bool TryLoadFromRoot(string rootPath, string source)

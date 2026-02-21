@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
@@ -15,13 +16,13 @@ namespace OneWare.PackageManager;
 
 public class PackageManagerModule : OneWareModuleBase
 {
-    public static readonly Package OnnxRuntimeGpuLinuxPackage = new()
+    public static readonly Package OnnxRuntimeNvidiaPackage = new()
     {
         Category = "ONNX Runtimes",
-        Id = "onnxruntime-gpu",
+        Id = "onnxruntime-nvidia",
         Type = "OnnxRuntime",
         Name = "ONNX Runtime NVIDIA",
-        Description = "Optional GPU runtime for ONNX Runtime. Available for Windows and Linux",
+        Description = "ONNXRuntime Available for Windows and Linux",
         License = "MIT",
         IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
@@ -44,19 +45,71 @@ public class PackageManagerModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.23.2",
+                Version = "1.24.2",
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.24.2"
                     },
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.24.2"
                     },
+                ]
+            }
+        ]
+    };
+
+    public static readonly Package OnnxRuntimeDirectMlPackage = new()
+    {
+        Category = "ONNX Runtimes",
+        Id = "onnxruntime-directml",
+        Type = "OnnxRuntime",
+        Name = "ONNX Runtime DirectML",
+        Description = "ONNX Runtime with DirectML for Windows",
+        License = "MIT",
+        IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
+        Links =
+        [
+            new PackageLink
+            {
+                Name = "NuGet",
+                Url = "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.DirectML/1.24.2"
+            },
+            new PackageLink
+            {
+                Name = "GitHub",
+                Url = "https://github.com/microsoft/onnxruntime"
+            }
+        ],
+        Tabs =
+        [
+            new PackageTab
+            {
+                Title = "License",
+                ContentUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/main/LICENSE"
+            }
+        ],
+        Versions =
+        [
+            new PackageVersion
+            {
+                Version = "1.24.2",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.24.2"
+                    },
+                    new PackageTarget
+                    {
+                        Target = "win-arm64",
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.24.2"
+                    }
                 ]
             }
         ]
@@ -80,7 +133,11 @@ public class PackageManagerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeGpuLinuxPackage);
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeNvidiaPackage);
+        
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeDirectMlPackage);
 
         var windowService = serviceProvider.Resolve<IWindowService>();
 

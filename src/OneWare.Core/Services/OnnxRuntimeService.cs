@@ -52,6 +52,8 @@ public class OnnxRuntimeService : IOnnxRuntimeService
 
         if (normalized.Contains("gpu-linux", StringComparison.Ordinal) ||
             normalized.Contains("gpu.linux", StringComparison.Ordinal) ||
+            normalized.Contains("onnxruntime-nvidia", StringComparison.Ordinal) ||
+            normalized.Contains("nvidia", StringComparison.Ordinal) ||
             normalized.Contains("cuda", StringComparison.Ordinal))
             return "cuda";
 

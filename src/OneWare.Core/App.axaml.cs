@@ -154,9 +154,9 @@ public class App : Application
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
         
         settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
-            new ComboBoxSetting("Preferred Runtime (restart required)", "cpu", GetOnnxRuntimeOptions(paths))
+            new ComboBoxSetting("Preferred Runtime (restart required)", "onnxruntime-cpu", GetOnnxRuntimeOptions(paths))
             {
-                HoverDescription = "Select the runtime to use with ONNX. You can install additional runtimes from the package manager."
+                HoverDescription = "Select the runtime to use with ONNX. You can install additional runtimes using the package manager."
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
@@ -608,7 +608,7 @@ public class App : Application
 
     private static object[] GetOnnxRuntimeOptions(IPaths paths)
     {
-        var options = new List<string> { "cpu" };
+        var options = new List<string> { "onnxruntime-cpu" };
         try
         {
             if (Directory.Exists(paths.OnnxRuntimesDirectory))
