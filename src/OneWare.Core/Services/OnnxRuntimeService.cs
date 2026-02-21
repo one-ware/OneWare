@@ -1,13 +1,16 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
 public class OnnxRuntimeService : IOnnxRuntimeService
 {
+    private const string RuntimeCpu = "onnxruntime-cpu";
+    private const string RuntimeNvidia = "onnxruntime-nvidia";
+    private const string RuntimeDirectMl = "onnxruntime-directml";
+
     private readonly OnnxRuntimeBootstrapper _bootstrapper;
     private readonly ILogger _logger;
 
@@ -23,64 +26,27 @@ public class OnnxRuntimeService : IOnnxRuntimeService
 
     public SessionOptions CreateSessionOptions()
     {
-        var runtime = NormalizeRuntime(SelectedRuntime);
-        var candidates = GetProviderCandidates(runtime);
         var sessionOptions = new SessionOptions();
 
         sessionOptions.ExecutionMode = ExecutionMode.ORT_SEQUENTIAL;
         sessionOptions.GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL;
         sessionOptions.EnableCpuMemArena = true;
 
-        foreach (var provider in candidates)
-            if (TryConfigureProvider(sessionOptions, provider))
-            {
-                SelectedExecutionProvider = provider;
-                return sessionOptions;
-            }
+        var preferredProvider = SelectedRuntime switch
+        {
+            RuntimeNvidia => "cuda",
+            RuntimeDirectMl => "directml",
+            _ => "cpu"
+        };
+
+        if (preferredProvider != "cpu" && TryConfigureProvider(sessionOptions, preferredProvider))
+        {
+            SelectedExecutionProvider = preferredProvider;
+            return sessionOptions;
+        }
 
         SelectedExecutionProvider = "cpu";
         return sessionOptions;
-    }
-
-    private string NormalizeRuntime(string value)
-    {
-        var normalized = value.Trim().ToLowerInvariant();
-
-        if (normalized.Contains("directml", StringComparison.Ordinal) ||
-            normalized.Contains("dml", StringComparison.Ordinal))
-            return "directml";
-
-        if (normalized.Contains("gpu-linux", StringComparison.Ordinal) ||
-            normalized.Contains("gpu.linux", StringComparison.Ordinal) ||
-            normalized.Contains("onnxruntime-nvidia", StringComparison.Ordinal) ||
-            normalized.Contains("nvidia", StringComparison.Ordinal) ||
-            normalized.Contains("cuda", StringComparison.Ordinal))
-            return "cuda";
-
-        if (normalized.Contains("cpu", StringComparison.Ordinal))
-            return "cpu";
-
-        return normalized switch
-        {
-            "none" => "cpu",
-            "disabled" => "cpu",
-            _ => normalized
-        };
-    }
-
-    private string[] GetProviderCandidates(string runtime)
-    {
-        if (runtime == "cuda") return ["cuda", "cpu"];
-        if (runtime == "directml") return ["directml", "cpu"];
-        if (runtime == "cpu") return ["cpu"];
-        if (runtime != "auto") return [runtime, "cpu"];
-
-        return PlatformHelper.Platform switch
-        {
-            PlatformId.WinX64 or PlatformId.WinArm64 => ["directml", "cuda", "cpu"],
-            PlatformId.LinuxX64 or PlatformId.LinuxArm64 => ["cuda", "cpu"],
-            _ => ["cpu"]
-        };
     }
 
     private bool TryConfigureProvider(SessionOptions sessionOptions, string provider)
