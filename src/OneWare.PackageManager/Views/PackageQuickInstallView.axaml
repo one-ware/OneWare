@@ -52,6 +52,7 @@
             <Button Command="{Binding CancelCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
                     IsEnabled="{Binding !IsLoading}"
+                    IsVisible="{Binding IsInstalling}"
                     Height="35"
                     Padding="20 0">
                 <TextBlock Text="Cancel" />
