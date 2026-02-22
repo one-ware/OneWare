@@ -48,16 +48,17 @@
         <!-- Bottom Buttons -->
         <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0"
                     Classes="WindowButtons"
-                    HorizontalAlignment="Right"
-                    IsEnabled="{Binding !IsLoading}">
-            <Button Command="{Binding Close}"
+                    HorizontalAlignment="Right">
+            <Button Command="{Binding CancelCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
+                    IsEnabled="{Binding !IsLoading}"
                     Height="35"
                     Padding="20 0">
                 <TextBlock Text="Cancel" />
             </Button>
             <Button Command="{Binding InstallCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
+                    IsEnabled="{Binding !IsLoading}"
                     Classes="PrimaryButton"
                     Height="35"
                     Padding="20 0">

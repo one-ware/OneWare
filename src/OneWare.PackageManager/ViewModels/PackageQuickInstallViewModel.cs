@@ -1,3 +1,4 @@
+using System.Threading;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
@@ -13,6 +14,7 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 {
     private readonly IPackageService _packageService;
+    private CancellationTokenSource? _installCts;
 
     public PackageQuickInstallViewModel(IPackageState package, IPackageService packageService)
     {
@@ -52,20 +54,53 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref field, value);
     }
 
+    public bool IsInstalling
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public RelayCommand<FlexibleWindow> CancelCommand => new(window =>
+    {
+        if (IsInstalling)
+        {
+            _installCts?.Cancel();
+            _packageService.CancelInstall(Package.Package.Id!);
+        }
+        else
+        {
+            window?.Close();
+        }
+    });
+
     public AsyncRelayCommand<FlexibleWindow> InstallCommand => new(async window =>
     {
-        var result = await _packageService.InstallAsync(Package.Package);
-        
-        Success = result.Status is PackageInstallResultReason.AlreadyInstalled or PackageInstallResultReason.Installed;
+        if (IsInstalling) return;
 
-        if (!Success)
+        _installCts = new CancellationTokenSource();
+        IsInstalling = true;
+
+        try
         {
-            await ContainerLocator.Container.Resolve<IWindowService>().ShowMessageAsync("Installation failed",
-                result.CompatibilityRecord?.Report ?? "Please try again later or check for OneWare Studio updates",
-                MessageBoxIcon.Error);
+            var result = await _packageService.InstallAsync(Package.Package, null, false, false, _installCts.Token);
+
+            Success = result.Status is PackageInstallResultReason.AlreadyInstalled or PackageInstallResultReason.Installed;
+
+            if (!Success && !_installCts.IsCancellationRequested)
+            {
+                await ContainerLocator.Container.Resolve<IWindowService>().ShowMessageAsync("Installation failed",
+                    result.CompatibilityRecord?.Report ?? "Please try again later or check for OneWare Studio updates",
+                    MessageBoxIcon.Error);
+            }
+            if (Success)
+                window?.Close();
         }
-        if(Success)
-            window?.Close();
+        finally
+        {
+            IsInstalling = false;
+            _installCts?.Dispose();
+            _installCts = null;
+        }
     });
 
     private async Task ResolveAsync()
