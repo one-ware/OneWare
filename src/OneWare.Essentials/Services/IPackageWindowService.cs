@@ -1,9 +1,14 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
+using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Services;
 
 public interface IPackageWindowService
 {
+    /// <summary>
+    /// Registers a package category path (e.g. "Plugins/Languages") so plugins can extend the UI.
+    /// </summary>
+    void RegisterCategory(string categoryPath, IconModel? iconModel = null);
     /// <summary>
     /// Refreshes the package list in the UI.
     /// </summary>
@@ -29,3 +34,4 @@ public interface IPackageWindowService
     /// </summary>
     Task<bool> QuickInstallPackageAsync(string packageId);
 }
+
