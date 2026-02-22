@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
@@ -10,6 +11,8 @@ namespace OneWare.Core.Services;
 public class OnnxRuntimeBootstrapper
 {
     public const string SettingSelectedRuntimeKey = "OnnxRuntime_SelectedRuntime";
+    
+    public const string SettingSelectedExecutionProviderKey = "OnnxRuntime_SelectedExecutionProvider";
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;
@@ -18,12 +21,60 @@ public class OnnxRuntimeBootstrapper
     private static IntPtr _resolverOnnxRuntimeHandle;
     private static bool _onnxResolverRegistered;
 
-    public string SelectedRuntime { get; private set; } = "onnxruntime-cpu";
+    public string SelectedRuntime { get; private set; } = "onnxruntime-builtin";
 
     public OnnxRuntimeBootstrapper(IPaths paths, ILogger logger)
     {
         _paths = paths;
         _logger = logger;
+    }
+    
+    public static string[] GetOnnxRuntimeOptions(IPaths paths)
+    {
+        var options = new List<string> { "onnxruntime-builtin" };
+        try
+        {
+            if (Directory.Exists(paths.OnnxRuntimesDirectory))
+                options.AddRange(Directory.GetDirectories(paths.OnnxRuntimesDirectory)
+                    .Select(Path.GetFileName)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))!
+                    .Cast<string>());
+        }
+        catch
+        {
+            // Ignore IO errors and keep default options.
+        }
+
+        return options
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+    
+    public OnnxExecutionProvider[] GetOnnxExecutionProviders()
+    {
+        var executionProviders = new List<OnnxExecutionProvider> { OnnxExecutionProvider.Cpu };
+        switch (SelectedRuntime)
+        {
+            case "onnxruntime-builtin":
+                if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    executionProviders.Add(OnnxExecutionProvider.CoreMl);
+                break;
+            case "onnxruntime-directml":
+                executionProviders.Add(OnnxExecutionProvider.DirectMl);
+                break;
+            case "onnxruntime-nvidia":
+                executionProviders.Add(OnnxExecutionProvider.Cuda);
+                executionProviders.Add(OnnxExecutionProvider.TensorRt);
+                break;
+            case "onnxruntime-openvino":
+                executionProviders.Add(OnnxExecutionProvider.OpenVino);
+                break;
+            case "onnxruntime-qnn":
+                executionProviders.Add(OnnxExecutionProvider.Qnn);
+                break;
+        }
+
+        return executionProviders.ToArray();
     }
 
     public void Initialize()
@@ -32,6 +83,7 @@ public class OnnxRuntimeBootstrapper
 
         try
         {
+            // We don't use settings service here because it is not loaded at this state
             var selectedRuntime = ReadStringSetting(SettingSelectedRuntimeKey)?.Trim() ?? "no-runtime";
             
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
@@ -42,7 +94,7 @@ public class OnnxRuntimeBootstrapper
                 return;
             }
 
-            SelectedRuntime = "onnxruntime-cpu";
+            SelectedRuntime = "onnxruntime-builtin";
             
             _logger.LogInformation("ONNX Runtime preload skipped");
         }
@@ -275,21 +327,6 @@ public class OnnxRuntimeBootstrapper
         {
             _logger.LogDebug(ex, "Failed to read setting '{SettingKey}' from settings file.", key);
             return null;
-        }
-    }
-
-    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
-    private static extern bool SetDllDirectory(string? lpPathName);
-
-    private void TrySetDllDirectory(string directory)
-    {
-        try
-        {
-            _ = SetDllDirectory(directory);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to set DLL directory to '{Directory}'.", directory);
         }
     }
 }

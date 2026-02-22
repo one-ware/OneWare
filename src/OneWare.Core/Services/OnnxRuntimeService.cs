@@ -1,36 +1,42 @@
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
 public class OnnxRuntimeService : IOnnxRuntimeService
 {
-    private const string RuntimeNvidia = "onnxruntime-nvidia";
-    private const string RuntimeDirectMl = "onnxruntime-directml";
-
+    private readonly ISettingsService _settingsService;
     private readonly OnnxRuntimeBootstrapper _bootstrapper;
     private readonly ILogger _logger;
 
-    public OnnxRuntimeService(OnnxRuntimeBootstrapper bootstrapper, ILogger logger)
+    public OnnxRuntimeService(OnnxRuntimeBootstrapper bootstrapper, ILogger logger, ISettingsService settingsService)
     {
         _bootstrapper = bootstrapper;
         _logger = logger;
+        _settingsService = settingsService;
     }
 
-    public string SelectedRuntime => _bootstrapper.SelectedRuntime;
+    public OnnxExecutionProvider PreferredExecutionProvider =>
+        _settingsService.GetSettingValue<OnnxExecutionProvider>(OnnxRuntimeBootstrapper
+            .SettingSelectedExecutionProviderKey);
 
-    // TODO we can add another setting to allow TensorRT instead of cuda
-    public string SelectedExecutionProvider => SelectedRuntime switch
+    public OnnxExecutionProvider[] GetAvailableExecutionProviders()
     {
-        RuntimeNvidia => "cuda",
-        RuntimeDirectMl => "directml",
-        _ => "cpu"
-    };
+        return _bootstrapper.GetOnnxExecutionProviders();
+    }
 
-    public SessionOptions CreateSessionOptions()
+    public SessionOptions CreateSessionOptions(OnnxExecutionProvider? providerOverride = null)
     {
+        var provider = providerOverride ?? PreferredExecutionProvider;
+
+        if (!GetAvailableExecutionProviders().Contains(provider))
+        {
+            _logger.Warning($"Wanted execution provider {provider} not supported by this runtime / os. Falling back to CPU");
+            provider = OnnxExecutionProvider.Cpu;
+        }
+        
         var so = new SessionOptions
         {
             ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
@@ -48,9 +54,9 @@ public class OnnxRuntimeService : IOnnxRuntimeService
 
         try
         {
-            switch (SelectedExecutionProvider)
+            switch (provider)
             {
-                case "cuda":
+                case OnnxExecutionProvider.Cuda:
                 {
                     var cudaOpts = new OrtCUDAProviderOptions();
 
@@ -64,10 +70,7 @@ public class OnnxRuntimeService : IOnnxRuntimeService
 
                         // Allow cuDNN to use more workspace for better perf:
                         ["cudnn_conv_use_max_workspace"] = "1",
-
-                        // Optional: set a cap (bytes). Example: 8 GiB:
-                        // ["gpu_mem_limit"] = (8L * 1024 * 1024 * 1024).ToString(),
-
+                        
                         // Optional: can help stream behavior in some apps:
                         ["do_copy_in_default_stream"] = "1"
                     };
@@ -90,18 +93,31 @@ public class OnnxRuntimeService : IOnnxRuntimeService
                     break;
                 }
 
-                case "directml":
+                case OnnxExecutionProvider.DirectMl:
                     so.AppendExecutionProvider_DML(0);
-                    so.EnableMemoryPattern = false; // recommended for DML
+                    so.EnableMemoryPattern = false;
+                    break;
+                
+                case OnnxExecutionProvider.TensorRt:
+                    so.AppendExecutionProvider_Tensorrt();
+                    break;
+                
+                case OnnxExecutionProvider.CoreMl:
+                    so.AppendExecutionProvider_CoreML();
+                    so.EnableMemoryPattern = false;
+                    break;
+                
+                case OnnxExecutionProvider.OpenVino:
+                    so.AppendExecutionProvider_OpenVINO();
                     break;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to configure ONNX Runtime provider '{Provider}'.", SelectedExecutionProvider);
+            _logger.LogWarning(ex, "Failed to configure ONNX Runtime provider '{Provider}'.", provider.ToString());
         }
         
-        _logger.LogInformation("Created ONNX Runtime provider '{Provider}'.", SelectedExecutionProvider);
+        _logger.LogInformation("Created ONNX Runtime provider '{Provider}'.", provider.ToString());
 
         return so;
     }

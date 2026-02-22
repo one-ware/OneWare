@@ -24,6 +24,7 @@ using OneWare.Core.Views.Extensions;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
 using OneWare.Essentials.Commands;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
@@ -154,9 +155,30 @@ public class App : Application
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
         
         settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
-            new ComboBoxSetting("Preferred Runtime (restart required)", "onnxruntime-cpu", GetOnnxRuntimeOptions(paths))
+            new ComboBoxSetting("Runtime (restart required)", "onnxruntime-builtin", OnnxRuntimeBootstrapper.GetOnnxRuntimeOptions(paths).Cast<object>().ToArray())
             {
-                HoverDescription = "Select the runtime to use with ONNX. You can install additional runtimes using the package manager."
+                MarkdownDocumentation = """
+                                        **This setting requires a restart to be effective**
+                                        
+                                        - Select the runtime to use with ONNX. 
+                                        - You can install additional runtimes using the package manager.
+                                        - Every runtime offers different execution providers.
+                                        """
+            });
+        
+        settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey,
+            new AdvancedComboBoxSetting("Preferred Execution Provider", OnnxExecutionProvider.Cpu, Services.Resolve<OnnxRuntimeBootstrapper>().GetOnnxExecutionProviders().Select(x => new AdvancedComboBoxOption()
+            {
+                Title = x.ToString(),
+                Value = x
+            }).ToArray())
+            {
+                MarkdownDocumentation = """
+                                        Select the preferred execution provider to use with ONNX. 
+                                        The options here are dependent on the above selected runtime.
+                                        
+                                        **Plugins can use this option, but may ignore it**
+                                        """
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
@@ -541,6 +563,7 @@ public class App : Application
 
         compositeProvider.Resolve<OnnxRuntimeBootstrapper>().Initialize();
 
+        
         LoadStartupPlugins();
 
         var shell = CreateShell();
@@ -604,28 +627,6 @@ public class App : Application
         _ = LoadContentAsync();
 
         base.OnFrameworkInitializationCompleted();
-    }
-
-    private static object[] GetOnnxRuntimeOptions(IPaths paths)
-    {
-        var options = new List<string> { "onnxruntime-cpu" };
-        try
-        {
-            if (Directory.Exists(paths.OnnxRuntimesDirectory))
-                options.AddRange(Directory.GetDirectories(paths.OnnxRuntimesDirectory)
-                    .Select(Path.GetFileName)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))!
-                    .Cast<string>());
-        }
-        catch
-        {
-            // Ignore IO errors and keep default options.
-        }
-
-        return options
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Cast<object>()
-            .ToArray();
     }
 
     protected virtual Task LoadContentAsync()

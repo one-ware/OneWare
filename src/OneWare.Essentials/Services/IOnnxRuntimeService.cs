@@ -1,12 +1,13 @@
 using Microsoft.ML.OnnxRuntime;
+using OneWare.Essentials.Enums;
 
 namespace OneWare.Essentials.Services;
 
 public interface IOnnxRuntimeService
 {
-    public string SelectedRuntime { get; }
+    public OnnxExecutionProvider PreferredExecutionProvider { get; }
+    
+    public OnnxExecutionProvider[] GetAvailableExecutionProviders();
 
-    public string SelectedExecutionProvider { get; }
-
-    public SessionOptions CreateSessionOptions();
+    public SessionOptions CreateSessionOptions(OnnxExecutionProvider? providerOverride = null);
 }
