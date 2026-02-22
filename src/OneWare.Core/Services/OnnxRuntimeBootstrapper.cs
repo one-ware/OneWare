@@ -121,10 +121,7 @@ public class OnnxRuntimeBootstrapper
 
         var fileNames = GetOnnxRuntimeFileNameCandidates();
         var providersShared = PlatformHelper.GetLibraryFileName("onnxruntime_providers_shared");
-
-        // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        //     TrySetDllDirectory(nativeDirectory);
-
+        
         // Ensure provider shared library can be resolved before loading onnxruntime itself.
         var providerSharedPath = Path.Combine(nativeDirectory, providersShared);
         if (File.Exists(providerSharedPath))
@@ -158,8 +155,6 @@ public class OnnxRuntimeBootstrapper
         {
             if (Directory.Exists(runtimesRoot))
             {
-                var familyPrefix = GetRidFamilyPrefix();
-                var architectureSuffix = GetRidArchitectureSuffix();
                 directories.AddRange(
                     Directory.EnumerateDirectories(runtimesRoot)
                         .Select(path => new
@@ -168,9 +163,7 @@ public class OnnxRuntimeBootstrapper
                             NativePath = Path.Combine(path, "native")
                         })
                         .Where(x => !string.IsNullOrWhiteSpace(x.Name))
-                        .Where(x =>
-                            x.Name.StartsWith(familyPrefix, StringComparison.OrdinalIgnoreCase) &&
-                            x.Name.EndsWith(architectureSuffix, StringComparison.OrdinalIgnoreCase))
+                        .Where(x => x.Name.Equals(PlatformHelper.PlatformIdentifier, StringComparison.OrdinalIgnoreCase))
                         .Select(x => x.NativePath));
             }
         }
@@ -282,34 +275,6 @@ public class OnnxRuntimeBootstrapper
         return candidates
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct(StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string GetRidFamilyPrefix()
-    {
-        return PlatformHelper.Platform switch
-        {
-            PlatformId.WinX64 => "win-",
-            PlatformId.WinArm64 => "win-",
-            PlatformId.LinuxX64 => "linux-",
-            PlatformId.LinuxArm64 => "linux-",
-            PlatformId.OsxX64 => "osx-",
-            PlatformId.OsxArm64 => "osx-",
-            _ => string.Empty
-        };
-    }
-
-    private static string GetRidArchitectureSuffix()
-    {
-        return PlatformHelper.Platform switch
-        {
-            PlatformId.WinX64 => "-x64",
-            PlatformId.LinuxX64 => "-x64",
-            PlatformId.OsxX64 => "-x64",
-            PlatformId.WinArm64 => "-arm64",
-            PlatformId.LinuxArm64 => "-arm64",
-            PlatformId.OsxArm64 => "-arm64",
-            _ => string.Empty
-        };
     }
 
     private string? ReadStringSetting(string key)
