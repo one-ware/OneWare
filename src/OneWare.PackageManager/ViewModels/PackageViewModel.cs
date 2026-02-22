@@ -57,6 +57,9 @@ public class PackageViewModel : ObservableObject
                 _packageService.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
             _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
 
+        CancelCommand = new RelayCommand(() => _packageService.CancelInstall(PackageState.Package.Id!),
+            () => PackageState.Status is PackageStatus.Installing);
+
         PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
         InitPackage();
     }
@@ -122,6 +125,8 @@ public class PackageViewModel : ObservableObject
 
     public AsyncRelayCommand<Control?> UpdateCommand { get; }
 
+    public ICommand CancelCommand { get; }
+
     private void InitPackage()
     {
         Links.Clear();
@@ -178,7 +183,9 @@ public class PackageViewModel : ObservableObject
                 MainButtonCommand = RemoveCommand;
                 break;
             case PackageStatus.Installing:
-                PrimaryButtonText = "Installing...";
+                PrimaryButtonText = "Cancel";
+                MainButtonCommand = CancelCommand;
+                primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlMidBrush");
                 break;
             case PackageStatus.Unavailable:
                 PrimaryButtonText = "Unavailable";
@@ -199,6 +206,7 @@ public class PackageViewModel : ObservableObject
         RemoveCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
+        (CancelCommand as RelayCommand)?.NotifyCanExecuteChanged();
     }
 
     private async Task ConfirmLicenseAndDownloadAsync(Control? control, IPackageState model, PackageVersion version)

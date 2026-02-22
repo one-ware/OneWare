@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Threading;
 using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -46,6 +47,11 @@ public interface IPackageService : INotifyPropertyChanged
     void RegisterInstaller<T>(string packageType) where T : IPackageInstaller;
 
     /// <summary>
+    /// Cancels an active install/update for a package ID.
+    /// </summary>
+    void CancelInstall(string packageId);
+
+    /// <summary>
     /// Refreshes package metadata from repositories.
     /// </summary>
     Task<bool> RefreshAsync();
@@ -63,10 +69,28 @@ public interface IPackageService : INotifyPropertyChanged
         bool includePrerelease = false, bool ignoreCompatibility = false);
 
     /// <summary>
+    /// Installs a package by definition with cancellation support.
+    /// </summary>
+    Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Installs a package by ID with cancellation support.
+    /// </summary>
+    Task<PackageInstallResult> InstallAsync(string packageId, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Updates an installed package.
     /// </summary>
     Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version = null,
         bool includePrerelease = false, bool ignoreCompatibility = false);
+
+    /// <summary>
+    /// Updates an installed package with cancellation support.
+    /// </summary>
+    Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken);
 
     /// <summary>
     /// Removes an installed package.

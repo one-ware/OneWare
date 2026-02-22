@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Threading;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
@@ -29,6 +30,7 @@ public class PackageService : ObservableObject, IPackageService
     private readonly IPaths _paths;
     private readonly Dictionary<string, Type> _installersByType = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
+    private readonly Dictionary<string, CancellationTokenSource> _installCancellation = new();
     private readonly List<string> _repositoryUrls = [];
 
     private Task<bool>? _currentRefreshTask;
@@ -105,6 +107,13 @@ public class PackageService : ObservableObject, IPackageService
         _installersByType[packageType] = typeof(T);
     }
 
+    public void CancelInstall(string packageId)
+    {
+        if (string.IsNullOrWhiteSpace(packageId)) return;
+        if (_installCancellation.TryGetValue(packageId, out var cts))
+            cts.Cancel();
+    }
+
     public async Task<bool> RefreshAsync()
     {
         try
@@ -124,49 +133,95 @@ public class PackageService : ObservableObject, IPackageService
         }
     }
 
-    public async Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version = null,
+    public Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version = null,
         bool includePrerelease = false, bool ignoreCompatibility = false)
+    {
+        return InstallAsync(package, version, includePrerelease, ignoreCompatibility, CancellationToken.None);
+    }
+
+    public Task<PackageInstallResult> InstallAsync(string packageId, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false)
+    {
+        return InstallAsync(packageId, version, includePrerelease, ignoreCompatibility, CancellationToken.None);
+    }
+
+    public Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version = null,
+        bool includePrerelease = false, bool ignoreCompatibility = false)
+    {
+        return UpdateAsync(packageId, version, includePrerelease, ignoreCompatibility, CancellationToken.None);
+    }
+
+    public async Task<PackageInstallResult> InstallAsync(Package package, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken)
     {
         if (package.Id == null)
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
         if (!_packages.ContainsKey(package.Id)) RegisterPackage(package);
 
-        return await InstallAsync(package.Id, version, includePrerelease, ignoreCompatibility);
+        return await InstallAsync(package.Id, version, includePrerelease, ignoreCompatibility, cancellationToken);
     }
 
-    public async Task<PackageInstallResult> InstallAsync(string packageId, PackageVersion? version = null,
-        bool includePrerelease = false, bool ignoreCompatibility = false)
+    public async Task<PackageInstallResult> InstallAsync(string packageId, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken)
     {
         if (!_packages.TryGetValue(packageId, out var state))
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
         if (_activeInstalls.TryGetValue(packageId, out var active))
+        {
+            if (cancellationToken.CanBeCanceled && _installCancellation.TryGetValue(packageId, out var existingCts))
+                cancellationToken.Register(() => existingCts.Cancel());
             return await active;
+        }
 
-        var installTask = InstallInternalAsync(state, version, includePrerelease, ignoreCompatibility);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _installCancellation[packageId] = cts;
+
+        var installTask = InstallInternalAsync(state, version, includePrerelease, ignoreCompatibility, cts.Token);
         _activeInstalls[packageId] = installTask;
 
-        var result = await installTask;
-        _activeInstalls.Remove(packageId);
-        return result;
+        try
+        {
+            return await installTask;
+        }
+        finally
+        {
+            _activeInstalls.Remove(packageId);
+            _installCancellation.Remove(packageId);
+            cts.Dispose();
+        }
     }
 
-    public async Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version = null,
-        bool includePrerelease = false, bool ignoreCompatibility = false)
+    public async Task<PackageInstallResult> UpdateAsync(string packageId, PackageVersion? version,
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken)
     {
         if (!_packages.TryGetValue(packageId, out var state))
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
         if (_activeInstalls.TryGetValue(packageId, out var active))
+        {
+            if (cancellationToken.CanBeCanceled && _installCancellation.TryGetValue(packageId, out var existingCts))
+                cancellationToken.Register(() => existingCts.Cancel());
             return await active;
+        }
 
-        var updateTask = UpdateInternalAsync(state, version, includePrerelease, ignoreCompatibility);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _installCancellation[packageId] = cts;
+
+        var updateTask = UpdateInternalAsync(state, version, includePrerelease, ignoreCompatibility, cts.Token);
         _activeInstalls[packageId] = updateTask;
 
-        var result = await updateTask;
-        _activeInstalls.Remove(packageId);
-        return result;
+        try
+        {
+            return await updateTask;
+        }
+        finally
+        {
+            _activeInstalls.Remove(packageId);
+            _installCancellation.Remove(packageId);
+            cts.Dispose();
+        }
     }
 
     public async Task<bool> RemoveAsync(string packageId)
@@ -176,6 +231,7 @@ public class PackageService : ObservableObject, IPackageService
         if (state.InstalledVersion == null) return true;
 
         var installer = ResolveInstaller(state.Package);
+
         var extractionPath = installer.GetExtractionPath(state.Package, _paths);
 
         var version = state.InstalledVersion;
@@ -327,7 +383,7 @@ public class PackageService : ObservableObject, IPackageService
     }
 
     private async Task<PackageInstallResult> InstallInternalAsync(PackageState state, PackageVersion? version,
-        bool includePrerelease, bool ignoreCompatibility)
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken)
     {
         var selectedVersion = ResolveVersion(state, version, includePrerelease);
         if (selectedVersion == null)
@@ -338,8 +394,8 @@ public class PackageService : ObservableObject, IPackageService
             return new PackageInstallResult { Status = PackageInstallResultReason.AlreadyInstalled };
 
         var installer = ResolveInstaller(state.Package);
-
-        var compatibility = await installer.CheckCompatibilityAsync(state.Package, selectedVersion);
+        
+        var compatibility = await installer.CheckCompatibilityAsync(state.Package, selectedVersion, cancellationToken);
         if (!compatibility.IsCompatible && !ignoreCompatibility)
         {
             _logger.Error(compatibility.Report ?? "Package is incompatible.");
@@ -359,33 +415,36 @@ public class PackageService : ObservableObject, IPackageService
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
         }
 
-        return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility);
+        return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility, cancellationToken);
     }
 
     private async Task<PackageInstallResult> UpdateInternalAsync(PackageState state, PackageVersion? version,
-        bool includePrerelease, bool ignoreCompatibility)
+        bool includePrerelease, bool ignoreCompatibility, CancellationToken cancellationToken)
     {
         var selectedVersion = ResolveVersion(state, version, includePrerelease);
         if (selectedVersion == null)
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
         if (state.InstalledVersion == null)
-            return await InstallInternalAsync(state, selectedVersion, includePrerelease, ignoreCompatibility);
+            return await InstallInternalAsync(state, selectedVersion, includePrerelease, ignoreCompatibility, cancellationToken);
 
+        cancellationToken.ThrowIfCancellationRequested();
         var removed = await RemoveAsync(state.Package.Id!);
         if (!removed)
             return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
 
-        return await InstallInternalAsync(state, selectedVersion, includePrerelease, ignoreCompatibility);
+        return await InstallInternalAsync(state, selectedVersion, includePrerelease, ignoreCompatibility, cancellationToken);
     }
 
     private async Task<PackageInstallResult> DownloadAndInstallAsync(PackageState state, PackageVersion version,
-        PackageTarget target, IPackageInstaller installer, CompatibilityReport compatibility)
+        PackageTarget target, IPackageInstaller installer, CompatibilityReport compatibility,
+        CancellationToken cancellationToken)
     {
+        var stateHandle =
+            _applicationStateService.AddState($"Downloading {state.Package.Id}...", AppState.Loading);
         try
         {
             state.Status = PackageStatus.Installing;
-            var stateHandle = _applicationStateService.AddState($"Downloading {state.Package.Id}...", AppState.Loading);
 
             var progress = new Progress<float>(value =>
             {
@@ -410,9 +469,7 @@ public class PackageService : ObservableObject, IPackageService
             var url = target.Url ??
                       $"{state.Package.SourceUrl}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
-            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, progress);
-            _applicationStateService.RemoveState(stateHandle);
-            state.IsIndeterminate = false;
+            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, progress, cancellationToken);
 
             if (!success)
             {
@@ -423,7 +480,7 @@ public class PackageService : ObservableObject, IPackageService
             PlatformHelper.ChmodFolder(extractionPath);
 
             var result = await installer.InstallAsync(new PackageInstallContext(state.Package, version, target,
-                extractionPath, progress));
+                extractionPath, progress), cancellationToken);
 
             state.InstalledVersion = version;
             state.InstalledVersionWarningText = result.InstalledVersionWarningText;
@@ -440,11 +497,22 @@ public class PackageService : ObservableObject, IPackageService
                 CompatibilityRecord = compatibility
             };
         }
+        catch (OperationCanceledException)
+        {
+            state.Progress = 0;
+            UpdateStatus(state);
+            return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
+        }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
             UpdateStatus(state);
             return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
+        }
+        finally
+        {
+            _applicationStateService.RemoveState(stateHandle);
+            state.IsIndeterminate = false;
         }
     }
 
@@ -486,7 +554,7 @@ public class PackageService : ObservableObject, IPackageService
 
         if (installerType == null) return _defaultInstaller;
         
-        return (_compositeServiceProvider.GetService(installerType) as IPackageInstaller) ?? _defaultInstaller;
+        return (_compositeServiceProvider.Resolve(installerType) as IPackageInstaller) ?? _defaultInstaller;
     }
 
     private async Task SaveInstalledPackagesAsync()

@@ -14,6 +14,7 @@ public class PackageDownloader : IPackageDownloader
     public Task<bool> DownloadAndExtractAsync(string url, string extractionPath, IProgress<float> progress,
         CancellationToken cancellationToken = default)
     {
-        return _httpService.DownloadAndExtractArchiveAsync(url, extractionPath, progress);
+        return _httpService.DownloadAndExtractArchiveAsync(url, extractionPath, progress,
+            cancellationToken: cancellationToken);
     }
 }

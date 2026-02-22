@@ -25,7 +25,7 @@ public class PackageManagerModule : OneWareModuleBase
         Name = "ONNX Runtime NVIDIA",
         Description = "ONNXRuntime Available for Windows and Linux",
         License = "MIT",
-        IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
+        IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
         [
             new PackageLink
@@ -72,7 +72,7 @@ public class PackageManagerModule : OneWareModuleBase
         Name = "ONNX Runtime DirectML",
         Description = "ONNX Runtime with DirectML for Windows",
         License = "MIT",
-        IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
+        IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
         [
             new PackageLink
@@ -124,7 +124,7 @@ public class PackageManagerModule : OneWareModuleBase
         Name = "ONNX Runtime OpenVINO",
         Description = "ONNX Runtime with OpenVINO execution provider",
         License = "MIT",
-        IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
+        IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
         [
             new PackageLink
@@ -166,7 +166,7 @@ public class PackageManagerModule : OneWareModuleBase
         Name = "ONNX Runtime QNN",
         Description = "ONNX Runtime with Qualcomm QNN execution provider",
         License = "MIT",
-        IconUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/refs/heads/main/ORT_icon_for_light_bg.png",
+        IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
         [
             new PackageLink
