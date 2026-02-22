@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -9,12 +10,14 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
+using OneWare.PackageManager.Installers;
 using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.Services;
 
 public class PackageService : ObservableObject, IPackageService
 {
+    private readonly ICompositeServiceProvider _compositeServiceProvider;
     private readonly IPackageCatalog _catalog;
     private readonly IPackageDownloader _downloader;
     private readonly IHttpService _httpService;
@@ -22,16 +25,17 @@ public class PackageService : ObservableObject, IPackageService
     private readonly ISettingsService _settingsService;
     private readonly IApplicationStateService _applicationStateService;
     private readonly IPackageStateStore _stateStore;
-    private readonly IReadOnlyDictionary<string, IPackageInstaller> _installersByType;
+    private readonly IPackageInstaller _defaultInstaller;
     private readonly IPaths _paths;
+    private readonly Dictionary<string, Type> _installersByType = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
     private readonly List<string> _repositoryUrls = [];
 
     private Task<bool>? _currentRefreshTask;
 
     public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
-        IEnumerable<IPackageInstaller> installers, ISettingsService settingsService, ILogger logger,
-        IApplicationStateService applicationStateService, IHttpService httpService, IPaths paths)
+        ISettingsService settingsService, ILogger logger, IApplicationStateService applicationStateService,
+        IHttpService httpService, IPaths paths, ICompositeServiceProvider compositeServiceProvider, GenericPackageInstaller genericPackageInstaller)
     {
         _catalog = catalog;
         _downloader = downloader;
@@ -41,7 +45,8 @@ public class PackageService : ObservableObject, IPackageService
         _applicationStateService = applicationStateService;
         _httpService = httpService;
         _paths = paths;
-        _installersByType = installers.ToDictionary(x => x.PackageType, x => x);
+        _defaultInstaller = genericPackageInstaller;
+        _compositeServiceProvider = compositeServiceProvider;
     }
 
     public bool IsUpdating
@@ -90,6 +95,14 @@ public class PackageService : ObservableObject, IPackageService
     public void RegisterPackageRepository(string url)
     {
         _repositoryUrls.Add(url);
+    }
+
+    public void RegisterInstaller<T>(string packageType) where T : IPackageInstaller
+    {
+        if (string.IsNullOrWhiteSpace(packageType))
+            throw new ArgumentException("Package type is required.", nameof(packageType));
+
+        _installersByType[packageType] = typeof(T);
     }
 
     public async Task<bool> RefreshAsync()
@@ -163,31 +176,7 @@ public class PackageService : ObservableObject, IPackageService
         if (state.InstalledVersion == null) return true;
 
         var installer = ResolveInstaller(state.Package);
-        var extractionPath = GetExtractionPath(state.Package);
-
-        if (installer == null)
-        {
-            try
-            {
-                if (Directory.Exists(extractionPath))
-                    Directory.Delete(extractionPath, true);
-
-                state.InstalledVersion = null;
-                state.InstalledVersionWarningText = null;
-                state.Progress = 0;
-                state.IsIndeterminate = false;
-                UpdateStatus(state);
-
-                await SaveInstalledPackagesAsync();
-                return true;
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e.Message, e);
-                UpdateStatus(state);
-                return false;
-            }
-        }
+        var extractionPath = installer.GetExtractionPath(state.Package, _paths);
 
         var version = state.InstalledVersion;
         var target = installer.SelectTarget(state.Package, version) ?? new PackageTarget { Target = "all" };
@@ -226,8 +215,6 @@ public class PackageService : ObservableObject, IPackageService
             return Task.FromResult(new CompatibilityReport(false));
 
         var installer = ResolveInstaller(state.Package);
-        if (installer == null)
-            return Task.FromResult(new CompatibilityReport(false));
 
         return installer.CheckCompatibilityAsync(state.Package, version);
     }
@@ -351,8 +338,6 @@ public class PackageService : ObservableObject, IPackageService
             return new PackageInstallResult { Status = PackageInstallResultReason.AlreadyInstalled };
 
         var installer = ResolveInstaller(state.Package);
-        if (installer == null)
-            return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
 
         var compatibility = await installer.CheckCompatibilityAsync(state.Package, selectedVersion);
         if (!compatibility.IsCompatible && !ignoreCompatibility)
@@ -421,7 +406,7 @@ public class PackageService : ObservableObject, IPackageService
                         state.IsIndeterminate));
             });
 
-            var extractionPath = GetExtractionPath(state.Package);
+            var extractionPath = installer.GetExtractionPath(state.Package, _paths);
             var url = target.Url ??
                       $"{state.Package.SourceUrl}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
@@ -493,27 +478,15 @@ public class PackageService : ObservableObject, IPackageService
         return state.Package.Versions?.LastOrDefault(x => includePrerelease || !x.IsPrerelease);
     }
 
-    private IPackageInstaller? ResolveInstaller(Package package)
+    private IPackageInstaller ResolveInstaller(Package package)
     {
-        if (package.Type == null) return null;
-        return _installersByType.GetValueOrDefault(package.Type);
-    }
+        if (string.IsNullOrWhiteSpace(package.Type)) return _defaultInstaller;
 
-    private string GetExtractionPath(Package package)
-    {
-        if (package.Id == null) throw new InvalidOperationException("Package Id is required.");
+        var installerType = _installersByType.GetValueOrDefault(package.Type);
 
-        return package.Type switch
-        {
-            "Plugin" => Path.Combine(_paths.PluginsDirectory, package.Id),
-            "NativeTool" => Path.Combine(_paths.NativeToolsDirectory, package.Id),
-            "OnnxRuntime" => Path.Combine(_paths.OnnxRuntimesDirectory, package.Id),
-            "Hardware" => Path.Combine(_paths.PackagesDirectory, "Hardware",
-                package.Id),
-            "Library" => Path.Combine(_paths.PackagesDirectory, "Libraries",
-                package.Id),
-            _ => Path.Combine(_paths.PackagesDirectory, package.Id)
-        };
+        if (installerType == null) return _defaultInstaller;
+        
+        return (_compositeServiceProvider.GetService(installerType) as IPackageInstaller) ?? _defaultInstaller;
     }
 
     private async Task SaveInstalledPackagesAsync()

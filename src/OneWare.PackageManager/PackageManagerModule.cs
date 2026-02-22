@@ -206,11 +206,12 @@ public class PackageManagerModule : OneWareModuleBase
         services.AddSingleton<IPackageCatalog, PackageCatalog>();
         services.AddSingleton<IPackageStateStore, PackageStateStore>();
         services.AddSingleton<IPackageDownloader, PackageDownloader>();
-        services.AddSingleton<IPackageInstaller, PluginPackageInstaller>();
-        services.AddSingleton<IPackageInstaller, NativeToolPackageInstaller>();
-        services.AddSingleton<IPackageInstaller, OnnxRuntimePackageInstaller>();
-        services.AddSingleton<IPackageInstaller, HardwarePackageInstaller>();
-        services.AddSingleton<IPackageInstaller, LibraryPackageInstaller>();
+        services.AddSingleton<PluginPackageInstaller>();
+        services.AddSingleton<NativeToolPackageInstaller>();
+        services.AddSingleton<OnnxRuntimePackageInstaller>();
+        services.AddSingleton<HardwarePackageInstaller>();
+        services.AddSingleton<LibraryPackageInstaller>();
+        services.AddSingleton<GenericPackageInstaller>();
         services.AddSingleton<IPackageService, PackageService>();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<IPackageWindowService>(provider => provider.Resolve<PackageManagerViewModel>());
@@ -218,17 +219,24 @@ public class PackageManagerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
+        var packageService = serviceProvider.Resolve<IPackageService>();
+        packageService.RegisterInstaller<PluginPackageInstaller>("Plugin");
+        packageService.RegisterInstaller<NativeToolPackageInstaller>("NativeTool");
+        packageService.RegisterInstaller<OnnxRuntimePackageInstaller>("OnnxRuntime");
+        packageService.RegisterInstaller<HardwarePackageInstaller>("Hardware");
+        packageService.RegisterInstaller<LibraryPackageInstaller>("Library");
+
         if(PlatformHelper.Platform is PlatformId.LinuxX64 or PlatformId.WinX64)
-            serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeNvidiaPackage);
+            packageService.RegisterPackage(OnnxRuntimeNvidiaPackage);
         
         if(PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.WinArm64)
-            serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeDirectMlPackage);
+            packageService.RegisterPackage(OnnxRuntimeDirectMlPackage);
         
         if(PlatformHelper.Platform is PlatformId.WinX64)
-            serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeOpenVinoPackage);
+            packageService.RegisterPackage(OnnxRuntimeOpenVinoPackage);
         
         if(PlatformHelper.Platform is PlatformId.WinArm64)
-            serviceProvider.Resolve<IPackageService>().RegisterPackage(OnnxRuntimeQnnPackage);
+            packageService.RegisterPackage(OnnxRuntimeQnnPackage);
 
         var windowService = serviceProvider.Resolve<IWindowService>();
 

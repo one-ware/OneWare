@@ -41,6 +41,11 @@ public interface IPackageService : INotifyPropertyChanged
     void RegisterPackageRepository(string url);
 
     /// <summary>
+    /// Registers a package installer for a package type.
+    /// </summary>
+    void RegisterInstaller<T>(string packageType) where T : IPackageInstaller;
+
+    /// <summary>
     /// Refreshes package metadata from repositories.
     /// </summary>
     Task<bool> RefreshAsync();

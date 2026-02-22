@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
@@ -16,8 +18,12 @@ public class PluginPackageInstaller : PackageInstallerBase
         _httpService = httpService;
         _pluginService = pluginService;
     }
-
-    public override string PackageType => "Plugin";
+    
+    public override string GetExtractionPath(Package package, IPaths paths)
+    {
+        if (package.Id == null) throw new InvalidOperationException("Package Id is required.");
+        return Path.Combine(paths.PluginsDirectory, package.Id);
+    }
 
     public override async Task<CompatibilityReport> CheckCompatibilityAsync(Package package, PackageVersion version,
         CancellationToken cancellationToken = default)

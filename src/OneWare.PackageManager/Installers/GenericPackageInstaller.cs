@@ -6,12 +6,12 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.PackageManager.Installers;
 
-public class HardwarePackageInstaller : PackageInstallerBase
+public class GenericPackageInstaller : PackageInstallerBase
 {
     public override string GetExtractionPath(Package package, IPaths paths)
     {
         if (package.Id == null) throw new InvalidOperationException("Package Id is required.");
-        return Path.Combine(paths.PackagesDirectory, "Hardware", package.Id);
+        return Path.Combine(paths.PackagesDirectory, package.Id);
     }
 
     public override Task<PackageInstallerResult> InstallAsync(PackageInstallContext context,

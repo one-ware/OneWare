@@ -1,11 +1,11 @@
-using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
+using OneWare.Essentials.Services;
 
-namespace OneWare.PackageManager.Services;
+namespace OneWare.Essentials.PackageManager;
 
 public interface IPackageInstaller
 {
-    string PackageType { get; }
+    string GetExtractionPath(Package package, IPaths paths);
 
     PackageTarget? SelectTarget(Package package, PackageVersion version);
 

@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.PackageManager;
@@ -18,8 +20,12 @@ public class NativeToolPackageInstaller : PackageInstallerBase
         _paths = paths;
         _childProcessService = childProcessService;
     }
-
-    public override string PackageType => "NativeTool";
+    
+    public override string GetExtractionPath(Package package, IPaths paths)
+    {
+        if (package.Id == null) throw new InvalidOperationException("Package Id is required.");
+        return Path.Combine(paths.NativeToolsDirectory, package.Id);
+    }
 
     public override PackageTarget? SelectTarget(Package package, PackageVersion version)
     {
