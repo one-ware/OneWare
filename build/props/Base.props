@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <StudioVersion>1.0.6</StudioVersion>
+        <StudioVersion>1.0.7</StudioVersion>
         <CoreVersion>$(StudioVersion)</CoreVersion>
         <UniversalFpgaProjectSystemVersion>$(StudioVersion)</UniversalFpgaProjectSystemVersion>
         <EssentialsVersion>$(StudioVersion)</EssentialsVersion>
