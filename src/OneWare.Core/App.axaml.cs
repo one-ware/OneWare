@@ -24,6 +24,7 @@ using OneWare.Core.Views.Extensions;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
 using OneWare.Essentials.Commands;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
@@ -74,6 +75,8 @@ public class App : Application
 
         //Services
         services.AddSingleton<IPluginService, PluginService>();
+        services.AddSingleton<OnnxRuntimeBootstrapper>();
+        services.AddSingleton<IOnnxRuntimeService, OnnxRuntimeService>();
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IApplicationCommandService, ApplicationCommandService>();
         services.AddSingleton<IProjectManagerService, ProjectManagerService>();
@@ -144,13 +147,39 @@ public class App : Application
 
         //General
         settingsService.RegisterSettingCategory("General", 0, "Material.ToggleSwitchOutline");
-
         //Editor settings
         settingsService.RegisterSettingCategory("Editor", 0, "BoxIcons.RegularCode");
 
         settingsService.RegisterSettingCategory("Tools", 0, "FeatherIcons.Tool");
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
+        
+        settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
+            new ComboBoxSetting("Runtime (restart required)", "onnxruntime-builtin", OnnxRuntimeBootstrapper.GetOnnxRuntimeOptions(paths).Cast<object>().ToArray())
+            {
+                MarkdownDocumentation = """
+                                        **This setting requires a restart to be effective**
+                                        
+                                        - Select the runtime to use with ONNX. 
+                                        - You can install additional runtimes using the package manager.
+                                        - Every runtime offers different execution providers.
+                                        """
+            });
+        
+        settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey,
+            new AdvancedComboBoxSetting("Preferred Execution Provider", OnnxExecutionProvider.Cpu, Services.Resolve<OnnxRuntimeBootstrapper>().GetOnnxExecutionProviders().Select(x => new AdvancedComboBoxOption()
+            {
+                Title = x.ToString(),
+                Value = x
+            }).ToArray())
+            {
+                MarkdownDocumentation = """
+                                        Select the preferred execution provider to use with ONNX. 
+                                        The options here are dependent on the above selected runtime.
+                                        
+                                        **Plugins can use this option, but may ignore it**
+                                        """
+            });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
             new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL",
@@ -532,6 +561,9 @@ public class App : Application
         logger.LogInformation(
             $"App Started: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
 
+        compositeProvider.Resolve<OnnxRuntimeBootstrapper>().Initialize();
+
+        
         LoadStartupPlugins();
 
         var shell = CreateShell();

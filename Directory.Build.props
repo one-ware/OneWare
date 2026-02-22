@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <OnnxRuntimeVersion>1.23.2</OnnxRuntimeVersion>
+  </PropertyGroup>
+</Project>

@@ -55,6 +55,10 @@ public interface IPaths
     /// </summary>
     public string NativeToolsDirectory { get; }
     /// <summary>
+    /// ONNX runtime package directory.
+    /// </summary>
+    public string OnnxRuntimesDirectory { get; }
+    /// <summary>
     /// Plugins directory.
     /// </summary>
     public string PluginsDirectory { get; }

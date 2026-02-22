@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -16,6 +17,8 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
+    private static readonly char[] CategorySeparators = ['/', '\\'];
+
     private readonly IApplicationStateService _applicationStateService;
     private readonly IHttpService _httpService;
     private readonly ILogger _logger;
@@ -36,29 +39,18 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _logger = logger;
         _applicationStateService = applicationStateService;
 
-        PackageCategories.Add(new PackageCategoryViewModel("Plugins",
-            new IconModel("BoxIcons.RegularExtension")));
-        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Languages",
-            new IconModel("FluentIcons.ProofreadLanguageRegular")));
-        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Toolchains",
-            new IconModel("FeatherIcons.Tool")));
-        PackageCategories[0].SubCategories.Add(new PackageCategoryViewModel("Simulators",
-            new IconModel("Material.Pulse")));
-        PackageCategories[0].SubCategories
-            .Add(new PackageCategoryViewModel("Tools", new IconModel("Module")));
-
-        var hardwareCategory =
-            new PackageCategoryViewModel("Hardware", new IconModel("NiosIcon"));
-        hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("FPGA Boards"));
-        hardwareCategory.SubCategories.Add(new PackageCategoryViewModel("Extensions"));
-
-        PackageCategories.Add(hardwareCategory);
-        PackageCategories.Add(new PackageCategoryViewModel("Libraries",
-            new IconModel("BoxIcons.RegularLibrary")));
-        PackageCategories.Add(new PackageCategoryViewModel("Binaries",
-            new IconModel("BoxIcons.RegularCode")));
-        PackageCategories.Add(new PackageCategoryViewModel("Drivers",
-            new IconModel("BoxIcons.RegularUsb")));
+        RegisterCategory("Plugins", new IconModel("BoxIcons.RegularExtension"));
+        RegisterCategory("Plugins/Languages", new IconModel("FluentIcons.ProofreadLanguageRegular"));
+        RegisterCategory("Plugins/Toolchains", new IconModel("FeatherIcons.Tool"));
+        RegisterCategory("Plugins/Simulators", new IconModel("Material.Pulse"));
+        RegisterCategory("Plugins/Tools", new IconModel("Module"));
+        RegisterCategory("Hardware", new IconModel("NiosIcon"));
+        RegisterCategory("Hardware/FPGA Boards");
+        RegisterCategory("Hardware/Extensions");
+        RegisterCategory("Libraries", new IconModel("BoxIcons.RegularLibrary"));
+        RegisterCategory("Binaries", new IconModel("BoxIcons.RegularCode"));
+        RegisterCategory("Binaries/ONNX Runtimes");
+        RegisterCategory("Drivers", new IconModel("BoxIcons.RegularUsb"));
 
         SelectedCategory = PackageCategories.First();
 
@@ -132,6 +124,30 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     public bool AskForRestart { get; set; } = true;
     
     public AsyncRelayCommand UpdateAllCommand { get; }
+
+    public void RegisterCategory(string categoryPath, IconModel? iconModel = null)
+    {
+        var segments = SplitCategoryPath(categoryPath);
+        if (segments.Length == 0) return;
+
+        PackageCategoryViewModel? current = null;
+
+        for (var i = 0; i < segments.Length; i++)
+        {
+            var header = NormalizeCategorySegment(segments[i], i == segments.Length - 1);
+            var categories = current == null ? PackageCategories : current.SubCategories;
+
+            var existing = FindCategory(categories, header);
+            if (existing == null)
+            {
+                var category = new PackageCategoryViewModel(header, i == segments.Length - 1 ? iconModel : null);
+                categories.Add(category);
+                existing = category;
+            }
+
+            current = existing;
+        }
+    }
 
     public async Task RefreshPackagesAsync()
     {
@@ -240,12 +256,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private void ConstructPackageViewModels()
     {
         foreach (var category in PackageCategories)
-        {
-            foreach (var pkg in category.Packages.ToArray()) category.Remove(pkg);
-            foreach (var sub in category.SubCategories)
-            foreach (var pkg in sub.Packages.ToArray())
-                sub.Remove(pkg);
-        }
+            ClearCategoryPackages(category);
 
         foreach (var (_, packageModel) in _packageService.Packages)
             try
@@ -253,34 +264,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                 var viewModel =
                     new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService, _logger);
 
-                var category = packageModel.Package.Type switch
-                {
-                    "Plugin" => PackageCategories[0],
-                    "Hardware" => PackageCategories[1],
-                    "Library" => PackageCategories[2],
-                    "NativeTool" => PackageCategories[3],
-                    _ => null
-                };
+                var targetCategory = ResolveCategoryForPackage(packageModel.Package);
+                if (targetCategory == null) continue;
 
-                if (category == null) continue;
-
-                var wantedCategory = packageModel.Package.Category;
-
-                if (wantedCategory is "Misc") wantedCategory = "Tools";
-
-                var subCategory = category.SubCategories.FirstOrDefault(x =>
-                    x.Header.Equals(wantedCategory, StringComparison.OrdinalIgnoreCase));
-
-                if (subCategory == null && wantedCategory != null)
-                {
-                    subCategory = new PackageCategoryViewModel(wantedCategory);
-                    category.SubCategories.Add(subCategory);
-                }
-
-                subCategory?.Add(viewModel);
-
-                if (subCategory == null)
-                    category.Add(viewModel);
+                targetCategory.Add(viewModel);
             }
             catch (Exception e)
             {
@@ -342,5 +329,114 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         UpdateAllCommand.NotifyCanExecuteChanged();
         
         return true;
+    }
+
+    private static string[] SplitCategoryPath(string? categoryPath)
+    {
+        if (string.IsNullOrWhiteSpace(categoryPath)) return [];
+
+        return categoryPath
+            .Split(CategorySeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => x.Length > 0)
+            .ToArray();
+    }
+
+    private static string NormalizeCategorySegment(string segment, bool isLeaf)
+    {
+        if (isLeaf && segment.Equals("Misc", StringComparison.OrdinalIgnoreCase))
+            return "Tools";
+
+        return segment;
+    }
+
+    private static PackageCategoryViewModel? FindCategory(
+        IEnumerable<PackageCategoryViewModel> categories,
+        string header)
+    {
+        return categories.FirstOrDefault(x =>
+            x.Header.Equals(header, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static PackageCategoryViewModel GetOrCreateCategory(
+        IList<PackageCategoryViewModel> categories,
+        string header,
+        IconModel? iconModel = null)
+    {
+        var existing = FindCategory(categories, header);
+        if (existing != null) return existing;
+
+        var category = new PackageCategoryViewModel(header, iconModel);
+        categories.Add(category);
+        return category;
+    }
+
+    private PackageCategoryViewModel? ResolveCategoryForPackage(Essentials.PackageManager.Package package)
+    {
+        var rawCategory = package.Category;
+        var hasPath = !string.IsNullOrWhiteSpace(rawCategory) &&
+                      rawCategory.IndexOfAny(CategorySeparators) >= 0;
+
+        if (hasPath)
+        {
+            var segments = SplitCategoryPath(rawCategory);
+            if (segments.Length == 0) return ResolveRootCategoryForType(package.Type);
+
+            var root = GetOrCreateCategory(PackageCategories, segments[0]);
+            var current = root;
+
+            for (var i = 1; i < segments.Length; i++)
+            {
+                var header = NormalizeCategorySegment(segments[i], i == segments.Length - 1);
+                current = GetOrCreateCategory(current.SubCategories, header);
+            }
+
+            return current;
+        }
+
+        var category = ResolveRootCategoryForType(package.Type);
+        if (category == null) return null;
+
+        var wantedCategory = rawCategory;
+        if (string.IsNullOrWhiteSpace(wantedCategory))
+            return category;
+
+        wantedCategory = NormalizeCategorySegment(wantedCategory, true);
+
+        var subCategory = FindCategory(category.SubCategories, wantedCategory);
+        if (subCategory == null)
+        {
+            subCategory = new PackageCategoryViewModel(wantedCategory);
+            category.SubCategories.Add(subCategory);
+        }
+
+        return subCategory;
+    }
+
+    private PackageCategoryViewModel? ResolveRootCategoryForType(string? packageType)
+    {
+        if (string.IsNullOrWhiteSpace(packageType)) return null;
+
+        var rootCategoryName = packageType switch
+        {
+            "Plugin" => "Plugins",
+            "Hardware" => "Hardware",
+            "Library" => "Libraries",
+            "NativeTool" => "Binaries",
+            "OnnxRuntime" => "Binaries",
+            _ => null
+        };
+
+        if (rootCategoryName == null) return null;
+        return FindCategory(PackageCategories, rootCategoryName);
+    }
+
+    private static void ClearCategoryPackages(PackageCategoryViewModel category)
+    {
+        foreach (var pkg in category.Packages.ToArray())
+            category.Remove(pkg);
+
+        foreach (var subCategory in category.SubCategories)
+            ClearCategoryPackages(subCategory);
     }
 }

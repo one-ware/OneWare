@@ -163,13 +163,36 @@ public class PackageService : ObservableObject, IPackageService
         if (state.InstalledVersion == null) return true;
 
         var installer = ResolveInstaller(state.Package);
-        if (installer == null) return false;
+        var extractionPath = GetExtractionPath(state.Package);
+
+        if (installer == null)
+        {
+            try
+            {
+                if (Directory.Exists(extractionPath))
+                    Directory.Delete(extractionPath, true);
+
+                state.InstalledVersion = null;
+                state.InstalledVersionWarningText = null;
+                state.Progress = 0;
+                state.IsIndeterminate = false;
+                UpdateStatus(state);
+
+                await SaveInstalledPackagesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+                UpdateStatus(state);
+                return false;
+            }
+        }
 
         var version = state.InstalledVersion;
-        var target = installer.SelectTarget(state.Package, version);
-        if (target == null) return false;
+        var target = installer.SelectTarget(state.Package, version) ?? new PackageTarget { Target = "all" };
 
-        var context = new PackageInstallContext(state.Package, version, target, GetExtractionPath(state.Package),
+        var context = new PackageInstallContext(state.Package, version, target, extractionPath,
             new Progress<float>(_ => { }));
 
         try
@@ -484,6 +507,7 @@ public class PackageService : ObservableObject, IPackageService
         {
             "Plugin" => Path.Combine(_paths.PluginsDirectory, package.Id),
             "NativeTool" => Path.Combine(_paths.NativeToolsDirectory, package.Id),
+            "OnnxRuntime" => Path.Combine(_paths.OnnxRuntimesDirectory, package.Id),
             "Hardware" => Path.Combine(_paths.PackagesDirectory, "Hardware",
                 package.Id),
             "Library" => Path.Combine(_paths.PackagesDirectory, "Libraries",
