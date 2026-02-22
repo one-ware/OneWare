@@ -194,7 +194,12 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return true;
     }
 
-    public async Task<bool> QuickInstallPackageAsync(string packageId)
+    public Task<bool> QuickInstallPackageAsync(string packageId)
+    {
+        return QuickInstallPackageAsync(packageId, null);
+    }
+    
+    public async Task<bool> QuickInstallPackageAsync(string packageId, Window? owner)
     {
         if (!_packageService.Packages.TryGetValue(packageId, out var packageModel)) return false;
 
@@ -205,7 +210,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             DataContext = quickInstallViewModel
         };
 
-        await _windowService.ShowDialogAsync(view);
+        await _windowService.ShowDialogAsync(view, owner);
 
         return quickInstallViewModel.Success;
     }

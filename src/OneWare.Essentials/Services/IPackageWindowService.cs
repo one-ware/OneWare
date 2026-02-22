@@ -33,5 +33,7 @@ public interface IPackageWindowService
     /// Quickly installs a package by ID.
     /// </summary>
     Task<bool> QuickInstallPackageAsync(string packageId);
+    
+    Task<bool> QuickInstallPackageAsync(string packageId, Window? owner);
 }
 
