@@ -29,6 +29,8 @@ public sealed class OneWareCloudLoginService
     private readonly string _tokenPath;
 
     private int? _port;
+    private string? _codeVerifier;
+    private string? _state;
 
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
@@ -137,28 +139,47 @@ public sealed class OneWareCloudLoginService
 
     private async Task<(bool success, HttpStatusCode status)> RefreshAsync(string refreshToken)
     {
-        var request = new RestRequest("/api/auth/refresh");
-        request.AddJsonBody(new RefreshModel
+        try
         {
-            RefreshToken = refreshToken
-        });
-        var response = await GetRestClient().ExecutePostAsync(request);
+            string? keycloakBaseUrl = await GetKeycloakAuthProviderUrlAsync();
+            if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
+            {
+                _logger.Error("Failed to get Keycloak auth provider URL for token refresh");
+                return (false, HttpStatusCode.ServiceUnavailable);
+            }
 
-        if (response.IsSuccessful)
-        {
-            var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-            var token = data["token"]?.GetValue<string>();
-            var newRefreshToken = data["refreshToken"]?.GetValue<string>();
+            string tokenEndpoint = $"{keycloakBaseUrl}/protocol/openid-connect/token";
+            
+            RestRequest request = new RestRequest(tokenEndpoint, Method.Post);
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("grant_type", "refresh_token");
+            request.AddParameter("client_id", "OneWareStudio");
+            request.AddParameter("refresh_token", refreshToken);
 
-            if (token == null || newRefreshToken == null)
-                throw new Exception("Token or refresh token not found");
+            RestClient keycloakClient = new RestClient(_httpService.HttpClient, new RestClientOptions(keycloakBaseUrl));
+            RestResponse response = await keycloakClient.ExecuteAsync(request);
 
-            SaveCredentials(token, newRefreshToken);
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                JsonNode data = JsonSerializer.Deserialize<JsonNode>(response.Content)!;
+                string? token = data["access_token"]?.GetValue<string>();
+                string? newRefreshToken = data["refresh_token"]?.GetValue<string>();
 
-            return (true, response.StatusCode);
+                if (token == null || newRefreshToken == null)
+                    throw new Exception("Token or refresh token not found");
+
+                SaveCredentials(token, newRefreshToken);
+
+                return (true, response.StatusCode);
+            }
+
+            return (false, response.StatusCode);
         }
-
-        return (false, response.StatusCode);
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            return (false, HttpStatusCode.InternalServerError);
+        }
     }
 
     public async Task<(bool success, HttpStatusCode status)> LoginAsync(string email, string password)
@@ -255,8 +276,7 @@ public sealed class OneWareCloudLoginService
                 Email = mail
             });
 
-            var restClient =
-                new RestClient(_httpService.HttpClient, new RestClientOptions("https://cloud.one-ware.com"));
+            RestClient restClient = new (_httpService.HttpClient);
 
             var response = await restClient.ExecutePostAsync(request);
             return response.IsSuccessful;
@@ -271,8 +291,8 @@ public sealed class OneWareCloudLoginService
 
     private void SaveCredentials(string jwt, string refreshToken)
     {
-        var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
-        var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "nameid")?.Value ?? null;
+        JwtSecurityToken? jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
+        string? userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "sub")?.Value ?? null;
         if (userId == null) throw new Exception("User ID not found in token");
 
         _jwtTokenCache[userId] = jwtToken;
@@ -303,26 +323,93 @@ public sealed class OneWareCloudLoginService
         _settingService.Save(_paths.SettingsPath);
     }
 
+    private async Task<string?> GetKeycloakAuthProviderUrlAsync()
+    {
+        try
+        {
+            var request = new RestRequest("/api/auth/auth-provider");
+            var response = await GetRestClient().ExecuteGetAsync(request);
 
-    //Returns if new listener was started
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                return response.Content.Trim('"'); 
+            }
+
+            _logger.Error($"Failed to get auth provider URL: {response.StatusCode}");
+            return null;
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            return null;
+        }
+    }
+
+    private static string GenerateCodeVerifier()
+    {
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+    }
+
+    private static string GenerateCodeChallenge(string codeVerifier)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+    }
+
+    private static string GenerateState()
+    {
+        var bytes = new byte[16];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+    }
+    
     public async Task<bool> LoginWithBrowserAsync(CancellationToken cancellationToken = default)
     {
         var startNewListener = false;
         if (_port == null) startNewListener = true;
         _port ??= PlatformHelper.GetAvailablePort();
-        var prefix = $"http://{IPAddress.Loopback}:{_port}/";
-        var host = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
-            .TrimEnd('/');
-        var url = $"{host}/Account/LoginInApplication/?redirectPort={_port}";
+        var redirectUri = $"http://localhost:{_port}/callback";
         using HttpListener listener = new();
+
+        var keycloakBaseUrl = await GetKeycloakAuthProviderUrlAsync();
+        if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
+        {
+            _logger.Error("Failed to get Keycloak auth provider URL");
+            return false;
+        }
+
+        _codeVerifier = GenerateCodeVerifier();
+        string codeChallenge = GenerateCodeChallenge(_codeVerifier);
+        _state = GenerateState();
+        
+        string authUrl = $"{keycloakBaseUrl}/protocol/openid-connect/auth" +
+                         $"?client_id=OneWareStudio" +
+                         $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                         $"&response_type=code" +
+                         $"&scope=openid profile email" +
+                         $"&code_challenge={codeChallenge}" +
+                         $"&code_challenge_method=S256" +
+                         $"&state={_state}" +
+                         $"&prompt=consent";
 
         if (startNewListener)
         {
-            listener.Prefixes.Add(prefix);
+            listener.Prefixes.Add($"http://localhost:{_port}/");
             listener.Start();
         }
 
-        PlatformHelper.OpenHyperLink(url);
+        PlatformHelper.OpenHyperLink(authUrl);
 
         if (startNewListener)
             try
@@ -337,8 +424,12 @@ public sealed class OneWareCloudLoginService
 
                 var response = context.Response;
 
-                await HandleLoginResponseAsync(context);
-                response.Redirect(host);
+                await HandleKeycloakCallbackAsync(context, keycloakBaseUrl, redirectUri);
+                
+                // Redirect to Cloud index page
+                var cloudHost = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
+                    .TrimEnd('/');
+                response.Redirect($"{cloudHost}/");
                 response.KeepAlive = false;
                 response.Close();
             }
@@ -350,31 +441,94 @@ public sealed class OneWareCloudLoginService
             {
                 listener.Stop();
                 _port = null;
+                _codeVerifier = null;
+                _state = null;
             }
 
         return startNewListener;
     }
 
-    private async Task HandleLoginResponseAsync(HttpListenerContext context)
+    private async Task HandleKeycloakCallbackAsync(HttpListenerContext context, string keycloakBaseUrl, string redirectUri)
     {
         var query = HttpUtility.ParseQueryString(context!.Request!.Url!.Query);
-        var refreshToken = query["refreshToken"];
+        var code = query["code"];
+        var state = query["state"];
+        var error = query["error"];
 
-        if (refreshToken == null) return;
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            _logger.Error($"Authentication error: {error}");
+            return;
+        }
 
-        await Dispatcher.UIThread.InvokeAsync(() => RefreshAsync(refreshToken));
-        _settingService.Save(_paths.SettingsPath);
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            _logger.Error("No authorization code received from Keycloak");
+            return;
+        }
+
+        if (state != _state)
+        {
+            _logger.Error("State mismatch in OAuth callback");
+            return;
+        }
+
+        // Exchange authorization code for tokens
+        await ExchangeCodeForTokensAsync(code, keycloakBaseUrl, redirectUri);
     }
+
+    private async Task ExchangeCodeForTokensAsync(string code, string keycloakBaseUrl, string redirectUri)
+    {
+        try
+        {
+            var tokenEndpoint = $"{keycloakBaseUrl}/protocol/openid-connect/token";
+            
+            var request = new RestRequest(tokenEndpoint, Method.Post);
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("grant_type", "authorization_code");
+            request.AddParameter("client_id", "OneWareStudio");
+            request.AddParameter("code", code);
+            request.AddParameter("redirect_uri", redirectUri);
+            request.AddParameter("code_verifier", _codeVerifier);
+
+            var keycloakClient = new RestClient(_httpService.HttpClient, new RestClientOptions(keycloakBaseUrl));
+            var response = await keycloakClient.ExecuteAsync(request);
+
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                var tokenResponse = JsonSerializer.Deserialize<JsonNode>(response.Content)!;
+                var accessToken = tokenResponse["access_token"]?.GetValue<string>();
+                var refreshToken = tokenResponse["refresh_token"]?.GetValue<string>();
+
+                if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(refreshToken))
+                {
+                    _logger.Error("Access token or refresh token not found in Keycloak response");
+                    return;
+                }
+
+                // Save the Keycloak tokens directly - backend expects the Keycloak signed JWT
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    SaveCredentials(accessToken, refreshToken);
+                    _settingService.Save(_paths.SettingsPath);
+                });
+            }
+            else
+            {
+                _logger.Error($"Failed to exchange code for tokens: {response.StatusCode} - {response.Content}");
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+
 
     private class LoginModel
     {
         [JsonPropertyName("email")] public required string Email { get; set; }
 
         [JsonPropertyName("password")] public required string Password { get; set; }
-    }
-
-    private class RefreshModel
-    {
-        [JsonPropertyName("refreshToken")] public required string RefreshToken { get; set; }
     }
 }
