@@ -479,11 +479,11 @@ public class App : Application
             [ConsoleThemeStyle.TertiaryText] = new() { Foreground = ConsoleColor.DarkGray },
 
             // Literals / scalars
-            [ConsoleThemeStyle.String] = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Number] = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Boolean] = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Null] = new() { Foreground = ConsoleColor.White },
-            [ConsoleThemeStyle.Scalar] = new() { Foreground = ConsoleColor.White },
+            [ConsoleThemeStyle.String] = new() { Foreground = ConsoleColor.Gray },
+            [ConsoleThemeStyle.Number] = new() { Foreground = ConsoleColor.Gray },
+            [ConsoleThemeStyle.Boolean] = new() { Foreground = ConsoleColor.Gray },
+            [ConsoleThemeStyle.Null] = new() { Foreground = ConsoleColor.Gray },
+            [ConsoleThemeStyle.Scalar] = new() { Foreground = ConsoleColor.Gray },
 
             // Property names
             [ConsoleThemeStyle.Name] = new() { Foreground = ConsoleColor.Gray },
