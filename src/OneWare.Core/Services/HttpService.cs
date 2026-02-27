@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Net.Sockets;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
@@ -37,11 +38,20 @@ public class HttpService : IHttpService
             await client.DownloadAsync(url, stream, progress, cancellationToken);
             return true;
         }
+        catch (HttpRequestException e)
+        {
+            LogOfflineOrUnexpected(e, url, "file");
+        }
+        catch (TaskCanceledException e)
+        {
+            LogOfflineOrUnexpected(e, url, "file");
+        }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
-            return false;
         }
+
+        return false;
     }
 
     public async Task<IImage?> DownloadImageAsync(string url, TimeSpan timeout = default,
@@ -76,7 +86,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Warning(e.Message, e);
+            LogOfflineOrUnexpected(e, url, "image");
+        }
+        catch (TaskCanceledException e)
+        {
+            LogOfflineOrUnexpected(e, url, "image");
         }
         catch (Exception e)
         {
@@ -107,7 +121,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Warning(e.Message, e);
+            LogOfflineOrUnexpected(e, url, "text");
+        }
+        catch (TaskCanceledException e)
+        {
+            LogOfflineOrUnexpected(e, url, "text");
         }
         catch (Exception e)
         {
@@ -127,7 +145,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Warning(e.Message, e);
+            LogOfflineOrUnexpected(e, url, "file");
+        }
+        catch (TaskCanceledException e)
+        {
+            LogOfflineOrUnexpected(e, url, "file");
         }
         catch (Exception e)
         {
@@ -147,7 +169,7 @@ public class HttpService : IHttpService
             Directory.CreateDirectory(location);
 
             if (!await DownloadFileAsync(url, tempPath, progress, timeout, cancellationToken))
-                throw new Exception("Download failed");
+                return false;
 
             await Task.Run(() =>
             {
@@ -168,7 +190,11 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            _logger.Warning(e.Message, e);
+            LogOfflineOrUnexpected(e, url, "archive");
+        }
+        catch (TaskCanceledException e)
+        {
+            LogOfflineOrUnexpected(e, url, "archive");
         }
         catch (Exception e)
         {
@@ -176,5 +202,37 @@ public class HttpService : IHttpService
         }
 
         return false;
+    }
+
+    private void LogOfflineOrUnexpected(Exception exception, string url, string contentType)
+    {
+        // Offline/timeout cases are expected and should not show user-visible warnings.
+        if (IsConnectivityIssue(exception))
+        {
+            _logger.LogDebug(exception, "Skipping {ContentType} download while offline: {Url}", contentType, url);
+            return;
+        }
+
+        _logger.Warning(exception.Message, exception);
+    }
+
+    private static bool IsConnectivityIssue(Exception exception)
+    {
+        if (exception is TaskCanceledException)
+            return true;
+
+        if (exception is HttpRequestException { InnerException: SocketException })
+            return true;
+
+        if (exception is HttpRequestException { InnerException: IOException })
+            return true;
+
+        var message = exception.Message;
+        return message.Contains("Name or service not known", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("No such host is known", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("Network is unreachable", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("Connection refused", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("Operation timed out", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("The operation was canceled", StringComparison.OrdinalIgnoreCase);
     }
 }
