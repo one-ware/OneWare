@@ -36,6 +36,36 @@
                             <TextBlock Text="New Chat" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Name="HistoryButton"
+                            IsVisible="{Binding !!SessionHistory.Count}">
+                        <Button.Flyout>
+                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="Bottom">
+                                <ListBox ItemsSource="{Binding SessionHistory}" BorderThickness="0" MinWidth="280">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button HorizontalContentAlignment="Stretch"
+                                                    Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).LoadSessionHistoryCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding }"
+                                                    Background="Transparent">
+                                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
+                                                    <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding UpdatedAtLabel}"
+                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                                               FontSize="11" />
+                                                </Grid>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ListBox>
+                            </Flyout>
+                        </Button.Flyout>
+                        <Image Source="{DynamicResource Bootstrap.Clock}" Width="12" Height="12" />
+                    </Button>
                 </StackPanel>
             </DockPanel>
         </Border>
