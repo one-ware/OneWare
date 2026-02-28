@@ -50,7 +50,8 @@ jobs:
         run: rm -rf source-repo
       - name: Update Version
         run: |
-          sed -i 's/tag: .*/tag: ${{ steps.get-oneware-version.outputs.info }}/' com.one_ware.OneWare.yml
+          sed -i "s/tag: .*/tag: ${{ steps.get-oneware-version.outputs.info }}/" com.one_ware.OneWare.yml
+          sed -i "s/commit: .*/commit: ${{ github.sha }}/" com.one_ware.OneWare.yml
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"
