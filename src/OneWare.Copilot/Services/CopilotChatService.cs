@@ -105,8 +105,21 @@ public sealed class CopilotChatService(
 
         try
         {
-            var currentAuthStatus = await _client.GetAuthStatusAsync();
-            if (currentAuthStatus.IsAuthenticated) return true;
+            bool isAuthenticated;
+            try
+            {
+                var currentAuthStatus = await _client.GetAuthStatusAsync();
+                isAuthenticated = currentAuthStatus.IsAuthenticated;
+            }
+            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" && 
+                                         ex.Message.Contains("401"))
+            {
+                // Treat 401 authentication errors as unauthenticated
+                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Authentication check failed with 401, treating as unauthenticated.");
+                isAuthenticated = false;
+            }
+            
+            if (isAuthenticated) return true;
             
             var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
 
@@ -189,9 +202,21 @@ public sealed class CopilotChatService(
                 CliPath = cliPath
             });
 
-            var authStatus = await _client.GetAuthStatusAsync();
+            bool isAuthenticated;
+            try
+            {
+                var authStatus = await _client.GetAuthStatusAsync();
+                isAuthenticated = authStatus.IsAuthenticated;
+            }
+            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" && 
+                                         ex.Message.Contains("401"))
+            {
+                // Treat 401 authentication errors as unauthenticated
+                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Authentication check failed with 401, treating as unauthenticated.");
+                isAuthenticated = false;
+            }
             
-            if (!authStatus.IsAuthenticated)
+            if (!isAuthenticated)
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
                 EventReceived?.Invoke(this, new ChatButtonEvent(
