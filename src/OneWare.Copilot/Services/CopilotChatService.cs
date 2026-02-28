@@ -267,7 +267,7 @@ public sealed class CopilotChatService(
                 Streaming = true,
                 SystemMessage = new SystemMessageConfig
                 {
-                    Content = CopilotModule.SystemMessage
+                    Content = BuildSystemMessage()
                 },
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
@@ -301,6 +301,14 @@ public sealed class CopilotChatService(
         }
 
         _subscription = _session.On(HandleSessionEvent);
+    }
+
+    private string BuildSystemMessage()
+    {
+        var additions = toolProvider.GetPromptAdditions();
+        if (additions.Count == 0) return CopilotModule.SystemMessage;
+
+        return $"{CopilotModule.SystemMessage}\n\n{string.Join("\n\n", additions)}";
     }
 
     public async Task SendAsync(string prompt)
