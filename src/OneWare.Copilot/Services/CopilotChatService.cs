@@ -575,7 +575,7 @@ public sealed class CopilotChatService(
     {
         return new PermissionRequestResult
         {
-            Kind = "deny",
+            Kind = "denied",
             Rules = null
         };
     }
