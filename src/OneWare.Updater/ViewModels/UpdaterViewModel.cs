@@ -116,7 +116,6 @@ public class UpdaterViewModel : ObservableObject
             PlatformId.WinArm64 => "win-arm64",
             PlatformId.OsxArm64 => "osx-arm64",
             PlatformId.OsxX64 => "osx-x64",
-            PlatformId.LinuxX64 => "win-x64",
             _ => null
         };
 
