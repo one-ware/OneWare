@@ -208,10 +208,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         if (SelectedChatService == null)
         {
-            Messages.Add(new ChatMessageAssistantViewModel()
-            {
-                Content = "No ChatService Selected"
-            });
+            AddErrorMessage("No chat service selected.");
             return;
         }
 
@@ -222,10 +219,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         if (!IsConnected)
         {
-            Messages.Add(new ChatMessageAssistantViewModel()
-            {
-                Content = $"{SelectedChatService.Name} is not connected yet."
-            });
+            AddErrorMessage($"{SelectedChatService.Name} is not connected yet.");
             return;
         }
 
@@ -249,8 +243,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
         catch (Exception ex)
         {
-            assistantMessage.Content = ex.Message;
-            assistantMessage.IsStreaming = false;
+            if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
+            {
+                Messages.Remove(initMessage);
+            }
+            else
+            {
+                Messages.Remove(assistantMessage);
+            }
+
+            AddErrorMessage(ex.Message);
             IsBusy = false;
         }
     }
@@ -281,6 +283,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
 
         Messages.Add(message);
+    }
+
+    private void AddErrorMessage(string? message)
+    {
+        var errorMessage = string.IsNullOrWhiteSpace(message)
+            ? "An unexpected error occurred."
+            : message;
+
+        AddMessage(new ChatMessageErrorViewModel(errorMessage));
     }
 
     private ChatMessageReasoningViewModel GetOrCreateAssistantReasoningMessage(string? reasoningId)
@@ -425,14 +436,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    var errorMessage = string.IsNullOrWhiteSpace(x.Message)
-                        ? "An unexpected error occurred."
-                        : x.Message;
-
-                    AddMessage(new ChatMessageAssistantViewModel()
-                    {
-                        Content = $"**Error:** {errorMessage}"
-                    });
+                    AddErrorMessage(x.Message);
                 });
                 break;
             }
@@ -627,6 +631,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     ToolOutput = tool.ToolOutput,
                     IsSuccessful = tool.IsSuccessful
                 };
+            case ChatMessageErrorViewModel:
+                // Error chat messages are intentionally not serialized.
+                return null;
             default:
                 return null;
         }
