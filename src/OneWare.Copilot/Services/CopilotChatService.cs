@@ -417,6 +417,11 @@ public sealed class CopilotChatService(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
+        if (IsCustomToolPermissionRequest(request))
+        {
+            return Task.FromResult(CreateAllowPermissionResult());
+        }
+
         var scope = string.IsNullOrWhiteSpace(request.Kind) ? "tool" : request.Kind;
         if (_allowedPermissionScopes.Contains(scope))
         {
@@ -561,8 +566,8 @@ public sealed class CopilotChatService(
     {
         return new PermissionRequestResult
         {
-            Kind = "allow",
-            Rules = []
+            Kind = "approved",
+            Rules = null
         };
     }
 
@@ -571,8 +576,13 @@ public sealed class CopilotChatService(
         return new PermissionRequestResult
         {
             Kind = "deny",
-            Rules = []
+            Rules = null
         };
+    }
+
+    private static bool IsCustomToolPermissionRequest(PermissionRequest request)
+    {
+        return request.Kind?.Equals("custom-tool", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private Task<UserInputResponse> OnUserInputRequestAsync(
