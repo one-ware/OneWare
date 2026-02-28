@@ -130,7 +130,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         get;
         set
         {
-            if (SetProperty(ref field, value) && value != null)
+            if (SetProperty(ref field, value) && value != null && IsInitialized)
             {
                 _ = LoadSessionAsync(value);
             }
