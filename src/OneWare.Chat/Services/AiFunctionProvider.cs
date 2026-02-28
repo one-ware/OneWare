@@ -18,6 +18,9 @@ public class AiFunctionProvider(
     IWindowService windowService,
     AiFileEditService aiFileEditService) : IAiFunctionProvider
 {
+    private const int MaxTerminalOutputLines = 220;
+    private const int MaxTerminalOutputChars = 12000;
+
     private readonly HashSet<string> _allowedForSession = new(StringComparer.Ordinal);
 
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
@@ -30,7 +33,7 @@ public class AiFunctionProvider(
     {
         var searchFiles = AIFunctionFactory.Create(
             ([Description("regex pattern to search for")] string pattern,
-                [Description("root directory to search (optional, defaults to active project)")] string? rootPath = null,
+                [Description("absolute root directory to search (optional, defaults to active project)")] string? rootPath = null,
                 [Description("file name glob(s), e.g. \"*.cs\" or \"*.cs;*.md\" (optional)")] string? fileGlob = null,
                 [Description("case-insensitive search")] bool ignoreCase = true,
                 [Description("max total matches to return")] int maxResults = 200,
@@ -64,7 +67,7 @@ public class AiFunctionProvider(
         );
 
         var readFile = AIFunctionFactory.Create(
-            ([Description("path of the file to read")] string path,
+            ([Description("absolute path of the file to read")] string path,
                 [Description("1-based start line for partial reads (omit for full file)")] int? startLine = null,
                 [Description("number of lines to read from startLine (omit for full file)")] int? lineCount = null) =>
                 WrapWithNotificationTaskUiThread(
@@ -82,11 +85,11 @@ public class AiFunctionProvider(
                         };
                     }),
             "readFile",
-            "Read the specified file (optionally by line range). Relative paths are resolved against the active project."
+            "Read the specified file (optionally by line range). Always pass an absolute path."
         );
 
         var editFile = AIFunctionFactory.Create(
-            ([Description("path of the file to edit")] string path,
+            ([Description("absolute path of the file to edit")] string path,
                 [Description("new text to write (full file or replacement lines)")] string content,
                 [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
                 [Description("number of lines to replace from startLine; 0 inserts before startLine")] int? lineCount = null) =>
@@ -110,11 +113,11 @@ public class AiFunctionProvider(
                 permissionQuestion: "Allow editing this file?",
                 permissionDetail: $"File: `{path}`"),
             "editFile",
-            "Edit file contents with new text (optionally by line range). Creates missing files automatically. Relative paths are resolved against the active project."
+            "Edit file contents with new text (optionally by line range). Creates missing files automatically. Always pass an absolute path."
         );
 
         var listDirectory = AIFunctionFactory.Create(
-            ([Description("directory path (optional, defaults to active project root)")] string? path = null,
+            ([Description("absolute directory path (optional, defaults to active project root)")] string? path = null,
                 [Description("include nested files and folders recursively")] bool recursive = false,
                 [Description("include hidden entries")] bool includeHidden = false,
                 [Description("maximum number of entries to return")] int maxEntries = 500) =>
@@ -137,7 +140,7 @@ public class AiFunctionProvider(
         );
 
         var pathExists = AIFunctionFactory.Create(
-            ([Description("path to check")] string path) => WrapWithNotificationUiThread(
+            ([Description("absolute path to check")] string path) => WrapWithNotificationUiThread(
                 $"Check Path {Path.GetFileName(path)}",
                 () =>
                 {
@@ -161,7 +164,7 @@ public class AiFunctionProvider(
         );
 
         var createDirectory = AIFunctionFactory.Create(
-            ([Description("directory path to create")] string path) => WrapWithNotificationUiThread(
+            ([Description("absolute directory path to create")] string path) => WrapWithNotificationUiThread(
                 $"Create Directory {Path.GetFileName(path)}",
                 () =>
                 {
@@ -177,8 +180,8 @@ public class AiFunctionProvider(
         );
 
         var movePath = AIFunctionFactory.Create(
-            ([Description("source file or directory path")] string sourcePath,
-                [Description("destination file or directory path")] string destinationPath,
+            ([Description("absolute source file or directory path")] string sourcePath,
+                [Description("absolute destination file or directory path")] string destinationPath,
                 [Description("overwrite destination if it already exists")] bool overwrite = false) =>
                 WrapWithNotificationUiThread(
                     $"Move Path {Path.GetFileName(sourcePath)}",
@@ -211,7 +214,7 @@ public class AiFunctionProvider(
         );
 
         var deletePath = AIFunctionFactory.Create(
-            ([Description("file or directory path to delete")] string path,
+            ([Description("absolute file or directory path to delete")] string path,
                 [Description("for directories: delete recursively")] bool recursive = true) =>
                 WrapWithNotificationUiThread(
                     $"Delete Path {Path.GetFileName(path)}",
@@ -244,10 +247,10 @@ public class AiFunctionProvider(
                 "Get Active Project",
                 () => new
                 {
-                    activeProject = projectExplorerService.ActiveProject?.FullPath
+                    activeProject = ResolvePath(null)
                 }),
             "getActiveProject",
-            "Returns the working directory of the active project. If no active project is enabled, it will return null."
+            "Returns the absolute working directory of the active project. If no active project is enabled, it returns null."
         );
 
         var getOpenFiles = AIFunctionFactory.Create(
@@ -255,11 +258,14 @@ public class AiFunctionProvider(
                 "Get Open Files",
                 () => new
                 {
-                    openFiles = dockService.OpenFiles.Select(x => x.Key).ToArray()
+                    openFiles = dockService.OpenFiles
+                        .Select(x => ResolvePath(x.Key))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .ToArray()
                 }),
             "getOpenFiles",
             """
-            Returns the full paths of ALL files currently open in the IDE.
+            Returns the absolute full paths of ALL files currently open in the IDE.
             This is the ONLY way to know which files are open.
             Do not assume or invent open files.
             """
@@ -270,17 +276,17 @@ public class AiFunctionProvider(
                 "Get Focused File",
                 () => new
                 {
-                    currentFile = dockService.CurrentDocument?.FullPath
+                    currentFile = ResolvePath(dockService.CurrentDocument?.FullPath)
                 }),
             "getFocusedFile",
             """
-            Returns the full path of the currently focused editor file.
+            Returns the absolute full path of the currently focused editor file.
             This is the ONLY way to know which file is active.
             """
         );
 
         var getErrorsForFile = AIFunctionFactory.Create(
-            ([Description("path of the file to get errors")] string path) => WrapWithNotificationUiThread(
+            ([Description("absolute path of the file to get errors")] string path) => WrapWithNotificationUiThread(
                 $"Get Errors for {Path.GetFileName(path)}",
                 () =>
                 {
@@ -328,7 +334,7 @@ public class AiFunctionProvider(
             (
                 [Description("Shell command to execute")]
                 string command,
-                [Description("Working directory for execution (WARNING!, only works the first time for every session, after that it needs to be adjusted manually)")]
+                [Description("Absolute working directory for execution (optional, defaults to active project).")]
                 string? workDir = null
             ) => WrapWithNotificationTaskUiThread(
                 $"Execute In Terminal", command,
@@ -343,9 +349,16 @@ public class AiFunctionProvider(
                         true,
                         TimeSpan.FromMinutes(1));
 
+                    var truncatedOutput = TruncateTerminalOutput(terminalResult.Output, out var outputTruncated);
+                    var result = outputTruncated
+                        ? terminalResult with { Output = truncatedOutput }
+                        : terminalResult;
+
                     return new
                     {
-                        result = terminalResult
+                        result,
+                        outputTruncated,
+                        originalOutputLength = terminalResult.Output.Length
                     };
                 },
                 requiresPermission: true,
@@ -354,7 +367,9 @@ public class AiFunctionProvider(
                 permissionDetail: $"```bash\n{command}\n```"),
             "runTerminalCommand",
             """
-            Executes a command in the terminal. It will return the result
+            Executes a command in the terminal and returns the output.
+            This is the only supported way to execute shell commands.
+            Output is automatically truncated to avoid oversized responses.
             """
         );
         
@@ -651,19 +666,76 @@ public class AiFunctionProvider(
         return false;
     }
 
+    private static string TruncateTerminalOutput(string output, out bool wasTruncated)
+    {
+        var lineLimited = TruncateByLines(output, MaxTerminalOutputLines, out var lineTruncated);
+        var charLimited = TruncateByChars(lineLimited, MaxTerminalOutputChars, out var charTruncated);
+        wasTruncated = lineTruncated || charTruncated;
+        return charLimited;
+    }
+
+    private static string TruncateByLines(string output, int maxLines, out bool wasTruncated)
+    {
+        if (string.IsNullOrEmpty(output))
+        {
+            wasTruncated = false;
+            return output;
+        }
+
+        var normalized = output.Replace("\r\n", "\n");
+        var lines = normalized.Split('\n');
+        if (lines.Length <= maxLines)
+        {
+            wasTruncated = false;
+            return output;
+        }
+
+        wasTruncated = true;
+        var headCount = maxLines / 2;
+        var tailCount = maxLines - headCount;
+        var omittedCount = lines.Length - maxLines;
+
+        var head = lines.Take(headCount);
+        var tail = lines.Skip(lines.Length - tailCount);
+        var marker = $"... [truncated {omittedCount} lines] ...";
+
+        return string.Join('\n', head.Concat([marker]).Concat(tail));
+    }
+
+    private static string TruncateByChars(string output, int maxChars, out bool wasTruncated)
+    {
+        if (string.IsNullOrEmpty(output) || output.Length <= maxChars)
+        {
+            wasTruncated = false;
+            return output;
+        }
+
+        wasTruncated = true;
+        var marker = "\n... [truncated output] ...\n";
+        var budget = Math.Max(0, maxChars - marker.Length);
+        var headCount = budget / 2;
+        var tailCount = budget - headCount;
+
+        return output[..headCount] + marker + output[^tailCount..];
+    }
+
     private string? ResolvePath(string? path)
     {
         var activeProjectPath = projectExplorerService.ActiveProject?.FullPath;
+        var normalizedActiveProjectPath = string.IsNullOrWhiteSpace(activeProjectPath)
+            ? null
+            : Path.GetFullPath(activeProjectPath);
+
         if (string.IsNullOrWhiteSpace(path))
-            return activeProjectPath;
+            return normalizedActiveProjectPath;
 
         if (Path.IsPathRooted(path))
             return Path.GetFullPath(path);
 
-        if (!string.IsNullOrWhiteSpace(activeProjectPath))
-            return Path.GetFullPath(Path.Combine(activeProjectPath, path));
+        if (!string.IsNullOrWhiteSpace(normalizedActiveProjectPath))
+            return Path.GetFullPath(Path.Combine(normalizedActiveProjectPath, path));
 
-        return Path.GetFullPath(path);
+        return null;
     }
 
     private static IReadOnlyList<DirectoryEntry> EnumerateDirectoryEntries(

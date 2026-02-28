@@ -36,6 +36,11 @@ public class CopilotModule : OneWareModuleBase
                                         - To search code → use `searchFiles`
                                         - To inspect diagnostics → use `getErrorsForFile` or `getAllErrors`
 
+                                        PATH FORMAT RULES (MANDATORY):
+                                        - For ALL file/directory tool arguments, use ABSOLUTE paths only.
+                                        - Never pass relative paths to file or directory tools.
+                                        - Always take paths from tool outputs (`getFocusedFile`, `getOpenFiles`, `listDirectory`, `getActiveProject`) and reuse them verbatim.
+
                                         You MUST NOT:
                                         - Assume the contents of any file
                                         - Assume which files are open or active
@@ -61,6 +66,7 @@ public class CopilotModule : OneWareModuleBase
 
                                         Rules:
                                         - If a task normally requires a terminal command, you MUST call `runTerminalCommand`
+                                        - You MUST NOT use internal shell tools or any non-OneWare terminal mechanism
                                         - You MUST NOT explain, predict, summarize, or fabricate command output
                                         - You MUST NOT answer in text when terminal execution is required
                                         - You MUST NOT assume the working directory; always determine or ask for it
