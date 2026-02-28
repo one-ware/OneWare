@@ -32,10 +32,19 @@ public class PluginPackageInstaller : PackageInstallerBase
         {
             var depsUrl = version.CompatibilityUrl ?? $"{package.SourceUrl}/{version.Version}/compatibility.txt";
             var deps = await _httpService.DownloadTextAsync(depsUrl);
+            
+            // If download fails (network error), skip compatibility check and assume compatible
+            // This allows offline usage without showing errors
+            if (deps == null)
+            {
+                return new CompatibilityReport(true);
+            }
+            
             return PluginCompatibilityChecker.CheckCompatibility(deps);
         }
 
-        return PluginCompatibilityChecker.CheckCompatibility(null);
+        // No compatibility URL means no specific requirements - assume compatible
+        return new CompatibilityReport(true);
     }
 
     public override Task<PackageInstallerResult> InstallAsync(PackageInstallContext context,
