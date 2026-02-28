@@ -277,12 +277,7 @@ public sealed class CopilotChatService(
 
         var sessionId = _requestedSessionId;
         _requestedSessionId = null;
-
-        if (string.IsNullOrWhiteSpace(sessionId) && !_forceNewSession)
-        {
-            sessionId = await _client.GetLastSessionIdAsync();
-        }
-
+        
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             var tools = toolProvider.GetTools();
