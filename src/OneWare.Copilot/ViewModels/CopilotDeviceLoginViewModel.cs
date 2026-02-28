@@ -48,13 +48,25 @@ public sealed class CopilotDeviceLoginViewModel : FlexibleWindowViewModelBase
 
     public void Cancel(FlexibleWindow window)
     {
-        _cancellationTokenSource.Cancel();
+        CancelLogin();
         window.Close();
     }
 
     public override bool OnWindowClosing(FlexibleWindow window)
     {
-        _cancellationTokenSource.Cancel();
+        CancelLogin();
         return true;
+    }
+
+    private void CancelLogin()
+    {
+        try
+        {
+            _cancellationTokenSource.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Can happen if the auth flow already finished and disposed the source.
+        }
     }
 }

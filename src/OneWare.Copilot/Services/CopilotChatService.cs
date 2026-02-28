@@ -120,23 +120,24 @@ public sealed class CopilotChatService(
 
             if (loginResult)
             {
-                var authStatus = await _client.GetAuthStatusAsync(cts.Token);
-                if (authStatus.IsAuthenticated)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(view.Close);
-                    await showTask;
-                    SessionReset?.Invoke(this, EventArgs.Empty);
-                    await InitializeAsync();
-                    return true;
-                }
-
-                UpdateLoginStatus(viewModel, "Authentication failed.");
+                await Dispatcher.UIThread.InvokeAsync(view.Close);
+                await showTask;
+                SessionReset?.Invoke(this, EventArgs.Empty);
+                return await InitializeAsync();
             }
-            else
+
+            if (cts.IsCancellationRequested)
             {
                 UpdateLoginStatus(viewModel, "Login cancelled.");
             }
-            
+            else
+            {
+                UpdateLoginStatus(viewModel, "Authentication failed.");
+            }
+
+            // Keep dialog lifecycle contained in this method so the token source
+            // is not disposed while the window can still trigger cancellation.
+            await showTask;
             return false;
         }
         catch (Exception e)
@@ -261,9 +262,9 @@ public sealed class CopilotChatService(
                 },
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
-                //OnPermissionRequest = OnPermissionRequestAsync, AS OF NOW (FEB 2026), these don't work! 
-                //Hooks = BuildPermissionHooks(),
-                //OnUserInputRequest = OnUserInputRequestAsync
+                OnPermissionRequest = OnPermissionRequestAsync,
+                Hooks = BuildPermissionHooks(),
+                OnUserInputRequest = OnUserInputRequestAsync
             });
 
             _forceNewSession = false;
