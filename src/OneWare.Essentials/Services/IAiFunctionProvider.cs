@@ -21,4 +21,19 @@ public interface IAiFunctionProvider
     /// Returns available AI tools for this provider.
     /// </summary>
     ICollection<AIFunction> GetTools();
+
+    /// <summary>
+    /// Registers an additional AI function (e.g. from plugins).
+    /// </summary>
+    void RegisterFunction(IOneWareAiFunction function);
+
+    /// <summary>
+    /// Registers an additional system prompt segment.
+    /// </summary>
+    void RegisterPromptAddition(string promptAddition);
+
+    /// <summary>
+    /// Returns all registered prompt additions.
+    /// </summary>
+    IReadOnlyCollection<string> GetPromptAdditions();
 }

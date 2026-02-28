@@ -36,6 +36,31 @@
                             <TextBlock Text="New Chat" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Name="HistoryButton"
+                            IsVisible="{Binding !!SessionHistory.Count}">
+                        <Button.Flyout>
+                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="BottomEdgeAlignedRight">
+                                <ListBox ItemsSource="{Binding SessionHistory}" SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0" MinWidth="280">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="6">
+                                                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="2" Text="{Binding UpdatedAtLabel}"
+                                                           Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                                           FontSize="11" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Flyout>
+                        </Button.Flyout>
+                        <Image Source="{DynamicResource Bootstrap.Clock}" Width="12" Height="12" />
+                    </Button>
                 </StackPanel>
             </DockPanel>
         </Border>

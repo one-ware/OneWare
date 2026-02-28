@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageErrorView"
+             x:DataType="chatMessages:ChatMessageErrorViewModel">
+
+    <Border Margin="0 2"
+            Padding="8"
+            CornerRadius="6"
+            BorderThickness="1"
+            BorderBrush="OrangeRed"
+            Background="{DynamicResource ThemeControlMidBrush}">
+        <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+    </Border>
+
+</UserControl>

@@ -27,13 +27,14 @@ public sealed class CopilotChatService(
     IPackageWindowService packageWindowService,
     IWindowService windowService,
     IPaths paths)
-    : ObservableObject, IChatService
+    : ObservableObject, IChatServiceWithSessions
 {
     private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private bool _forceNewSession;
+    private string? _requestedSessionId;
     private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
@@ -62,6 +63,12 @@ public sealed class CopilotChatService(
     }
 
     public string Name { get; } = "Copilot";
+
+    public string? CurrentSessionId
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
 
     public Control BottomUiExtension => new CopilotChatExtensionView()
     {
@@ -243,13 +250,15 @@ public sealed class CopilotChatService(
 
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
 
-        string? sessionId = null;
-        if (!_forceNewSession)
+        var sessionId = _requestedSessionId;
+        _requestedSessionId = null;
+
+        if (string.IsNullOrWhiteSpace(sessionId) && !_forceNewSession)
         {
             sessionId = await _client.GetLastSessionIdAsync();
         }
 
-        if (sessionId == null)
+        if (string.IsNullOrWhiteSpace(sessionId))
         {
             var tools = toolProvider.GetTools();
             _session = await _client.CreateSessionAsync(new SessionConfig
@@ -258,7 +267,7 @@ public sealed class CopilotChatService(
                 Streaming = true,
                 SystemMessage = new SystemMessageConfig
                 {
-                    Content = CopilotModule.SystemMessage
+                    Content = BuildSystemMessage()
                 },
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
@@ -280,10 +289,26 @@ public sealed class CopilotChatService(
                 OnUserInputRequest = OnUserInputRequestAsync
             });
         }
+
+        CurrentSessionId = _session?.SessionId ?? sessionId;
         
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
-        
+
+        if (_session == null)
+        {
+            EventReceived?.Invoke(this, new ChatErrorEvent("Failed to initialize Copilot session."));
+            return;
+        }
+
         _subscription = _session.On(HandleSessionEvent);
+    }
+
+    private string BuildSystemMessage()
+    {
+        var additions = toolProvider.GetPromptAdditions();
+        if (additions.Count == 0) return CopilotModule.SystemMessage;
+
+        return $"{CopilotModule.SystemMessage}\n\n{string.Join("\n\n", additions)}";
     }
 
     public async Task SendAsync(string prompt)
@@ -312,8 +337,29 @@ public sealed class CopilotChatService(
 
     public async Task NewChatAsync()
     {
+        _requestedSessionId = null;
         _forceNewSession = true;
         await InitializeSessionAsync();
+    }
+
+    public async Task<bool> LoadSessionAsync(string sessionId)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return false;
+
+        _requestedSessionId = sessionId;
+        _forceNewSession = false;
+
+        try
+        {
+            await InitializeSessionAsync();
+            return string.Equals(CurrentSessionId, sessionId, StringComparison.Ordinal);
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogError(ex, "Failed to load Copilot session {SessionId}.",
+                sessionId);
+            return false;
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -361,6 +407,8 @@ public sealed class CopilotChatService(
             await _session.DisposeAsync();
             _session = null;
         }
+
+        CurrentSessionId = null;
     }
 
     private void HandleSessionEvent(SessionEvent evt)
