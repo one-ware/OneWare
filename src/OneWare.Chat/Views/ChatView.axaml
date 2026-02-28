@@ -39,28 +39,23 @@
                     <Button Name="HistoryButton"
                             IsVisible="{Binding !!SessionHistory.Count}">
                         <Button.Flyout>
-                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="Bottom">
-                                <ListBox ItemsSource="{Binding SessionHistory}" BorderThickness="0" MinWidth="280">
-                                    <ItemsControl.ItemsPanel>
+                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="BottomEdgeAlignedRight">
+                                <ListBox ItemsSource="{Binding SessionHistory}" SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0" MinWidth="280">
+                                    <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel />
                                         </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Button HorizontalContentAlignment="Stretch"
-                                                    Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).LoadSessionHistoryCommand, FallbackValue={x:Null}}"
-                                                    CommandParameter="{Binding }"
-                                                    Background="Transparent">
-                                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
-                                                    <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding UpdatedAtLabel}"
-                                                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                                                               FontSize="11" />
-                                                </Grid>
-                                            </Button>
+                                            <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="6">
+                                                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="2" Text="{Binding UpdatedAtLabel}"
+                                                           Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                                           FontSize="11" />
+                                            </Grid>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
+                                    </ListBox.ItemTemplate>
                                 </ListBox>
                             </Flyout>
                         </Button.Flyout>
