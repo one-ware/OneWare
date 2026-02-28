@@ -40,7 +40,12 @@
                             IsVisible="{Binding !!SessionHistory.Count}">
                         <Button.Flyout>
                             <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="BottomEdgeAlignedRight">
-                                <ListBox ItemsSource="{Binding SessionHistory}" SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0" MinWidth="280">
+                                <ListBox ItemsSource="{Binding SessionHistory}" SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0" Width="300" MaxHeight="500">
+                                    <Interaction.Behaviors>
+                                        <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                            <HideFlyoutAction Flyout="{Binding #HistoryButton.Flyout}" />
+                                        </behaviors1:PointerPressedHandledEventTrigger>
+                                    </Interaction.Behaviors>
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel />

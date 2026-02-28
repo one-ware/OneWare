@@ -130,7 +130,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         get;
         set
         {
-            if (SetProperty(ref field, value) && value != null && IsInitialized)
+            if (SetProperty(ref field, value) && value != null)
             {
                 _ = LoadSessionAsync(value);
             }
@@ -793,13 +793,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         
         StoreCurrentMessages(SelectedChatService.Name, SelectedChatService);
 
+        if (!IsInitialized) return;
+        
         if (SelectedChatService is IChatServiceWithSessions serviceWithSessions)
         {
-            if (!IsInitialized)
-            {
-                await InitializeCurrentAsync();
-            }
-
             var loaded = await serviceWithSessions.LoadSessionAsync(item.SessionId);
             if (!loaded)
             {
