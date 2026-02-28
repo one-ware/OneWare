@@ -1008,7 +1008,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         
         _selectedSessionByService[chatService.Name] = serviceWithSessions.CurrentSessionId;
         LoadSessionHistoryForService(chatService.Name);
-        SessionHistory.Add(new ChatSessionHistoryItem()
+        SessionHistory.Insert(0, new ChatSessionHistoryItem()
         {
             FilePath = "",
             Name = "New Session",
