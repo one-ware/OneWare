@@ -144,7 +144,7 @@ public sealed class OneWareCloudLoginService
             string? keycloakBaseUrl = await GetKeycloakAuthProviderUrlAsync();
             if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
             {
-                _logger.Error("Failed to get Keycloak auth provider URL for token refresh");
+                _logger.Error("Failed to get auth provider URL.");
                 return (false, HttpStatusCode.ServiceUnavailable);
             }
 
@@ -335,7 +335,6 @@ public sealed class OneWareCloudLoginService
                 return response.Content.Trim('"'); 
             }
 
-            _logger.Error($"Failed to get auth provider URL: {response.StatusCode}");
             return null;
         }
         catch (Exception e)
