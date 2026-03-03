@@ -285,9 +285,9 @@ public class PackageService : ObservableObject, IPackageService
 
     public async Task<IImage?> DownloadPackageIconAsync(Package package)
     {
-        return package.IconUrl != null
-            ? await _httpService.DownloadImageAsync(package.IconUrl)
-            : null;
+        if (package.IconUrl == null) return null;
+
+        return await _httpService.DownloadImageAsync(package.IconUrl);
     }
 
     private async Task<bool> RefreshInternalAsync()

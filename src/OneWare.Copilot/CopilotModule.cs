@@ -36,6 +36,11 @@ public class CopilotModule : OneWareModuleBase
                                         - To search code → use `searchFiles`
                                         - To inspect diagnostics → use `getErrorsForFile` or `getAllErrors`
 
+                                        PATH FORMAT RULES (MANDATORY):
+                                        - For ALL file/directory tool arguments, use ABSOLUTE paths only.
+                                        - Never pass relative paths to file or directory tools.
+                                        - Always take paths from tool outputs (`getFocusedFile`, `getOpenFiles`, `listDirectory`, `getActiveProject`) and reuse them verbatim.
+
                                         You MUST NOT:
                                         - Assume the contents of any file
                                         - Assume which files are open or active
@@ -61,6 +66,7 @@ public class CopilotModule : OneWareModuleBase
 
                                         Rules:
                                         - If a task normally requires a terminal command, you MUST call `runTerminalCommand`
+                                        - You MUST NOT use internal shell tools or any non-OneWare terminal mechanism
                                         - You MUST NOT explain, predict, summarize, or fabricate command output
                                         - You MUST NOT answer in text when terminal execution is required
                                         - You MUST NOT assume the working directory; always determine or ask for it
@@ -156,13 +162,13 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "0.0.411",
+                Version = "0.0.418",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-win32-x64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-win32-x64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -175,7 +181,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-win32-arm64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-win32-arm64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -188,7 +194,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-linux-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-linux-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -201,7 +207,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-linux-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-linux-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -214,7 +220,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-darwin-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-darwin-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -227,7 +233,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.411/copilot-darwin-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-darwin-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

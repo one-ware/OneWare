@@ -8,9 +8,9 @@ namespace OneWare.Output.ViewModels;
 
 public abstract class OutputBaseViewModel : ExtendedTool
 {
-    private const int Maxoutputlength = 50000;
+    private const int Maxoutputlength = 1000000;
 
-    private const int Maxlinelength = 1000;
+    private const int Maxlinelength = 5000;
 
     private bool _autoScroll = true;
 

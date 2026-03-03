@@ -27,13 +27,14 @@ public sealed class CopilotChatService(
     IPackageWindowService packageWindowService,
     IWindowService windowService,
     IPaths paths)
-    : ObservableObject, IChatService
+    : ObservableObject, IChatServiceWithSessions
 {
     private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private bool _forceNewSession;
+    private string? _requestedSessionId;
     private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
@@ -62,6 +63,12 @@ public sealed class CopilotChatService(
     }
 
     public string Name { get; } = "Copilot";
+
+    public string? CurrentSessionId
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
 
     public Control BottomUiExtension => new CopilotChatExtensionView()
     {
@@ -98,8 +105,21 @@ public sealed class CopilotChatService(
 
         try
         {
-            var currentAuthStatus = await _client.GetAuthStatusAsync();
-            if (currentAuthStatus.IsAuthenticated) return true;
+            bool isAuthenticated;
+            try
+            {
+                var currentAuthStatus = await _client.GetAuthStatusAsync();
+                isAuthenticated = currentAuthStatus.IsAuthenticated;
+            }
+            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" && 
+                                         ex.Message.Contains("401"))
+            {
+                // Treat 401 authentication errors as unauthenticated
+                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Authentication check failed with 401, treating as unauthenticated.");
+                isAuthenticated = false;
+            }
+            
+            if (isAuthenticated) return true;
             
             var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
 
@@ -120,23 +140,24 @@ public sealed class CopilotChatService(
 
             if (loginResult)
             {
-                var authStatus = await _client.GetAuthStatusAsync(cts.Token);
-                if (authStatus.IsAuthenticated)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(view.Close);
-                    await showTask;
-                    SessionReset?.Invoke(this, EventArgs.Empty);
-                    await InitializeAsync();
-                    return true;
-                }
-
-                UpdateLoginStatus(viewModel, "Authentication failed.");
+                await Dispatcher.UIThread.InvokeAsync(view.Close);
+                await showTask;
+                SessionReset?.Invoke(this, EventArgs.Empty);
+                return await InitializeAsync();
             }
-            else
+
+            if (cts.IsCancellationRequested)
             {
                 UpdateLoginStatus(viewModel, "Login cancelled.");
             }
-            
+            else
+            {
+                UpdateLoginStatus(viewModel, "Authentication failed.");
+            }
+
+            // Keep dialog lifecycle contained in this method so the token source
+            // is not disposed while the window can still trigger cancellation.
+            await showTask;
             return false;
         }
         catch (Exception e)
@@ -181,9 +202,21 @@ public sealed class CopilotChatService(
                 CliPath = cliPath
             });
 
-            var authStatus = await _client.GetAuthStatusAsync();
+            bool isAuthenticated;
+            try
+            {
+                var authStatus = await _client.GetAuthStatusAsync();
+                isAuthenticated = authStatus.IsAuthenticated;
+            }
+            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" && 
+                                         ex.Message.Contains("401"))
+            {
+                // Treat 401 authentication errors as unauthenticated
+                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Authentication check failed with 401, treating as unauthenticated.");
+                isAuthenticated = false;
+            }
             
-            if (!authStatus.IsAuthenticated)
+            if (!isAuthenticated)
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
                 EventReceived?.Invoke(this, new ChatButtonEvent(
@@ -242,13 +275,10 @@ public sealed class CopilotChatService(
 
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
 
-        string? sessionId = null;
-        if (!_forceNewSession)
-        {
-            sessionId = await _client.GetLastSessionIdAsync();
-        }
-
-        if (sessionId == null)
+        var sessionId = _requestedSessionId;
+        _requestedSessionId = null;
+        
+        if (string.IsNullOrWhiteSpace(sessionId))
         {
             var tools = toolProvider.GetTools();
             _session = await _client.CreateSessionAsync(new SessionConfig
@@ -257,13 +287,13 @@ public sealed class CopilotChatService(
                 Streaming = true,
                 SystemMessage = new SystemMessageConfig
                 {
-                    Content = CopilotModule.SystemMessage
+                    Content = BuildSystemMessage()
                 },
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
-                //OnPermissionRequest = OnPermissionRequestAsync, AS OF NOW (FEB 2026), these don't work! 
-                //Hooks = BuildPermissionHooks(),
-                //OnUserInputRequest = OnUserInputRequestAsync
+                OnPermissionRequest = OnPermissionRequestAsync,
+                Hooks = BuildPermissionHooks(),
+                OnUserInputRequest = OnUserInputRequestAsync
             });
 
             _forceNewSession = false;
@@ -279,10 +309,26 @@ public sealed class CopilotChatService(
                 OnUserInputRequest = OnUserInputRequestAsync
             });
         }
+
+        CurrentSessionId = _session?.SessionId ?? sessionId;
         
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
-        
+
+        if (_session == null)
+        {
+            EventReceived?.Invoke(this, new ChatErrorEvent("Failed to initialize Copilot session."));
+            return;
+        }
+
         _subscription = _session.On(HandleSessionEvent);
+    }
+
+    private string BuildSystemMessage()
+    {
+        var additions = toolProvider.GetPromptAdditions();
+        if (additions.Count == 0) return CopilotModule.SystemMessage;
+
+        return $"{CopilotModule.SystemMessage}\n\n{string.Join("\n\n", additions)}";
     }
 
     public async Task SendAsync(string prompt)
@@ -311,8 +357,29 @@ public sealed class CopilotChatService(
 
     public async Task NewChatAsync()
     {
+        _requestedSessionId = null;
         _forceNewSession = true;
         await InitializeSessionAsync();
+    }
+
+    public async Task<bool> LoadSessionAsync(string sessionId)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return false;
+
+        _requestedSessionId = sessionId;
+        _forceNewSession = false;
+
+        try
+        {
+            await InitializeSessionAsync();
+            return string.Equals(CurrentSessionId, sessionId, StringComparison.Ordinal);
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogError(ex, "Failed to load Copilot session {SessionId}.",
+                sessionId);
+            return false;
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -360,6 +427,8 @@ public sealed class CopilotChatService(
             await _session.DisposeAsync();
             _session = null;
         }
+
+        CurrentSessionId = null;
     }
 
     private void HandleSessionEvent(SessionEvent evt)
@@ -416,6 +485,11 @@ public sealed class CopilotChatService(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
+        if (IsCustomToolPermissionRequest(request))
+        {
+            return Task.FromResult(CreateAllowPermissionResult());
+        }
+
         var scope = string.IsNullOrWhiteSpace(request.Kind) ? "tool" : request.Kind;
         if (_allowedPermissionScopes.Contains(scope))
         {
@@ -560,8 +634,8 @@ public sealed class CopilotChatService(
     {
         return new PermissionRequestResult
         {
-            Kind = "allow",
-            Rules = []
+            Kind = "approved",
+            Rules = null
         };
     }
 
@@ -569,9 +643,14 @@ public sealed class CopilotChatService(
     {
         return new PermissionRequestResult
         {
-            Kind = "deny",
-            Rules = []
+            Kind = "denied",
+            Rules = null
         };
+    }
+
+    private static bool IsCustomToolPermissionRequest(PermissionRequest request)
+    {
+        return request.Kind?.Equals("custom-tool", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private Task<UserInputResponse> OnUserInputRequestAsync(

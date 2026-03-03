@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
@@ -19,15 +20,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private readonly IMainDockService _mainDockService;
     private readonly string _statePath;
+    private readonly string _historyRootPath;
 
     private readonly Dictionary<string, ChatMessageAssistantViewModel> _assistantMessagesById =
         new(StringComparer.Ordinal);
 
     private readonly Dictionary<string, ChatMessageReasoningViewModel> _assistantReasoningById =
         new(StringComparer.Ordinal);
-
-    private readonly Dictionary<string, List<ChatMessageState>> _messagesByService =
-        new(StringComparer.Ordinal);
+    
+    private readonly Dictionary<string, string> _selectedSessionByService = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
     private bool _initialized;
 
@@ -49,7 +51,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
 
         _mainDockService = mainDockService;
-        _statePath = Path.Combine(paths.AppDataDirectory, "Chat", "ChatState.json");
+
+        var chatDirectory = Path.Combine(paths.AppDataDirectory, "Chat");
+        _statePath = Path.Combine(chatDirectory, "ChatState.json");
+        _historyRootPath = Path.Combine(chatDirectory, "History");
+
         AiFileEditService = aiFileEditService;
 
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
@@ -117,37 +123,43 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
 
+    public ObservableCollection<ChatSessionHistoryItem> SessionHistory { get; } = [];
+
+    public ChatSessionHistoryItem? SelectedSessionHistory
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value) && value != null)
+            {
+                _ = LoadSessionAsync(value);
+            }
+        }
+    }
+
     public IChatService? SelectedChatService
     {
         get;
         set
         {
             var oldValue = field;
-            if (SetProperty(ref field, value))
+            if (!SetProperty(ref field, value)) return;
+
+            if (oldValue != null)
             {
-                if (oldValue != null)
-                {
-                    StoreCurrentMessages(oldValue.Name);
-                }
-
-                if (oldValue != null)
-                {
-                    oldValue.EventReceived -= OnEventReceived;
-                    oldValue.StatusChanged -= OnStatusChanged;
-                    oldValue.SessionReset -= OnSessionReset;
-                }
-
-                if (value != null)
-                {
-                    value.EventReceived += OnEventReceived;
-                    value.StatusChanged += OnStatusChanged;
-                    value.SessionReset += OnSessionReset;
-
-                    LoadMessagesForService(value.Name);
-
-                    InitializeCurrentCommand.Execute(null);
-                }
+                StoreCurrentMessages(oldValue.Name, oldValue);
+                oldValue.EventReceived -= OnEventReceived;
+                oldValue.StatusChanged -= OnStatusChanged;
+                oldValue.SessionReset -= OnSessionReset;
             }
+
+            if (value == null) return;
+
+            value.EventReceived += OnEventReceived;
+            value.StatusChanged += OnStatusChanged;
+            value.SessionReset += OnSessionReset;
+            
+            _ = InitializeAndRestoreCurrentServiceAsync(value);
         }
     }
 
@@ -174,9 +186,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private async Task<bool> InitializeCurrentAsync()
     {
         if (SelectedChatService == null) return false;
-
-        _assistantMessagesById.Clear();
-
+        
         var status = await SelectedChatService.InitializeAsync();
 
         IsInitialized = status;
@@ -184,10 +194,30 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         return status;
     }
 
+    private async Task InitializeAndRestoreCurrentServiceAsync(IChatService chatService)
+    {
+        LoadMessagesForService(chatService.Name);
+        
+        var initialized = await InitializeCurrentAsync();
+        if (!initialized || SelectedChatService != chatService) return;
+
+        if (chatService is not IChatServiceWithSessions serviceWithSessions) return;
+
+        var targetSessionId = _selectedSessionByService.TryGetValue(chatService.Name, out var sessionId)
+            ? sessionId
+            : SessionHistory.FirstOrDefault()?.SessionId;
+
+        if (string.IsNullOrWhiteSpace(targetSessionId)) return;
+
+        await serviceWithSessions.LoadSessionAsync(targetSessionId);
+    }
+
     private async Task NewChatAsync()
     {
         if (SelectedChatService != null)
         {
+            StoreCurrentMessages(SelectedChatService.Name, SelectedChatService);
+
             if (!IsInitialized)
             {
                 await InitializeCurrentAsync();
@@ -195,10 +225,13 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
             await AbortAsync();
             await SelectedChatService.NewChatAsync();
+
+            UpdateSelectedSessionFromService(SelectedChatService);
         }
 
         Messages.Clear();
         _assistantMessagesById.Clear();
+        _assistantReasoningById.Clear();
     }
 
     private async Task SendAsync()
@@ -208,10 +241,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         if (SelectedChatService == null)
         {
-            Messages.Add(new ChatMessageAssistantViewModel()
-            {
-                Content = "No ChatService Selected"
-            });
+            AddErrorMessage("No chat service selected.");
             return;
         }
 
@@ -222,10 +252,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         if (!IsConnected)
         {
-            Messages.Add(new ChatMessageAssistantViewModel()
-            {
-                Content = $"{SelectedChatService.Name} is not connected yet."
-            });
+            AddErrorMessage($"{SelectedChatService.Name} is not connected yet.");
             return;
         }
 
@@ -249,8 +276,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
         catch (Exception ex)
         {
-            assistantMessage.Content = ex.Message;
-            assistantMessage.IsStreaming = false;
+            if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
+            {
+                Messages.Remove(initMessage);
+            }
+            else
+            {
+                Messages.Remove(assistantMessage);
+            }
+
+            AddErrorMessage(ex.Message);
             IsBusy = false;
         }
     }
@@ -281,6 +316,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
 
         Messages.Add(message);
+    }
+
+    private void AddErrorMessage(string? message)
+    {
+        var errorMessage = string.IsNullOrWhiteSpace(message)
+            ? "An unexpected error occurred."
+            : message;
+
+        AddMessage(new ChatMessageErrorViewModel(errorMessage));
     }
 
     private ChatMessageReasoningViewModel GetOrCreateAssistantReasoningMessage(string? reasoningId)
@@ -390,20 +434,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 });
                 break;
             }
-            case ChatToolExecutionStartEvent x:
+            case ChatToolExecutionStartEvent:
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    //AddMessage(new ChatMessageToolViewModel(x.Tool));
-                });
                 break;
             }
-            case ChatUserMessageEvent x:
+            case ChatUserMessageEvent:
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    //AddMessage(new ChatMessageUserViewModel(x.Content));
-                });
                 break;
             }
             case ChatButtonEvent x:
@@ -423,17 +459,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatErrorEvent x:
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    var errorMessage = string.IsNullOrWhiteSpace(x.Message)
-                        ? "An unexpected error occurred."
-                        : x.Message;
-
-                    AddMessage(new ChatMessageAssistantViewModel()
-                    {
-                        Content = $"**Error:** {errorMessage}"
-                    });
-                });
+                Dispatcher.UIThread.Post(() => { AddErrorMessage(x.Message); });
                 break;
             }
             case ChatIdleEvent:
@@ -463,7 +489,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
             if (SelectedChatService != null)
             {
-                _messagesByService[SelectedChatService.Name] = new List<ChatMessageState>();
+                UpdateSelectedSessionFromService(SelectedChatService);
             }
         });
     }
@@ -507,7 +533,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 denyCommand,
                 "Allow for session",
                 allowForSessionCommand));
-            
+
             msg.CloseAction = () => Messages.Remove(msg);
             AddMessage(msg);
             ContentAdded?.Invoke(this, EventArgs.Empty);
@@ -540,7 +566,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         if (SelectedChatService != null)
         {
-            StoreCurrentMessages(SelectedChatService.Name);
+            StoreCurrentMessages(SelectedChatService.Name, SelectedChatService);
         }
 
         var state = BuildChatState();
@@ -563,32 +589,36 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private void LoadState()
     {
-        if (!File.Exists(_statePath)) return;
+        LoadSessionHistoryIndex();
 
-        try
+        if (File.Exists(_statePath))
         {
-            using var stream = File.OpenRead(_statePath);
-            var state = JsonSerializer.Deserialize<ChatState>(stream, ChatStateSerializerOptions);
-            if (state == null) return;
-
-            Messages.Clear();
-            _assistantMessagesById.Clear();
-            _assistantReasoningById.Clear();
-            _messagesByService.Clear();
-
-            foreach (var kvp in state.MessagesByService)
+            try
             {
-                _messagesByService[kvp.Key] = kvp.Value;
-            }
+                using var stream = File.OpenRead(_statePath);
+                var state = JsonSerializer.Deserialize<ChatState>(stream, ChatStateSerializerOptions);
+                if (state != null)
+                {
+                    _selectedSessionByService.Clear();
+                    foreach (var kvp in state.SelectedSessionByService)
+                    {
+                        if (!string.IsNullOrWhiteSpace(kvp.Value))
+                            _selectedSessionByService[kvp.Key] = kvp.Value;
+                    }
 
-            SelectedChatService = ChatServices.FirstOrDefault(x => x.Name == state.SelectedChatServiceName) ??
-                                  ChatServices.FirstOrDefault();
+                    SelectedChatService = ChatServices.FirstOrDefault(x => x.Name == state.SelectedChatServiceName) ??
+                                          ChatServices.FirstOrDefault();
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                    ?.Warning("Loading chat state failed", e);
+            }
         }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
-                ?.Warning("Loading chat state failed", e);
-        }
+
+        SelectedChatService = ChatServices.FirstOrDefault();
     }
 
     private ChatState BuildChatState()
@@ -596,7 +626,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         return new ChatState
         {
             SelectedChatServiceName = SelectedChatService?.Name,
-            MessagesByService = _messagesByService
+            SelectedSessionByService = _selectedSessionByService
         };
     }
 
@@ -627,6 +657,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     ToolOutput = tool.ToolOutput,
                     IsSuccessful = tool.IsSuccessful
                 };
+            case ChatMessageErrorViewModel:
+                // Error chat messages are intentionally not serialized.
+                return null;
             default:
                 return null;
         }
@@ -673,11 +706,374 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
     }
 
+    private void StoreCurrentMessages(string serviceName, IChatService? sourceService = null)
+    {
+        var messages = BuildCurrentMessageStates();
+        if (messages.Count == 0) return;
+        
+        var sessionSource = sourceService ?? SelectedChatService;
+        if (sessionSource is not IChatServiceWithSessions serviceWithSessions ||
+            !string.Equals(sessionSource.Name, serviceName, StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(serviceWithSessions.CurrentSessionId))
+        {
+            return;
+        }
+
+        _selectedSessionByService[serviceName] = serviceWithSessions.CurrentSessionId;
+        SaveSessionHistory(serviceName, serviceWithSessions.CurrentSessionId, messages);
+    }
+
+    private List<ChatMessageState> BuildCurrentMessageStates()
+    {
+        var messages = new List<ChatMessageState>(Messages.Count);
+        foreach (var message in Messages)
+        {
+            var state = BuildMessageState(message);
+            if (state != null) messages.Add(state);
+        }
+
+        return messages;
+    }
+
+    private void LoadMessagesForService(string serviceName)
+    {
+        LoadSessionHistoryForService(serviceName);
+
+        if (_selectedSessionByService.TryGetValue(serviceName, out var selectedSessionId) &&
+            TryGetHistoryItem(serviceName, selectedSessionId, out var selectedHistory))
+        {
+            SelectedSessionHistory = SessionHistory.FirstOrDefault(x =>
+                string.Equals(x.SessionId, selectedHistory.SessionId, StringComparison.Ordinal));
+            if (TryReadSessionMessages(selectedHistory, out var selectedStates))
+            {
+                LoadMessagesFromStates(selectedStates);
+                return;
+            }
+        }
+
+        if (SessionHistory.Count > 0)
+        {
+            var latest = SessionHistory[0];
+            _selectedSessionByService[serviceName] = latest.SessionId;
+            LoadSessionHistoryForService(serviceName);
+            SelectedSessionHistory = SessionHistory.FirstOrDefault(x =>
+                string.Equals(x.SessionId, latest.SessionId, StringComparison.Ordinal));
+            if (TryReadSessionMessages(latest, out var latestStates))
+            {
+                LoadMessagesFromStates(latestStates);
+                return;
+            }
+        }
+
+        SelectedSessionHistory = null;
+
+        Messages.Clear();
+        _assistantMessagesById.Clear();
+        _assistantReasoningById.Clear();
+    }
+
+    private void LoadMessagesFromStates(IReadOnlyCollection<ChatMessageState> states)
+    {
+        Messages.Clear();
+        _assistantMessagesById.Clear();
+        _assistantReasoningById.Clear();
+
+        foreach (var messageState in states)
+        {
+            if (TryCreateMessage(messageState, out var message))
+                Messages.Add(message);
+        }
+    }
+
+    private async Task LoadSessionAsync(ChatSessionHistoryItem? item)
+    {
+        if (item == null || SelectedChatService == null) return;
+        if (!string.Equals(item.ServiceName, SelectedChatService.Name, StringComparison.Ordinal)) return;
+        if (SelectedChatService is IChatServiceWithSessions s && s.CurrentSessionId == item.SessionId) return;
+        
+        StoreCurrentMessages(SelectedChatService.Name, SelectedChatService);
+
+        if (!IsInitialized) return;
+        
+        if (SelectedChatService is IChatServiceWithSessions serviceWithSessions)
+        {
+            var loaded = await serviceWithSessions.LoadSessionAsync(item.SessionId);
+            if (!loaded)
+            {
+                AddErrorMessage($"Failed to load session '{item.SessionId}'.");
+                return;
+            }
+        }
+
+        _selectedSessionByService[item.ServiceName] = item.SessionId;
+        
+        if (TryReadSessionMessages(item, out var states))
+        {
+            LoadMessagesFromStates(states);
+        }
+        
+        ContentAdded?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void LoadSessionHistoryIndex()
+    {
+        _historyByService.Clear();
+
+        if (!Directory.Exists(_historyRootPath)) return;
+
+        foreach (var serviceDirectory in Directory.EnumerateDirectories(_historyRootPath))
+        {
+            List<ChatSessionHistoryItem> items = [];
+            foreach (var filePath in Directory.EnumerateFiles(serviceDirectory, "chat_*.json", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    using var stream = File.OpenRead(filePath);
+                    var file = JsonSerializer.Deserialize<ChatSessionFile>(stream, ChatStateSerializerOptions);
+                    if (file == null || string.IsNullOrWhiteSpace(file.ServiceName) || string.IsNullOrWhiteSpace(file.SessionId))
+                        continue;
+
+                    items.Add(new ChatSessionHistoryItem
+                    {
+                        ServiceName = file.ServiceName,
+                        SessionId = file.SessionId,
+                        Name = string.IsNullOrWhiteSpace(file.Name) ? "Chat" : file.Name,
+                        UpdatedAt = file.UpdatedAt,
+                        FilePath = filePath
+                    });
+                }
+                catch
+                {
+                    // Ignore malformed history files.
+                }
+            }
+
+            if (items.Count == 0) continue;
+
+            items = items
+                .OrderByDescending(x => x.UpdatedAt)
+                .ToList();
+
+            _historyByService[items[0].ServiceName] = items;
+        }
+    }
+
+    private void LoadSessionHistoryForService(string serviceName)
+    {
+        SessionHistory.Clear();
+
+        if (!_historyByService.TryGetValue(serviceName, out var items)) return;
+
+        foreach (var item in items.OrderByDescending(x => x.UpdatedAt))
+        {
+            SessionHistory.Add(item);
+        }
+    }
+
+    private bool TryGetHistoryItem(string serviceName, string sessionId, out ChatSessionHistoryItem item)
+    {
+        item = null!;
+        if (!_historyByService.TryGetValue(serviceName, out var items)) return false;
+
+        var match = items.FirstOrDefault(x => string.Equals(x.SessionId, sessionId, StringComparison.Ordinal));
+        if (match == null) return false;
+
+        item = match;
+        return true;
+    }
+
+    private void SaveSessionHistory(string serviceName, string sessionId, List<ChatMessageState> messages)
+    {
+        try
+        {
+            var serviceDirectory = GetServiceHistoryDirectory(serviceName);
+            Directory.CreateDirectory(serviceDirectory);
+
+            var existingFilePath = Directory.EnumerateFiles(serviceDirectory, $"chat_*_{sessionId}.json")
+                .FirstOrDefault();
+
+            var chatName = BuildChatName(messages);
+            var safeName = SanitizeFileSegment(chatName);
+            var targetFilePath = existingFilePath ?? Path.Combine(serviceDirectory, $"chat_{safeName}_{sessionId}.json");
+
+            var createdAt = DateTimeOffset.UtcNow;
+            if (existingFilePath != null)
+            {
+                try
+                {
+                    using var existingStream = File.OpenRead(existingFilePath);
+                    var existing = JsonSerializer.Deserialize<ChatSessionFile>(existingStream, ChatStateSerializerOptions);
+                    if (existing != null && existing.CreatedAt != default)
+                    {
+                        createdAt = existing.CreatedAt;
+                    }
+                }
+                catch
+                {
+                    // Use current timestamp fallback.
+                }
+            }
+
+            var file = new ChatSessionFile
+            {
+                ServiceName = serviceName,
+                SessionId = sessionId,
+                Name = chatName,
+                CreatedAt = createdAt,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Messages = messages
+            };
+
+            using var stream = File.Open(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            JsonSerializer.Serialize(stream, file, ChatStateSerializerOptions);
+
+            if (!_historyByService.TryGetValue(serviceName, out var items))
+            {
+                items = [];
+                _historyByService[serviceName] = items;
+            }
+
+            var existingItem = items.FirstOrDefault(x => string.Equals(x.SessionId, sessionId, StringComparison.Ordinal));
+            if (existingItem == null)
+            {
+                items.Add(new ChatSessionHistoryItem
+                {
+                    ServiceName = serviceName,
+                    SessionId = sessionId,
+                    Name = chatName,
+                    UpdatedAt = file.UpdatedAt,
+                    FilePath = targetFilePath
+                });
+            }
+            else
+            {
+                existingItem.Name = chatName;
+                existingItem.UpdatedAt = file.UpdatedAt;
+                existingItem.FilePath = targetFilePath;
+            }
+
+            items.Sort((a, b) => b.UpdatedAt.CompareTo(a.UpdatedAt));
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning("Saving chat history failed", e);
+        }
+    }
+
+    private string GetServiceHistoryDirectory(string serviceName)
+    {
+        return Path.Combine(_historyRootPath, SanitizeFileSegment(serviceName));
+    }
+
+    private static string BuildChatName(IReadOnlyCollection<ChatMessageState> messages)
+    {
+        var firstUserMessage = messages.FirstOrDefault(x => x.Kind == ChatMessageKind.User)?.Message;
+        if (string.IsNullOrWhiteSpace(firstUserMessage))
+        {
+            return "Chat";
+        }
+
+        var normalized = Regex.Replace(firstUserMessage.Trim(), "\\s+", " ");
+        return normalized.Length > 64 ? normalized[..64].Trim() : normalized;
+    }
+
+    private static string SanitizeFileSegment(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "chat";
+
+        var sanitized = Regex.Replace(value.Trim(), "[^a-zA-Z0-9]+", "_")
+            .Trim('_')
+            .ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(sanitized))
+            return "chat";
+
+        if (sanitized.Length > 64)
+            return sanitized[..64];
+
+        return sanitized;
+    }
+
+    private void UpdateSelectedSessionFromService(IChatService chatService)
+    {
+        if (chatService is not IChatServiceWithSessions serviceWithSessions ||
+            string.IsNullOrWhiteSpace(serviceWithSessions.CurrentSessionId))
+        {
+            return;
+        }
+        
+        _selectedSessionByService[chatService.Name] = serviceWithSessions.CurrentSessionId;
+        LoadSessionHistoryForService(chatService.Name);
+        SessionHistory.Insert(0, new ChatSessionHistoryItem()
+        {
+            FilePath = "",
+            Name = "New Session",
+            ServiceName = chatService.Name,
+            SessionId = serviceWithSessions.CurrentSessionId,
+            UpdatedAt = DateTimeOffset.Now
+        });
+        SelectedSessionHistory = SessionHistory.FirstOrDefault(x =>
+            string.Equals(x.SessionId, serviceWithSessions.CurrentSessionId, StringComparison.Ordinal));
+    }
+
+    private static bool TryReadSessionMessages(ChatSessionHistoryItem item, out List<ChatMessageState> messages)
+    {
+        messages = [];
+        try
+        {
+            if (!File.Exists(item.FilePath)) return false;
+
+            using var stream = File.OpenRead(item.FilePath);
+            var file = JsonSerializer.Deserialize<ChatSessionFile>(stream, ChatStateSerializerOptions);
+            if (file == null) return false;
+
+            messages = file.Messages;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private sealed class ChatState
     {
         public string? SelectedChatServiceName { get; set; }
 
-        public Dictionary<string, List<ChatMessageState>> MessagesByService { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, string> SelectedSessionByService { get; set; } = new(StringComparer.Ordinal);
+    }
+
+    private sealed class ChatSessionFile
+    {
+        public string ServiceName { get; set; } = string.Empty;
+
+        public string SessionId { get; set; } = string.Empty;
+
+        public string Name { get; set; } = "Chat";
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset UpdatedAt { get; set; }
+
+        public List<ChatMessageState> Messages { get; set; } = [];
+    }
+
+    public sealed class ChatSessionHistoryItem
+    {
+        public required string ServiceName { get; init; }
+
+        public required string SessionId { get; init; }
+
+        public required string Name { get; set; }
+
+        public required DateTimeOffset UpdatedAt { get; set; }
+
+        public required string FilePath { get; set; }
+
+        public string DisplayName => Name;
+
+        public string UpdatedAtLabel => UpdatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm");
     }
 
     private sealed class ChatMessageState
@@ -706,33 +1102,5 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Assistant,
         Reasoning,
         Tool
-    }
-
-    private void StoreCurrentMessages(string serviceName)
-    {
-        var messages = new List<ChatMessageState>(Messages.Count);
-        foreach (var message in Messages)
-        {
-            var state = BuildMessageState(message);
-            if (state != null) messages.Add(state);
-        }
-
-        _messagesByService[serviceName] = messages;
-    }
-
-    private void LoadMessagesForService(string serviceName)
-    {
-        Messages.Clear();
-        _assistantMessagesById.Clear();
-        _assistantReasoningById.Clear();
-
-        if (_messagesByService.TryGetValue(serviceName, out var states))
-        {
-            foreach (var messageState in states)
-            {
-                if (TryCreateMessage(messageState, out var message))
-                    Messages.Add(message);
-            }
-        }
     }
 }

@@ -47,7 +47,7 @@ public class OnnxRuntimeService : IOnnxRuntimeService
             EnableCpuMemArena = true,
             EnableMemoryPattern = true
         };
-
+        
         // Threads: good general defaults (tune per app)
         so.IntraOpNumThreads = Math.Max(1, Environment.ProcessorCount);
         so.InterOpNumThreads = 1;
