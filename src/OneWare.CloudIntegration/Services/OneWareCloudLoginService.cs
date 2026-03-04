@@ -88,7 +88,11 @@ public sealed class OneWareCloudLoginService
 
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
-            if (!result) return (null, status);
+            if (!result)
+            {
+                Logout(userId);
+                return (null, status);
+            }
 
             if (!_jwtTokenCache.TryGetValue(userId, out var regeneratedToken)) return (null, status);
 
@@ -141,14 +145,14 @@ public sealed class OneWareCloudLoginService
     {
         try
         {
-            string? keycloakBaseUrl = await GetKeycloakAuthProviderUrlAsync();
-            if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
+            string? authBaseUrl = await GetKeycloakAuthProviderUrlAsync();
+            if (string.IsNullOrWhiteSpace(authBaseUrl))
             {
                 _logger.Error("Failed to get auth provider URL.");
                 return (false, HttpStatusCode.ServiceUnavailable);
             }
 
-            string tokenEndpoint = $"{keycloakBaseUrl}/protocol/openid-connect/token";
+            string tokenEndpoint = $"{authBaseUrl}/protocol/openid-connect/token";
             
             RestRequest request = new RestRequest(tokenEndpoint, Method.Post);
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -156,7 +160,7 @@ public sealed class OneWareCloudLoginService
             request.AddParameter("client_id", "OneWareStudio");
             request.AddParameter("refresh_token", refreshToken);
 
-            RestClient keycloakClient = new RestClient(_httpService.HttpClient, new RestClientOptions(keycloakBaseUrl));
+            RestClient keycloakClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authBaseUrl));
             RestResponse response = await keycloakClient.ExecuteAsync(request);
 
             if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
