@@ -16,7 +16,7 @@ public partial class AuthenticateCloudView : FlexibleWindow
     {
         if (DataContext is AuthenticateCloudViewModel viewModel)
         {
-            await viewModel.LoginWithBrowserAsync(this);
+            await viewModel.LoginAsync(this);
         }
     }
 }

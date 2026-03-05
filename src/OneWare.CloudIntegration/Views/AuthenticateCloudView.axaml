@@ -12,12 +12,6 @@
                          WindowStartupLocation="CenterOwner"
                          Name="AuthenticateCloudViewView" Title="{Binding Title}">
 
-    <Interaction.Behaviors>
-        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Routes="Bubble"
-                                               Command="{Binding LoginAsync}"
-                                               CommandParameter="{Binding #AuthenticateCloudViewView}" />
-    </Interaction.Behaviors>
-
     <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 10">
             <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}"
@@ -25,7 +19,7 @@
                 <TextBlock Text="Waiting for login from browser..." VerticalAlignment="Center" FontWeight="Bold" />
                 <controls:Spinner Height="16" VerticalAlignment="Center" />
             </StackPanel>
-            <Button Command="{Binding LoginWithBrowserAsync}"
+            <Button Command="{Binding LoginAsync}"
                     CommandParameter="{Binding #AuthenticateCloudViewView}"
                     HorizontalAlignment="Stretch"
                     Height="35"

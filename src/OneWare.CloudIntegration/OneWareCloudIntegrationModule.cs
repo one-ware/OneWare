@@ -60,6 +60,11 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
                 Icon = new IconModel("Unicons.CommentMessage"),
                 Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
             });
+        
+        _ = Task.Run(async () =>
+        {
+            await serviceProvider.Resolve<OneWareCloudLoginService>().RefreshRefreshTokenAsync();
+        });
     }
 
     public static async Task OpenFeedbackDialogAsync()
