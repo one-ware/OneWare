@@ -70,21 +70,31 @@ public sealed class OneWareCloudLoginService
 
             string? refreshToken = await GetRefreshToken(userId);
 
-
             if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                _logger.Warning("No refresh token found for configured cloud account. Logging out local session.");
+                Logout(userId);
                 return;
+            }
 
             DateTime? expiryDate = TryGetRefreshTokenExpiry(refreshToken);
-            
+
             if (expiryDate.HasValue)
             {
+                if (expiryDate.Value <= DateTime.UtcNow)
+                {
+                    _logger.Warning("Stored refresh token has expired. Logging out local session.");
+                    Logout(userId);
+                    return;
+                }
+
                 var daysUntilExpiry = (expiryDate.Value - DateTime.UtcNow).TotalDays;
-                
+
                 if (daysUntilExpiry <= 14)
                 {
                     // Renew the refresh token (this also updates the bearer token as a side effect)
                     var (success, status) = await RenewRefreshTokenAsync(refreshToken);
-                    
+
                     if (success)
                     {
                         _logger.Log("Refresh token successfully renewed on startup.");
@@ -92,8 +102,21 @@ public sealed class OneWareCloudLoginService
                     else
                     {
                         _logger.Warning($"Failed to renew refresh token on startup. Status: {status}");
+
+                        if (ShouldLogoutAfterTokenRefreshFailure(status))
+                            Logout(userId);
                     }
                 }
+
+                return;
+            }
+
+            // Token couldn't be decoded as JWT. Validate it by trying a token refresh once.
+            var (refreshSuccess, refreshStatus) = await RefreshBearerTokenAsync(refreshToken);
+            if (!refreshSuccess && ShouldLogoutAfterTokenRefreshFailure(refreshStatus))
+            {
+                _logger.Warning("Stored refresh token is no longer valid. Logging out local session.");
+                Logout(userId);
             }
         }
         catch (Exception e)
@@ -161,7 +184,9 @@ public sealed class OneWareCloudLoginService
 
             if (!result)
             {
-                Logout(userId);
+                if (ShouldLogoutAfterTokenRefreshFailure(status))
+                    Logout(userId);
+
                 return (null, status);
             }
 
@@ -616,6 +641,11 @@ public sealed class OneWareCloudLoginService
         }
 
         return refreshToken;
+    }
+
+    private static bool ShouldLogoutAfterTokenRefreshFailure(HttpStatusCode status)
+    {
+        return status is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden;
     }
 
 
