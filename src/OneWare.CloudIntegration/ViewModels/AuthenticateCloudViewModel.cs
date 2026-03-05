@@ -88,8 +88,7 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
 
     public override bool OnWindowClosing(FlexibleWindow window)
     {
-        _browserLoginCts?.Cancel();
-        _browserLoginCts?.Dispose();
+        _browserLoginCts.Cancel();
         return base.OnWindowClosing(window);
     }
 }

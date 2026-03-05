@@ -505,6 +505,10 @@ public sealed class OneWareCloudLoginService
             {
                 // Listener was stopped due to cancellation, ignore
             }
+            catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Listener was stopped due to cancellation, ignore
+            }
             finally
             {
                 listener.Stop();
