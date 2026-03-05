@@ -12,68 +12,19 @@
                          WindowStartupLocation="CenterOwner"
                          Name="AuthenticateCloudViewView" Title="{Binding Title}">
 
-    <Interaction.Behaviors>
-        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Routes="Bubble"
-                                               Command="{Binding LoginAsync}"
-                                               CommandParameter="{Binding #AuthenticateCloudViewView}" />
-    </Interaction.Behaviors>
-
     <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 10">
-
-            <!-- Description -->
-            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
-
-            <!-- Register Link -->
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Don't have an account?" VerticalAlignment="Center" />
-                <controls:HyperLink Url="https://cloud.one-ware.com/Account/Register"
-                                    Label="Register here"
-                                    VerticalAlignment="Center" />
-            </StackPanel>
-
-            <!-- Login with Browser Button -->
-            <Button Command="{Binding LoginWithBrowserAsync}"
-                    CommandParameter="{Binding #AuthenticateCloudViewView}"
-                    HorizontalAlignment="Stretch"
-                    Height="35"
-                    Classes="PrimaryButton"
-                    Content="Login with Browser" />
-
             <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}"
                         HorizontalAlignment="Center">
                 <TextBlock Text="Waiting for login from browser..." VerticalAlignment="Center" FontWeight="Bold" />
                 <controls:Spinner Height="16" VerticalAlignment="Center" />
             </StackPanel>
-
-            <!-- Expandable Username/Password Section -->
-            <Expander Header="Login with Username and Password"
-                      HorizontalAlignment="Stretch"
-                      Margin="0 5 0 0">
-                <StackPanel Spacing="8" Orientation="Vertical" Margin="0 10 0 5">
-
-                    <StackPanel Spacing="3" Orientation="Vertical">
-                        <TextBlock Text="Email:" />
-                        <TextBox Text="{Binding Email, Mode=TwoWay}"
-                                 Watermark="Enter your email" />
-                    </StackPanel>
-
-                    <StackPanel Spacing="3" Orientation="Vertical">
-                        <TextBlock Text="Password:" />
-                        <TextBox Text="{Binding Password, Mode=TwoWay}"
-                                 PasswordChar="*"
-                                 Watermark="Enter your password" />
-                    </StackPanel>
-
-                    <Button Command="{Binding LoginAsync}"
-                            CommandParameter="{Binding #AuthenticateCloudViewView}"
-                            HorizontalAlignment="Stretch"
-                            Height="30"
-                            Classes="PrimaryButton"
-                            Content="Login" />
-                </StackPanel>
-            </Expander>
-
+            <Button Command="{Binding LoginAsync}"
+                    CommandParameter="{Binding #AuthenticateCloudViewView}"
+                    HorizontalAlignment="Stretch"
+                    Height="35"
+                    Classes="PrimaryButton"
+                    Content="Retry Login" />
         </StackPanel>
 
         <!-- Bottom Section: Error Message and Loading Spinner -->

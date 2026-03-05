@@ -69,38 +69,12 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
         set => SetProperty(ref field, value);
     }
 
-    public async Task LoginAsync(FlexibleWindow window)
-    {
-        if (string.IsNullOrWhiteSpace(Password)) return;
-
-        IsLoading = true;
-        ErrorText = null;
-
-        var result = await _loginService.LoginAsync(Email, Password);
-
-        IsLoading = false;
-
-        if (!result.success)
-        {
-            ErrorText = result.status switch
-            {
-                0 => "Connection Failed",
-                HttpStatusCode.Unauthorized => "Invalid email or password",
-                HttpStatusCode.TooManyRequests => "Too many login attempts, please try again later",
-                _ => "Unknown error"
-            };
-            return;
-        }
-
-        window.Close();
-    }
-
-    public async Task LoginWithBrowserAsync(FlexibleWindow? window)
+    public async Task LoginAsync(FlexibleWindow? window)
     {
         IsWaitingForBrowserResponse = true;
         ErrorText = null;
 
-        var newListenerStarted = await _loginService.LoginWithBrowserAsync(_browserLoginCts.Token);
+        var newListenerStarted = await _loginService.LoginAsync(_browserLoginCts.Token);
         if (newListenerStarted)
         {
             IsWaitingForBrowserResponse = false;
@@ -109,8 +83,6 @@ public class AuthenticateCloudViewModel : FlexibleWindowViewModelBase
             ContainerLocator.Current.Resolve<IWindowService>().ActivateMainWindow();
             ContainerLocator.Current.Resolve<IMainDockService>()
                 .Show(ContainerLocator.Current.Resolve<IOutputService>(), DockShowLocation.Bottom);
-            ContainerLocator.Current.Resolve<ILogger>()
-                .Log("Successfully logged in to OneWare Cloud via browser authentication.", true, Brushes.Lime);
         }
     }
 

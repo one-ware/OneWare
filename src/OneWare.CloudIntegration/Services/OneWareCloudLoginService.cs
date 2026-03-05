@@ -20,7 +20,7 @@ namespace OneWare.CloudIntegration.Services;
 public sealed class OneWareCloudLoginService
 {
     private readonly IHttpService _httpService;
-    private readonly Dictionary<string, JwtSecurityToken> _jwtTokenCache = new();
+    private readonly Dictionary<string, JwtSecurityToken> _jwtBearerTokenCache = new();
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;
@@ -29,6 +29,8 @@ public sealed class OneWareCloudLoginService
     private readonly string _tokenPath;
 
     private int? _port;
+    private string? _codeVerifier;
+    private string? _state;
 
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
@@ -53,6 +55,77 @@ public sealed class OneWareCloudLoginService
     }
 
     public bool OneWareCloudIsUsed { get; }
+
+    /// <summary>
+    ///     Refreshes the refresh token if it expires within 14 days
+    ///     Should be called on application startup
+    /// </summary>
+    public async Task RefreshRefreshTokenAsync()
+    {
+        try
+        {
+            var userId = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
+            if (string.IsNullOrWhiteSpace(userId))
+                return;
+
+            string? refreshToken = await GetRefreshToken(userId);
+
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return;
+
+            DateTime? expiryDate = TryGetRefreshTokenExpiry(refreshToken);
+            
+            if (expiryDate.HasValue)
+            {
+                var daysUntilExpiry = (expiryDate.Value - DateTime.UtcNow).TotalDays;
+                
+                if (daysUntilExpiry <= 14)
+                {
+                    // Renew the refresh token (this also updates the bearer token as a side effect)
+                    var (success, status) = await RenewRefreshTokenAsync(refreshToken);
+                    
+                    if (success)
+                    {
+                        _logger.Log("Refresh token successfully renewed on startup.");
+                    }
+                    else
+                    {
+                        _logger.Warning($"Failed to renew refresh token on startup. Status: {status}");
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Error during startup token check: {e.Message}", e);
+        }
+    }
+
+    /// <summary>
+    ///     Tries to decode the refresh token and extract its expiry date
+    /// </summary>
+    private DateTime? TryGetRefreshTokenExpiry(string refreshToken)
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            
+            // Check if it's a valid JWT
+            if (!handler.CanReadToken(refreshToken))
+                return null;
+            
+            var jwtToken = handler.ReadJwtToken(refreshToken);
+            
+            // Return the expiry date
+            return jwtToken.ValidTo;
+        }
+        catch (Exception e)
+        {
+            _logger.Warning($"Could not decode refresh token as JWT: {e.Message}");
+            return null;
+        }
+    }
 
     public RestClient GetRestClient()
     {
@@ -79,16 +152,20 @@ public sealed class OneWareCloudLoginService
         {
             if (string.IsNullOrWhiteSpace(userId)) return (null, HttpStatusCode.Unauthorized);
 
-            _jwtTokenCache.TryGetValue(userId, out var existingToken);
+            _jwtBearerTokenCache.TryGetValue(userId, out var existingToken);
 
             if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
                 return (existingToken, HttpStatusCode.NoContent);
 
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
-            if (!result) return (null, status);
+            if (!result)
+            {
+                Logout(userId);
+                return (null, status);
+            }
 
-            if (!_jwtTokenCache.TryGetValue(userId, out var regeneratedToken)) return (null, status);
+            if (!_jwtBearerTokenCache.TryGetValue(userId, out var regeneratedToken)) return (null, status);
 
             return (regeneratedToken, status);
         }
@@ -102,29 +179,12 @@ public sealed class OneWareCloudLoginService
     {
         try
         {
-            string? refreshToken = null;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
-                if (File.Exists(tokenPath))
-                {
-                    var encrypted = await File.ReadAllBytesAsync(tokenPath);
-                    var plaintext = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
-                    refreshToken = Encoding.UTF8.GetString(plaintext);
-                }
-            }
-            else
-            {
-                var store = CredentialManager.Create("oneware");
-
-                var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, userId);
-                refreshToken = cred?.Password;
-            }
+            string? refreshToken = await GetRefreshToken(userId);
 
             if (refreshToken == null)
                 return (false, HttpStatusCode.Unauthorized);
 
-            var result = await RefreshAsync(refreshToken);
+            var result = await RefreshBearerTokenAsync(refreshToken);
 
             return result;
         }
@@ -135,71 +195,101 @@ public sealed class OneWareCloudLoginService
         }
     }
 
-    private async Task<(bool success, HttpStatusCode status)> RefreshAsync(string refreshToken)
-    {
-        var request = new RestRequest("/api/auth/refresh");
-        request.AddJsonBody(new RefreshModel
-        {
-            RefreshToken = refreshToken
-        });
-        var response = await GetRestClient().ExecutePostAsync(request);
-
-        if (response.IsSuccessful)
-        {
-            var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-            var token = data["token"]?.GetValue<string>();
-            var newRefreshToken = data["refreshToken"]?.GetValue<string>();
-
-            if (token == null || newRefreshToken == null)
-                throw new Exception("Token or refresh token not found");
-
-            SaveCredentials(token, newRefreshToken);
-
-            return (true, response.StatusCode);
-        }
-
-        return (false, response.StatusCode);
-    }
-
-    public async Task<(bool success, HttpStatusCode status)> LoginAsync(string email, string password)
+    private async Task<(bool success, HttpStatusCode status)> RefreshBearerTokenAsync(string refreshToken)
     {
         try
         {
-            var request = new RestRequest("/api/auth/login");
-            request.AddJsonBody(new LoginModel
+            string? authBaseUrl = await GetAuthProviderUrlAsync();
+            if (string.IsNullOrWhiteSpace(authBaseUrl))
             {
-                Email = email,
-                Password = password
-            });
-
-            var response = await GetRestClient().ExecutePostAsync(request);
-
-            if (response.IsSuccessful)
-            {
-                var data = JsonSerializer.Deserialize<JsonNode>(response.Content!)!;
-
-                var token = data["token"]?.GetValue<string>();
-                var refreshToken = data["refreshToken"]?.GetValue<string>();
-
-                if (token == null || refreshToken == null) throw new Exception("Token or refresh token not found");
-
-                SaveCredentials(token, refreshToken);
-
-                _settingService.Save(_paths.SettingsPath);
-
-                return (true, HttpStatusCode.OK);
+                _logger.Error("Failed to get auth provider URL.");
+                return (false, HttpStatusCode.ServiceUnavailable);
             }
 
-            if (response.StatusCode == HttpStatusCode.TooManyRequests) return (false, response.StatusCode);
+            string tokenEndpoint = $"{authBaseUrl}/protocol/openid-connect/token";
+            
+            RestRequest request = new RestRequest(tokenEndpoint, Method.Post);
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("grant_type", "refresh_token");
+            request.AddParameter("client_id", "OneWareStudio");
+            request.AddParameter("refresh_token", refreshToken);
+
+            RestClient authClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authBaseUrl));
+            RestResponse response = await authClient.ExecuteAsync(request);
+
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                JsonNode data = JsonSerializer.Deserialize<JsonNode>(response.Content)!;
+                string? token = data["access_token"]?.GetValue<string>();
+                string? newRefreshToken = data["refresh_token"]?.GetValue<string>();
+
+                if (token == null || newRefreshToken == null)
+                    throw new Exception("Token or refresh token not found");
+
+                SaveCredentials(token, newRefreshToken);
+
+                return (true, response.StatusCode);
+            }
 
             return (false, response.StatusCode);
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+            return (false, HttpStatusCode.InternalServerError);
         }
+    }
 
-        return (false, HttpStatusCode.NoContent);
+    /// <summary>
+    ///     Renews the refresh token proactively when it's close to expiration (e.g., within 14 days).
+    ///     This uses the same Keycloak endpoint as RefreshBearerTokenAsync, but is called explicitly
+    ///     to extend the refresh token's validity period.
+    ///     Note: Keycloak returns both a new access token and a new refresh token.
+    /// </summary>
+    private async Task<(bool success, HttpStatusCode status)> RenewRefreshTokenAsync(string refreshToken)
+    {
+        try
+        {
+            string? authBaseUrl = await GetAuthProviderUrlAsync();
+            if (string.IsNullOrWhiteSpace(authBaseUrl))
+            {
+                _logger.Error("Failed to get auth provider URL.");
+                return (false, HttpStatusCode.ServiceUnavailable);
+            }
+
+            string tokenEndpoint = $"{authBaseUrl}/protocol/openid-connect/token";
+            
+            RestRequest request = new RestRequest(tokenEndpoint, Method.Post);
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("grant_type", "refresh_token");
+            request.AddParameter("client_id", "OneWareStudio");
+            request.AddParameter("refresh_token", refreshToken);
+
+            RestClient authClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authBaseUrl));
+            RestResponse response = await authClient.ExecuteAsync(request);
+
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                JsonNode data = JsonSerializer.Deserialize<JsonNode>(response.Content)!;
+                string? token = data["access_token"]?.GetValue<string>();
+                string? newRefreshToken = data["refresh_token"]?.GetValue<string>();
+
+                if (token == null || newRefreshToken == null)
+                    throw new Exception("Token or refresh token not found");
+                
+
+                SaveCredentials(token, newRefreshToken);
+
+                return (true, response.StatusCode);
+            }
+
+            return (false, response.StatusCode);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            return (false, HttpStatusCode.InternalServerError);
+        }
     }
 
     public void Logout(string userId)
@@ -221,7 +311,7 @@ public sealed class OneWareCloudLoginService
                 store.Remove(OneWareCloudIntegrationModule.CredentialStore, userId);
             }
 
-            _jwtTokenCache.Remove(userId);
+            _jwtBearerTokenCache.Remove(userId);
         }
         catch (Exception e)
         {
@@ -255,8 +345,7 @@ public sealed class OneWareCloudLoginService
                 Email = mail
             });
 
-            var restClient =
-                new RestClient(_httpService.HttpClient, new RestClientOptions("https://cloud.one-ware.com"));
+            RestClient restClient = new (_httpService.HttpClient);
 
             var response = await restClient.ExecutePostAsync(request);
             return response.IsSuccessful;
@@ -271,11 +360,11 @@ public sealed class OneWareCloudLoginService
 
     private void SaveCredentials(string jwt, string refreshToken)
     {
-        var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
-        var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "nameid")?.Value ?? null;
+        JwtSecurityToken? jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
+        string? userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "sub")?.Value ?? null;
         if (userId == null) throw new Exception("User ID not found in token");
 
-        _jwtTokenCache[userId] = jwtToken;
+        _jwtBearerTokenCache[userId] = jwtToken;
 
         try
         {
@@ -303,26 +392,92 @@ public sealed class OneWareCloudLoginService
         _settingService.Save(_paths.SettingsPath);
     }
 
+    private async Task<string?> GetAuthProviderUrlAsync()
+    {
+        try
+        {
+            var request = new RestRequest("/api/auth/auth-provider");
+            var response = await GetRestClient().ExecuteGetAsync(request);
 
-    //Returns if new listener was started
-    public async Task<bool> LoginWithBrowserAsync(CancellationToken cancellationToken = default)
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                return response.Content.Trim('"'); 
+            }
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            return null;
+        }
+    }
+
+    private static string GenerateCodeVerifier()
+    {
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+    }
+
+    private static string GenerateCodeChallenge(string codeVerifier)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+    }
+
+    private static string GenerateState()
+    {
+        var bytes = new byte[16];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+    }
+    
+    public async Task<bool> LoginAsync(CancellationToken cancellationToken = default)
     {
         var startNewListener = false;
         if (_port == null) startNewListener = true;
         _port ??= PlatformHelper.GetAvailablePort();
-        var prefix = $"http://{IPAddress.Loopback}:{_port}/";
-        var host = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
-            .TrimEnd('/');
-        var url = $"{host}/Account/LoginInApplication/?redirectPort={_port}";
+        var redirectUri = $"http://localhost:{_port}/callback";
         using HttpListener listener = new();
+
+        var authProviderBaseUrl = await GetAuthProviderUrlAsync();
+        if (string.IsNullOrWhiteSpace(authProviderBaseUrl))
+        {
+            _logger.Error("Failed to get auth provider URL");
+            return false;
+        }
+
+        _codeVerifier = GenerateCodeVerifier();
+        string codeChallenge = GenerateCodeChallenge(_codeVerifier);
+        _state = GenerateState();
+        
+        string authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth" +
+                         $"?client_id=OneWareStudio" +
+                         $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                         $"&response_type=code" +
+                         $"&scope=openid profile email" +
+                         $"&code_challenge={codeChallenge}" +
+                         $"&code_challenge_method=S256" +
+                         $"&state={_state}" +
+                         $"&prompt=consent";
 
         if (startNewListener)
         {
-            listener.Prefixes.Add(prefix);
+            listener.Prefixes.Add($"http://localhost:{_port}/");
             listener.Start();
         }
 
-        PlatformHelper.OpenHyperLink(url);
+        PlatformHelper.OpenHyperLink(authUrl);
 
         if (startNewListener)
             try
@@ -337,8 +492,12 @@ public sealed class OneWareCloudLoginService
 
                 var response = context.Response;
 
-                await HandleLoginResponseAsync(context);
-                response.Redirect(host);
+                await HandleLoginCallbackAsync(context, authProviderBaseUrl, redirectUri);
+                
+                // Redirect to Cloud index page
+                var cloudHost = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
+                    .TrimEnd('/');
+                response.Redirect($"{cloudHost}/");
                 response.KeepAlive = false;
                 response.Close();
             }
@@ -350,31 +509,116 @@ public sealed class OneWareCloudLoginService
             {
                 listener.Stop();
                 _port = null;
+                _codeVerifier = null;
+                _state = null;
             }
 
         return startNewListener;
     }
 
-    private async Task HandleLoginResponseAsync(HttpListenerContext context)
+    private async Task HandleLoginCallbackAsync(HttpListenerContext context, string authProviderBaseUrl, string redirectUri)
     {
         var query = HttpUtility.ParseQueryString(context!.Request!.Url!.Query);
-        var refreshToken = query["refreshToken"];
+        var code = query["code"];
+        var state = query["state"];
+        var error = query["error"];
 
-        if (refreshToken == null) return;
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            _logger.Error($"Authentication error: {error}");
+            return;
+        }
 
-        await Dispatcher.UIThread.InvokeAsync(() => RefreshAsync(refreshToken));
-        _settingService.Save(_paths.SettingsPath);
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            _logger.Error("No authorization code received");
+            return;
+        }
+
+        if (state != _state)
+        {
+            _logger.Error("State mismatch in OAuth callback");
+            return;
+        }
+
+        // Exchange authorization code for tokens
+        await ExchangeCodeForTokensAsync(code, authProviderBaseUrl, redirectUri);
     }
+
+    private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri)
+    {
+        try
+        {
+            var tokenEndpoint = $"{authProviderBaseUrl}/protocol/openid-connect/token";
+            
+            var request = new RestRequest(tokenEndpoint, Method.Post);
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("grant_type", "authorization_code");
+            request.AddParameter("client_id", "OneWareStudio");
+            request.AddParameter("code", code);
+            request.AddParameter("redirect_uri", redirectUri);
+            request.AddParameter("code_verifier", _codeVerifier);
+
+            var authClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authProviderBaseUrl));
+            var response = await authClient.ExecuteAsync(request);
+
+            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                var tokenResponse = JsonSerializer.Deserialize<JsonNode>(response.Content)!;
+                var accessToken = tokenResponse["access_token"]?.GetValue<string>();
+                var refreshToken = tokenResponse["refresh_token"]?.GetValue<string>();
+
+                if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(refreshToken))
+                {
+                    _logger.Error("Access token or refresh token not found in response");
+                    return;
+                }
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    SaveCredentials(accessToken, refreshToken);
+                    _settingService.Save(_paths.SettingsPath);
+                });
+            }
+            else
+            {
+                _logger.Error($"Failed to exchange code for tokens: {response.StatusCode} - {response.Content}");
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+
+    private async Task<string?> GetRefreshToken(string userId)
+    {
+        string? refreshToken = null;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
+            if (File.Exists(tokenPath))
+            {
+                var encrypted = await File.ReadAllBytesAsync(tokenPath);
+                var plaintext = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+                refreshToken = Encoding.UTF8.GetString(plaintext);
+            }
+        }
+        else
+        {
+            var store = CredentialManager.Create("oneware");
+            var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, userId);
+            refreshToken = cred?.Password;
+        }
+
+        return refreshToken;
+    }
+
 
     private class LoginModel
     {
         [JsonPropertyName("email")] public required string Email { get; set; }
 
         [JsonPropertyName("password")] public required string Password { get; set; }
-    }
-
-    private class RefreshModel
-    {
-        [JsonPropertyName("refreshToken")] public required string RefreshToken { get; set; }
     }
 }
