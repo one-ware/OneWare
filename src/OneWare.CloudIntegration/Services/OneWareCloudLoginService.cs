@@ -32,6 +32,9 @@ public sealed class OneWareCloudLoginService
     private string? _codeVerifier;
     private string? _state;
 
+    private string? _offlineCodeVerifier;
+    private string? _offlineState;
+
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
     {
@@ -180,6 +183,7 @@ public sealed class OneWareCloudLoginService
             if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
                 return (existingToken, HttpStatusCode.NoContent);
 
+            RefreshRefreshTokenAsync();
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
             if (!result)
@@ -481,11 +485,11 @@ public sealed class OneWareCloudLoginService
             _logger.Error("Failed to get auth provider URL");
             return false;
         }
-
+        
         _codeVerifier = GenerateCodeVerifier();
         string codeChallenge = GenerateCodeChallenge(_codeVerifier);
         _state = GenerateState();
-        
+
         string authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth" +
                          $"?client_id=OneWareStudio" +
                          $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
@@ -507,24 +511,88 @@ public sealed class OneWareCloudLoginService
         if (startNewListener)
             try
             {
-                // Register cancellation callback to stop the listener
                 using var registration = cancellationToken.Register(() => listener.Stop());
 
-                var context = await listener.GetContextAsync();
-
-                // Check if cancelled after getting context
+                var context1 = await listener.GetContextAsync();
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var response = context.Response;
+                var step1Response = context1.Response;
 
-                await HandleLoginCallbackAsync(context, authProviderBaseUrl, redirectUri);
+                var query1 = HttpUtility.ParseQueryString(context1.Request!.Url!.Query);
+                var code1 = query1["code"];
+                var state1 = query1["state"];
+                var error1 = query1["error"];
+
+                if (!string.IsNullOrWhiteSpace(error1))
+                {
+                    _logger.Error($"Authentication error (step 1): {error1}");
+                    step1Response.StatusCode = 400;
+                    step1Response.Close();
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(code1) || state1 != _state)
+                {
+                    _logger.Error("Invalid step-1 callback (missing code or state mismatch)");
+                    step1Response.StatusCode = 400;
+                    step1Response.Close();
+                    return false;
+                }
+
+                await ExchangeCodeForTokensAsync(code1, authProviderBaseUrl, redirectUri, persistTokens: false);
+
+                _offlineCodeVerifier = GenerateCodeVerifier();
+                string offlineCodeChallenge = GenerateCodeChallenge(_offlineCodeVerifier);
+                _offlineState = GenerateState();
+
+                string offlineAuthUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth" +
+                                        $"?client_id=OneWareStudio" +
+                                        $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                                        $"&response_type=code" +
+                                        $"&scope=openid%20offline_access" +
+                                        $"&code_challenge={offlineCodeChallenge}" +
+                                        $"&code_challenge_method=S256" +
+                                        $"&state={_offlineState}" +
+                                        $"&prompt=none";
+
+                step1Response.Redirect(offlineAuthUrl);
+                step1Response.KeepAlive = false;
+                step1Response.Close();
                 
-                // Redirect to Cloud index page
+                var context2 = await listener.GetContextAsync();
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var step2Response = context2.Response;
+
+                var query2 = HttpUtility.ParseQueryString(context2.Request!.Url!.Query);
+                var code2 = query2["code"];
+                var state2 = query2["state"];
+                var error2 = query2["error"];
+
+                if (!string.IsNullOrWhiteSpace(error2))
+                {
+                    _logger.Error($"Authentication error (step 2 offline upgrade): {error2}");
+                    step2Response.StatusCode = 400;
+                    step2Response.Close();
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(code2) || state2 != _offlineState)
+                {
+                    _logger.Error("Invalid step-2 callback (missing code or state mismatch)");
+                    step2Response.StatusCode = 400;
+                    step2Response.Close();
+                    return false;
+                }
+
+                await ExchangeCodeForTokensAsync(code2, authProviderBaseUrl, redirectUri,
+                    persistTokens: true, codeVerifierOverride: _offlineCodeVerifier);
+
                 var cloudHost = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
                     .TrimEnd('/');
-                response.Redirect($"{cloudHost}/");
-                response.KeepAlive = false;
-                response.Close();
+                step2Response.Redirect($"{cloudHost}/");
+                step2Response.KeepAlive = false;
+                step2Response.Close();
             }
             catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
             {
@@ -540,53 +608,28 @@ public sealed class OneWareCloudLoginService
                 _port = null;
                 _codeVerifier = null;
                 _state = null;
+                _offlineCodeVerifier = null;
+                _offlineState = null;
             }
 
         return startNewListener;
     }
 
-    private async Task HandleLoginCallbackAsync(HttpListenerContext context, string authProviderBaseUrl, string redirectUri)
-    {
-        var query = HttpUtility.ParseQueryString(context!.Request!.Url!.Query);
-        var code = query["code"];
-        var state = query["state"];
-        var error = query["error"];
-
-        if (!string.IsNullOrWhiteSpace(error))
-        {
-            _logger.Error($"Authentication error: {error}");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            _logger.Error("No authorization code received");
-            return;
-        }
-
-        if (state != _state)
-        {
-            _logger.Error("State mismatch in OAuth callback");
-            return;
-        }
-
-        // Exchange authorization code for tokens
-        await ExchangeCodeForTokensAsync(code, authProviderBaseUrl, redirectUri);
-    }
-
-    private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri)
+    private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri,
+        bool persistTokens = true, string? codeVerifierOverride = null)
     {
         try
         {
             var tokenEndpoint = $"{authProviderBaseUrl}/protocol/openid-connect/token";
-            
+            var usedCodeVerifier = codeVerifierOverride ?? _codeVerifier;
+
             var request = new RestRequest(tokenEndpoint, Method.Post);
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
             request.AddParameter("grant_type", "authorization_code");
             request.AddParameter("client_id", "OneWareStudio");
             request.AddParameter("code", code);
             request.AddParameter("redirect_uri", redirectUri);
-            request.AddParameter("code_verifier", _codeVerifier);
+            request.AddParameter("code_verifier", usedCodeVerifier);
 
             var authClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authProviderBaseUrl));
             var response = await authClient.ExecuteAsync(request);
@@ -597,17 +640,33 @@ public sealed class OneWareCloudLoginService
                 var accessToken = tokenResponse["access_token"]?.GetValue<string>();
                 var refreshToken = tokenResponse["refresh_token"]?.GetValue<string>();
 
-                if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(refreshToken))
+                if (string.IsNullOrWhiteSpace(accessToken))
                 {
-                    _logger.Error("Access token or refresh token not found in response");
+                    _logger.Error("Access token not found in response");
                     return;
                 }
 
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                if (persistTokens)
                 {
-                    SaveCredentials(accessToken, refreshToken);
-                    _settingService.Save(_paths.SettingsPath);
-                });
+                    if (string.IsNullOrWhiteSpace(refreshToken))
+                    {
+                        _logger.Error("Refresh token not found in step-2 response");
+                        return;
+                    }
+
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        SaveCredentials(accessToken, refreshToken);
+                        _settingService.Save(_paths.SettingsPath);
+                    });
+                }
+                else
+                {
+                    var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+                    var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "sub")?.Value;
+                    if (userId != null)
+                        _jwtBearerTokenCache[userId] = jwtToken;
+                }
             }
             else
             {
