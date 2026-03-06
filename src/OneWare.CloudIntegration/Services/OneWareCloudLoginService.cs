@@ -110,16 +110,6 @@ public sealed class OneWareCloudLoginService
                             Logout(userId);
                     }
                 }
-
-                return;
-            }
-
-            // Token couldn't be decoded as JWT. Validate it by trying a token refresh once.
-            var (refreshSuccess, refreshStatus) = await RefreshBearerTokenAsync(refreshToken);
-            if (!refreshSuccess && ShouldLogoutAfterTokenRefreshFailure(refreshStatus))
-            {
-                _logger.Warning("Stored refresh token is no longer valid. Logging out local session.");
-                Logout(userId);
             }
         }
         catch (Exception e)
@@ -182,8 +172,9 @@ public sealed class OneWareCloudLoginService
 
             if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
                 return (existingToken, HttpStatusCode.NoContent);
-
-            RefreshRefreshTokenAsync();
+            
+            await RefreshRefreshTokenAsync();
+            
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
             if (!result)
