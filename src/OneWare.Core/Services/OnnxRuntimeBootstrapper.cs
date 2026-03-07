@@ -13,6 +13,8 @@ public class OnnxRuntimeBootstrapper
     public const string SettingSelectedRuntimeKey = "OnnxRuntime_SelectedRuntime";
     
     public const string SettingSelectedExecutionProviderKey = "OnnxRuntime_SelectedExecutionProvider";
+    
+    public const string SettingOpenVinoDeviceKey = "OnnxRuntime_OpenVinoDevice";
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;

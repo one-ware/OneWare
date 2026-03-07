@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
@@ -178,6 +179,19 @@ public class App : Application
                                         The options here are dependent on the above selected runtime.
                                         
                                         **Plugins can use this option, but may ignore it**
+                                        """
+            });
+        
+        settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingOpenVinoDeviceKey,
+            new ComboBoxSetting("OpenVINO Device", "GPU", ["GPU", "NPU", "CPU"])
+            {
+                IsVisibleObservable = settingsService
+                    .GetSettingObservable<OnnxExecutionProvider>(OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey)
+                    .Select(provider => provider == OnnxExecutionProvider.OpenVino)
+                    .StartWith(settingsService.GetSettingValue<OnnxExecutionProvider>(OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey) == OnnxExecutionProvider.OpenVino),
+                MarkdownDocumentation = """
+                                        Select the target OpenVINO device. 
+                                        Valid options are `GPU`, `NPU` and `CPU`.
                                         """
             });
 

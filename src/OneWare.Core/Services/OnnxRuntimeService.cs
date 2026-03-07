@@ -7,6 +7,8 @@ namespace OneWare.Core.Services;
 
 public class OnnxRuntimeService : IOnnxRuntimeService
 {
+    private static readonly HashSet<string> OpenVinoDevices = ["GPU", "NPU", "CPU"];
+
     private readonly ISettingsService _settingsService;
     private readonly OnnxRuntimeBootstrapper _bootstrapper;
     private readonly ILogger _logger;
@@ -108,7 +110,7 @@ public class OnnxRuntimeService : IOnnxRuntimeService
                     break;
                 
                 case OnnxExecutionProvider.OpenVino:
-                    so.AppendExecutionProvider_OpenVINO();
+                    so.AppendExecutionProvider_OpenVINO(GetOpenVinoDevice());
                     break;
             }
         }
@@ -120,5 +122,19 @@ public class OnnxRuntimeService : IOnnxRuntimeService
         _logger.LogInformation("Created ONNX Runtime provider '{Provider}'.", provider.ToString());
 
         return so;
+    }
+
+    private string GetOpenVinoDevice()
+    {
+        var configuredDevice = _settingsService
+            .GetSettingValue<string>(OnnxRuntimeBootstrapper.SettingOpenVinoDeviceKey)
+            .Trim()
+            .ToUpperInvariant();
+
+        if (OpenVinoDevices.Contains(configuredDevice))
+            return configuredDevice;
+        
+        _logger.Warning($"Invalid OpenVINO device setting '{configuredDevice}'. Falling back to GPU.");
+        return "GPU";
     }
 }
