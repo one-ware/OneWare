@@ -87,8 +87,17 @@ public class OnnxRuntimeBootstrapper
             var selectedRuntime = ReadStringSetting(SettingSelectedRuntimeKey)?.Trim() ?? "no-runtime";
             
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
+            var runtimeRootToLoad = CreateSessionRuntimeCopy(selectedRuntime, selectedRuntimeRoot) ?? selectedRuntimeRoot;
 
-            if (TryLoadFromRoot(selectedRuntimeRoot))
+            if (TryLoadFromRoot(runtimeRootToLoad))
+            {
+                SelectedRuntime = selectedRuntime;
+                return;
+            }
+
+            // Keep a direct-load fallback if session staging failed for any reason.
+            if (!string.Equals(runtimeRootToLoad, selectedRuntimeRoot, StringComparison.OrdinalIgnoreCase)
+                && TryLoadFromRoot(selectedRuntimeRoot))
             {
                 SelectedRuntime = selectedRuntime;
                 return;
@@ -101,6 +110,28 @@ public class OnnxRuntimeBootstrapper
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to initialize ONNX Runtime bootstrapper.");
+        }
+    }
+
+    private string? CreateSessionRuntimeCopy(string runtimeName, string sourceRootPath)
+    {
+        if (string.IsNullOrWhiteSpace(runtimeName) || !Directory.Exists(sourceRootPath))
+            return null;
+
+        var sessionRootPath = Path.Combine(_paths.SessionDirectory, "OnnxRuntimes", runtimeName);
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(sessionRootPath)!);
+            if (Directory.Exists(sessionRootPath))
+                Directory.Delete(sessionRootPath, true);
+
+            PlatformHelper.CopyDirectory(sourceRootPath, sessionRootPath);
+            return sessionRootPath;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Failed to copy ONNX runtime '{RuntimeName}' into session directory.", runtimeName);
+            return null;
         }
     }
 
