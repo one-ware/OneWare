@@ -27,52 +27,78 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
     public async Task<IReadOnlyList<Package>> LoadRepositoryAsync(string url,
         CancellationToken cancellationToken = default)
     {
-        var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10));
-        if (repositoryString == null) return Array.Empty<Package>();
-
-        var trimmed = WhitespaceRegex().Replace(repositoryString, "");
-        var packages = new List<Package>();
-
-        if (trimmed.StartsWith("{\"packages\":", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            try
+            var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10));
+            if (repositoryString == null) return Array.Empty<Package>();
+
+            var trimmed = WhitespaceRegex().Replace(repositoryString, "");
+            var packages = new List<Package>();
+
+            if (trimmed.StartsWith("{\"packages\":", StringComparison.OrdinalIgnoreCase))
             {
-                var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
-
-                if (repository is { Packages: not null })
-                    foreach (var manifest in repository.Packages)
-                        try
-                        {
-                            if (manifest.ManifestUrl == null) continue;
-
-                            var downloadManifest =
-                                await _httpService.DownloadTextAsync(manifest.ManifestUrl);
-
-                            var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
-
-                            if (package != null) packages.Add(package);
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.Error(e.Message, e);
-                        }
-                else
+                try
                 {
-                    throw new Exception("Packages empty");
+                    var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
+
+                    if (repository is { Packages: not null })
+                        foreach (var manifest in repository.Packages)
+                            try
+                            {
+                                if (manifest.ManifestUrl == null) continue;
+
+                                var downloadManifest =
+                                    await _httpService.DownloadTextAsync(manifest.ManifestUrl);
+
+                                var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
+
+                                if (package != null) packages.Add(package);
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.Error(e.Message, e);
+                            }
+                    else
+                    {
+                        throw new Exception("Packages empty");
+                    }
+                }
+                catch (JsonException e)
+                {
+                    _logger.Error($"Invalid package source format at '{url}'. Expected repository JSON with a 'packages' array.", e);
+                    return Array.Empty<Package>();
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e.Message, e);
+                    return Array.Empty<Package>();
                 }
             }
-            catch (Exception e)
+            else
             {
-                _logger.Error(e.Message, e);
+                try
+                {
+                    var package = JsonSerializer.Deserialize<Package>(repositoryString, SerializerOptions);
+                    if (package != null) packages.Add(package);
+                }
+                catch (JsonException e)
+                {
+                    _logger.Error($"Invalid package source format at '{url}'. Expected a package manifest JSON object.", e);
+                    return Array.Empty<Package>();
+                }
             }
-        }
-        else
-        {
-            var package = JsonSerializer.Deserialize<Package>(repositoryString, SerializerOptions);
-            if (package != null) packages.Add(package);
-        }
 
-        return packages;
+            return packages;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Failed to load package source '{url}'.", e);
+            return Array.Empty<Package>();
+        }
     }
 
     [GeneratedRegex(@"\s+")]

@@ -1,17 +1,20 @@
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
+using Microsoft.Extensions.Logging;
 
 namespace OneWare.PackageManager.Services;
 
 public class PackageCatalog : IPackageCatalog
 {
     private readonly IPackageRepositoryClient _repositoryClient;
+    private readonly ILogger _logger;
     private readonly List<Package> _standalonePackages = [];
     private readonly Dictionary<string, Package> _manifests = new();
 
-    public PackageCatalog(IPackageRepositoryClient repositoryClient)
+    public PackageCatalog(IPackageRepositoryClient repositoryClient, ILogger logger)
     {
         _repositoryClient = repositoryClient;
+        _logger = logger;
     }
 
     public IReadOnlyDictionary<string, Package> Manifests => _manifests;
@@ -30,7 +33,22 @@ public class PackageCatalog : IPackageCatalog
 
         foreach (var source in sources)
         {
-            var loaded = await _repositoryClient.LoadRepositoryAsync(source, cancellationToken);
+            IReadOnlyList<Package> loaded;
+            try
+            {
+                loaded = await _repositoryClient.LoadRepositoryAsync(source, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"Failed to refresh package source '{source}'.", e);
+                result = false;
+                continue;
+            }
+
             if (loaded.Count == 0)
             {
                 result = false;
