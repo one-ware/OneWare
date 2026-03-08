@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Reactive.Linq;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.ReactiveUI;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Essentials.Helpers;
@@ -168,21 +170,35 @@ public class AdvancedComboBoxSetting : TitledSetting
     {
         Options = options;
 
-        this.WhenValueChanged(x => x.Value).Subscribe(x => { OnPropertyChanged(nameof(SelectedItem)); });
+        this.WhenValueChanged(x => x.Value)
+            .Subscribe(x =>
+            {
+                SelectedItem = Options.FirstOrDefault(b => b.Value.Equals(x));
+            });
     }
 
     public AdvancedComboBoxOption[] Options
     {
         get;
-        set => SetProperty(ref field, value);
-    }
-
-    public AdvancedComboBoxOption SelectedItem
-    {
-        get => Options.FirstOrDefault(x => x.Value.Equals(Value))!;
         set
         {
-            if (value?.Value != Value && value != null) Value = value.Value;
+            var oldValue = Value;
+            if (SetProperty(ref field, value))
+            {
+                SelectedItem = Options.FirstOrDefault(b => b.Value.Equals(oldValue));
+            }
+        }
+    }
+
+    public AdvancedComboBoxOption? SelectedItem
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value) && value != null)
+            {
+                Value = value.Value;
+            }
         }
     }
 }

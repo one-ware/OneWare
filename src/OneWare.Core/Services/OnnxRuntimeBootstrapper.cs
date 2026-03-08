@@ -54,8 +54,13 @@ public class OnnxRuntimeBootstrapper
     
     public OnnxExecutionProvider[] GetOnnxExecutionProviders()
     {
+        return GetOnnxExecutionProviders(SelectedRuntime);
+    }
+
+    public OnnxExecutionProvider[] GetOnnxExecutionProviders(string? runtimeName)
+    {
         var executionProviders = new List<OnnxExecutionProvider> { OnnxExecutionProvider.Cpu };
-        switch (SelectedRuntime)
+        switch ((runtimeName ?? "onnxruntime-builtin").Trim())
         {
             case "onnxruntime-builtin":
                 if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

@@ -166,9 +166,13 @@ public class App : Application
                                         - Every runtime offers different execution providers.
                                         """
             });
+
+        var onnxRuntimeBootstrapper = Services.Resolve<OnnxRuntimeBootstrapper>();
+        var selectedRuntime = settingsService.GetSettingValue<string>(OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey);
+        var initialExecutionProviders = onnxRuntimeBootstrapper.GetOnnxExecutionProviders(selectedRuntime);
         
         settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey,
-            new AdvancedComboBoxSetting("Preferred Execution Provider", OnnxExecutionProvider.Cpu, Services.Resolve<OnnxRuntimeBootstrapper>().GetOnnxExecutionProviders().Select(x => new AdvancedComboBoxOption()
+            new AdvancedComboBoxSetting("Preferred Execution Provider", initialExecutionProviders.First(), initialExecutionProviders.Select(x => new AdvancedComboBoxOption()
             {
                 Title = x.ToString(),
                 Value = x
@@ -181,6 +185,27 @@ public class App : Application
                                         **Plugins can use this option, but may ignore it**
                                         """
             });
+
+        void SyncOnnxExecutionProviders(string runtime)
+        {
+            if (settingsService.GetSetting(OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey) is not AdvancedComboBoxSetting executionProviderSetting)
+                return;
+
+            var validProviders = onnxRuntimeBootstrapper.GetOnnxExecutionProviders(runtime);
+            executionProviderSetting.Options = validProviders.Select(x => new AdvancedComboBoxOption
+            {
+                Title = x.ToString(),
+                Value = x
+            }).ToArray();
+
+            var selectedExecutionProvider = settingsService.GetSettingValue<OnnxExecutionProvider>(OnnxRuntimeBootstrapper.SettingSelectedExecutionProviderKey);
+            executionProviderSetting.Value = validProviders.Contains(selectedExecutionProvider)
+                ? selectedExecutionProvider
+                : validProviders.FirstOrDefault();
+        }
+
+        settingsService.GetSettingObservable<string>(OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey)
+            .Subscribe(SyncOnnxExecutionProviders);
         
         settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingOpenVinoDeviceKey,
             new ComboBoxSetting("OpenVINO Device", "GPU", ["GPU", "NPU", "CPU"])
