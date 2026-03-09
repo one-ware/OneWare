@@ -481,15 +481,16 @@ public sealed class OneWareCloudLoginService
         string codeChallenge = GenerateCodeChallenge(_codeVerifier);
         _state = GenerateState();
 
-        string authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth" +
-                         $"?client_id=OneWareStudio" +
-                         $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-                         $"&response_type=code" +
-                         $"&scope=openid profile email" +
-                         $"&code_challenge={codeChallenge}" +
-                         $"&code_challenge_method=S256" +
-                         $"&state={_state}" +
-                         $"&prompt=consent";
+        var authQueryParams = HttpUtility.ParseQueryString(string.Empty);
+        authQueryParams["client_id"] = "OneWareStudio";
+        authQueryParams["redirect_uri"] = redirectUri;
+        authQueryParams["response_type"] = "code";
+        authQueryParams["scope"] = "openid profile email";
+        authQueryParams["code_challenge"] = codeChallenge;
+        authQueryParams["code_challenge_method"] = "S256";
+        authQueryParams["state"] = _state;
+        authQueryParams["prompt"] = "consent";
+        string authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{authQueryParams}";
 
         if (startNewListener)
         {
@@ -536,15 +537,16 @@ public sealed class OneWareCloudLoginService
                 string offlineCodeChallenge = GenerateCodeChallenge(_offlineCodeVerifier);
                 _offlineState = GenerateState();
 
-                string offlineAuthUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth" +
-                                        $"?client_id=OneWareStudio" +
-                                        $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-                                        $"&response_type=code" +
-                                        $"&scope=openid%20offline_access" +
-                                        $"&code_challenge={offlineCodeChallenge}" +
-                                        $"&code_challenge_method=S256" +
-                                        $"&state={_offlineState}" +
-                                        $"&prompt=none";
+                var offlineQueryParams = HttpUtility.ParseQueryString(string.Empty);
+                offlineQueryParams["client_id"] = "OneWareStudio";
+                offlineQueryParams["redirect_uri"] = redirectUri;
+                offlineQueryParams["response_type"] = "code";
+                offlineQueryParams["scope"] = "openid offline_access";
+                offlineQueryParams["code_challenge"] = offlineCodeChallenge;
+                offlineQueryParams["code_challenge_method"] = "S256";
+                offlineQueryParams["state"] = _offlineState;
+                offlineQueryParams["prompt"] = "none";
+                string offlineAuthUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{offlineQueryParams}";
 
                 step1Response.Redirect(offlineAuthUrl);
                 step1Response.KeepAlive = false;
