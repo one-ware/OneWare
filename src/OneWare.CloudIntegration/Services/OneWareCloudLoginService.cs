@@ -482,14 +482,13 @@ public sealed class OneWareCloudLoginService
         _state = GenerateState();
 
         var authQueryParams = HttpUtility.ParseQueryString(string.Empty);
-        authQueryParams["client_id"] = "OneWareStudio";
+        authQueryParams["client_id"] = "Empty";
         authQueryParams["redirect_uri"] = redirectUri;
         authQueryParams["response_type"] = "code";
         authQueryParams["scope"] = "openid profile email";
         authQueryParams["code_challenge"] = codeChallenge;
         authQueryParams["code_challenge_method"] = "S256";
         authQueryParams["state"] = _state;
-        authQueryParams["prompt"] = "consent";
         string authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{authQueryParams}";
 
         if (startNewListener)
@@ -514,7 +513,7 @@ public sealed class OneWareCloudLoginService
                 var code1 = query1["code"];
                 var state1 = query1["state"];
                 var error1 = query1["error"];
-
+                
                 if (!string.IsNullOrWhiteSpace(error1))
                 {
                     _logger.Error($"Authentication error (step 1): {error1}");
@@ -530,8 +529,9 @@ public sealed class OneWareCloudLoginService
                     step1Response.Close();
                     return false;
                 }
-
-                await ExchangeCodeForTokensAsync(code1, authProviderBaseUrl, redirectUri, persistTokens: false);
+                
+                await ExchangeCodeForTokensAsync(code1, authProviderBaseUrl, redirectUri,
+                    persistTokens: false, clientIdOverride: "Empty");
 
                 _offlineCodeVerifier = GenerateCodeVerifier();
                 string offlineCodeChallenge = GenerateCodeChallenge(_offlineCodeVerifier);
@@ -541,11 +541,11 @@ public sealed class OneWareCloudLoginService
                 offlineQueryParams["client_id"] = "OneWareStudio";
                 offlineQueryParams["redirect_uri"] = redirectUri;
                 offlineQueryParams["response_type"] = "code";
-                offlineQueryParams["scope"] = "openid offline_access";
+                offlineQueryParams["scope"] = "openid profile email offline_access";
                 offlineQueryParams["code_challenge"] = offlineCodeChallenge;
                 offlineQueryParams["code_challenge_method"] = "S256";
                 offlineQueryParams["state"] = _offlineState;
-                offlineQueryParams["prompt"] = "none";
+                offlineQueryParams["prompt"] = "consent";
                 string offlineAuthUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{offlineQueryParams}";
 
                 step1Response.Redirect(offlineAuthUrl);
@@ -586,6 +586,8 @@ public sealed class OneWareCloudLoginService
                 step2Response.Redirect($"{cloudHost}/");
                 step2Response.KeepAlive = false;
                 step2Response.Close();
+                
+                return true;
             }
             catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
             {
@@ -609,17 +611,18 @@ public sealed class OneWareCloudLoginService
     }
 
     private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri,
-        bool persistTokens = true, string? codeVerifierOverride = null)
+        bool persistTokens = true, string? codeVerifierOverride = null, string? clientIdOverride = null)
     {
         try
         {
             var tokenEndpoint = $"{authProviderBaseUrl}/protocol/openid-connect/token";
             var usedCodeVerifier = codeVerifierOverride ?? _codeVerifier;
+            var clientId = clientIdOverride ?? "OneWareStudio";
 
             var request = new RestRequest(tokenEndpoint, Method.Post);
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
             request.AddParameter("grant_type", "authorization_code");
-            request.AddParameter("client_id", "OneWareStudio");
+            request.AddParameter("client_id", clientId);
             request.AddParameter("code", code);
             request.AddParameter("redirect_uri", redirectUri);
             request.AddParameter("code_verifier", usedCodeVerifier);
