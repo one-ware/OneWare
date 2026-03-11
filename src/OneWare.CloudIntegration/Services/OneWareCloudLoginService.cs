@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Web;
 using Avalonia.Threading;
 using GitCredentialManager;
@@ -32,8 +31,6 @@ public sealed class OneWareCloudLoginService
     private string? _codeVerifier;
     private string? _state;
 
-    private string? _offlineCodeVerifier;
-    private string? _offlineState;
 
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
@@ -478,18 +475,18 @@ public sealed class OneWareCloudLoginService
         }
         
         _codeVerifier = GenerateCodeVerifier();
-        string codeChallenge = GenerateCodeChallenge(_codeVerifier);
+        var codeChallenge = GenerateCodeChallenge(_codeVerifier);
         _state = GenerateState();
 
         var authQueryParams = HttpUtility.ParseQueryString(string.Empty);
-        authQueryParams["client_id"] = "Empty";
+        authQueryParams["client_id"] = "OneWareStudio";
         authQueryParams["redirect_uri"] = redirectUri;
         authQueryParams["response_type"] = "code";
-        authQueryParams["scope"] = "openid profile email";
+        authQueryParams["scope"] = "openid profile email offline_access";
         authQueryParams["code_challenge"] = codeChallenge;
         authQueryParams["code_challenge_method"] = "S256";
         authQueryParams["state"] = _state;
-        string authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{authQueryParams}";
+        var authUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{authQueryParams}";
 
         if (startNewListener)
         {
@@ -504,88 +501,39 @@ public sealed class OneWareCloudLoginService
             {
                 using var registration = cancellationToken.Register(() => listener.Stop());
 
-                var context1 = await listener.GetContextAsync();
+                var context = await listener.GetContextAsync();
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var step1Response = context1.Response;
+                var response = context.Response;
 
-                var query1 = HttpUtility.ParseQueryString(context1.Request!.Url!.Query);
-                var code1 = query1["code"];
-                var state1 = query1["state"];
-                var error1 = query1["error"];
+                var query = HttpUtility.ParseQueryString(context.Request!.Url!.Query);
+                var code = query["code"];
+                var state = query["state"];
+                var error = query["error"];
                 
-                if (!string.IsNullOrWhiteSpace(error1))
+                if (!string.IsNullOrWhiteSpace(error))
                 {
-                    _logger.Error($"Authentication error (step 1): {error1}");
-                    step1Response.StatusCode = 400;
-                    step1Response.Close();
+                    _logger.Error($"Authentication error: {error}");
+                    response.StatusCode = 400;
+                    response.Close();
                     return false;
                 }
 
-                if (string.IsNullOrWhiteSpace(code1) || state1 != _state)
+                if (string.IsNullOrWhiteSpace(code) || state != _state)
                 {
-                    _logger.Error("Invalid step-1 callback (missing code or state mismatch)");
-                    step1Response.StatusCode = 400;
-                    step1Response.Close();
-                    return false;
-                }
-                
-                await ExchangeCodeForTokensAsync(code1, authProviderBaseUrl, redirectUri,
-                    persistTokens: false, clientIdOverride: "Empty");
-
-                _offlineCodeVerifier = GenerateCodeVerifier();
-                string offlineCodeChallenge = GenerateCodeChallenge(_offlineCodeVerifier);
-                _offlineState = GenerateState();
-
-                var offlineQueryParams = HttpUtility.ParseQueryString(string.Empty);
-                offlineQueryParams["client_id"] = "OneWareStudio";
-                offlineQueryParams["redirect_uri"] = redirectUri;
-                offlineQueryParams["response_type"] = "code";
-                offlineQueryParams["scope"] = "openid profile email offline_access";
-                offlineQueryParams["code_challenge"] = offlineCodeChallenge;
-                offlineQueryParams["code_challenge_method"] = "S256";
-                offlineQueryParams["state"] = _offlineState;
-                offlineQueryParams["prompt"] = "consent";
-                string offlineAuthUrl = $"{authProviderBaseUrl}/protocol/openid-connect/auth?{offlineQueryParams}";
-
-                step1Response.Redirect(offlineAuthUrl);
-                step1Response.KeepAlive = false;
-                step1Response.Close();
-                
-                var context2 = await listener.GetContextAsync();
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var step2Response = context2.Response;
-
-                var query2 = HttpUtility.ParseQueryString(context2.Request!.Url!.Query);
-                var code2 = query2["code"];
-                var state2 = query2["state"];
-                var error2 = query2["error"];
-
-                if (!string.IsNullOrWhiteSpace(error2))
-                {
-                    _logger.Error($"Authentication error (step 2 offline upgrade): {error2}");
-                    step2Response.StatusCode = 400;
-                    step2Response.Close();
+                    _logger.Error("Invalid callback (missing code or state mismatch)");
+                    response.StatusCode = 400;
+                    response.Close();
                     return false;
                 }
 
-                if (string.IsNullOrWhiteSpace(code2) || state2 != _offlineState)
-                {
-                    _logger.Error("Invalid step-2 callback (missing code or state mismatch)");
-                    step2Response.StatusCode = 400;
-                    step2Response.Close();
-                    return false;
-                }
-
-                await ExchangeCodeForTokensAsync(code2, authProviderBaseUrl, redirectUri,
-                    persistTokens: true, codeVerifierOverride: _offlineCodeVerifier);
+                await ExchangeCodeForTokensAsync(code, authProviderBaseUrl, redirectUri);
 
                 var cloudHost = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
                     .TrimEnd('/');
-                step2Response.Redirect($"{cloudHost}/");
-                step2Response.KeepAlive = false;
-                step2Response.Close();
+                response.Redirect($"{cloudHost}/");
+                response.KeepAlive = false;
+                response.Close();
                 
                 return true;
             }
@@ -603,29 +551,24 @@ public sealed class OneWareCloudLoginService
                 _port = null;
                 _codeVerifier = null;
                 _state = null;
-                _offlineCodeVerifier = null;
-                _offlineState = null;
             }
 
         return startNewListener;
     }
 
-    private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri,
-        bool persistTokens = true, string? codeVerifierOverride = null, string? clientIdOverride = null)
+    private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri)
     {
         try
         {
             var tokenEndpoint = $"{authProviderBaseUrl}/protocol/openid-connect/token";
-            var usedCodeVerifier = codeVerifierOverride ?? _codeVerifier;
-            var clientId = clientIdOverride ?? "OneWareStudio";
 
             var request = new RestRequest(tokenEndpoint, Method.Post);
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
             request.AddParameter("grant_type", "authorization_code");
-            request.AddParameter("client_id", clientId);
+            request.AddParameter("client_id", "OneWareStudio");
             request.AddParameter("code", code);
             request.AddParameter("redirect_uri", redirectUri);
-            request.AddParameter("code_verifier", usedCodeVerifier);
+            request.AddParameter("code_verifier", _codeVerifier);
 
             var authClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authProviderBaseUrl));
             var response = await authClient.ExecuteAsync(request);
@@ -642,27 +585,17 @@ public sealed class OneWareCloudLoginService
                     return;
                 }
 
-                if (persistTokens)
+                if (string.IsNullOrWhiteSpace(refreshToken))
                 {
-                    if (string.IsNullOrWhiteSpace(refreshToken))
-                    {
-                        _logger.Error("Refresh token not found in step-2 response");
-                        return;
-                    }
+                    _logger.Error("Refresh token not found in response");
+                    return;
+                }
 
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        SaveCredentials(accessToken, refreshToken);
-                        _settingService.Save(_paths.SettingsPath);
-                    });
-                }
-                else
+                await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
-                    var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "sub")?.Value;
-                    if (userId != null)
-                        _jwtBearerTokenCache[userId] = jwtToken;
-                }
+                    SaveCredentials(accessToken, refreshToken);
+                    _settingService.Save(_paths.SettingsPath);
+                });
             }
             else
             {
@@ -701,13 +634,5 @@ public sealed class OneWareCloudLoginService
     private static bool ShouldLogoutAfterTokenRefreshFailure(HttpStatusCode status)
     {
         return status is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden;
-    }
-
-
-    private class LoginModel
-    {
-        [JsonPropertyName("email")] public required string Email { get; set; }
-
-        [JsonPropertyName("password")] public required string Password { get; set; }
     }
 }
