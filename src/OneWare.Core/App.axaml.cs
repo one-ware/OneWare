@@ -444,7 +444,7 @@ public class App : Application
                 null,
                 new RelayCommand(() =>
                 {
-                    PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/");
+                    PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/quick-start-guide");
                 }))
             {
                 Icon = new IconModel("AI_Img")
