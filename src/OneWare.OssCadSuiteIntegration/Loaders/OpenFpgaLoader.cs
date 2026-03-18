@@ -29,7 +29,7 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
         var board = properties.GetValueOrDefault("openFpgaLoaderBoard");
         var cable = properties.GetValueOrDefault("OpenFpgaLoader_Cable");
 
-        List<string> openFpgaLoaderArguments = [];
+        List<string?> openFpgaLoaderArguments = [];
         if (!string.IsNullOrEmpty(board))
         {
             openFpgaLoaderArguments.AddRange(["-b", board]);
@@ -44,9 +44,19 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
             return;
         }
 
-        if (longTerm) openFpgaLoaderArguments.Add("-f");
+        if (longTerm)
+        {
+            if (properties.GetValueOrDefault("openFpgaLoaderLongTermFlags") is { } longFlags)
+                openFpgaLoaderArguments.Add(longFlags);
+        
+            openFpgaLoaderArguments.Add("-f");
+        }
+        else if (properties.GetValueOrDefault("openFpgaLoaderShortTermFlags") is { } shortFlags)
+        {
+            openFpgaLoaderArguments.Add(shortFlags);
+        }
 
-        openFpgaLoaderArguments.AddRange(properties.GetValueOrDefault("OpenFpgaLoader_Flags")?.Split(' ',
+        openFpgaLoaderArguments.AddRange(properties.GetValueOrDefault("OpenFpgaLoaderFlags")?.Split(' ',
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
         
         var bitstreamFormat = properties
@@ -66,6 +76,7 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
         }
         
         var path = settingsService.GetSettingValue<string>(OssCadSuiteIntegrationModule.OpenFpgaLoaderPathSetting);
+        outputService.WriteLine("Starting OpenFpgaLoader ...");
         var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments,
             project.FullPath, $"Running {path}...", AppState.Loading, true, null, s =>
             {
@@ -73,7 +84,24 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
                 return true;
             });
         
-        await toolExecutionDispatcherService.ExecuteAsync(command);
+        // await toolExecutionDispatcherService.ExecuteAsync(command);
+        
+        try 
+        {
+            await toolExecutionDispatcherService.ExecuteAsync(command);
+        }
+        catch (Exception ex)
+        {
+            // Schreibt den Fehler direkt in deine Konsole/Output-Service
+            Dispatcher.UIThread.Post(() => 
+            {
+                outputService.WriteLine($"Error in ExecuteAsync: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    outputService.WriteLine($"Details: {ex.InnerException.Message}");
+                }
+            });
+        }
         
         //await childProcess.ExecuteShellAsync(path, openFpgaLoaderArguments,
         //    project.FullPath, "Running OpenFPGALoader...", AppState.Loading, true);

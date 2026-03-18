@@ -74,6 +74,14 @@ public class YosysService(
             var includedFiles = project.GetFiles("*.v").Concat(project.GetFiles("*.sv"))
                 .Where(x => !project.IsCompileExcluded(x))
                 .Where(x => !project.IsTestBench(x));
+            
+            var genVerilogPath = Path.Combine(project.RootFolderPath, "build", "gen_verilog");
+            if (Directory.Exists(genVerilogPath))
+            {
+                var generatedFiles = Directory.EnumerateFiles(genVerilogPath, "*.v", 
+                    SearchOption.AllDirectories);
+                includedFiles = includedFiles.Concat(generatedFiles);
+            }
 
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
@@ -91,7 +99,7 @@ public class YosysService(
             }
             else
             {
-                yosysCommand = yosysCommand.Replace("$TOP", top.Split(".")[0]);
+                yosysCommand = yosysCommand.Replace("$TOP", Path.GetFileNameWithoutExtension(top));
                 yosysCommand = yosysCommand.Replace("$SYNTH_TOOL", yosysSynthTool);
                 yosysCommand = yosysCommand.Replace("$OUTPUT", "build/synth.json");
 
