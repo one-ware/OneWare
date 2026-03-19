@@ -9,8 +9,7 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace OneWare.OssCadSuiteIntegration.Loaders;
 
-public class OpenFpgaLoader(IChildProcessService childProcess, 
-    ISettingsService settingsService, ILogger logger, IOutputService outputService, 
+public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IOutputService outputService, 
     IToolExecutionDispatcherService toolExecutionDispatcherService)
     : IFpgaLoader
 {
@@ -29,7 +28,7 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
         var board = properties.GetValueOrDefault("openFpgaLoaderBoard");
         var cable = properties.GetValueOrDefault("OpenFpgaLoader_Cable");
 
-        List<string?> openFpgaLoaderArguments = [];
+        List<string> openFpgaLoaderArguments = [];
         if (!string.IsNullOrEmpty(board))
         {
             openFpgaLoaderArguments.AddRange(["-b", board]);
@@ -77,14 +76,12 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
         
         var path = settingsService.GetSettingValue<string>(OssCadSuiteIntegrationModule.OpenFpgaLoaderPathSetting);
         outputService.WriteLine("Starting OpenFpgaLoader ...");
-        var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments,
+        var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments!,
             project.FullPath, $"Running {path}...", AppState.Loading, true, null, s =>
             {
                 Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                 return true;
             });
-        
-        // await toolExecutionDispatcherService.ExecuteAsync(command);
         
         try 
         {
@@ -92,7 +89,6 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
         }
         catch (Exception ex)
         {
-            // Schreibt den Fehler direkt in deine Konsole/Output-Service
             Dispatcher.UIThread.Post(() => 
             {
                 outputService.WriteLine($"Error in ExecuteAsync: {ex.Message}");
@@ -102,8 +98,5 @@ public class OpenFpgaLoader(IChildProcessService childProcess,
                 }
             });
         }
-        
-        //await childProcess.ExecuteShellAsync(path, openFpgaLoaderArguments,
-        //    project.FullPath, "Running OpenFPGALoader...", AppState.Loading, true);
     }
 }

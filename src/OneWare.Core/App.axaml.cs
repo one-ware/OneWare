@@ -401,6 +401,19 @@ public class App : Application
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
             Icon = new IconModel("VsImageLib.SaveAll16X")
         });
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemModel("exit")
+        {
+            Command = new RelayCommand(() =>
+            {
+                if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    desktop.MainWindow?.Close();
+                }
+            }),
+            Header = "Exit",
+            InputGesture = new KeyGesture(Key.X, PlatformHelper.ControlKey | KeyModifiers.Shift),
+            Icon = new IconModel("VsImageLib.Exit")
+        });
 
         var applicationCommandService = Services.Resolve<IApplicationCommandService>();
 

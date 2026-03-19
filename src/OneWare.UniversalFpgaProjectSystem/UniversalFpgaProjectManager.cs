@@ -1,11 +1,6 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using CommunityToolkit.Mvvm.Input;
-using OneWare.Essentials.Extensions;
-using OneWare.Essentials.Helpers;
+﻿using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
-using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
@@ -19,14 +14,16 @@ public class UniversalFpgaProjectManager : IProjectManager
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly IWindowService _windowService;
+    private readonly IOutputService _outputService;
 
     public UniversalFpgaProjectManager(IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
-        IWindowService windowService, FpgaService fpgaService)
+        IWindowService windowService, FpgaService fpgaService, IOutputService outputService)
     {
         _projectExplorerService = projectExplorerService;
         _mainDockService = mainDockService;
         _windowService = windowService;
         _fpgaService = fpgaService;
+        _outputService = outputService;
 
         _projectExplorerService.RegisterConstructContextMenu(ConstructContextMenu);
     }
@@ -111,6 +108,12 @@ public class UniversalFpgaProjectManager : IProjectManager
                         Header = "Reload",
                         Command = new AsyncRelayCommand(() => _projectExplorerService.ReloadProjectAsync(root)),
                         Icon = new IconModel("VsImageLib.RefreshGrey16X")
+                    });
+                    menuItems.Add(new MenuItemModel("Clean")
+                    {
+                        Header = "Clean",
+                        Command = new AsyncRelayCommand(() =>
+                            CleanBuildFoldersAsync(root))
                     });
                     menuItems.Add(new MenuItemModel("ProjectSettings")
                     {
@@ -210,5 +213,19 @@ public class UniversalFpgaProjectManager : IProjectManager
                 ContainerLocator.Container.Resolve<UniversalFpgaProjectSettingsEditorViewModel>((
                     typeof(UniversalFpgaProjectRoot), root))
         });
+    }
+
+    private async Task CleanBuildFoldersAsync(UniversalFpgaProjectRoot root)
+    {
+        var buildFolderPath = Path.Combine(root.RootFolderPath, "build");
+        _outputService.WriteLine($"Cleaning build folders: {buildFolderPath}");
+        if (Directory.Exists(buildFolderPath))
+        {
+            await Task.Run(() =>
+            {
+                Directory.Delete(buildFolderPath, true);
+                Directory.CreateDirectory(buildFolderPath);
+            });
+        }
     }
 }

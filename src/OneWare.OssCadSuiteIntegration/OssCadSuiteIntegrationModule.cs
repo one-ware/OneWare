@@ -546,8 +546,13 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 Path.Combine(x, "lib", $"python3{PlatformHelper.ExecutableExtension}"));
             //environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
             //    Path.Combine(x, "share", $"verilator"));
-            environmentService.SetEnvironmentVariable("GHDL_PREFIX",
-                Path.Combine(x, "lib", $"ghdl"));
+            // GHDL is not provided in the Windows version
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                environmentService.SetEnvironmentVariable("GHDL_PREFIX",
+                    Path.Combine(x, "lib", $"ghdl"));
+            }
+            
             environmentService.SetEnvironmentVariable("GTK_EXE_PREFIX", x);
             environmentService.SetEnvironmentVariable("GTK_DATA_PREFIX", x);
             environmentService.SetEnvironmentVariable("GDK_PIXBUF_MODULEDIR",
