@@ -367,6 +367,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         var windowService = serviceProvider.Resolve<IWindowService>();
         var projectExplorerService = serviceProvider.Resolve<IProjectExplorerService>();
         var fpgaService = serviceProvider.Resolve<FpgaService>();
+        var outputService = serviceProvider.Resolve<IOutputService>();
 
         fpgaService.RegisterNodeProvider<YosysNodeProvider>();
         
@@ -545,8 +546,13 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 Path.Combine(x, "lib", $"python3{PlatformHelper.ExecutableExtension}"));
             //environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
             //    Path.Combine(x, "share", $"verilator"));
-            environmentService.SetEnvironmentVariable("GHDL_PREFIX",
-                Path.Combine(x, "lib", $"ghdl"));
+            // GHDL is not provided in the Windows version
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                environmentService.SetEnvironmentVariable("GHDL_PREFIX",
+                    Path.Combine(x, "lib", $"ghdl"));
+            }
+            
             environmentService.SetEnvironmentVariable("GTK_EXE_PREFIX", x);
             environmentService.SetEnvironmentVariable("GTK_DATA_PREFIX", x);
             environmentService.SetEnvironmentVariable("GDK_PIXBUF_MODULEDIR",
@@ -596,6 +602,25 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                             Command = new AsyncRelayCommand(() => YosysSettingHelper.UpdateProjectPcFileAsync(pcf.Root, pcf)),
                         });
                     }
+                }
+            }
+            if (x is [IProjectFile { Extension: ".ccf" } ccf])
+            {
+                if (ccf.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot)
+                {
+                        l.Add(new MenuItemModel("ccf")
+                        {
+                            Header = "Convert to pcf",
+                            Command = new AsyncRelayCommand(() =>
+                            {
+                                var absoluteCcfPath = Path.Combine(universalFpgaProjectRoot.RootFolderPath, ccf.FullPath);
+                                var absolutePcfPath = Path.ChangeExtension(absoluteCcfPath, ".pcf");
+                                outputService.WriteLine($"Converting {absoluteCcfPath} to CCF File");
+                                if (Path.Exists(absolutePcfPath))
+                                    ConstraintFileHelper.Convert(absoluteCcfPath, absolutePcfPath);
+                                return Task.CompletedTask;
+                            }),
+                        });
                 }
             }
         });
