@@ -149,7 +149,16 @@ public class PluginService : IPluginService
                     // Try 1
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
                     var libPath = Path.Combine(pluginPath, libFileName);
+                    
+                    // Remove the 'lib' prefix and '.so' suffix, since some libraries are named like that for compatibility reasons
+                    if (libFileName.EndsWith(".so.dll") && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        libFileName = libFileName.Replace(".so.dll", ".dll");
 
+                        if (libFileName.StartsWith("lib"))
+                            libFileName = libFileName[3..];
+                    }
+                    
                     // Try 2 : look in runtimes folder
                     if (!File.Exists(libPath))
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
