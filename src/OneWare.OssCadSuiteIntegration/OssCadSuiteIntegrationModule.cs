@@ -634,8 +634,9 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         fpgaService.RegisterProjectEntryModification(x =>
         {
             if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
-            
-            if (x is IProjectFile file && YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == file.RelativePath)
+            if (!(x is IProjectFile file && file.Extension == ".pcf")) return;
+
+            if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == file.RelativePath)
             {
                 x.Icon?.AddOverlay("ConstraintFile", "ForkAwesome.Check");
             }
