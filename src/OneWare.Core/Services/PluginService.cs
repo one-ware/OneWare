@@ -108,16 +108,32 @@ public class PluginService : IPluginService
     private IReadOnlyList<IOneWareModule> LoadModulesFromPath(string path)
     {
         var assemblies = new List<Assembly>();
-        foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories))
+        var loadedAssemblyNames = AppDomain.CurrentDomain.GetAssemblies()
+            .Select(static assembly => assembly.GetName().FullName)
+            .Where(static fullName => !string.IsNullOrWhiteSpace(fullName))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories)
+                     .Where(file => ShouldProbePluginAssembly(path, file)))
+        {
+            if (!TryGetManagedAssemblyName(file, out var assemblyName))
+                continue;
+
+            if (assemblyName.FullName is { } fullName && loadedAssemblyNames.Contains(fullName))
+                continue;
+
             try
             {
                 assemblies.Add(Assembly.LoadFrom(file));
+                if (assemblyName.FullName is { } loadedFullName)
+                    loadedAssemblyNames.Add(loadedFullName);
             }
             catch (Exception ex)
             {
                 ContainerLocator.Container?.Resolve<ILogger>()
                     .Warning($"Skipping plugin assembly '{Path.GetFileName(file)}': {ex.Message}", ex);
             }
+        }
 
         var added = new List<IOneWareModule>();
         foreach (var assembly in assemblies) added.AddRange(_moduleCatalog.AddModulesFromAssembly(assembly));
@@ -127,6 +143,41 @@ public class PluginService : IPluginService
                 .Log($"Module '{module.Id}' loaded");
 
         return added;
+    }
+
+    // Usually we can assume that all managed DLLs will be in the base dir of a plugin
+    // Some libraries ship in runtimes/arch/lib/...
+    private static bool ShouldProbePluginAssembly(string pluginPath, string filePath)
+    {
+        var relativePath = Path.GetRelativePath(pluginPath, filePath);
+        var pathSegments = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        if (pathSegments.Length < 2 || !pathSegments[0].Equals("runtimes", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (pathSegments.Length < 4)
+            return false;
+
+        return pathSegments[1].Equals(PlatformHelper.PlatformIdentifier, StringComparison.OrdinalIgnoreCase)
+               && pathSegments[2].Equals("lib", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryGetManagedAssemblyName(string filePath, out AssemblyName assemblyName)
+    {
+        try
+        {
+            assemblyName = AssemblyName.GetAssemblyName(filePath);
+            return true;
+        }
+        catch (BadImageFormatException)
+        {
+        }
+        catch (FileLoadException)
+        {
+        }
+
+        assemblyName = null!;
+        return false;
     }
 
     private void SetupNativeImports(string pluginPath)
@@ -198,33 +249,5 @@ public class PluginService : IPluginService
                     $"Skipping resolver setup for {assembly.FullName}, resolver already set.");
             }
         }
-    }
-
-    private bool TryResolveSharedOnnxRuntimeLibraryPath(string libraryName, out string fullPath)
-    {
-        fullPath = string.Empty;
-
-        if (!libraryName.Contains("onnxruntime", StringComparison.OrdinalIgnoreCase)) return false;
-        if (!Directory.Exists(_paths.OnnxRuntimesDirectory)) return false;
-
-        var fileName = PlatformHelper.GetLibraryFileName(libraryName);
-        var rid = PlatformHelper.PlatformIdentifier;
-        var candidatePaths = new List<string>();
-
-        foreach (var runtimeDir in Directory.GetDirectories(_paths.OnnxRuntimesDirectory))
-        {
-            candidatePaths.Add(Path.Combine(runtimeDir, fileName));
-            candidatePaths.Add(Path.Combine(runtimeDir, "runtimes", rid, "native", fileName));
-            candidatePaths.Add(Path.Combine(runtimeDir, $"lib{fileName}"));
-            candidatePaths.Add(Path.Combine(runtimeDir, "runtimes", rid, "native", $"lib{fileName}"));
-        }
-
-        foreach (var candidate in candidatePaths.Where(File.Exists))
-        {
-            fullPath = candidate;
-            return true;
-        }
-
-        return false;
     }
 }
