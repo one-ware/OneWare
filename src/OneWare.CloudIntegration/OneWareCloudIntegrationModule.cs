@@ -34,7 +34,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
             Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
 
         serviceProvider.Resolve<ISettingsService>()
-            .RegisterSetting("General", "OneWare Cloud", OneWareCloudHostKey,
+            .RegisterSetting("Experimental", "OneWare Cloud", OneWareCloudHostKey,
                 new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
         serviceProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountUserIdKey,
             serviceProvider.Resolve<OneWareCloudAccountSetting>());
