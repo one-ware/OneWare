@@ -69,6 +69,9 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
             case "bit":
                 openFpgaLoaderArguments.Add("./build/pack.bit");
                 break;
+            case "fs":
+                openFpgaLoaderArguments.Add("./build/pack.fs");
+                break;
             default:
                 outputService.WriteLine($"Could not find output type: {bitstreamFormat}");
                 return;

@@ -143,7 +143,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         _packOutputTypeSetting = new ComboBoxSetting("Pack output format",
             defaultProperties.GetValueOrDefault("packToolOutputFormat") ?? "", [
                 "bin",
-                "bit"
+                "bit",
+                "fs"
             ])
         {
             HoverDescription = "Set Pack tool output format"
