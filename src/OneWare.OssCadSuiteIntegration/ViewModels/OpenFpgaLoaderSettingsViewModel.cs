@@ -50,7 +50,8 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
         _inputBitstreamFormat = new ComboBoxSetting("Pack output format",
             defaultProperties.GetValueOrDefault("openFpgaLoaderBitstreamFormat") ?? "", [
                 "bin",
-                "bit"
+                "bit",
+                "fs"
             ])
         {
             HoverDescription = "Set Pack tool output format"
