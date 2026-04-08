@@ -55,7 +55,7 @@
         <Content Include="com.one_ware.OneWare.mime.xml" CopyToOutputDirectory="PreserveNewest"/>
 
         <!-- Temporary fix for DBus issue on Linux-->
-        <PackageReference Include="Tmds.DBus.Protocol" Version="0.23.0"/>
+        <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0"/>
     </ItemGroup>
 
     <!--Exclude Terminal on Linux to stop crashes on SetWindowSize. TODO: Check if this is still needed-->
