@@ -197,22 +197,23 @@ public class PluginService : IPluginService
             {
                 NativeLibrary.SetDllImportResolver(assembly, (libraryName, _, _) =>
                 {
-                    // Try 1
+                    // Try 1 : Check runtimes folder
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
-                    var libPath = Path.Combine(pluginPath, libFileName);
+                    var libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                        libFileName);
                     
-                    // Try 2 : look in runtimes folder
-                    if (!File.Exists(libPath))
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
-                            libFileName);
-
-                    // Try 3: add lib infront of it
-                    if (!File.Exists(libPath)) libPath = Path.Combine(pluginPath, $"lib{libFileName}");
-
-                    // Try 4 : look in (plugin) runtimes folder with lib infront
+                    // Try 2 : add lib infront in runtimes folder
                     if (!File.Exists(libPath))
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
                             $"lib{libFileName}");
+
+                    // Try 3: check base
+                    if (!File.Exists(libPath)) 
+                        libPath = Path.Combine(pluginPath, libFileName);
+
+                    // Try 4 : base with lib infront
+                    if (!File.Exists(libPath))
+                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
 
                     // Try 5: MacOS weirdness, look in (own) base folder
                     // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
