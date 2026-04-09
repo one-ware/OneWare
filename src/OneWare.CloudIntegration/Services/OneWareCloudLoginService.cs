@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -221,10 +222,7 @@ public sealed class OneWareCloudLoginService
         {
             string? authBaseUrl = await GetAuthProviderUrlAsync();
             if (string.IsNullOrWhiteSpace(authBaseUrl))
-            {
-                _logger.Error("Failed to get auth provider URL.");
                 return (false, HttpStatusCode.ServiceUnavailable);
-            }
 
             string tokenEndpoint = $"{authBaseUrl}/protocol/openid-connect/token";
             
@@ -272,10 +270,7 @@ public sealed class OneWareCloudLoginService
         {
             string? authBaseUrl = await GetAuthProviderUrlAsync();
             if (string.IsNullOrWhiteSpace(authBaseUrl))
-            {
-                _logger.Error("Failed to get auth provider URL.");
                 return (false, HttpStatusCode.ServiceUnavailable);
-            }
 
             string tokenEndpoint = $"{authBaseUrl}/protocol/openid-connect/token";
             
@@ -420,17 +415,33 @@ public sealed class OneWareCloudLoginService
             var response = await GetRestClient().ExecuteGetAsync(request);
 
             if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
-            {
                 return response.Content.Trim('"'); 
-            }
+
+            _logger.Error("Failed to get auth provider URL.", showOutput: false);
 
             return null;
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            if (!IsConnectivityFailure(e))
+                _logger.Error(e.Message, e, showOutput: false);
+
             return null;
         }
+    }
+
+    private static bool IsConnectivityFailure(Exception exception)
+    {
+        return exception switch
+        {
+            HttpRequestException => true,
+            SocketException => true,
+            TimeoutException => true,
+            TaskCanceledException => true,
+            OperationCanceledException => true,
+            _ when exception.InnerException is not null => IsConnectivityFailure(exception.InnerException),
+            _ => false
+        };
     }
 
     private static string GenerateCodeVerifier()
@@ -472,10 +483,7 @@ public sealed class OneWareCloudLoginService
 
         var authProviderBaseUrl = await GetAuthProviderUrlAsync();
         if (string.IsNullOrWhiteSpace(authProviderBaseUrl))
-        {
-            _logger.Error("Failed to get auth provider URL");
             return false;
-        }
         
         _codeVerifier = GenerateCodeVerifier();
         string codeChallenge = GenerateCodeChallenge(_codeVerifier);
