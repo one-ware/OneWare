@@ -197,31 +197,23 @@ public class PluginService : IPluginService
             {
                 NativeLibrary.SetDllImportResolver(assembly, (libraryName, _, _) =>
                 {
-                    // Try 1
+                    // Try 1 : Check runtimes folder
                     var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
-                    var libPath = Path.Combine(pluginPath, libFileName);
+                    var libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
+                        libFileName);
                     
-                    // Remove the 'lib' prefix and '.so' suffix, since some libraries are named like that for compatibility reasons
-                    if (libFileName.EndsWith(".so.dll") && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        libFileName = libFileName.Replace(".so.dll", ".dll");
-
-                        if (libFileName.StartsWith("lib"))
-                            libFileName = libFileName[3..];
-                    }
-                    
-                    // Try 2 : look in runtimes folder
-                    if (!File.Exists(libPath))
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
-                            libFileName);
-
-                    // Try 3: add lib infront of it
-                    if (!File.Exists(libPath)) libPath = Path.Combine(pluginPath, $"lib{libFileName}");
-
-                    // Try 4 : look in (plugin) runtimes folder with lib infront
+                    // Try 2 : add lib infront in runtimes folder
                     if (!File.Exists(libPath))
                         libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
                             $"lib{libFileName}");
+
+                    // Try 3: check base
+                    if (!File.Exists(libPath)) 
+                        libPath = Path.Combine(pluginPath, libFileName);
+
+                    // Try 4 : base with lib infront
+                    if (!File.Exists(libPath))
+                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
 
                     // Try 5: MacOS weirdness, look in (own) base folder
                     // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
@@ -231,12 +223,12 @@ public class PluginService : IPluginService
                     // Try 6: Same as 5 but added lib Prefix
                     if (!File.Exists(libPath))
                         libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
-
+                    
                     if (NativeLibrary.TryLoad(libPath, out var customHandle)) return customHandle;
 
                     if (NativeLibrary.TryLoad(libraryName, out var handle)) return handle;
 
-                    Console.WriteLine($"Loading native library {libraryName} failed");
+                    Console.WriteLine($"Loading native library {libraryName} failed {File.Exists(libPath)}");
                     return IntPtr.Zero;
                 });
 

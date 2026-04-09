@@ -80,11 +80,11 @@ public static class PlatformHelper
     public static string GetLibraryFileName(string libraryName)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return $"{libraryName}.dll"; // Windows uses .dll
+            return libraryName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? libraryName : $"{libraryName}.dll";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            return $"{libraryName}.dylib"; // macOS uses .dylib
+            return libraryName.EndsWith(".dylib", StringComparison.OrdinalIgnoreCase) ? libraryName : $"{libraryName}.dylib";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return $"{libraryName}.so"; // Linux uses .so
+            return libraryName.EndsWith(".so", StringComparison.OrdinalIgnoreCase) ? libraryName : $"{libraryName}.so";
 
         throw new PlatformNotSupportedException("Unsupported operating system.");
     }
