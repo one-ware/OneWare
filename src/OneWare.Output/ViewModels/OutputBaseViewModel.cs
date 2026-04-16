@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using OneWare.Essentials.Models;
@@ -63,6 +64,12 @@ public abstract class OutputBaseViewModel : ExtendedTool
     {
         if (string.IsNullOrEmpty(text)) return;
 
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(() => Write(text, textColor, owner));
+            return;
+        }
+
         OutputDocument.BeginUpdate();
 
         for (var i = 0; i < text.Length; i++)
@@ -100,6 +107,12 @@ public abstract class OutputBaseViewModel : ExtendedTool
 
     public void Clear()
     {
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(Clear);
+            return;
+        }
+
         OutputDocument.Text = "";
         OutputDocument.UndoStack.ClearAll();
         LineContexts.Clear();

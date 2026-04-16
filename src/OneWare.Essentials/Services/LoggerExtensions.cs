@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 
@@ -14,8 +15,7 @@ public static class LoggerExtensions
         var text = message?.ToString() ?? string.Empty;
         logger.LogInformation(text);
 
-        if (showOutput && ContainerLocator.Container?.IsRegistered<IOutputService>() == true)
-            ContainerLocator.Current.Resolve<IOutputService>().WriteLine(text, outputBrush);
+        WriteToOutput(text, showOutput, outputBrush);
     }
 
     public static void Warning(this ILogger logger, string message, Exception? exception = null, bool showOutput = true,
@@ -34,16 +34,31 @@ public static class LoggerExtensions
         ShowDialog(message, exception, showDialog, "Error", MessageBoxIcon.Error, dialogOwner);
     }
 
-    private static void WriteToOutput(string message, bool showOutput, IBrush brush)
+    private static void WriteToOutput(string message, bool showOutput, IBrush? brush)
     {
         if (!showOutput || ContainerLocator.Container?.IsRegistered<IOutputService>() != true)
             return;
 
-        ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message, brush);
+        void WriteAndShow()
+        {
+            try
+            {
+                ContainerLocator.Current.Resolve<IOutputService>().WriteLine(message, brush);
 
-        if (LayoutLoaded)
-            ContainerLocator.Current.Resolve<IMainDockService>()
-                .Show(ContainerLocator.Current.Resolve<IOutputService>(), DockShowLocation.Bottom);
+                if (LayoutLoaded)
+                    ContainerLocator.Current.Resolve<IMainDockService>()
+                        .Show(ContainerLocator.Current.Resolve<IOutputService>(), DockShowLocation.Bottom);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to write log output to the output window: {ex}");
+            }
+        }
+
+        if (Dispatcher.UIThread.CheckAccess())
+            WriteAndShow();
+        else
+            Dispatcher.UIThread.Post(WriteAndShow);
     }
 
     private static void ShowDialog(string message, Exception? exception, bool showDialog, string title,
@@ -52,7 +67,15 @@ public static class LoggerExtensions
         if (!showDialog || ContainerLocator.Container?.IsRegistered<IWindowService>() != true)
             return;
 
-        var output = exception == null ? message : $"{message}\n{exception.Message}";
-        _ = ContainerLocator.Current.Resolve<IWindowService>().ShowMessageAsync(title, output, icon, owner);
+        void ShowMessage()
+        {
+            var output = exception == null ? message : $"{message}\n{exception.Message}";
+            _ = ContainerLocator.Current.Resolve<IWindowService>().ShowMessageAsync(title, output, icon, owner);
+        }
+
+        if (Dispatcher.UIThread.CheckAccess())
+            ShowMessage();
+        else
+            Dispatcher.UIThread.Post(ShowMessage);
     }
 }
