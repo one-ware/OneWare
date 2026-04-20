@@ -60,90 +60,6 @@ public sealed class OneWareCloudLoginService
 
     public bool OneWareCloudIsUsed { get; }
 
-    /// <summary>
-    ///     Refreshes the refresh token if it expires within 14 days
-    ///     Should be called on application startup
-    /// </summary>
-    public async Task RefreshRefreshTokenAsync()
-    {
-        try
-        {
-            var userId = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
-            if (string.IsNullOrWhiteSpace(userId))
-                return;
-
-            string? refreshToken = await GetRefreshToken(userId);
-
-            if (string.IsNullOrWhiteSpace(refreshToken))
-            {
-                _logger.Warning("No refresh token found for configured cloud account. Logging out local session.");
-                Logout(userId);
-                return;
-            }
-
-            DateTime? expiryDate = TryGetRefreshTokenExpiry(refreshToken);
-
-            if (expiryDate.HasValue)
-            {
-                if (expiryDate.Value <= DateTime.UtcNow)
-                {
-                    _logger.Warning("Stored refresh token has expired. Logging out local session.");
-                    Logout(userId);
-                    return;
-                }
-
-                var daysUntilExpiry = (expiryDate.Value - DateTime.UtcNow).TotalDays;
-
-                if (daysUntilExpiry <= 14)
-                {
-                    // Renew the refresh token (this also updates the bearer token as a side effect)
-                    var (success, status) = await RenewRefreshTokenAsync(refreshToken);
-
-                    if (success)
-                    {
-                        _logger.Log("Refresh token successfully renewed on startup.");
-                    }
-                    else
-                    {
-                        _logger.Warning($"Failed to renew refresh token on startup. Status: {status}");
-
-                        if (ShouldLogoutAfterTokenRefreshFailure(status))
-                            Logout(userId);
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"Error during startup token check: {e.Message}", e);
-        }
-    }
-
-    /// <summary>
-    ///     Tries to decode the refresh token and extract its expiry date
-    /// </summary>
-    private DateTime? TryGetRefreshTokenExpiry(string refreshToken)
-    {
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
-            
-            // Check if it's a valid JWT
-            if (!handler.CanReadToken(refreshToken))
-                return null;
-            
-            var jwtToken = handler.ReadJwtToken(refreshToken);
-            
-            // Return the expiry date
-            return jwtToken.ValidTo;
-        }
-        catch (Exception e)
-        {
-            _logger.Warning($"Could not decode refresh token as JWT: {e.Message}");
-            return null;
-        }
-    }
-
     public RestClient GetRestClient()
     {
         var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
@@ -173,9 +89,7 @@ public sealed class OneWareCloudLoginService
 
             if (existingToken?.ValidTo > DateTime.UtcNow.AddMinutes(2))
                 return (existingToken, HttpStatusCode.NoContent);
-            
-            await RefreshRefreshTokenAsync();
-            
+
             var (result, status) = await RefreshFromUserIdAsync(userId);
 
             if (!result)
@@ -205,7 +119,7 @@ public sealed class OneWareCloudLoginService
             if (refreshToken == null)
                 return (false, HttpStatusCode.Unauthorized);
 
-            var result = await RefreshBearerTokenAsync(refreshToken);
+            var result = await RefreshTokensAsync(refreshToken);
 
             return result;
         }
@@ -216,7 +130,7 @@ public sealed class OneWareCloudLoginService
         }
     }
 
-    private async Task<(bool success, HttpStatusCode status)> RefreshBearerTokenAsync(string refreshToken)
+    private async Task<(bool success, HttpStatusCode status)> RefreshTokensAsync(string refreshToken)
     {
         try
         {
@@ -243,55 +157,6 @@ public sealed class OneWareCloudLoginService
 
                 if (token == null || newRefreshToken == null)
                     throw new Exception("Token or refresh token not found");
-
-                SaveCredentials(token, newRefreshToken);
-
-                return (true, response.StatusCode);
-            }
-
-            return (false, response.StatusCode);
-        }
-        catch (Exception e)
-        {
-            _logger.Error(e.Message, e);
-            return (false, HttpStatusCode.InternalServerError);
-        }
-    }
-
-    /// <summary>
-    ///     Renews the refresh token proactively when it's close to expiration (e.g., within 14 days).
-    ///     This uses the same Keycloak endpoint as RefreshBearerTokenAsync, but is called explicitly
-    ///     to extend the refresh token's validity period.
-    ///     Note: Keycloak returns both a new access token and a new refresh token.
-    /// </summary>
-    private async Task<(bool success, HttpStatusCode status)> RenewRefreshTokenAsync(string refreshToken)
-    {
-        try
-        {
-            string? authBaseUrl = await GetAuthProviderUrlAsync();
-            if (string.IsNullOrWhiteSpace(authBaseUrl))
-                return (false, HttpStatusCode.ServiceUnavailable);
-
-            string tokenEndpoint = $"{authBaseUrl}/protocol/openid-connect/token";
-            
-            RestRequest request = new RestRequest(tokenEndpoint, Method.Post);
-            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
-            request.AddParameter("grant_type", "refresh_token");
-            request.AddParameter("client_id", "OneWareStudio");
-            request.AddParameter("refresh_token", refreshToken);
-
-            RestClient authClient = new RestClient(_httpService.HttpClient, new RestClientOptions(authBaseUrl));
-            RestResponse response = await authClient.ExecuteAsync(request);
-
-            if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
-            {
-                JsonNode data = JsonSerializer.Deserialize<JsonNode>(response.Content)!;
-                string? token = data["access_token"]?.GetValue<string>();
-                string? newRefreshToken = data["refresh_token"]?.GetValue<string>();
-
-                if (token == null || newRefreshToken == null)
-                    throw new Exception("Token or refresh token not found");
-                
 
                 SaveCredentials(token, newRefreshToken);
 
