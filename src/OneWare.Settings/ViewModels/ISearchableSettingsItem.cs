@@ -11,4 +11,9 @@ public interface ISearchableSettingsItem : INotifyPropertyChanged
     ///     Gets a value indicating whether this item (or any of its children) matches the current search query.
     /// </summary>
     bool IsVisibleBySearch { get; }
+
+    /// <summary>
+    ///     Gets or sets a value indicating whether this item should appear expanded in the tree.
+    /// </summary>
+    bool IsExpanded { get; set; }
 }

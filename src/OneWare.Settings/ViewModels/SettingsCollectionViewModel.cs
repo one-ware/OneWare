@@ -11,6 +11,7 @@ namespace OneWare.Settings.ViewModels;
 
 public class SettingsCollectionViewModel : ObservableObject, ISearchableSettingsItem
 {
+    private bool _isExpanded;
     private bool _isVisibleBySearch = true;
 
     public SettingsCollectionViewModel(string label, string? iconKey = null, string? toolTip = null)
@@ -55,6 +56,12 @@ public class SettingsCollectionViewModel : ObservableObject, ISearchableSettings
     {
         get => _isVisibleBySearch;
         set => SetProperty(ref _isVisibleBySearch, value);
+    }
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => SetProperty(ref _isExpanded, value);
     }
 
     private void ConstructViewModels(IEnumerable<Setting> source)

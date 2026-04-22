@@ -96,6 +96,7 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
         var hasQuery = query.Length > 0;
 
         SettingsPageViewModel? firstMatchingPage = null;
+        SettingsCollectionViewModel? firstMatchingCollection = null;
 
         foreach (var page in SettingPages)
         {
@@ -122,21 +123,23 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
                                         || collectionHeaderMatches
                                         || anySettingMatches;
                 collection.IsVisibleBySearch = collectionVisible;
+                collection.IsExpanded = false;
                 if (collectionVisible) anyChildMatches = true;
+
+                if (hasQuery && firstMatchingCollection == null && (collectionHeaderMatches || anySettingMatches))
+                    firstMatchingCollection = collection;
             }
 
             var pageVisible = !hasQuery || pageHeaderMatches || anyChildMatches;
             page.IsVisibleBySearch = pageVisible;
+            page.IsExpanded = hasQuery && pageVisible;
 
             if (hasQuery && pageVisible)
-            {
-                page.IsExpanded = true;
                 firstMatchingPage ??= page;
-            }
         }
 
-        if (hasQuery && firstMatchingPage != null && !IsCurrentSelectionVisible())
-            SelectedItem = firstMatchingPage;
+        if (hasQuery && !IsCurrentSelectionVisible())
+            SelectedItem = firstMatchingCollection != null ? firstMatchingCollection : firstMatchingPage;
     }
 
     private bool IsCurrentSelectionVisible()
