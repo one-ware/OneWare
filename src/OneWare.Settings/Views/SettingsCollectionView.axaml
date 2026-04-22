@@ -9,9 +9,7 @@
              x:DataType="viewModels:SettingsCollectionViewModel">
     <DockPanel HorizontalAlignment="Stretch">
         <DockPanel IsVisible="{Binding ShowTitle}" DockPanel.Dock="Top" Margin="0 5" LastChildFill="True">
-            <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                   Source="{Binding Icon}" Width="14" />
-            <TextBlock Text="{Binding Header}" FontWeight="Bold" />
+            <TextBlock Text="{Binding Header}" FontWeight="Bold" FontSize="13" />
 
             <Border Background="{DynamicResource ThemeBorderLowBrush}" Margin="10 0"
                     Height="1" VerticalAlignment="Center" />
@@ -26,7 +24,14 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemContainerTheme>
                 <ControlTheme TargetType="ContentPresenter" x:DataType="settingTypes1:SettingViewModel">
-                    <Setter Property="IsVisible" Value="{Binding Setting.IsVisibleObservable^, FallbackValue={x:Null}}" />
+                    <Setter Property="IsVisible">
+                        <Setter.Value>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="IsVisibleBySearch" />
+                                <Binding Path="Setting.IsVisibleObservable^" FallbackValue="True" TargetNullValue="True" />
+                            </MultiBinding>
+                        </Setter.Value>
+                    </Setter>
                 </ControlTheme>
             </ItemsControl.ItemContainerTheme>
         </ItemsControl>
