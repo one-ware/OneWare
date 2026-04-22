@@ -408,7 +408,7 @@ public class App : Application
                 () => Services.Resolve<IMainDockService>().CurrentDocument is not null),
             Header = "Close Tab",
             InputGesture = new KeyGesture(Key.W, PlatformHelper.ControlKey),
-            Icon = new IconModel("VsImageLib.CloseDocumentGroup16X")
+            Icon = new IconModel("MaterialDesign.Close")
         });
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemModel("exit")
         {
