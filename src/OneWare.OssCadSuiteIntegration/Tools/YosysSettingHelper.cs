@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
@@ -51,6 +52,6 @@ public class YosysSettingHelper
         if (!hasPcfInclude)
             project.Properties.AddToStringArray("include", "*.pcf");
 
-        project.Properties.SetString("ossCad/constraintFile", constraintFile);
+        project.Properties.SetString("ossCad/constraintFile", constraintFile?.ToUnixPath());
     }
 }
