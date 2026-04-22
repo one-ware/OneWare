@@ -20,48 +20,10 @@ public class VcdParserTests
         _output = output;
     }
 
-    private static string GetTestPath()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/GHDL.vcd");
-    }
-
-    private static string GetTestPath2()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/tb_scale_bias_correction.vcd");
-    }
-
-    private static string GetTestPath3()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/tb_top_aurora.vcd");
-    }
-
-    private static string GetTestPath4()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/core.vcd");
-    }
-
-    private static string GetTestPath5()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/trace.vcd");
-    }
-
-    private static string GetTestPath6()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/integer_width.vcd");
-    }
-    
-    private static string GetTestPath7()
-    {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets/code_gen_tb.vcd");
-    }
-
     [Fact]
     public void SignalLineTest()
     {
-        var changeTimes = new List<long>
-        {
-            0, 1000, 10000, 100000
-        };
+        var changeTimes = new List<long> { 0, 1000, 10000, 100000 };
         var signal = new VcdSignal<StdLogic[]>(changeTimes, VcdLineType.Reg, 4, "#", "Line");
 
         var testValue = new[] { StdLogic.Full, StdLogic.X };
@@ -78,7 +40,6 @@ public class VcdParserTests
         Assert.Equal(testValue3, signal.GetValueFromOffset(10000));
         Assert.Equal(testValue3, signal.GetValueFromOffset(10001));
         Assert.Equal(1, signal.FindIndex(1005));
-
         Assert.Equal(3, signal.FindIndex(1000000000));
         Assert.Equal(testValue4, signal.GetValueFromIndex(3));
     }
@@ -86,12 +47,8 @@ public class VcdParserTests
     [Fact]
     public void SignalLineTest2()
     {
-        var changeTimes = new List<long>
-        {
-            0, 1000, 10000, 100000
-        };
+        var changeTimes = new List<long> { 0, 1000, 10000, 100000 };
         var signal = new VcdSignal<StdLogic[]>(changeTimes, VcdLineType.Reg, 4, "#", "Line");
-
         var testValue = new[] { StdLogic.Full, StdLogic.X };
 
         signal.AddChange(0, testValue);
@@ -99,137 +56,104 @@ public class VcdParserTests
         Assert.Equal(testValue, signal.GetValueFromOffset(0));
     }
 
-    [Fact]
-    public void ParseTest()
+    [Theory]
+    [InlineData("GHDL.vcd", 5, 24004)]
+    [InlineData("tb_scale_bias_correction.vcd", 37, 42)]
+    [InlineData("tb_top_aurora.vcd", 216, 130)]
+    public void ParseTest_WithExpectedDefinitionCounts(string assetName, int signalCount, int changeTimeCount)
     {
-        var sw = new Stopwatch();
+        var result = ParseVcdWithMetrics(assetName);
 
-        var before = GC.GetTotalMemory(true);
-        sw.Start();
-        var result = VcdParser.ParseVcd(GetTestPath());
-        sw.Stop();
-        var after = GC.GetTotalMemory(true);
+        Assert.Equal(signalCount, result.Definition.SignalRegister.Count);
+        Assert.Equal(changeTimeCount, result.Definition.ChangeTimes.Count);
+    }
 
-        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
-        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
-        Assert.Equal(5, result.Definition.SignalRegister.Count);
-        Assert.Equal(24004, result.Definition.ChangeTimes.Count);
+    [Theory]
+    [InlineData("core.vcd")]
+    [InlineData("trace.vcd")]
+    [InlineData("waveform.vcd")]
+    public void ParseTest_Smoke(string assetName)
+    {
+        var result = ParseVcdWithMetrics(assetName);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Definition);
     }
 
     [Fact]
-    public void ParseTest2()
+    public void ParseTest_IntegerWidth()
     {
-        var sw = new Stopwatch();
-
-        var before = GC.GetTotalMemory(true);
-        sw.Start();
-        var result = VcdParser.ParseVcd(GetTestPath2());
-        sw.Stop();
-        var after = GC.GetTotalMemory(true);
-
-        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
-        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
-        Assert.Equal(37, result.Definition.SignalRegister.Count);
-        Assert.Equal(42, result.Definition.ChangeTimes.Count);
-    }
-
-    [Fact]
-    public void ParseTest3()
-    {
-        var sw = new Stopwatch();
-
-        var before = GC.GetTotalMemory(true);
-        sw.Start();
-        var result = VcdParser.ParseVcd(GetTestPath3());
-        sw.Stop();
-        var after = GC.GetTotalMemory(true);
-
-        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
-        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
-        Assert.Equal(216, result.Definition.SignalRegister.Count);
-        Assert.Equal(130, result.Definition.ChangeTimes.Count);
-    }
-
-    [Fact]
-    public void ParseTest4()
-    {
-        var sw = new Stopwatch();
-
-        var before = GC.GetTotalMemory(true);
-        sw.Start();
-        var result = VcdParser.ParseVcd(GetTestPath4());
-        sw.Stop();
-        var after = GC.GetTotalMemory(true);
-
-        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
-        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
-    }
-
-    [Fact]
-    public void ParseTest5()
-    {
-        var sw = new Stopwatch();
-
-        var before = GC.GetTotalMemory(true);
-        sw.Start();
-        var result = VcdParser.ParseVcd(GetTestPath5());
-        sw.Stop();
-        var after = GC.GetTotalMemory(true);
-
-        _output.WriteLine($"Parsing took {sw.ElapsedMilliseconds}ms");
-        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
-    }
-    
-    [Fact]
-    public void ParseTest6()
-    {
-        var result = VcdParser.ParseVcd(GetTestPath6());
+        var result = VcdParser.ParseVcd(GetAssetPath("integer_width.vcd"));
         var signal = result.GetSignal("!");
+
+        Assert.NotNull(signal);
         Assert.Equal(32, signal.BitWidth);
+
         var expected = Enumerable.Repeat(StdLogic.Zero, 31)
             .Append(StdLogic.Full)
             .ToList();
         Assert.Equal(expected, signal.GetValueFromOffset(0));
     }
-    
+
     [Fact]
-    public void ParseTest7()
+    public void ParseTest_EscapedSignalName()
     {
-        var result = VcdParser.ParseVcd(GetTestPath7());
+        var result = VcdParser.ParseVcd(GetAssetPath("code_gen_tb.vcd"));
         var signal = result.GetSignal("\\,");
+
+        Assert.NotNull(signal);
         Assert.Equal(1, signal.BitWidth);
     }
 
     [Fact]
     public async Task FindLastTimeTest()
     {
-        var lastTime = await VcdParser.TryFindLastTime(GetTestPath());
+        var lastTime = await VcdParser.TryFindLastTime(GetAssetPath("GHDL.vcd"));
 
         Assert.Equal(1000079333000, lastTime);
-    }
-
-    private async Task ParseMulticore(string path, int threads)
-    {
-        var sw = new Stopwatch();
-        var vcdFile = VcdParser.ParseVcdDefinition(path);
-
-        var before = GC.GetTotalMemory(true);
-        sw.Start();
-        await VcdParser.ReadSignalsAsync(path, vcdFile, new Progress<(int, int)>(),
-            new CancellationToken(), threads);
-        sw.Stop();
-        var after = GC.GetTotalMemory(true);
-
-        _output.WriteLine($"Parsing with {threads} Threads took {sw.ElapsedMilliseconds}ms");
-        _output.WriteLine($"Memory occupied: {(after - before) / 1000}kB");
     }
 
     [Fact]
     public async Task ParseTestMulticore()
     {
-        await ParseMulticore(GetTestPath(), 1);
-        await ParseMulticore(GetTestPath(), 2);
-        await ParseMulticore(GetTestPath(), 4);
-        await ParseMulticore(GetTestPath(), 8);
+        await ParseMulticore("GHDL.vcd", 1);
+        await ParseMulticore("GHDL.vcd", 2);
+        await ParseMulticore("GHDL.vcd", 4);
+        await ParseMulticore("GHDL.vcd", 8);
+    }
+
+    private VcdFile ParseVcdWithMetrics(string assetName)
+    {
+        var sw = Stopwatch.StartNew();
+        var before = GC.GetTotalMemory(true);
+        var result = VcdParser.ParseVcd(GetAssetPath(assetName));
+        sw.Stop();
+        var after = GC.GetTotalMemory(true);
+
+        _output.WriteLine($"{assetName}: parsing took {sw.ElapsedMilliseconds}ms");
+        _output.WriteLine($"{assetName}: memory occupied: {(after - before) / 1000}kB");
+
+        return result;
+    }
+
+    private async Task ParseMulticore(string assetName, int threads)
+    {
+        var path = GetAssetPath(assetName);
+        var sw = Stopwatch.StartNew();
+        var vcdFile = VcdParser.ParseVcdDefinition(path);
+
+        var before = GC.GetTotalMemory(true);
+        await VcdParser.ReadSignalsAsync(path, vcdFile, new Progress<(int, int)>(),
+            CancellationToken.None, threads);
+        sw.Stop();
+        var after = GC.GetTotalMemory(true);
+
+        _output.WriteLine($"{assetName}: parsing with {threads} threads took {sw.ElapsedMilliseconds}ms");
+        _output.WriteLine($"{assetName}: memory occupied: {(after - before) / 1000}kB");
+    }
+
+    private static string GetAssetPath(string assetName)
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", assetName);
     }
 }
