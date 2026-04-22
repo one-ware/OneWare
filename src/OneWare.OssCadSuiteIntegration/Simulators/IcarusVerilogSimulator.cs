@@ -48,9 +48,16 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         
         var vvpPath = Path.Combine(relativeFolderPath, Path.GetFileNameWithoutExtension(fullPath) + ".vvp").ToUnixPath();
 
+        // Restrict simulation to exactly one testbench per run (the active one passed as fullPath).
+        // Including multiple testbenches in a single iverilog invocation causes VCD file collisions,
+        // interleaved $display output and elaboration conflicts.
+        var activeTestBenchRelative = Path.GetRelativePath(root.FullPath, fullPath).ToUnixPath();
+
         var verilogFiles = root.GetFiles("*.v")
             .Where(x => !root.IsCompileExcluded(x))
-            .Select(x => $"{x.ToUnixPath()}");
+            .Select(x => x.ToUnixPath())
+            .Where(x => !root.IsTestBench(x) ||
+                        string.Equals(x, activeTestBenchRelative, StringComparison.OrdinalIgnoreCase));
 
         _mainDockService.Show<IOutputService>();
 
