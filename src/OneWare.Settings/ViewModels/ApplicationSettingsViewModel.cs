@@ -135,8 +135,17 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
             }
         }
 
-        if (hasQuery && firstMatchingPage != null && (SelectedPage == null || !SelectedPage.IsVisibleBySearch))
+        if (hasQuery && firstMatchingPage != null && !IsCurrentSelectionVisible())
             SelectedItem = firstMatchingPage;
+    }
+
+    private bool IsCurrentSelectionVisible()
+    {
+        return _selectedItem switch
+        {
+            ISearchableSettingsItem searchable => searchable.IsVisibleBySearch,
+            _ => false
+        };
     }
 
     private static bool Matches(string? value, string query)
