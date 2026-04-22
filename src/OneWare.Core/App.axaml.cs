@@ -401,6 +401,15 @@ public class App : Application
             InputGesture = new KeyGesture(Key.S, PlatformHelper.ControlKey | KeyModifiers.Shift),
             Icon = new IconModel("VsImageLib.SaveAll16X")
         });
+        windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemModel("Close Tab")
+        {
+            Command = new AsyncRelayCommand(
+                () => { var dockService = Services.Resolve<IMainDockService>(); return dockService.CloseFileAsync(dockService.CurrentDocument!.FullPath); },
+                () => Services.Resolve<IMainDockService>().CurrentDocument is not null),
+            Header = "Close Tab",
+            InputGesture = new KeyGesture(Key.W, PlatformHelper.ControlKey),
+            Icon = new IconModel("VsImageLib.CloseDocumentGroup16X")
+        });
         windowService.RegisterMenuItem("MainWindow_MainMenu/File", new MenuItemModel("exit")
         {
             Command = new RelayCommand(() =>
