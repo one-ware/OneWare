@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -214,11 +215,24 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     {
         foreach (var (setting, key) in _dynamicSettingsKeys)
         {
-            _root.Properties.SetNode(key, JsonValue.Create(setting.Value));
+            _root.Properties.SetNode(key, CreateSettingNode(setting, key));
         }
 
         await _projectExplorerService.SaveProjectAsync(_root);
         await _projectExplorerService.ReloadProjectAsync(_root);
+    }
+
+    private static JsonNode? CreateSettingNode(TitledSetting setting, string key)
+    {
+        return setting switch
+        {
+            FolderPathSetting or FilePathSetting => JsonValue.Create((setting.Value as string)?.ToUnixPath()),
+            ListBoxSetting when key is "include" or "exclude" => new JsonArray(
+                ((ObservableCollection<string>)setting.Value)
+                .Select(item => JsonValue.Create(item.ToUnixPath()))
+                .ToArray()),
+            _ => JsonValue.Create(setting.Value)
+        };
     }
 
     public async Task SaveAndCloseAsync(FlexibleWindow window)
