@@ -1,6 +1,7 @@
 ﻿using DynamicData;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -12,6 +13,8 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+
+    private string _searchText = string.Empty;
 
     private object? _selectedItem = new();
 
@@ -72,6 +75,80 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
             SetProperty(ref _selectedItem, value);
             if (SelectedPage != null) SelectedPage.IsExpanded = true;
         }
+    }
+
+    /// <summary>
+    ///     Free-text search applied to category, sub-category and individual setting titles/descriptions.
+    ///     An empty value shows the full tree.
+    /// </summary>
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (SetProperty(ref _searchText, value ?? string.Empty)) ApplyFilter();
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        var query = _searchText.Trim();
+        var hasQuery = query.Length > 0;
+
+        SettingsPageViewModel? firstMatchingPage = null;
+
+        foreach (var page in SettingPages)
+        {
+            var pageHeaderMatches = !hasQuery || Matches(page.Header, query);
+            var anyChildMatches = false;
+
+            foreach (var collection in page.SettingCollections)
+            {
+                var collectionHeaderMatches = !hasQuery || Matches(collection.Header, query);
+                var anySettingMatches = false;
+
+                foreach (var settingVm in collection.SettingViewModels)
+                {
+                    var settingMatches = !hasQuery
+                                         || pageHeaderMatches
+                                         || collectionHeaderMatches
+                                         || MatchesSetting(settingVm.Setting, query);
+                    settingVm.IsVisibleBySearch = settingMatches;
+                    if (settingMatches) anySettingMatches = true;
+                }
+
+                var collectionVisible = !hasQuery
+                                        || pageHeaderMatches
+                                        || collectionHeaderMatches
+                                        || anySettingMatches;
+                collection.IsVisibleBySearch = collectionVisible;
+                if (collectionVisible) anyChildMatches = true;
+            }
+
+            var pageVisible = !hasQuery || pageHeaderMatches || anyChildMatches;
+            page.IsVisibleBySearch = pageVisible;
+
+            if (hasQuery && pageVisible)
+            {
+                page.IsExpanded = true;
+                firstMatchingPage ??= page;
+            }
+        }
+
+        if (hasQuery && firstMatchingPage != null && (SelectedPage == null || !SelectedPage.IsVisibleBySearch))
+            SelectedItem = firstMatchingPage;
+    }
+
+    private static bool Matches(string? value, string query)
+    {
+        return !string.IsNullOrEmpty(value) && value.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesSetting(CollectionSetting setting, string query)
+    {
+        if (setting is TitledSetting titled)
+            return Matches(titled.Title, query) || Matches(titled.HoverDescription, query);
+        return false;
     }
 
     public void Save(FlexibleWindow window)
