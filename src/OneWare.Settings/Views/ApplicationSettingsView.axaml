@@ -39,9 +39,9 @@
                     BorderThickness="0, 0, 1, 0"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 
-                <StackPanel Orientation="Vertical" Spacing="5">
+                <Grid RowDefinitions="Auto, *">
                     <!-- Search box spanning both columns -->
-                    <Border Padding="4 4 4 0">
+                    <Border Padding="4">
                         <TextBox Name="SearchBox"
                                  Text="{Binding SearchText, Mode=TwoWay}"
                                  Watermark="Search settings..."
@@ -54,7 +54,7 @@
                         </TextBox>
                     </Border>
                     
-                    <TreeView Padding="3" BorderThickness="0" Background="Transparent"
+                    <TreeView Grid.Row="1" Padding="3" BorderThickness="0" Background="Transparent"
                               ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"
                               SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
                         <TreeView.ItemContainerTheme>
@@ -75,7 +75,7 @@
                             </DataTemplate>
                         </TreeView.DataTemplates>
                     </TreeView>
-                </StackPanel>
+                </Grid>
              
             </Border>
 
