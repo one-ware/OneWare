@@ -248,6 +248,12 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         if (isVcd)
             await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, cancellationToken, useThreads,
                 parseLock).ConfigureAwait(true);
+        else if (_vcdFile.Definition.ChangeTimes.Count != 0)
+        {
+            var maxTime = _vcdFile.Definition.ChangeTimes.Last();
+            if (maxTime > WaveFormViewer.Max) WaveFormViewer.Max = maxTime;
+            WaveFormViewer.LoadingMarkerOffset = maxTime;
+        }
 
         disposable.Dispose();
 

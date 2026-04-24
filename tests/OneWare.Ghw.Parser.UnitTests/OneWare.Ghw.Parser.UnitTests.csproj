@@ -16,4 +16,10 @@
         <ProjectReference Include="..\..\src\OneWare.Ghw.Parser\OneWare.Ghw.Parser.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="Assets\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>
