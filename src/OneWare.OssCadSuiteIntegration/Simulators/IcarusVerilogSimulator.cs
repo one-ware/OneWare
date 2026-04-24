@@ -47,10 +47,13 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         var relativeFolderPath = Path.GetRelativePath(root.FullPath, folderPath);
         
         var vvpPath = Path.Combine(relativeFolderPath, Path.GetFileNameWithoutExtension(fullPath) + ".vvp").ToUnixPath();
+        
+        var activeTestBenchRelative = Path.GetRelativePath(root.FullPath, fullPath).ToUnixPath();
 
         var verilogFiles = root.GetFiles("*.v")
             .Where(x => !root.IsCompileExcluded(x))
-            .Select(x => $"{x.ToUnixPath()}");
+            .Where(x => !root.IsTestBench(x) || x.EqualPaths(activeTestBenchRelative))
+            .Select(x => x.ToUnixPath());
 
         _mainDockService.Show<IOutputService>();
 

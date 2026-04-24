@@ -7,6 +7,7 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:data="clr-namespace:OneWare.Vcd.Parser.Data;assembly=OneWare.Vcd.Parser"
              xmlns:behaviors1="clr-namespace:OneWare.Vcd.Viewer.Behaviors"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Vcd.Viewer.Views.VcdView" x:DataType="viewModels:VcdViewModel">
 
@@ -72,7 +73,7 @@
                         <Setter Property="Interaction.Behaviors">
                             <BehaviorCollectionTemplate>
                                 <BehaviorCollection>
-                                    <ContextDragBehavior />
+                                    <behaviors:ContextDragBubbleBehavior />
                                 </BehaviorCollection>
                             </BehaviorCollectionTemplate>
                         </Setter>

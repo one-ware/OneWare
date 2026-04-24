@@ -5,7 +5,7 @@
                          xmlns:viewModels="clr-namespace:OneWare.Settings.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
-                         PrefWidth="550" PrefHeight="400"
+                         PrefWidth="650" PrefHeight="450"
                          mc:Ignorable="d"
                          x:Class="OneWare.Settings.Views.ApplicationSettingsView"
                          CustomIcon="{DynamicResource Material.SettingsOutline}"
@@ -33,31 +33,50 @@
     </controls:FlexibleWindow.Styles>
 
     <Border BorderThickness="0 1 0 0">
-        <Grid ColumnDefinitions="180,*" RowDefinitions="*,Auto">
+        <Grid ColumnDefinitions="200,*" RowDefinitions="*,Auto">
 
-            <Border BorderThickness="0, 0, 1, 0" Grid.RowSpan="2"
+            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
+                    BorderThickness="0, 0, 1, 0"
                     Background="{DynamicResource ThemeControlLowBrush}">
-                <TreeView Padding="3" BorderThickness="0" Background="Transparent"
-                          ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"
-                          SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
-                    <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="viewModels:SettingsPageViewModel"
-                                          ItemsSource="{Binding SettingCollections}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
-                                <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                       VerticalAlignment="Center" Width="16" Height="16" Source="{Binding Icon}" />
-                                <TextBlock FontSize="13" Text="{Binding Header}" />
-                            </StackPanel>
-                        </TreeDataTemplate>
-                        <DataTemplate DataType="viewModels:SettingsCollectionViewModel">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="5" Margin="0 2">
-                                <Image IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                       VerticalAlignment="Center" Width="16" Height="16" Source="{Binding Icon}" />
-                                <TextBlock FontSize="13" Text="{Binding Header}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </TreeView.DataTemplates>
-                </TreeView>
+                
+                <Grid RowDefinitions="Auto, *">
+                    <!-- Search box spanning both columns -->
+                    <Border Padding="4">
+                        <TextBox Name="SearchBox"
+                                 Text="{Binding SearchText, Mode=TwoWay}"
+                                 Watermark="Search settings..."
+                                 ToolTip.Tip="Search categories and settings">
+                            <TextBox.InnerLeftContent>
+                                <Image Source="{DynamicResource VsImageLib.Search16XMd}"
+                                       Width="14" Height="14" Margin="4 0 4 0"
+                                       VerticalAlignment="Center" />
+                            </TextBox.InnerLeftContent>
+                        </TextBox>
+                    </Border>
+                    
+                    <TreeView Grid.Row="1" Padding="3" BorderThickness="0" Background="Transparent"
+                              ItemsSource="{Binding SettingPages}" Name="TreeView" SelectionMode="Single"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+                        <TreeView.ItemContainerTheme>
+                            <ControlTheme TargetType="TreeViewItem"
+                                          x:DataType="viewModels:ISearchableSettingsItem"
+                                          BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                                <Setter Property="IsVisible" Value="{Binding IsVisibleBySearch}" />
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            </ControlTheme>
+                        </TreeView.ItemContainerTheme>
+                        <TreeView.DataTemplates>
+                            <TreeDataTemplate DataType="viewModels:SettingsPageViewModel"
+                                              ItemsSource="{Binding SettingCollections}">
+                                <TextBlock FontSize="13" Text="{Binding Header}" Margin="0 2" />
+                            </TreeDataTemplate>
+                            <DataTemplate DataType="viewModels:SettingsCollectionViewModel">
+                                <TextBlock FontSize="13" Text="{Binding Header}" Margin="0 2" />
+                            </DataTemplate>
+                        </TreeView.DataTemplates>
+                    </TreeView>
+                </Grid>
+             
             </Border>
 
             <ListBox Name="SettingsList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -69,6 +88,13 @@
                         <StackPanel />
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
+                <ListBox.ItemContainerTheme>
+                    <ControlTheme TargetType="ListBoxItem"
+                                  x:DataType="viewModels:SettingsCollectionViewModel"
+                                  BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="IsVisible" Value="{Binding IsVisibleBySearch}" />
+                    </ControlTheme>
+                </ListBox.ItemContainerTheme>
                 <ListBox.Styles>
                     <Style Selector="ListBox#SettingsList > ListBoxItem:selected > ContentPresenter">
                         <Setter Property="Background" Value="Transparent" />
