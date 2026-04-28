@@ -293,7 +293,6 @@ public sealed class CopilotChatService(
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
                 OnPermissionRequest = OnPermissionRequestAsync,
-                Hooks = BuildPermissionHooks(),
                 OnUserInputRequest = OnUserInputRequestAsync
             });
 
@@ -307,7 +306,6 @@ public sealed class CopilotChatService(
                 IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools(),
                 OnPermissionRequest = OnPermissionRequestAsync,
-                Hooks = BuildPermissionHooks(),
                 OnUserInputRequest = OnUserInputRequestAsync
             });
         }
@@ -611,26 +609,6 @@ public sealed class CopilotChatService(
         if (string.IsNullOrWhiteSpace(value)) return;
         var trimmed = value.Length > 240 ? value[..240] + "..." : value;
         details.Add($"{label}: `{trimmed}`");
-    }
-
-    private static SessionHooks BuildPermissionHooks()
-    {
-        return new SessionHooks
-        {
-            OnPreToolUse = (input, invocation) =>
-            {
-                if (input.ToolName is "runTerminalCommand" or "editFile")
-                {
-                    return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput
-                    {
-                        PermissionDecision = "ask",
-                        PermissionDecisionReason = $"Awaiting user approval for '{input.ToolName}'."
-                    });
-                }
-
-                return Task.FromResult<PreToolUseHookOutput?>(null);
-            }
-        };
     }
 
     private static PermissionRequestResult CreateAllowPermissionResult()
