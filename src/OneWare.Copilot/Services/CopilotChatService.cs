@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -285,6 +284,8 @@ public sealed class CopilotChatService(
             {
                 Model = SelectedModel.Id,
                 Streaming = true,
+                // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
+                IncludeSubAgentStreamingEvents = false,
                 SystemMessage = new SystemMessageConfig
                 {
                     Content = BuildSystemMessage()
@@ -303,6 +304,7 @@ public sealed class CopilotChatService(
             _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
             {
                 Streaming = true,
+                IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools(),
                 OnPermissionRequest = OnPermissionRequestAsync,
                 Hooks = BuildPermissionHooks(),
@@ -500,16 +502,17 @@ public sealed class CopilotChatService(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
         var context = BuildPermissionContext(request, invocation);
-        var title = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
-            ? "Copilot wants to edit something."
-            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
-                ? "Copilot wants to execute in terminal."
-                : "Copilot wants to use a tool.";
-        var question = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
-            ? "Copilot wants to edit this file."
-            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
-                ? "Allow this command?"
-                : "Allow this action?";
+        var (title, question) = request switch
+        {
+            PermissionRequestWrite => ("Copilot wants to edit something.", "Copilot wants to edit this file."),
+            PermissionRequestShell => ("Copilot wants to execute in terminal.", "Allow this command?"),
+            PermissionRequestRead => ("Copilot wants to read a file.", "Allow this read?"),
+            PermissionRequestUrl => ("Copilot wants to open a URL.", "Allow opening this URL?"),
+            PermissionRequestMcp => ("Copilot wants to invoke an MCP tool.", "Allow this MCP tool call?"),
+            PermissionRequestMemory => ("Copilot wants to update its memory.", "Allow this memory operation?"),
+            PermissionRequestHook => ("Copilot wants to run a hook.", "Allow this hook?"),
+            _ => ("Copilot wants to use a tool.", "Allow this action?")
+        };
 
         var prompt = string.IsNullOrWhiteSpace(context)
             ? $"**{title}**\n\n{question}"
@@ -548,59 +551,59 @@ public sealed class CopilotChatService(
         var details = new List<string>();
 
         AddDetail(details, "Kind", request.Kind);
-        AddDetail(details, "Tool call", request.ToolCallId);
-        AddDetail(details, "Session", invocation.SessionId);
 
-        if (request.ExtensionData != null)
+        switch (request)
         {
-            AddExtensionValue(details, request.ExtensionData, "toolName", "Tool");
-            AddExtensionValue(details, request.ExtensionData, "name", "Tool");
-            AddExtensionValue(details, request.ExtensionData, "command", "Command");
-            AddExtensionValue(details, request.ExtensionData, "filePath", "File");
-            AddExtensionValue(details, request.ExtensionData, "path", "Path");
-            AddExtensionValue(details, request.ExtensionData, "reason", "Reason");
-
-            var extraKeys = request.ExtensionData.Keys
-                .Where(x => x is not ("toolName" or "name" or "command" or "filePath" or "path" or "reason"))
-                .Take(6)
-                .ToArray();
-
-            if (extraKeys.Length > 0)
-            {
-                details.Add($"Metadata: {string.Join(", ", extraKeys)}");
-            }
+            case PermissionRequestShell shell:
+                AddDetail(details, "Tool call", shell.ToolCallId);
+                AddDetail(details, "Command", shell.FullCommandText);
+                AddDetail(details, "Intention", shell.Intention);
+                if (!string.IsNullOrWhiteSpace(shell.Warning))
+                    AddDetail(details, "Warning", shell.Warning);
+                break;
+            case PermissionRequestWrite write:
+                AddDetail(details, "Tool call", write.ToolCallId);
+                AddDetail(details, "File", write.FileName);
+                AddDetail(details, "Intention", write.Intention);
+                break;
+            case PermissionRequestRead read:
+                AddDetail(details, "Tool call", read.ToolCallId);
+                AddDetail(details, "Path", read.Path);
+                AddDetail(details, "Intention", read.Intention);
+                break;
+            case PermissionRequestUrl url:
+                AddDetail(details, "Tool call", url.ToolCallId);
+                AddDetail(details, "URL", url.Url);
+                AddDetail(details, "Intention", url.Intention);
+                break;
+            case PermissionRequestMcp mcp:
+                AddDetail(details, "Tool call", mcp.ToolCallId);
+                AddDetail(details, "Server", mcp.ServerName);
+                AddDetail(details, "Tool", mcp.ToolName);
+                break;
+            case PermissionRequestCustomTool tool:
+                AddDetail(details, "Tool call", tool.ToolCallId);
+                AddDetail(details, "Tool", tool.ToolName);
+                AddDetail(details, "Description", tool.ToolDescription);
+                break;
+            case PermissionRequestMemory memory:
+                AddDetail(details, "Tool call", memory.ToolCallId);
+                AddDetail(details, "Subject", memory.Subject);
+                AddDetail(details, "Fact", memory.Fact);
+                AddDetail(details, "Reason", memory.Reason);
+                break;
+            case PermissionRequestHook hook:
+                AddDetail(details, "Tool call", hook.ToolCallId);
+                AddDetail(details, "Tool", hook.ToolName);
+                AddDetail(details, "Message", hook.HookMessage);
+                break;
         }
+
+        AddDetail(details, "Session", invocation.SessionId);
 
         return details.Count == 0
             ? string.Empty
             : string.Join("\n", details.Select(x => $"- {x}"));
-    }
-
-    private static void AddExtensionValue(
-        ICollection<string> details,
-        IReadOnlyDictionary<string, object> extensionData,
-        string key,
-        string label)
-    {
-        if (!extensionData.TryGetValue(key, out var rawValue)) return;
-        var value = NormalizeExtensionValue(rawValue);
-        AddDetail(details, label, value);
-    }
-
-    private static string? NormalizeExtensionValue(object? rawValue)
-    {
-        if (rawValue == null) return null;
-        if (rawValue is JsonElement element)
-        {
-            return element.ValueKind switch
-            {
-                JsonValueKind.String => element.GetString(),
-                JsonValueKind.Array or JsonValueKind.Object => element.GetRawText(),
-                _ => element.ToString()
-            };
-        }
-
-        return rawValue.ToString();
     }
 
     private static void AddDetail(ICollection<string> details, string label, string? value)
@@ -634,7 +637,7 @@ public sealed class CopilotChatService(
     {
         return new PermissionRequestResult
         {
-            Kind = "approved",
+            Kind = PermissionRequestResultKind.Approved,
             Rules = null
         };
     }
@@ -643,14 +646,14 @@ public sealed class CopilotChatService(
     {
         return new PermissionRequestResult
         {
-            Kind = "denied",
+            Kind = PermissionRequestResultKind.Rejected,
             Rules = null
         };
     }
 
     private static bool IsCustomToolPermissionRequest(PermissionRequest request)
     {
-        return request.Kind?.Equals("custom-tool", StringComparison.OrdinalIgnoreCase) == true;
+        return request is PermissionRequestCustomTool;
     }
 
     private Task<UserInputResponse> OnUserInputRequestAsync(
