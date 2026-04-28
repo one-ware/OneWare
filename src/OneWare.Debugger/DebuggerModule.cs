@@ -18,20 +18,22 @@ public class DebuggerModule : OneWareModuleBase
 
     public override void RegisterServices(IServiceCollection services)
     {
+        services.AddSingleton<IDebugAdapter, GdbDebugAdapter>();
         services.AddSingleton<IDebuggerService, DebuggerService>();
         services.AddSingleton<DebuggerViewModel>();
+        services.AddSingleton<DebuggerLocalsViewModel>();
+        services.AddSingleton<DebuggerCallStackViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
         var dockService = serviceProvider.Resolve<IMainDockService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
 
-        // Cross-platform default for the GDB executable. Users can override
-        // this in settings; if left at the default we look the binary up via
-        // PATH at debug-start time.
         var defaultGdb = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "gdb.exe" : "gdb";
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("Tools", "Debugger", GdbPathSetting,
+        settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
             new FilePathSetting("GDB Path", defaultGdb, defaultGdb,
                 serviceProvider.Resolve<IPaths>().NativeToolsDirectory,
                 PlatformHelper.ExistsOnPath, PlatformHelper.ExeFile)
@@ -39,17 +41,37 @@ public class DebuggerModule : OneWareModuleBase
                 HoverDescription = "Path to the GDB executable used by the debugger. Leave blank to auto-detect on PATH."
             });
 
-        // Eagerly resolve the debugger service so it starts observing the
-        // shared breakpoint store right away.
-        var debuggerService = serviceProvider.Resolve<IDebuggerService>();
+        dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
+        dockService.RegisterLayoutExtension<DebuggerLocalsViewModel>(DockShowLocation.Right);
+        dockService.RegisterLayoutExtension<DebuggerCallStackViewModel>(DockShowLocation.Right);
 
-        serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+        _ = serviceProvider.Resolve<IDebuggerService>();
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemModel("Debugger")
             {
                 Header = "Debugger",
                 Command = new RelayCommand(() =>
                     dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
                 Icon = new IconModel(DebuggerViewModel.IconKey)
+            });
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+            new MenuItemModel("DebuggerLocals")
+            {
+                Header = "Debugger Locals",
+                Command = new RelayCommand(() =>
+                    dockService.Show(serviceProvider.Resolve<DebuggerLocalsViewModel>(), DockShowLocation.Right)),
+                Icon = new IconModel(DebuggerLocalsViewModel.IconKey)
+            });
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
+            new MenuItemModel("DebuggerCallStack")
+            {
+                Header = "Debugger Call Stack",
+                Command = new RelayCommand(() =>
+                    dockService.Show(serviceProvider.Resolve<DebuggerCallStackViewModel>(), DockShowLocation.Right)),
+                Icon = new IconModel(DebuggerCallStackViewModel.IconKey)
             });
     }
 }
