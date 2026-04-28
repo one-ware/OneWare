@@ -65,8 +65,8 @@ public class DebuggerViewModel : ExtendedTool
         {
             if (SetProperty(ref _selectedAdapter, value))
             {
-                StartCommand.NotifyCanExecuteChanged();
-                ExecuteRawCommand.NotifyCanExecuteChanged();
+                StartCommand?.NotifyCanExecuteChanged();
+                ExecuteRawCommand?.NotifyCanExecuteChanged();
             }
         }
     }
@@ -83,7 +83,7 @@ public class DebuggerViewModel : ExtendedTool
         set
         {
             if (SetProperty(ref _commandText, value))
-                ExecuteRawCommand.NotifyCanExecuteChanged();
+                ExecuteRawCommand?.NotifyCanExecuteChanged();
         }
     }
 
