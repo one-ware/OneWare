@@ -2,21 +2,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Resources scoped to ColorPicker so that the flyout (which references
-        SystemControlBackgroundBaseLowBrush, ColorViewContentBackgroundBrush
-        and ColorViewTabBorderBrush via DynamicResource in the upstream
-        Avalonia template) blends with the rest of the OneWare UI instead of
-        showing the default light-gray tab strip on top of a transparent body.
+        File-level resource overrides so the ColorPicker flyout (which lives in
+        a separate Popup visual tree and resolves these keys via DynamicResource
+        in the upstream Avalonia template) blends with the OneWare UI instead
+        of showing the default light-gray tab strip and transparent body.
     -->
+    <Styles.Resources>
+        <SolidColorBrush x:Key="SystemControlBackgroundBaseLowBrush"
+                         Color="{DynamicResource ThemeBackgroundColor}" />
+        <SolidColorBrush x:Key="ColorViewContentBackgroundBrush"
+                         Color="{DynamicResource ThemeBackgroundColor}" />
+        <SolidColorBrush x:Key="ColorViewTabBorderBrush"
+                         Color="{DynamicResource ThemeBorderLowColor}" />
+        <SolidColorBrush x:Key="ColorViewContentBorderBrush"
+                         Color="{DynamicResource ThemeBorderLowColor}" />
+    </Styles.Resources>
+
     <Style Selector="ColorPicker">
-        <Style.Resources>
-            <SolidColorBrush x:Key="SystemControlBackgroundBaseLowBrush"
-                             Color="{DynamicResource ThemeControlMidColor}" />
-            <SolidColorBrush x:Key="ColorViewContentBackgroundBrush"
-                             Color="{DynamicResource ThemeBackgroundColor}" />
-            <SolidColorBrush x:Key="ColorViewTabBorderBrush"
-                             Color="{DynamicResource ThemeBorderLowColor}" />
-        </Style.Resources>
         <Setter Property="Height" Value="24" />
         <Setter Property="CornerRadius" Value="3" />
     </Style>
