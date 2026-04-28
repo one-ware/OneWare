@@ -20,7 +20,8 @@ public class VhdlBlinkSimulationTemplate(ILogger logger, IMainDockService mainDo
             TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
             var file = root.AddFile(name + ".vhd");
 
-            root.TopEntity = file.RelativePath;
+            root.TopEntity = name;
+            root.TopEntityFile = file.RelativePath;
 
             var file2 = root.AddFile(name + "_tb.vhd");
 
