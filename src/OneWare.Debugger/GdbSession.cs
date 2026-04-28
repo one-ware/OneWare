@@ -35,7 +35,7 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger;
 
-public abstract class GdbSession(
+public class GdbSession(
     string gdbExecutable,
     string elfFile,
     bool asyncMode,
@@ -310,12 +310,18 @@ public abstract class GdbSession(
     }
 
 
-    private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
+    public bool IsRunning
+    {
+        get { lock (_eventLock) return _running; }
+    }
+
+
+    public Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
     {
         return Task.Run(() => RunCommand(command, 10000, args));
     }
 
-    private GdbCommandResult RunCommand(string command, int timeout = 10000, params string[] args)
+    public GdbCommandResult RunCommand(string command, int timeout = 10000, params string[] args)
     {
         lock (_gdbLock)
         {

@@ -1,8 +1,39 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Debugger.Views.DebuggerView" Background="{DynamicResource ThemeControlLowBrush}">
-    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Coming Soon!" />
+             xmlns:vm="clr-namespace:OneWare.Debugger.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+             x:DataType="vm:DebuggerViewModel"
+             x:Class="OneWare.Debugger.Views.DebuggerView"
+             Background="{DynamicResource ThemeControlLowBrush}">
+    <DockPanel Margin="4" LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,0,0,4">
+            <Button Content="Start" Command="{Binding StartCommand}"
+                    ToolTip.Tip="Start a GDB debugging session for the selected executable" />
+            <Button Content="Stop" Command="{Binding StopCommand}"
+                    ToolTip.Tip="Stop the active GDB session" />
+            <Separator Width="8" />
+            <Button Content="Continue" Command="{Binding ContinueCommand}"
+                    ToolTip.Tip="Continue execution" />
+            <Button Content="Pause" Command="{Binding PauseCommand}"
+                    ToolTip.Tip="Pause execution" />
+            <Button Content="Step" Command="{Binding StepCommand}"
+                    ToolTip.Tip="Step into" />
+            <Button Content="Next" Command="{Binding NextCommand}"
+                    ToolTip.Tip="Step over" />
+            <Button Content="Finish" Command="{Binding FinishCommand}"
+                    ToolTip.Tip="Step out of the current frame" />
+        </StackPanel>
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+            <TextBlock Grid.Column="0" Text="Executable:" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox Grid.Column="1" Text="{Binding ExecutablePath, Mode=TwoWay}"
+                     Watermark="Path to ELF / EXE to debug" />
+            <Button Grid.Column="2" Content="..." Command="{Binding BrowseExecutableCommand}"
+                    Margin="4,0,0,0" />
+        </Grid>
+        <TextBlock Text="GDB output is written to the Output panel."
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                   VerticalAlignment="Top" />
+    </DockPanel>
 </UserControl>
