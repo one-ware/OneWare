@@ -40,10 +40,13 @@ public class RoutedEditorCommand : ApplicationCommandBase
         return source as TextArea ?? source.FindLogicalAncestorOfType<TextArea>();
     }
 
+    private static readonly Regex SplitCamelCaseRegex =
+        new("(?<!^)([A-Z])", RegexOptions.Compiled);
+
     private static string BuildName(string commandName)
     {
         // "MoveLeftByCharacter" -> "Editor: Move Left By Character"
-        var pretty = Regex.Replace(commandName, "(?<!^)([A-Z])", " $1");
+        var pretty = SplitCamelCaseRegex.Replace(commandName, " $1");
         return $"Editor: {pretty}";
     }
 }
