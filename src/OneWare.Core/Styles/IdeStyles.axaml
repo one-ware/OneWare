@@ -56,6 +56,7 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/Buttons.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/TextBoxes.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/ComboBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Core/Styles/ColorPicker.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Borders.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/Expander.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/MarkdownViewer.axaml" />

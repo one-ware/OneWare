@@ -1,0 +1,45 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Resources scoped to ColorPicker so that the flyout (which references
+        SystemControlBackgroundBaseLowBrush, ColorViewContentBackgroundBrush
+        and ColorViewTabBorderBrush via DynamicResource in the upstream
+        Avalonia template) blends with the rest of the OneWare UI instead of
+        showing the default light-gray tab strip on top of a transparent body.
+    -->
+    <Style Selector="ColorPicker">
+        <Style.Resources>
+            <SolidColorBrush x:Key="SystemControlBackgroundBaseLowBrush"
+                             Color="{DynamicResource ThemeControlMidColor}" />
+            <SolidColorBrush x:Key="ColorViewContentBackgroundBrush"
+                             Color="{DynamicResource ThemeBackgroundColor}" />
+            <SolidColorBrush x:Key="ColorViewTabBorderBrush"
+                             Color="{DynamicResource ThemeBorderLowColor}" />
+        </Style.Resources>
+        <Setter Property="Height" Value="24" />
+        <Setter Property="CornerRadius" Value="3" />
+    </Style>
+
+    <Style Selector="ColorPicker:disabled">
+        <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+    </Style>
+
+    <!-- Match the look of ComboBox / RoundButton for the dropdown surface. -->
+    <Style Selector="ColorPicker /template/ DropDownButton">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="3 0 8 0" />
+    </Style>
+
+    <!-- Round the flyout corners so it matches FlyoutNoPadding / popups. -->
+    <Style Selector="FlyoutPresenter.nopadding">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+    </Style>
+
+</Styles>
