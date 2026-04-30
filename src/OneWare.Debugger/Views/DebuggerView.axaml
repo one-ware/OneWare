@@ -1,8 +1,85 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Debugger.Views.DebuggerView" Background="{DynamicResource ThemeControlLowBrush}">
-    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Coming Soon!" />
+             xmlns:vm="clr-namespace:OneWare.Debugger.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="900"
+             d:DesignHeight="240"
+             x:DataType="vm:DebuggerViewModel"
+             x:Class="OneWare.Debugger.Views.DebuggerView"
+             Background="{DynamicResource ThemeControlLowBrush}">
+    <DockPanel Margin="4" LastChildFill="True">
+        <Border DockPanel.Dock="Top" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <DockPanel Background="{DynamicResource ThemeBackgroundBrush}" VerticalAlignment="Top">
+                <StackPanel Orientation="Horizontal" Spacing="2" Margin="4" VerticalAlignment="Center">
+                    <Button Width="24" Height="24" Command="{Binding StartCommand}" ToolTip.Tip="Start">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Start}" />
+                    </Button>
+                    <Button Width="24" Height="24" Command="{Binding PauseCommand}" ToolTip.Tip="Pause" IsVisible="{Binding IsRunning}">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Pause}" />
+                    </Button>
+                    <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue" IsVisible="{Binding !IsRunning}">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Continue}" />
+                    </Button>
+                    <Button Width="24" Height="24" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Stop}" />
+                    </Button>
+                    <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+                    <Button Width="24" Height="24" Command="{Binding StepOverCommand}" ToolTip.Tip="Step Over">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Step-Over}" />
+                    </Button>
+                    <Button Width="24" Height="24" Command="{Binding StepIntoCommand}" ToolTip.Tip="Step Into">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Step-Into}" />
+                    </Button>
+                    <Button Width="24" Height="24" Command="{Binding StepOutCommand}" ToolTip.Tip="Step Out">
+                        <Image Source="{DynamicResource VsCodeLight.Debug-Step-Out}" />
+                    </Button>
+                    <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding StatusText}" Opacity="0.7" Margin="4,0,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid DockPanel.Dock="Top" Margin="0,8,0,8" ColumnDefinitions="Auto,220,8,Auto,*,Auto" RowDefinitions="Auto,8,Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Debugger" />
+            <ComboBox Grid.Row="0"
+                      Grid.Column="1"
+                      SelectedItem="{Binding SelectedAdapter}"
+                      ItemsSource="{Binding AvailableAdapters}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DebuggerAdapterItemViewModel">
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0" Text="Executable" />
+            <TextBox Grid.Row="2"
+                     Grid.Column="1"
+                     Grid.ColumnSpan="4"
+                     Text="{Binding ExecutablePath, Mode=TwoWay}"
+                     Watermark="Path to ELF / EXE to debug" />
+            <Button Grid.Row="2" Grid.Column="5" Margin="6,0,0,0" Command="{Binding BrowseExecutableCommand}" Content="..." />
+        </Grid>
+
+        <Border DockPanel.Dock="Bottom"
+                IsVisible="{Binding SupportsRawCommand}"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <DockPanel Background="{DynamicResource ThemeBackgroundBrush}">
+                <Button DockPanel.Dock="Right" Margin="4" Height="26" Command="{Binding ExecuteRawCommand}" Content="Send" />
+                <TextBox Name="CommandBox"
+                         Text="{Binding CommandText, Mode=TwoWay}"
+                         Background="{DynamicResource ThemeControlLowBrush}"
+                         BorderThickness="0,0,1,0"
+                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                         Padding="6,2" />
+            </DockPanel>
+        </Border>
+
+        <TextBlock Text="Debugger output is written to the Output panel."
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                   VerticalAlignment="Top" />
+    </DockPanel>
 </UserControl>
