@@ -85,7 +85,10 @@ public class WaveFormEffects : Control
 
         if (!pointerPressed)
         {
-            vm.SecondMarkerOffset = long.MaxValue;
+            // A single click (or end of drag) only updates the primary marker.
+            // The second marker is intentionally NOT cleared here so that the
+            // delta between the two markers remains visible after the mouse is
+            // released. Use ClearMarkers() (bound to Escape) to remove them.
             vm.MarkerOffset = offset;
         }
         else

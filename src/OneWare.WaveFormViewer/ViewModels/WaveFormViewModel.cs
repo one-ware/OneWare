@@ -243,6 +243,81 @@ public class WaveFormViewModel : ObservableObject
         Offset -= minus >= 1 ? minus : 1;
     }
 
+    /// <summary>
+    ///     Clears both markers so that no delta is displayed.
+    /// </summary>
+    public void ClearMarkers()
+    {
+        MarkerOffset = long.MaxValue;
+        SecondMarkerOffset = long.MaxValue;
+    }
+
+    /// <summary>
+    ///     Moves the primary marker to the next change-time of the selected signal
+    ///     that is strictly greater than the current marker position. If no signal
+    ///     is selected, or there is no further edge, nothing happens.
+    /// </summary>
+    public void JumpToNextEdge()
+    {
+        JumpToEdge(1);
+    }
+
+    /// <summary>
+    ///     Moves the primary marker to the previous change-time of the selected
+    ///     signal that is strictly less than the current marker position. If no
+    ///     signal is selected, or there is no previous edge, nothing happens.
+    /// </summary>
+    public void JumpToPreviousEdge()
+    {
+        JumpToEdge(-1);
+    }
+
+    private void JumpToEdge(int direction)
+    {
+        var selected = SelectedSignal;
+        if (selected is null) return;
+
+        var signal = selected.Signal;
+        var current = MarkerOffset == long.MaxValue ? 0 : MarkerOffset;
+
+        // FindIndex returns i such that changeTime[i] <= current < changeTime[i+1],
+        // or -1 if current is before the first change-time.
+        var index = signal.FindIndex(current);
+
+        long target;
+        if (direction > 0)
+        {
+            var nextIndex = index < 0 ? 0 : index + 1;
+            target = signal.GetChangeTimeFromIndex(nextIndex);
+            if (target == long.MaxValue || target <= current) return;
+        }
+        else
+        {
+            if (index < 0) return;
+            var changeAtIndex = signal.GetChangeTimeFromIndex(index);
+            var prevIndex = changeAtIndex < current ? index : index - 1;
+            if (prevIndex < 0) return;
+            target = signal.GetChangeTimeFromIndex(prevIndex);
+            if (target == long.MaxValue || target >= current) return;
+        }
+
+        MarkerOffset = target;
+        EnsureMarkerVisible(target);
+    }
+
+    private void EnsureMarkerVisible(long position)
+    {
+        if (ViewPortWidth <= 0) return;
+        if (position < Offset)
+        {
+            Offset = Math.Max(0, position - ViewPortWidth / 4);
+        }
+        else if (position > Offset + ViewPortWidth)
+        {
+            Offset = Math.Max(0, position - (long)(ViewPortWidth * 0.75));
+        }
+    }
+
     public WaveModel AddSignal(IVcdSignal signal)
     {
         var waveModel = new WaveModel(signal, WaveColors[Signals.Count % WaveColors.Length]);

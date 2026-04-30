@@ -42,8 +42,34 @@ public partial class WaveFormView : UserControl
             if (_viewModel == null) return;
 
             if (args.Key == Key.Left)
-                _viewModel.XOffsetMinus();
-            else if (args.Key == Key.Right) _viewModel.XOffsetPlus();
+            {
+                if (args.KeyModifiers.HasFlag(KeyModifiers.Alt))
+                {
+                    _viewModel.JumpToPreviousEdge();
+                    args.Handled = true;
+                }
+                else
+                {
+                    _viewModel.XOffsetMinus();
+                }
+            }
+            else if (args.Key == Key.Right)
+            {
+                if (args.KeyModifiers.HasFlag(KeyModifiers.Alt))
+                {
+                    _viewModel.JumpToNextEdge();
+                    args.Handled = true;
+                }
+                else
+                {
+                    _viewModel.XOffsetPlus();
+                }
+            }
+            else if (args.Key == Key.Escape)
+            {
+                _viewModel.ClearMarkers();
+                args.Handled = true;
+            }
         });
 
         AddHandler(PointerWheelChangedEvent, (sender, args) =>
