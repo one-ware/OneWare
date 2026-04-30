@@ -6,7 +6,10 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
 using DynamicData;
+using OneWare.Essentials.Commands;
+using OneWare.Essentials.Services;
 using TextMateSharp.Registry;
+using ApplicationCommands = AvaloniaEdit.ApplicationCommands;
 
 namespace OneWare.Essentials.EditorExtensions;
 
@@ -47,6 +50,44 @@ public class ExtendedTextEditor : TextEditor
         TextArea.TextView.LineTransformers.Add(ModificationService);
         //TextArea.TextView.ElementGenerators.Add(ElementGenerator);
         TextArea.TextView.ElementGenerators.Add(InlayHintGenerator);
+    }
+
+    private static readonly object RegistrationLock = new();
+    private static bool _commandsRegistered;
+
+    /// <summary>
+    ///     Registers a curated set of AvaloniaEdit's built-in editor commands (Undo, Redo,
+    ///     Copy, Cut, Paste) with the application command system so their gestures can be
+    ///     reassigned through OneWare's key configuration. The commands continue to use
+    ///     AvaloniaEdit's existing routed-command bindings on the focused <c>TextArea</c>,
+    ///     so the underlying behavior is unchanged. Safe to call multiple times.
+    /// </summary>
+    public static void RegisterDefaultEditorCommands(IApplicationCommandService commandService)
+    {
+        ArgumentNullException.ThrowIfNull(commandService);
+
+        lock (RegistrationLock)
+        {
+            if (_commandsRegistered) return;
+            _commandsRegistered = true;
+        }
+
+        var supportedCommands = new[]
+        {
+            ApplicationCommands.Undo,
+            ApplicationCommands.Redo,
+            ApplicationCommands.Copy,
+            ApplicationCommands.Cut,
+            ApplicationCommands.Paste
+        };
+
+        foreach (var routedCommand in supportedCommands)
+        {
+            commandService.RegisterCommand(new RoutedEditorCommand(routedCommand)
+            {
+                DefaultGesture = routedCommand.Gesture
+            });
+        }
     }
 
     protected override Type StyleKeyOverride => typeof(TextEditor);
