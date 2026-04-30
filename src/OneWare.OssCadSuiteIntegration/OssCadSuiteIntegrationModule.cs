@@ -36,6 +36,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 {
     public const string OssPathSetting = "OssCadSuite_Path";
     public const string OpenFpgaLoaderPathSetting = "OpenFpgaLoader_Path";
+    public const string OpenGhwWithGtkWaveSetting = "VcdViewer_OpenGhwWithGtkWave";
 
     public static readonly Package OssCadPackage = new()
     {
@@ -524,6 +525,12 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         
         settingsService.RegisterTitledFilePath("Tools", "OSS Cad Suite", OpenFpgaLoaderPathSetting, "OpenFPGALoaderPath",
             "Sets the path for the OpenFPGALoader", "openFPGALoader", null, null, null);
+        
+        settingsService.RegisterSetting("Simulator", "VCD Viewer", OpenGhwWithGtkWaveSetting,
+            new CheckBoxSetting("Open GHW Files in GTKWave", false)
+            {
+                HoverDescription = "Use GTKWave instead of the internal waveform viewer for GHW files"
+            });
 
         settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>
         {
@@ -627,9 +634,18 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 
         serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
         {
+            if (!settingsService.GetSettingValue<bool>(OpenGhwWithGtkWaveSetting)) return false;
+            if (!IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting))) return false;
+
             serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
             return true;
-        }, ".ghw", ".fst");
+        }, ".ghw");
+        
+        serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
+        {
+            serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
+            return true;
+        }, ".fst");
         
         fpgaService.RegisterProjectEntryModification(x =>
         {
