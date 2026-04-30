@@ -19,7 +19,8 @@ public class VhdlBlinkTemplate(ILogger logger, IMainDockService mainDockService)
             var name = root.Header.Replace(" ", "");
             TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
             var file = root.AddFile(name + ".vhd");
-            root.TopEntity = file.RelativePath;
+            root.TopEntity = name;
+            root.TopEntityFile = file.RelativePath;
 
             _ = mainDockService.OpenFileAsync(file.FullPath);
         }

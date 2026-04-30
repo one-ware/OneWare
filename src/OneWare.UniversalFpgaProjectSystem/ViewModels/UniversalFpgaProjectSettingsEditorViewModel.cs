@@ -183,7 +183,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                 {
                     if (file is UniversalFpgaProjectRoot root)
                     {
-                        if (root.TopEntity is not null) return Path.GetExtension(root.TopEntity) is ".vhd" or ".vhdl";
+                        if (root.TopEntityFile is not null) return Path.GetExtension(root.TopEntityFile) is ".vhd" or ".vhdl";
                         return root.GetFiles().Any(projectFile => Path.GetExtension(projectFile) is ".vhd" or ".vhdl");
                     }
 

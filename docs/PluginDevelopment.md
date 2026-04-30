@@ -390,7 +390,8 @@ model for FPGA workflows. It is designed to be extended by plugins.
 - Project files use JSON via `UniversalProjectProperties`. Keys are case-insensitive and stored in
   the project file. Common keys:
   - `include` / `exclude`: arrays of glob-like patterns used by `IsPathIncluded`.
-  - `topEntity`: relative path to the top-level HDL file.
+  - `topEntity`: name of the top-level HDL entity/module (e.g. `"blink_top"`). Since version 2, this stores the entity/module name rather than a file path. Old projects that stored a file path are handled transparently via backward-compatible getters.
+  - `topEntityFile`: relative path to the file containing the top-level entity/module.
   - `toolchain`: toolchain ID to run on compile.
   - `loader`: loader ID to use for programming.
   - `fpga`: selected FPGA package name.
@@ -490,8 +491,11 @@ Implement these interfaces to extend the toolchain pipeline:
 - `IFpgaPreCompileStep` (src/OneWare.UniversalFpgaProjectSystem/Services/IFpgaPreCompileStep.cs):
   optional steps executed before compile.
 - `INodeProvider` (src/OneWare.UniversalFpgaProjectSystem/Services/INodeProvider.cs):
-  extracts HDL nodes from an `IProjectFile`. The pin planner uses this to build
-  connectable nodes for the top entity.
+  extracts HDL nodes and entity/module names from an `IProjectFile`. The pin planner uses
+  `ExtractNodesAsync` to build connectable nodes for the top entity. The project manager uses
+  `ExtractEntityNamesAsync` to automatically determine the entity name when setting the top entity.
+  A default implementation of `ExtractEntityNamesAsync` falls back to the filename without
+  extension.
 
 ### Pin planner and connections
 
