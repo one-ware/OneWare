@@ -115,6 +115,8 @@
   </Folder>
   <Folder Name="/Extensions/ProjectSystem/" />
   <Folder Name="/Extensions/Wave/">
+    <Project Path="src/OneWare.Fst.Parser/OneWare.Fst.Parser.csproj" />
+    <Project Path="src/OneWare.Ghw.Parser/OneWare.Ghw.Parser.csproj" />
     <Project Path="src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj" />
     <Project Path="src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj" />
     <Project Path="src/OneWare.WaveFormViewer/OneWare.WaveFormViewer.csproj" />
@@ -126,6 +128,8 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
+    <Project Path="tests/OneWare.Fst.Parser.UnitTests/OneWare.Fst.Parser.UnitTests.csproj" />
+    <Project Path="tests/OneWare.Ghw.Parser.UnitTests/OneWare.Ghw.Parser.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
     <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj" />
     <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj" />
