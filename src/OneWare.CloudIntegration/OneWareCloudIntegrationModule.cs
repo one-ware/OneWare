@@ -19,6 +19,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
     public const string OneWareCloudHostKey = "General_OneWareCloud_Host";
     public const string OneWareAccountUserIdKey = "General_OneWareCloud_AccountUserId";
     public const string CredentialStore = "https://cloud.one-ware.com";
+    public static ISettingValidation CloudHostValidation { get; } = new CloudHostSettingValidation();
 
     public override void RegisterServices(IServiceCollection services)
     {
@@ -35,7 +36,10 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
 
         serviceProvider.Resolve<ISettingsService>()
             .RegisterSetting("Experimental", "OneWare Cloud", OneWareCloudHostKey,
-                new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
+                new TextBoxSetting("Host", CredentialStore, CredentialStore)
+                {
+                    Validator = CloudHostValidation
+                });
         serviceProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountUserIdKey,
             serviceProvider.Resolve<OneWareCloudAccountSetting>());
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_BottomRightExtension",
@@ -82,5 +86,21 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
             ? "We received your feedback and process the request as soon as possible."
             : "Something went wrong. Please retry it later.";
         await windowService.ShowMessageAsync("Feedback sent", msg, MessageBoxIcon.Info);
+    }
+
+    public static string GetCloudHost(string? configuredHost)
+    {
+        return string.IsNullOrWhiteSpace(configuredHost) ? CredentialStore : configuredHost.Trim();
+    }
+
+    private sealed class CloudHostSettingValidation : ISettingValidation
+    {
+        public bool Validate(object? value, out string? warningMessage)
+        {
+            warningMessage = string.IsNullOrWhiteSpace(value?.ToString())
+                ? $"\u26A0 Host is empty. Using {CredentialStore}/."
+                : null;
+            return warningMessage is null;
+        }
     }
 }

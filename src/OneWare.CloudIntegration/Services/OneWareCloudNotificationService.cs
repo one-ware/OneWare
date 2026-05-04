@@ -40,7 +40,8 @@ public class OneWareCloudNotificationService
 
         await DisconnectAsync();
 
-        var baseUrl = _settingsService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
+        var baseUrl = OneWareCloudIntegrationModule.GetCloudHost(
+            _settingsService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey));
 
         _connection = new HubConnectionBuilder()
             .WithUrl(new Uri(new Uri(baseUrl), "/hub"), options => { options.AccessTokenProvider = GetTokenAsync; })
