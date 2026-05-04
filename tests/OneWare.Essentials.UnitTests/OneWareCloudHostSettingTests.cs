@@ -31,7 +31,7 @@ public class OneWareCloudHostSettingTests
 
         setting.Value = string.Empty;
 
-        Assert.Equal($"\u26A0 Host is empty. Using {OneWareCloudIntegrationModule.CredentialStore}/.",
+        Assert.Equal($"\u26A0 Host is empty. Using {OneWareCloudIntegrationModule.CredentialStore}.",
             setting.ValidationMessage);
         Assert.Equal(OneWareCloudIntegrationModule.CredentialStore,
             OneWareCloudIntegrationModule.GetCloudHost(setting.Value.ToString()));

@@ -98,7 +98,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
         public bool Validate(object? value, out string? warningMessage)
         {
             warningMessage = string.IsNullOrWhiteSpace(value?.ToString())
-                ? $"\u26A0 Host is empty. Using {CredentialStore}/."
+                ? $"\u26A0 Host is empty. Using {CredentialStore}."
                 : null;
             return warningMessage is null;
         }
