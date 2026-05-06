@@ -9,5 +9,11 @@
     <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
         <TextBlock Text="IVerilog Arguments:" />
         <TextBox Width="200" Text="{Binding IcarusVerilogArguments}" />
+        <TextBlock VerticalAlignment="Center" Text="Format"
+                   ToolTip.Tip="Select the output format to use. VCD can be opened inside the IDE, while GHW and FST require GTKWave." />
+        <Border Classes="RoundToolBar">
+            <ComboBox Width="100" ItemsSource="{Binding AvailableWaveOutputFormats}" SelectedIndex="0"
+                      SelectedItem="{Binding WaveOutputFormat, Mode=TwoWay}" />
+        </Border>
     </StackPanel>
 </UserControl>

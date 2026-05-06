@@ -1,5 +1,4 @@
-﻿using OneWare.Essentials.Enums;
-using OneWare.Essentials.Services;
+﻿using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Context;
 
 namespace OneWare.OssCadSuiteIntegration.Tools;
@@ -7,6 +6,7 @@ namespace OneWare.OssCadSuiteIntegration.Tools;
 public class GtkWaveService(IChildProcessService childProcessService)
 {
     private static readonly string[] GtkProperties = ["GtkwSaveFile", "GtkwWaveArgs"];
+    public static readonly string[] GtkWaveformEndings = [".vcd", ".ghw", ".fst", ".lxt"];
 
     public async Task OpenInGtkWaveAsync(string filePath)
     {

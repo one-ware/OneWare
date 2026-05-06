@@ -1,23 +1,18 @@
-﻿using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Logging;
 using Avalonia.Media;
-using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
 using OneWare.Essentials.ToolEngine.Strategies;
-using OneWare.Essentials.ViewModels;
+using OneWare.OssCadSuiteIntegration.Helpers;
 using OneWare.OssCadSuiteIntegration.Loaders;
 using OneWare.OssCadSuiteIntegration.Simulators;
 using OneWare.OssCadSuiteIntegration.Tools;
@@ -34,324 +29,7 @@ namespace OneWare.OssCadSuiteIntegration;
 
 public class OssCadSuiteIntegrationModule : OneWareModuleBase
 {
-    public const string OssPathSetting = "OssCadSuite_Path";
-    public const string OpenFpgaLoaderPathSetting = "OpenFpgaLoader_Path";
-
-    public static readonly Package OssCadPackage = new()
-    {
-        Category = "Binaries",
-        Id = "osscadsuite",
-        Type = "NativeTool",
-        Name = "OSS CAD Suite",
-        Description = "Open Source FPGA Tools",
-        License = "ISC",
-        IconUrl =
-            "https://avatars.githubusercontent.com/u/35169771?s=48&v=4",
-        Links =
-        [
-            new PackageLink
-            {
-                Name = "GitHub",
-                Url = "https://github.com/YosysHQ/oss-cad-suite-build"
-            }
-        ],
-        Tabs =
-        [
-            new PackageTab()
-            {
-                Title = "Readme",
-                ContentUrl = "https://raw.githubusercontent.com/HendrikMennen/oss-cad-suite-build/main/README.md"
-            },
-            new PackageTab
-            {
-                Title = "License",
-                ContentUrl = "https://raw.githubusercontent.com/YosysHQ/oss-cad-suite-build/main/COPYING"
-            }
-        ],
-        Versions =
-        [
-            new PackageVersion
-            {
-                Version = "2024.07.27",
-                Targets =
-                [
-                    new PackageTarget
-                    {
-                        Target = "win-x64",
-                        Url =
-                            "https://github.com/HendrikMennen/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-windows-x64-20240727.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-linux-x64-20240727.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-darwin-x64-20240727.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2024-07-27/oss-cad-suite-darwin-arm64-20240727.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    }
-                ]
-            },
-            new PackageVersion
-            {
-                Version = "2025.01.22",
-                Targets =
-                [
-                    new PackageTarget
-                    {
-                        Target = "win-x64",
-                        Url =
-                            "https://github.com/HendrikMennen/oss-cad-suite-build/releases/download/2025-01-22/oss-cad-suite-windows-x64-20250122.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-01-22/oss-cad-suite-linux-x64-20250122.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-01-22/oss-cad-suite-darwin-x64-20250122.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-01-22/oss-cad-suite-darwin-arm64-20250122.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    }
-                ]
-            },
-            new PackageVersion
-            {
-                Version = "2025.08.27",
-                Targets =
-                [
-                    new PackageTarget
-                    {
-                        Target = "win-x64",
-                        Url =
-                            "https://github.com/hendrikmennen/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-windows-x64-20250827.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-linux-x64-20250827.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-linux-arm64-20250827.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-darwin-x64-20250827.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-08-27/oss-cad-suite-darwin-arm64-20250827.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    }
-                ]
-            },
-            new PackageVersion
-            {
-                Version = "2026.02.19",
-                Targets =
-                [
-                    new PackageTarget
-                    {
-                        Target = "win-x64",
-                        Url =
-                            "https://github.com/hendrikmennen/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-windows-x64-20260219.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-linux-x64-20260219.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-linux-arm64-20260219.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-x64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-darwin-x64-20260219.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-arm64",
-                        Url =
-                            "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-02-19/oss-cad-suite-darwin-arm64-20260219.tgz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "oss-cad-suite",
-                                SettingKey = OssPathSetting
-                            }
-                        ]
-                    }
-                ]
-            },
-        ]
-    };
+    public static readonly Package OssCadPackage = OssCadSuiteHelper.OssCadPackage;
     
     public override void RegisterServices(IServiceCollection services)
     {
@@ -392,7 +70,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
 
         
-        serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadSuiteHelper.OssCadPackage);
         serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
             ".pcf");
 
@@ -518,14 +196,30 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
         serviceProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         serviceProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
-
-        settingsService.RegisterTitledFolderPath("Tools", "OSS Cad Suite", OssPathSetting, "OSS CAD Suite Path",
-            "Sets the path for the Yosys OSS CAD Suite", "", null, null, IsOssPathValid);
         
-        settingsService.RegisterTitledFilePath("Tools", "OSS Cad Suite", OpenFpgaLoaderPathSetting, "OpenFPGALoaderPath",
-            "Sets the path for the OpenFPGALoader", "openFPGALoader", null, null, null);
+        settingsService.RegisterSetting(
+            "Tools", 
+            "OSS Cad Suite", 
+            OssCadSuiteHelper.OssPathSetting, 
+            new FolderPathSetting(
+                "OSS CAD Suite Path", 
+                "", 
+                "Path to oss-cad-suite...", 
+                null, 
+                IsOssPathValid));
+        
+        settingsService.RegisterSetting(
+            "Tools",
+            "OSS Cad Suite",
+            OssCadSuiteHelper.OpenFpgaLoaderPathSetting,
+            new FilePathSetting(
+                    "OpenFPGALoaderPath",
+                    "openFPGALoader",
+                    "Path to openFPGALoader executable...",
+                    null,
+                    null));
 
-        settingsService.GetSettingObservable<string>(OssPathSetting).Subscribe(x =>
+        settingsService.GetSettingObservable<string>(OssCadSuiteHelper.OssPathSetting).Subscribe(x =>
         {
             if (string.IsNullOrEmpty(x)) return;
 
@@ -574,8 +268,8 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                     Header = "Generate Json Netlist",
                     Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
                 });
-            if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or "fst" } wave] &&
-                IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting)))
+            if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or ".fst" or ".lxt" } wave] &&
+                IsOssPathValid(settingsService.GetSettingValue<string>(OssCadSuiteHelper.OssPathSetting)))
                 l.Add(new MenuItemModel("GtkWaveOpen")
                 {
                     Header = "Open with GTKWave",
@@ -627,9 +321,9 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 
         serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
         {
-            serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
+            _ = serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x);
             return true;
-        }, ".ghw", ".fst");
+        }, ".ghw", ".fst", ".lxt");
         
         fpgaService.RegisterProjectEntryModification(x =>
         {
@@ -645,6 +339,8 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 x.Icon?.RemoveOverlay("ConstraintFile");
             }
         });
+        
+        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("Material.Pulse", GtkWaveService.GtkWaveformEndings);
     }
 
     private static bool IsOssPathValid(string path)
