@@ -12,6 +12,8 @@
                         Advertise="yes" WorkingDirectory="INSTALLFOLDER" />
                 </File>
 
+                <Environment Name="PATH" Action="set" Part="last" System="yes" Value="[INSTALLFOLDER]" />
+
                 <!-- Associate .fpgaproj files -->
                 <RegistryKey Root="HKCR" Key=".fpgaproj">
                     <RegistryValue Value="OneWare.Project" Type="string" />

@@ -48,7 +48,7 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\Startup.png"/>
     </ItemGroup>
-    
+
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64'">
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
@@ -62,5 +62,11 @@
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll"/>
     </ItemGroup>
+
+    <Target Name="CreateWindowsCommandAlias" AfterTargets="Publish"
+        Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
+        <Copy SourceFiles="$(PublishDir)OneWareStudio.exe" DestinationFiles="$(PublishDir)oneware.exe"
+            SkipUnchangedFiles="true"/>
+    </Target>
 
 </Project>
