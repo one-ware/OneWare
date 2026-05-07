@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
+using OneWare.Essentials.ToolEngine.Strategies;
 
 namespace OneWare.ToolEngine.Services;
 
@@ -97,9 +98,14 @@ public class ToolService : IToolService
         if (_toolStrategies.TryGetValue(toolKey, out var strategies) &&
             strategies.TryGetValue(strategyKey, out var strategy))
             return strategy;
-
-        throw new InvalidOperationException(
-            $"No execution strategy found for tool '{toolKey}' and strategy '{strategyKey}'");
+        
+        _logger.LogError($"No execution strategy found for tool '{toolKey}' and strategy '{strategyKey}'");
+        _logger.LogError("Using default strategy");
+        
+        if (strategies != null && strategies.TryGetValue(NativeStrategy.ToolKey, out var defaultStrategy))
+            return defaultStrategy;
+        
+        throw new InvalidOperationException($"No strategy with key '{toolKey}' was found.");
     }
 
     private void RegisterToolInSettings(ToolContext description)

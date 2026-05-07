@@ -6,7 +6,7 @@ namespace OneWare.Essentials.ToolEngine.Strategies;
 
 public class NativeStrategy : IToolExecutionStrategy
 {
-    private const string ToolKey = "NativeExecutionStrategy";
+    public const string ToolKey = "NativeExecutionStrategy";
 
     public Task<(bool success, string output)> ExecuteAsync(ToolCommand command)
     {
