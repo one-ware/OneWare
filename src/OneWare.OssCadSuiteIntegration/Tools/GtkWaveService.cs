@@ -1,10 +1,11 @@
 ﻿using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
 using OneWare.UniversalFpgaProjectSystem.Context;
 
 namespace OneWare.OssCadSuiteIntegration.Tools;
 
-public class GtkWaveService(IChildProcessService childProcessService)
+public class GtkWaveService(IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
     private static readonly string[] GtkProperties = ["GtkwSaveFile", "GtkwWaveArgs"];
 
@@ -18,6 +19,7 @@ public class GtkWaveService(IChildProcessService childProcessService)
                 args.Add(jsonNode.GetValue<string>());
 
         // save file has to be provided as second argument without "--save"
-        childProcessService.StartWeakProcess("gtkwave", args, Path.GetDirectoryName(filePath) ?? "");
+        var toolCommand = ToolCommand.FromWeakParams("gtkwave", args, Path.GetDirectoryName(filePath) ?? "");
+        toolExecutionDispatcherService.StartWeakProcess(toolCommand);
     }
 }

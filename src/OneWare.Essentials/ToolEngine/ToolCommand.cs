@@ -82,6 +82,20 @@ public class ToolCommand
             ErrorHandler = errorAction
         };
     }
+    
+    public static ToolCommand FromWeakParams(
+        string path,
+        IReadOnlyCollection<string> arguments,
+        string workingDirectory)
+    {
+        return new ToolCommand
+        {
+            ToolName = Path.GetFileNameWithoutExtension(path),
+            Executable = path,
+            CommandArguments = ParseArguments(arguments),
+            WorkingDirectory = workingDirectory
+        };
+    }
 }
 
 public interface ICommandArgument

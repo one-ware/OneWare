@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
 
@@ -8,5 +9,10 @@ public class ToolExecutionDispatcherService(IToolService service) : IToolExecuti
     public Task<(bool success, string output)> ExecuteAsync(ToolCommand command)
     {
         return service.GetStrategy(command.ToolName).ExecuteAsync(command);
+    }
+
+    public WeakReference<Process> StartWeakProcess(ToolCommand command)
+    {
+        return service.GetStrategy(command.ToolName).StartWeakProcess(command);
     }
 }
