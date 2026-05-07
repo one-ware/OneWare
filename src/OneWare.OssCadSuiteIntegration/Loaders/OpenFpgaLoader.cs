@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
+using OneWare.OssCadSuiteIntegration.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -77,7 +78,7 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
                 return;
         }
         
-        var path = settingsService.GetSettingValue<string>(OssCadSuiteIntegrationModule.OpenFpgaLoaderPathSetting);
+        var path = settingsService.GetSettingValue<string>(OssCadSuiteHelper.OpenFpgaLoaderPathSetting);
         outputService.WriteLine("Starting OpenFpgaLoader ...");
         var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments!,
             project.FullPath, $"Running {path}...", AppState.Loading, true, null, s =>
