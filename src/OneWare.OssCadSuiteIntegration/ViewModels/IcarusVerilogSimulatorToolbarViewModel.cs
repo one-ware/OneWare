@@ -23,4 +23,16 @@ public class IcarusVerilogSimulatorToolbarViewModel : ObservableObject
             OnPropertyChanged();
         }
     }
+    
+    public string[] AvailableWaveOutputFormats => ["VCD", "LXT2", "FST"];
+    
+    public string WaveOutputFormat
+    {
+        get => _context.GetBenchProperty(nameof(WaveOutputFormat)) ?? AvailableWaveOutputFormats[0];
+        set
+        {
+            _context.SetBenchProperty(nameof(WaveOutputFormat), value);
+            OnPropertyChanged();
+        }
+    }
 }

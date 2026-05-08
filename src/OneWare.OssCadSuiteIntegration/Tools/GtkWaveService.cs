@@ -7,6 +7,7 @@ namespace OneWare.OssCadSuiteIntegration.Tools;
 public class GtkWaveService(IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
     private static readonly string[] GtkProperties = ["GtkwSaveFile", "GtkwWaveArgs"];
+    public static readonly string[] GtkWaveformEndings = [".vcd", ".ghw", ".fst", ".lxt"];
 
     public async Task OpenInGtkWaveAsync(string filePath)
     {
