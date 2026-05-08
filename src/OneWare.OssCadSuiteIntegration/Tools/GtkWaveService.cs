@@ -12,14 +12,24 @@ public class GtkWaveService(IToolExecutionDispatcherService toolExecutionDispatc
     public async Task OpenInGtkWaveAsync(string filePath)
     {
         var context = await TestBenchContextManager.LoadContextAsync(filePath);
+        var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+        
         List<string> args = [Path.GetFileName(filePath)];
 
         foreach (var property in GtkProperties)
-            if (context.Properties.TryGetPropertyValue(property, out var jsonNode) && jsonNode != null && jsonNode.GetValueKind() == System.Text.Json.JsonValueKind.String)            
-                args.Add(jsonNode.GetValue<string>());
+        {
+            if (context.Properties.TryGetPropertyValue(property, out var jsonNode) && 
+                jsonNode?.GetValueKind() == System.Text.Json.JsonValueKind.String)
+            {
+                var value = jsonNode.GetValue<string>();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    args.Add(value);
+                }
+            }
+        }
 
-        // save file has to be provided as second argument without "--save"
-        var toolCommand = ToolCommand.FromWeakParams("gtkwave", args, Path.GetDirectoryName(filePath) ?? "");
+        var toolCommand = ToolCommand.FromWeakParams("gtkwave", args, directory);
         toolExecutionDispatcherService.StartWeakProcess(toolCommand);
     }
 }

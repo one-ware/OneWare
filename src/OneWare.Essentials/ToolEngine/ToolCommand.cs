@@ -19,17 +19,6 @@ public class ToolCommand
     public Func<string, bool>? OutputHandler { get; init; }
     public Func<string, bool>? ErrorHandler { get; init; }
 
-    public void ConvertFilePaths(OSPlatform osPlatform)
-    {
-        foreach (var argument in CommandArguments)
-        {
-            if (argument is PathArgument pathArgument)
-            {
-                pathArgument.ChangeOsPath(osPlatform);
-            }
-        }
-    }
-
     private static IReadOnlyCollection<ICommandArgument> ParseArguments(IReadOnlyCollection<string> arguments)
     {
         return arguments.Select(arg => new CommandArgument(arg)).Cast<ICommandArgument>().ToList();
@@ -96,61 +85,12 @@ public class ToolCommand
             WorkingDirectory = workingDirectory
         };
     }
-}
-
-public interface ICommandArgument
-{
-    string GetArgument();
-}
-
-public class CommandArgument(string argument) : ICommandArgument
-{
-    public string GetArgument()
-    {
-        return argument;
-    }
-}
-
-public class PathArgument(string path) : ICommandArgument
-{
-    private string _path = path;
-
-    public void ChangeOsPath(OSPlatform osPlatform)
-    {
-        if (osPlatform == OSPlatform.Windows)
-        {
-            _path = _path.Replace("/", "\\");
-        }
-        else
-        {
-            _path = _path.Replace("\\", "/");
-        }
-    }
     
-    public string GetArgument()
+    public void PrepareCommand(OSPlatform osPlatform, Func<string, string>? pathMapper = null)
     {
-        return _path;
+        foreach (var argument in CommandArguments)
+        {
+            argument.Prepare(osPlatform, pathMapper);
+        }
     }
-}
-
-public class ToolContext
-{
-    public ToolContext(string name, string description, string key, List<string>? toolNames = null)
-    {
-        Name = name;
-        Description = description;
-        Key = key;
-        ToolNames = toolNames ?? [];
-    }
-
-    public string Name { get; init; }
-    public string Description { get; init; }
-    public string Key { get; init; }
-
-    public List<string> ToolNames { get; init; }
-}
-
-public class ToolConfiguration
-{
-    public readonly Dictionary<string, string> StrategyMapping = new();
 }

@@ -7,7 +7,6 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ToolEngine;
 using OneWare.OssCadSuiteIntegration.Models;
-using OneWare.ToolEngine.Services;
 using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -16,11 +15,9 @@ using OneWare.UniversalFpgaProjectSystem.Parser;
 namespace OneWare.OssCadSuiteIntegration.Yosys;
 
 public class YosysService(
-    IChildProcessService childProcessService,
     ILogger logger,
     IOutputService outputService,
     IMainDockService dockService,
-    IToolService toolService,
     IToolExecutionDispatcherService toolExecutionDispatcherService)
 {
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)
@@ -63,58 +60,32 @@ public class YosysService(
     }
 
     public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel,
-        IEnumerable<string>? mandatoryFiles)
+        IEnumerable<string>? mandatoryFiles = null)
     {
         try
         {
             var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
-
             var top = project.TopEntity ?? throw new Exception("TopEntity not set!");
 
             var includedFiles = project.GetFiles("*.v").Concat(project.GetFiles("*.sv"))
                 .Where(x => !project.IsCompileExcluded(x))
-                .Where(x => !project.IsTestBench(x));
-            
+                .Where(x => !project.IsTestBench(x))
+                .ToList();
+
             var genVerilogPath = Path.Combine(project.RootFolderPath, "build", "gen_verilog");
             if (Directory.Exists(genVerilogPath))
             {
-                var generatedFiles = Directory.EnumerateFiles(genVerilogPath, "*.v", 
-                    SearchOption.AllDirectories);
-                includedFiles = includedFiles.Concat(generatedFiles);
+                includedFiles.AddRange(Directory.EnumerateFiles(genVerilogPath, "*.v", SearchOption.AllDirectories));
             }
 
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
 
-            var yosysCommand = properties.GetValueOrDefault("yosysToolchainCommand") ?? "";
-            var yosysQuiet = Boolean.Parse(properties.GetValueOrDefault("yosysQuietFlag") ?? "true");
-            List<string> yosysArguments = [];
-
-            if (yosysQuiet)
-                yosysArguments.Add("-q");
-
-            if (string.IsNullOrWhiteSpace(yosysCommand))
-            {
-                yosysArguments.AddRange(["-p", $"{yosysSynthTool} -json build/synth.json"]);
-            }
-            else
-            {
-                yosysCommand = yosysCommand.Replace("$TOP", Path.GetFileNameWithoutExtension(top));
-                yosysCommand = yosysCommand.Replace("$SYNTH_TOOL", yosysSynthTool);
-                yosysCommand = yosysCommand.Replace("$OUTPUT", "build/synth.json");
-
-                yosysArguments.AddRange(["-p", yosysCommand]);
-            }
-
-            yosysArguments.AddRange(properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
-
-            yosysArguments.AddRange(includedFiles);
-
-            yosysArguments.AddRange(mandatoryFiles ?? []);
-
-            var command = ToolCommand.FromShellParams("yosys", yosysArguments, project.FullPath,
-                "Running yosys...", AppState.Loading, true, x =>
+            var builder = new ToolCommandBuilder("yosys")
+                .WithWorkingDirectory(project.FullPath)
+                .WithStatus("Running yosys...")
+                .WithTimer(true)
+                .WithOutputHandler(x =>
                 {
                     if (x.StartsWith("Error:"))
                     {
@@ -126,8 +97,40 @@ public class YosysService(
                     return true;
                 });
 
-            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
+            if (bool.TryParse(properties.GetValueOrDefault("yosysQuietFlag") ?? "true", out var quiet) && quiet)
+            {
+                builder.Add("-q");
+            }
 
+            var customCommandTemplate = properties.GetValueOrDefault("yosysToolchainCommand");
+
+            if (string.IsNullOrWhiteSpace(customCommandTemplate))
+            {
+                builder.Add("-p");
+                builder.AddScript("{synthTool} -json {output}",
+                    ("{synthTool}", yosysSynthTool),
+                    ("{output}", "build/synth.json"));
+            }
+            else
+            {
+                builder.Add("-p");
+                builder.AddScript(customCommandTemplate,
+                    ("$TOP", Path.GetFileNameWithoutExtension(top)),
+                    ("$SYNTH_TOOL", yosysSynthTool),
+                    ("$OUTPUT", "build/synth.json"));
+            }
+
+            var extraFlags = properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
+                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
+
+            foreach (var flag in extraFlags) builder.Add(flag);
+            foreach (var file in includedFiles) builder.AddPath(file);
+            foreach (var file in mandatoryFiles ?? []) builder.AddPath(file);
+
+            var command = builder.Build();
+
+
+            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
             return success;
         }
         catch (Exception e)
@@ -148,82 +151,76 @@ public class YosysService(
         try
         {
             var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
-
             var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool")
                               ?? throw new Exception("NextPnr Tool not set!");
 
-            var pcfFile = YosysSettingHelper.GetConstraintFile(project);
-            var cFileType = properties
-                .GetValueOrDefault("yosysToolchainConstraintFileType", "pcf");
+            var builder = new ToolCommandBuilder(nextPnrTool)
+                .WithWorkingDirectory(project.FullPath)
+                .WithStatus($"Running {nextPnrTool}...")
+                .WithTimer(true)
+                .WithErrorHandler(s =>
+                {
+                    Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                    return true;
+                });
 
-            var nextPnrArguments = new List<string>
-            {
-                "--json", "./build/synth.json",
-            };
+            builder.Add("--json").AddPath("./build/synth.json");
+
+            var pcfFile = YosysSettingHelper.GetConstraintFile(project);
+            var cFileType = properties.GetValueOrDefault("yosysToolchainConstraintFileType", "pcf");
 
             switch (cFileType)
             {
                 case "pcf":
-                    nextPnrArguments.Add("--pcf");
-                    nextPnrArguments.Add(pcfFile);
+                    builder.Add("--pcf").AddPath(pcfFile);
                     break;
                 case "ccf":
                     var absolutePcfPath = Path.Combine(project.RootFolderPath, pcfFile);
                     outputService.WriteLine($"Converting {absolutePcfPath} to CCF File");
-                    if (Path.Exists(absolutePcfPath))
-                        ConstraintFileHelper.Convert(absolutePcfPath, Path.Combine(project.RootFolderPath,
-                            "./build/constrains.ccf"));
+
+                    if (File.Exists(absolutePcfPath))
+                    {
+                        ConstraintFileHelper.Convert(absolutePcfPath,
+                            Path.Combine(project.RootFolderPath, "./build/constrains.ccf"));
+                    }
                     else
                     {
                         outputService.WriteLine($"Could not generate CCF file from {pcfFile}");
                         return false;
                     }
 
-                    nextPnrArguments.Add("-o");
-                    nextPnrArguments.Add($"ccf=./build/constrains.ccf");
+                    builder.Add("-o");
+                    builder.AddScript("ccf={path}", ("{path}", "./build/constrains.ccf"));
                     break;
                 default:
                     outputService.WriteLine($"Could not find Constraint file type: {cFileType}");
                     return false;
             }
 
-            var cOutputType = properties
-                .GetValueOrDefault("yosysToolchainOutputType", "asc");
-
+            var cOutputType = properties.GetValueOrDefault("yosysToolchainOutputType", "asc");
             switch (cOutputType)
             {
                 case "asc":
-                    nextPnrArguments.Add("--asc");
-                    nextPnrArguments.Add("./build/nextpnr.asc");
+                    builder.Add("--asc").AddPath("./build/nextpnr.asc");
                     break;
                 case "txt":
-                    nextPnrArguments.Add("-o");
-                    nextPnrArguments.Add("out=./build/impl.txt");
+                    builder.Add("-o");
+                    builder.AddScript("out={path}", ("{path}", "./build/impl.txt"));
                     break;
                 default:
                     outputService.WriteLine($"Could not find output type: {cOutputType}");
                     return false;
             }
 
+            if (withGui) builder.Add("--gui");
 
-            if (withGui)
-                nextPnrArguments.Add("--gui");
+            var extraFlags = properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?
+                .Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
 
-            nextPnrArguments.AddRange(properties
-                                          .GetValueOrDefault("yosysToolchainNextPnrFlags")?
-                                          .Split(' ',
-                                              StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                                      ?? Array.Empty<string>());
+            foreach (var flag in extraFlags) builder.Add(flag);
 
-            var command = ToolCommand.FromShellParams(nextPnrTool, nextPnrArguments,
-                project.FullPath, $"Running {nextPnrTool}...", AppState.Loading, true, null, s =>
-                {
-                    Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
-                    return true;
-                });
-
+            var command = builder.Build();
             var status = await toolExecutionDispatcherService.ExecuteAsync(command);
-
             return status.success;
         }
         catch (Exception e)
@@ -238,62 +235,54 @@ public class YosysService(
         try
         {
             var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
+            var packTool = properties.GetValueOrDefault("yosysToolchainPackTool")
+                           ?? throw new Exception("Pack Tool not set!");
 
-            var packTool = properties.GetValueOrDefault("yosysToolchainPackTool") ??
-                           throw new Exception("Pack Tool not set!");
-
-            List<string> packToolArguments = [];
-
-            var cOutputType = properties
-                .GetValueOrDefault("yosysToolchainOutputType", "asc");
-
-            switch (cOutputType)
-            {
-                case "asc":
-                    packToolArguments.Add("./build/nextpnr.asc");
-                    break;
-                case "txt":
-                    packToolArguments.Add("./build/impl.txt");
-                    break;
-                default:
-                    outputService.WriteLine($"Could not find input type: {cOutputType}");
-                    return false;
-            }
-
-            var pOutputFormat = properties
-                .GetValueOrDefault("packToolOutputFormat", "bin");
-
-            switch (pOutputFormat)
-            {
-                case "bin":
-                    packToolArguments.Add("./build/pack.bin");
-                    break;
-                case "bit":
-                    packToolArguments.Add("./build/pack.bit");
-                    break;
-                default:
-                    outputService.WriteLine($"Could not find output type: {pOutputFormat}");
-                    return false;
-            }
-
-
-            packToolArguments.AddRange(properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
-
-            var command = ToolCommand.FromShellParams(packTool, packToolArguments,
-                project.FullPath, $"Running {packTool}...", AppState.Loading, true, null, s =>
+            var builder = new ToolCommandBuilder(packTool)
+                .WithWorkingDirectory(project.FullPath)
+                .WithStatus($"Running {packTool}...")
+                .WithTimer(true)
+                .WithErrorHandler(s =>
                 {
                     Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                     return true;
                 });
 
-            var status = await toolExecutionDispatcherService.ExecuteAsync(command);
+            var cOutputType = properties.GetValueOrDefault("yosysToolchainOutputType", "asc");
+            string inputPath = cOutputType switch
+            {
+                "asc" => "./build/nextpnr.asc",
+                "txt" => "./build/impl.txt",
+                _ => throw new ArgumentException($"Unsupported input type: {cOutputType}")
+            };
+            builder.AddPath(inputPath);
 
+            var pOutputFormat = properties.GetValueOrDefault("packToolOutputFormat", "bin");
+            string outputPath = pOutputFormat switch
+            {
+                "bin" => "./build/pack.bin",
+                "bit" => "./build/pack.bit",
+                _ => throw new ArgumentException($"Unsupported output format: {pOutputFormat}")
+            };
+            builder.AddPath(outputPath);
+
+            var flags = properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
+                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
+
+            foreach (var flag in flags)
+            {
+                builder.Add(flag);
+            }
+
+            var command = builder.Build();
+
+            var status = await toolExecutionDispatcherService.ExecuteAsync(command);
             return status.success;
         }
         catch (Exception e)
         {
             logger.Error(e.Message, e);
+            outputService.WriteLine($"Error: {e.Message}");
             return false;
         }
     }
