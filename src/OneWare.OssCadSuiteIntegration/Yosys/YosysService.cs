@@ -80,7 +80,7 @@ public class YosysService(
 
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
-
+            
             var builder = new ToolCommandBuilder("yosys")
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus("Running yosys...")
@@ -97,38 +97,38 @@ public class YosysService(
                     return true;
                 });
 
-            if (bool.TryParse(properties.GetValueOrDefault("yosysQuietFlag") ?? "true", out var quiet) && quiet)
-            {
-                builder.Add("-q");
-            }
 
+            bool.TryParse(properties.GetValueOrDefault("yosysQuietFlag") ?? "true", out var quiet);
+            builder.AddIf(quiet, "-q");
+            
             var customCommandTemplate = properties.GetValueOrDefault("yosysToolchainCommand");
+            builder.Add("-p");
 
             if (string.IsNullOrWhiteSpace(customCommandTemplate))
             {
-                builder.Add("-p");
                 builder.AddScript("{synthTool} -json {output}",
-                    ("{synthTool}", yosysSynthTool),
-                    ("{output}", "build/synth.json"));
+                    ("{synthTool}", yosysSynthTool, false), 
+                    ("{output}", "build/synth.json", true)  
+                );
             }
             else
             {
-                builder.Add("-p");
                 builder.AddScript(customCommandTemplate,
-                    ("$TOP", Path.GetFileNameWithoutExtension(top)),
-                    ("$SYNTH_TOOL", yosysSynthTool),
-                    ("$OUTPUT", "build/synth.json"));
+                    ("$TOP", Path.GetFileNameWithoutExtension(top), false), 
+                    ("$SYNTH_TOOL", yosysSynthTool, false), 
+                    ("$OUTPUT", "build/synth.json", true)   
+                );
+            }
+            
+            builder.AddRawArguments(properties.GetValueOrDefault("yosysToolchainYosysFlags"));
+            builder.AddPaths(includedFiles);
+
+            if (mandatoryFiles != null)
+            {
+                builder.AddPaths(mandatoryFiles);
             }
 
-            var extraFlags = properties.GetValueOrDefault("yosysToolchainYosysFlags")?.Split(' ',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
-
-            foreach (var flag in extraFlags) builder.Add(flag);
-            foreach (var file in includedFiles) builder.AddPath(file);
-            foreach (var file in mandatoryFiles ?? []) builder.AddPath(file);
-
             var command = builder.Build();
-
 
             var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
             return success;
@@ -163,8 +163,8 @@ public class YosysService(
                     Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                     return true;
                 });
-
-            builder.Add("--json").AddPath("./build/synth.json");
+            
+            builder.AddPathOption("--json", "./build/synth.json");
 
             var pcfFile = YosysSettingHelper.GetConstraintFile(project);
             var cFileType = properties.GetValueOrDefault("yosysToolchainConstraintFileType", "pcf");

@@ -94,6 +94,12 @@ public class ToolService : IToolService
 
     public IToolExecutionStrategy GetStrategy(string toolKey)
     {
+        if (!_settingsService.HasSetting(toolKey))
+        {
+            throw new InvalidOperationException(
+                $"No Setting  for key '{toolKey}' was found. Register Tool first bevor you are using it");
+        }
+        
         var strategyKey = _settingsService.GetSettingValue<string>(toolKey);
         if (_toolStrategies.TryGetValue(toolKey, out var strategies) &&
             strategies.TryGetValue(strategyKey, out var strategy))

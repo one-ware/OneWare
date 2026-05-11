@@ -73,12 +73,19 @@ public class ToolCommandBuilder(string toolName)
         return this;
     }
     
-    public ToolCommandBuilder AddScript(string template, params (string placeholder, string path)[] mappings)
+    public ToolCommandBuilder AddScript(string template, params (string placeholder, string value)[] literals)
     {
+        var mappings = literals.Select(x => (x.placeholder, x.value, isPath: false)).ToArray();
         _args.Add(new TemplateArgument(template, mappings));
         return this;
     }
 
+    public ToolCommandBuilder AddScript(string template, params (string placeholder, string value, bool isPath)[] mappings)
+    {
+        _args.Add(new TemplateArgument(template, mappings));
+        return this;
+    }
+    
     public ToolCommandBuilder WithWorkingDirectory(string dir)
     {
         _workingDir = dir;

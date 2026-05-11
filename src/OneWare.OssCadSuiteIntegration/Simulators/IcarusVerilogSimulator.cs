@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
@@ -15,18 +16,18 @@ namespace OneWare.OssCadSuiteIntegration.Simulators;
 
 public class IcarusVerilogSimulator : IFpgaSimulator
 {
-    private readonly IChildProcessService _childProcessService;
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly GtkWaveService _gtkWaveService;
     private readonly IToolExecutionDispatcherService  _toolExecutionDispatcherService;
+    private readonly ILogger _logger;
 
-    public IcarusVerilogSimulator(IChildProcessService childProcessService, IMainDockService mainDockService,
+    public IcarusVerilogSimulator(ILogger logger, IMainDockService mainDockService,
         IProjectExplorerService projectExplorerService, GtkWaveService gtkWaveService,
         IToolExecutionDispatcherService toolExecutionDispatcherService)
     {
+        _logger = logger;
         _toolExecutionDispatcherService =  toolExecutionDispatcherService;
-        _childProcessService = childProcessService;
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
         _gtkWaveService = gtkWaveService;
@@ -63,27 +64,10 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             .Select(x => x.ToUnixPath());
 
         _mainDockService.Show<IOutputService>();
-
-        // List<string> icarusVerilogArguments = [];
-        // icarusVerilogArguments.AddRange(["-o", vvpPath]);
         
         var settings = await TestBenchContextManager.LoadContextAsync(fullPath);
         var waveOutput = settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.WaveOutputFormat)) ?? "VCD";
-
-        var waveOutputArgument = waveOutput switch
-        {
-            "VCD" => "",
-            "LXT2" => "-lxt2",
-            "FST" => "-fst",
-            _ => string.Empty
-        };
         
-        //var additionalGhdlOptions =
-            settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.IcarusVerilogArguments));
-        // if (additionalGhdlOptions != null) icarusVerilogArguments.AddRange(additionalGhdlOptions.Split(' '));
-        
-        // icarusVerilogArguments.AddRange(verilogFiles);
-
         var command = new ToolCommandBuilder("iverilog")
             .WithWorkingDirectory(root.FullPath)
             .WithStatus("Running IVerilog..", AppState.Loading)
@@ -93,17 +77,29 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             .AddPaths(verilogFiles)
             .Build();
         
-        var (result, _) = await _toolExecutionDispatcherService.ExecuteAsync(command);
-            
-        //var (result, _) = await _childProcessService.ExecuteShellAsync("iverilog", icarusVerilogArguments,
-        //     root.FullPath, "Running IVerilog...", AppState.Loading, true);
+        var (resultIVerilog, _) = await _toolExecutionDispatcherService.ExecuteAsync(command);
+        
+        if (!resultIVerilog)
+        {
+            _logger.LogWarning("IVerilog failed");
+            return false;
+        }
+        
 
-        if (!result) return false;
-
-        var (success2, output) = await _childProcessService.ExecuteShellAsync("vvp", [vvpPath, waveOutputArgument],
-            root.FullPath, "Running VVP Simulation...", AppState.Loading, true);
-
-        if (!success2) return false;
+        var vvpCommand = new ToolCommandBuilder("vvp").WithWorkingDirectory(root.FullPath)
+            .WithStatus("Running VPP Simulation", AppState.Loading)
+            .WithTimer(true)
+            .Add(vvpPath)
+            .AddIf(waveOutput == "LXT2", "-lxt2")
+            .AddIf(waveOutput == "FST", "-fst").Build();
+        
+        var (resultVvp, outputVvp) = await _toolExecutionDispatcherService.ExecuteAsync(vvpCommand);
+        
+        if (!resultVvp)
+        {
+            _logger.LogWarning("VVP failed");
+            return false;
+        }
         
         var escapedEnding = waveOutput switch
         {
@@ -115,7 +111,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         
         var vcdFileRegex = new Regex($@".*info: dumpfile\s+(.+\{escapedEnding})\s+opened for output.");
 
-        var match = vcdFileRegex.Match(output);
+        var match = vcdFileRegex.Match(outputVvp);
         if (!match.Success) return true;
         
         var fileRelativePath = match.Groups[1].Value;
