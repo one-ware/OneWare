@@ -3,6 +3,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
 using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
@@ -18,10 +19,13 @@ public class IcarusVerilogSimulator : IFpgaSimulator
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly GtkWaveService _gtkWaveService;
+    private readonly IToolExecutionDispatcherService  _toolExecutionDispatcherService;
 
     public IcarusVerilogSimulator(IChildProcessService childProcessService, IMainDockService mainDockService,
-        IProjectExplorerService projectExplorerService, GtkWaveService gtkWaveService)
+        IProjectExplorerService projectExplorerService, GtkWaveService gtkWaveService,
+        IToolExecutionDispatcherService toolExecutionDispatcherService)
     {
+        _toolExecutionDispatcherService =  toolExecutionDispatcherService;
         _childProcessService = childProcessService;
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
@@ -60,8 +64,8 @@ public class IcarusVerilogSimulator : IFpgaSimulator
 
         _mainDockService.Show<IOutputService>();
 
-        List<string> icarusVerilogArguments = [];
-        icarusVerilogArguments.AddRange(["-o", vvpPath]);
+        // List<string> icarusVerilogArguments = [];
+        // icarusVerilogArguments.AddRange(["-o", vvpPath]);
         
         var settings = await TestBenchContextManager.LoadContextAsync(fullPath);
         var waveOutput = settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.WaveOutputFormat)) ?? "VCD";
@@ -74,14 +78,25 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             _ => string.Empty
         };
         
-        var additionalGhdlOptions =
+        //var additionalGhdlOptions =
             settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.IcarusVerilogArguments));
-        if (additionalGhdlOptions != null) icarusVerilogArguments.AddRange(additionalGhdlOptions.Split(' '));
+        // if (additionalGhdlOptions != null) icarusVerilogArguments.AddRange(additionalGhdlOptions.Split(' '));
         
-        icarusVerilogArguments.AddRange(verilogFiles);
+        // icarusVerilogArguments.AddRange(verilogFiles);
+
+        var command = new ToolCommandBuilder("iverilog")
+            .WithWorkingDirectory(root.FullPath)
+            .WithStatus("Running IVerilog..", AppState.Loading)
+            .WithTimer(true)
+            .AddPathOption("-o", vvpPath)
+            .AddRawArguments(settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.IcarusVerilogArguments)))
+            .AddPaths(verilogFiles)
+            .Build();
         
-        var (result, _) = await _childProcessService.ExecuteShellAsync("iverilog", icarusVerilogArguments,
-            root.FullPath, "Running IVerilog...", AppState.Loading, true);
+        var (result, _) = await _toolExecutionDispatcherService.ExecuteAsync(command);
+            
+        //var (result, _) = await _childProcessService.ExecuteShellAsync("iverilog", icarusVerilogArguments,
+        //     root.FullPath, "Running IVerilog...", AppState.Loading, true);
 
         if (!result) return false;
 

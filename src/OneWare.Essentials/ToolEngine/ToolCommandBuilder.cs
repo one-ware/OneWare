@@ -1,5 +1,6 @@
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.ToolEngine;
+
+namespace OneWare.Essentials.ToolEngine;
 
 public class ToolCommandBuilder(string toolName)
 {
@@ -18,9 +19,51 @@ public class ToolCommandBuilder(string toolName)
         return this;
     }
 
+    public ToolCommandBuilder AddRange(IEnumerable<string> literals)
+    {
+        foreach (var lit in literals) Add(lit);
+        return this;
+    }
+
+    public ToolCommandBuilder AddPaths(IEnumerable<string> paths)
+    {
+        foreach (var path in paths) AddPath(path);
+        return this;
+    }
+    
+    public ToolCommandBuilder AddIf(bool condition, string literal)
+    {
+        if (condition) Add(literal);
+        return this;
+    }
+
+    public ToolCommandBuilder AddIfNotNull(string? literal)
+    {
+        if (!string.IsNullOrWhiteSpace(literal)) Add(literal);
+        return this;
+    }
+    
+    public ToolCommandBuilder AddOption(string flag, string value)
+    {
+        Add(flag);
+        return Add(value);
+    }
+
+    public ToolCommandBuilder AddPathOption(string flag, string path)
+    {
+        Add(flag);
+        return AddPath(path);
+    }
+    
     public ToolCommandBuilder Add(string literal)
     {
         _args.Add(new CommandArgument(literal));
+        return this;
+    }
+    
+    public ToolCommandBuilder Add(params string[] literals)
+    {
+        foreach (var lit in literals) Add(lit);
         return this;
     }
 
@@ -67,8 +110,24 @@ public class ToolCommandBuilder(string toolName)
         return this;
     }
 
+    public ToolCommandBuilder AddRawArguments(string? rawArgs)
+    {
+        if (string.IsNullOrWhiteSpace(rawArgs)) return this;
+        
+        var parts = System.Text.RegularExpressions.Regex
+            .Matches(rawArgs, @"[\""].+?[\""]|[^ ]+")
+            .Select(m => m.Value.Trim('"'));
+
+        return AddRange(parts);
+    }
+    
     public ToolCommand Build()
     {
+        if (string.IsNullOrWhiteSpace(toolName) && string.IsNullOrWhiteSpace(_executable))
+        {
+            throw new InvalidOperationException("Tool name or executable must be set.");
+        }
+        
         return new ToolCommand
         {
             ToolName = toolName,
