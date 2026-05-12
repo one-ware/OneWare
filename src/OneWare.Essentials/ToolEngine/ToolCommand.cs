@@ -10,6 +10,10 @@ public class ToolCommand
     public required string ToolName { get; init; }
     public string? Executable { get; init; }
     
+    public IReadOnlyCollection<ToolPort> ExposedPorts { get; init; } = Array.Empty<ToolPort>();
+    
+    public IReadOnlyCollection<ToolPortMapping> PortMappings { get; init; } = Array.Empty<ToolPortMapping>();
+    
     public IReadOnlyCollection<string> Arguments => 
         CommandArguments.Select(x => x.GetArgument()).ToList().AsReadOnly();
     
@@ -19,6 +23,8 @@ public class ToolCommand
     public AppState State { get; init; } = AppState.Loading;
     public bool ShowTimer { get; init; }
 
+    public IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; } = new Dictionary<string, string>();
+    
     public Func<string, bool>? OutputHandler { get; init; }
     public Func<string, bool>? ErrorHandler { get; init; }
 
@@ -52,3 +58,7 @@ public class ToolCommand
             .Build();
     }
 }
+
+public record ToolPort(int Number, string Protocol = "TCP");
+
+public record ToolPortMapping(ToolPort Host, ToolPort Guest);

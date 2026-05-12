@@ -12,6 +12,14 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
     IToolExecutionDispatcherService toolExecutionDispatcherService)
     : IFpgaLoader
 {
+    
+    private static readonly Dictionary<string, string> BitstreamPaths = new()
+    {
+        { "bin", "./build/pack.bin" },
+        { "bit", "./build/pack.bit" },
+        { "fs", "./build/pack.fs" }
+    };
+    
     public const string LoaderId = "openFpgaLoader";
     public string Id => LoaderId;
     public string Name => "OpenFpgaLoader";
@@ -46,13 +54,8 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
                 ? properties.GetValueOrDefault("openFpgaLoaderLongTermFlags") 
                 : properties.GetValueOrDefault("openFpgaLoaderShortTermFlags"))
             .AddRawArguments(properties.GetValueOrDefault("OpenFpgaLoaderFlags"))
-            
-            .AddPath(bitstreamFormat switch {
-                "bin" => "./build/pack.bin",
-                "bit" => "./build/pack.bit",
-                "fs" => "./build/pack.fs",
-                _ => throw new ArgumentException("Invalid format")
-            }).Build();
+            .AddPathFromMap(bitstreamFormat, BitstreamPaths).Build();
+        
         outputService.WriteLine("Starting OpenFpgaLoader ...");
         
         try 
