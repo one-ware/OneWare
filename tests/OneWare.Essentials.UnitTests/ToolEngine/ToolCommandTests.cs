@@ -30,7 +30,7 @@ public class ToolCommandTests
     [Fact]
     public void FromWeakParams_ShouldSetMinimumRequiredState()
     {
-        const string path = @"C:\Tools\MyApp.exe";
+        const string path = @"MyApp.exe";
         var args = new List<string> { "arg1" };
         
         var command = ToolCommand.FromWeakParams(path, args, ".");
@@ -135,16 +135,24 @@ public class ToolCommandTests
         {
             if (string.IsNullOrEmpty(inputPath)) return inputPath;
 
-            var fullPath = Path.IsPathRooted(inputPath)
-                ? Path.GetFullPath(inputPath)
-                : Path.GetFullPath(Path.Combine(localProjectRoot, inputPath));
-
-            if (!fullPath.StartsWith(localProjectRoot, StringComparison.OrdinalIgnoreCase))
-                return fullPath.Replace('\\', '/');
+            var normalizedInput = inputPath.Replace('\\', '/');
+            var normalizedRoot = localProjectRoot.Replace('\\', '/');
             
-            var relativePart = fullPath[localProjectRoot.Length..]
-                .Replace('\\', '/')
-                .TrimStart('/');
+            string fullPath;
+
+            if (normalizedInput.StartsWith('/') || (normalizedInput.Length > 1 && normalizedInput[1] == ':'))
+            {
+                fullPath = normalizedInput;
+            }
+            else
+            {
+                fullPath = $"{normalizedRoot.TrimEnd('/')}/{normalizedInput.TrimStart('/')}";
+            }
+
+            if (!fullPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+                return fullPath;
+        
+            var relativePart = fullPath[normalizedRoot.Length..].TrimStart('/');
 
             return string.IsNullOrEmpty(relativePart)
                 ? remoteWorkDir
