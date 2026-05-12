@@ -67,6 +67,17 @@ public class VerilogNodeProvider : INodeProvider
         return Task.FromResult<IEnumerable<FpgaNode>>(result);
     }
 
+    public Task<IEnumerable<string>> ExtractEntityNamesAsync(IProjectFile file)
+    {
+        if (file == null || string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
+            return Task.FromResult<IEnumerable<string>>(Array.Empty<string>());
+
+        var fileContent = File.ReadAllText(file.FullPath);
+        var cleaned = RemoveComments(fileContent);
+        IEnumerable<string> names = ParseModules(cleaned).Select(m => m.name).ToList();
+        return Task.FromResult(names);
+    }
+
     private static string RemoveComments(string text)
     {
         text = BlockCommentRegex.Replace(text, string.Empty);

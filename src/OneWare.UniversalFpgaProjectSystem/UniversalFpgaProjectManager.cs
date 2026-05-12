@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -132,13 +133,15 @@ public class UniversalFpgaProjectManager : IProjectManager
                     if (file.Extension is ".vhd" or ".vhdl" or ".v" or ".sv")
                     {
                         //Set Top
-                        if (universalFpgaProjectRoot.TopEntity == file.RelativePath)
+                        if (universalFpgaProjectRoot.TopEntityFile is not null &&
+                            universalFpgaProjectRoot.TopEntityFile.EqualPaths(file.RelativePath))
                             menuItems.Add(new MenuItemModel("Unset Top Entity")
                             {
                                 Header = "Unset Top Entity",
                                 Command = new RelayCommand(() =>
                                 {
                                     universalFpgaProjectRoot.TopEntity = null;
+                                    universalFpgaProjectRoot.TopEntityFile = null;
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
@@ -146,10 +149,12 @@ public class UniversalFpgaProjectManager : IProjectManager
                             menuItems.Add(new MenuItemModel("Set Top Entity")
                             {
                                 Header = "Set Top Entity",
-                                Command = new RelayCommand(() =>
+                                Command = new AsyncRelayCommand(async () =>
                                 {
-                                    universalFpgaProjectRoot.TopEntity = file.RelativePath;
-                                    _ = SaveProjectAsync(universalFpgaProjectRoot);
+                                    var entityName = await ExtractTopEntityNameAsync(file);
+                                    universalFpgaProjectRoot.TopEntity = entityName;
+                                    universalFpgaProjectRoot.TopEntityFile = file.RelativePath;
+                                    await SaveProjectAsync(universalFpgaProjectRoot);
                                 })
                             });
 
@@ -227,5 +232,17 @@ public class UniversalFpgaProjectManager : IProjectManager
                 Directory.CreateDirectory(buildFolderPath);
             });
         }
+    }
+
+    private async Task<string> ExtractTopEntityNameAsync(IProjectFile file)
+    {
+        var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+        if (nodeProvider != null)
+        {
+            var entities = (await nodeProvider.ExtractEntityNamesAsync(file)).ToList();
+            if (entities.Count > 0)
+                return entities[0];
+        }
+        return Path.GetFileNameWithoutExtension(file.FullPath);
     }
 }

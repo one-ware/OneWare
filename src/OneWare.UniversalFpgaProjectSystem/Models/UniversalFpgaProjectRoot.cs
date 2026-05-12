@@ -33,7 +33,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         
         RegisterProjectEntryModification(x =>
         {
-            if (x is IProjectFile file && file.RelativePath.EqualPaths(TopEntity))
+            if (x is IProjectFile file && file.RelativePath.EqualPaths(TopEntityFile))
             {
                 x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
             }
@@ -58,10 +58,49 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public override string ProjectTypeId => ProjectType;
 
+    /// <summary>
+    /// Returns true if the given string looks like an old-format HDL file path (with known HDL extension).
+    /// </summary>
+    private static bool IsLegacyTopEntityFilePath(string value) =>
+        value.EndsWith(".vhd", StringComparison.OrdinalIgnoreCase) ||
+        value.EndsWith(".vhdl", StringComparison.OrdinalIgnoreCase) ||
+        value.EndsWith(".v", StringComparison.OrdinalIgnoreCase) ||
+        value.EndsWith(".sv", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The name of the top-level HDL entity/module (e.g. "blink_top").
+    /// </summary>
     public string? TopEntity
     {
-        get => Properties.GetString("topEntity");
-        set => Properties.SetString("topEntity", value?.ToUnixPath());
+        get
+        {
+            var value = Properties.GetString("topEntity");
+            // Backward compat: old format stored an HDL file path here
+            if (value != null && IsLegacyTopEntityFilePath(value))
+                return Path.GetFileNameWithoutExtension(value);
+            return value;
+        }
+        set => Properties.SetString("topEntity", value);
+    }
+
+    /// <summary>
+    /// The relative path to the file containing the top-level entity/module.
+    /// </summary>
+    public string? TopEntityFile
+    {
+        get
+        {
+            var topEntityFile = Properties.GetString("topEntityFile");
+            if (topEntityFile != null) return topEntityFile;
+
+            // Backward compat: old format stored an HDL file path in "topEntity"
+            var topEntity = Properties.GetString("topEntity");
+            if (topEntity != null && IsLegacyTopEntityFilePath(topEntity))
+                return topEntity.ToUnixPath();
+
+            return null;
+        }
+        set => Properties.SetString("topEntityFile", value?.ToUnixPath());
     }
 
     public string? Toolchain

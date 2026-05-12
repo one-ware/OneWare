@@ -22,6 +22,18 @@ public partial class VhdlNodeProvider : INodeProvider
         return Task.FromResult<IEnumerable<FpgaNode>>(ExtractNodes(code));
     }
 
+    public Task<IEnumerable<string>> ExtractEntityNamesAsync(IProjectFile file)
+    {
+        if (string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
+            return Task.FromResult<IEnumerable<string>>(Array.Empty<string>());
+
+        var code = File.ReadAllText(file.FullPath);
+        var cleanCode = StripComments(code);
+        var matches = EntityNameMatch().Matches(cleanCode);
+        IEnumerable<string> names = matches.Select(m => m.Groups[1].Value).ToList();
+        return Task.FromResult(names);
+    }
+
     private static List<FpgaNode> ExtractNodes(string vhdlCode)
     {
         var nodes = new List<FpgaNode>();
@@ -203,4 +215,7 @@ public partial class VhdlNodeProvider : INodeProvider
         @"(\w+)\s*:\s*\w+\s*:=\s*(\d+)",
         RegexOptions.IgnoreCase)]
     private static partial Regex GenericDeclarationMatch();
+
+    [GeneratedRegex(@"\bentity\s+(\w+)\s+is\b", RegexOptions.IgnoreCase)]
+    private static partial Regex EntityNameMatch();
 }

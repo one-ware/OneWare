@@ -99,7 +99,7 @@ public class YosysService(
             }
             else
             {
-                yosysCommand = yosysCommand.Replace("$TOP", Path.GetFileNameWithoutExtension(top));
+                yosysCommand = yosysCommand.Replace("$TOP", top);
                 yosysCommand = yosysCommand.Replace("$SYNTH_TOOL", yosysSynthTool);
                 yosysCommand = yosysCommand.Replace("$OUTPUT", "build/synth.json");
 
