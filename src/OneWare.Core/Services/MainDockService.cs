@@ -44,13 +44,13 @@ public class MainDockService : Factory, IMainDockService
     public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService,
         IApplicationStateService applicationStateService,
         WelcomeScreenViewModel welcomeScreenViewModel, IFileWatchService fileWatchService,
-        MainDocumentDockViewModel mainDocumentDockViewModel)
+        MainDocumentDockViewModel mainDocumentDockViewModel, ILogger logger)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
         _fileWatchService = fileWatchService;
-        _serializer = new OneWareDockSerializer(serviceProvider);
+        _serializer = new OneWareDockSerializer(serviceProvider, logger);
 
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
