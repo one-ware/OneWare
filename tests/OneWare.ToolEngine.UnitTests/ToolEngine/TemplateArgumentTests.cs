@@ -1,6 +1,6 @@
 using System;
 
-namespace OneWare.Essentials.UnitTests.ToolEngine;
+namespace OneWare.ToolEngine.UnitTests.ToolEngine;
 
 using System.Runtime.InteropServices;
 using OneWare.Essentials.ToolEngine;

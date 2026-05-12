@@ -68,7 +68,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         var settings = await TestBenchContextManager.LoadContextAsync(fullPath);
         var waveOutput = settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.WaveOutputFormat)) ?? "VCD";
         
-        var command = new ToolCommandBuilder("iverilog")
+        var command = _toolExecutionDispatcherService.CreateToolCommandBuilder("iverilog")
             .WithWorkingDirectory(root.FullPath)
             .WithStatus("Running IVerilog..", AppState.Loading)
             .WithTimer(true)
@@ -86,7 +86,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         }
         
 
-        var vvpCommand = new ToolCommandBuilder("vvp").WithWorkingDirectory(root.FullPath)
+        var vvpCommand = _toolExecutionDispatcherService.CreateToolCommandBuilder("vvp").WithWorkingDirectory(root.FullPath)
             .WithStatus("Running VPP Simulation", AppState.Loading)
             .WithTimer(true)
             .Add(vvpPath)

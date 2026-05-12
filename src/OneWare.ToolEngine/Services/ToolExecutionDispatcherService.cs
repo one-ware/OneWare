@@ -35,4 +35,11 @@ public class ToolExecutionDispatcherService(IToolService service, ILogger logger
         
         return null!;
     }
+
+    public IToolCommandBuilder CreateToolCommandBuilder(string toolName)
+    {
+        // This is just in case you want to access a different service in the Builder in the future.
+        // Such as the outputService or similar.
+        return new ToolCommandBuilder(toolName);
+    }
 }

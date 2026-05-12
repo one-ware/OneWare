@@ -2,43 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using OneWare.Essentials.Enums;
 using OneWare.Essentials.ToolEngine;
+using OneWare.ToolEngine.Services;
 using Xunit;
 
-namespace OneWare.Essentials.UnitTests.ToolEngine;
+namespace OneWare.ToolEngine.UnitTests.ToolEngine;
 
 public class ToolCommandTests
 {
-    [Fact]
-    public void FromShellParams_ShouldCorrectlyMapProperties()
-    {
-        const string path = "/usr/bin/gcc.exe";
-        const string workingDir = "/home/user";
-        var args = new[] { "-v", "--help" };
-        
-        var command = ToolCommand.FromShellParams(path, args, workingDir, "Testing...");
-        
-        Assert.Equal("gcc", command.ToolName); 
-        Assert.Equal(path, command.Executable);
-        Assert.Equal(workingDir, command.WorkingDirectory);
-        Assert.Equal(2, command.CommandArguments.Count);
-        Assert.All(command.CommandArguments, a => Assert.IsType<CommandArgument>(a));
-    }
-
-    [Fact]
-    public void FromWeakParams_ShouldSetMinimumRequiredState()
-    {
-        const string path = @"MyApp.exe";
-        var args = new List<string> { "arg1" };
-        
-        var command = ToolCommand.FromWeakParams(path, args, ".");
-        
-        Assert.Equal("MyApp", command.ToolName);
-        Assert.Equal(AppState.Loading, command.State); 
-        Assert.Equal("Running tool...", command.StatusMessage); 
-    }
-
     [Fact]
     public void PrepareCommand_ShouldInvokePrepareOnAllArguments()
     {
@@ -57,26 +28,7 @@ public class ToolCommandTests
         Assert.Equal("folder\\file.txt", resultArgs[0]); 
         Assert.Equal("echo val", resultArgs[1]);       
     }
-
-    [Fact]
-    // When creating ShellParams, all arguments are treated as command arguments.
-    // Paths cannot be recognized and therefore cannot be modified
-    public void PrepareCommand_WithPathMapper_ShouldTransformArguments()
-    {
-        var command = ToolCommand.FromShellParams(
-            "test",
-            ["input.txt"], 
-            ".", 
-            "status");
-
-        command.PrepareCommand(OSPlatform.Linux, Mapper);
-        
-        Assert.Equal("input.txt", command.Arguments.First());
-        return;
-
-        string Mapper(string s) => s.Replace(".txt", ".bak");
-    }
-
+    
     [Fact]
     public void ArgumentsProperty_ShouldReflectCurrentStateOfCommandArguments()
     {

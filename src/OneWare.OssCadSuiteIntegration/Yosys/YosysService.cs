@@ -81,7 +81,7 @@ public class YosysService(
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");
             
-            var builder = new ToolCommandBuilder("yosys")
+            var builder = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus("Running yosys...")
                 .WithTimer(true)
@@ -154,7 +154,7 @@ public class YosysService(
             var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool")
                               ?? throw new Exception("NextPnr Tool not set!");
 
-            var builder = new ToolCommandBuilder(nextPnrTool)
+            var builder = toolExecutionDispatcherService.CreateToolCommandBuilder(nextPnrTool)
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus($"Running {nextPnrTool}...")
                 .WithTimer(true)
@@ -238,7 +238,7 @@ public class YosysService(
             var packTool = properties.GetValueOrDefault("yosysToolchainPackTool")
                            ?? throw new Exception("Pack Tool not set!");
 
-            var builder = new ToolCommandBuilder(packTool)
+            var builder = toolExecutionDispatcherService.CreateToolCommandBuilder(packTool)
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus($"Running {packTool}...")
                 .WithTimer(true)
@@ -290,11 +290,14 @@ public class YosysService(
     [Obsolete(message: "Use CreateJsonNetListAsync instead")]
     public async Task CreateNetListJsonAsync(IProjectFile verilog)
     {
-        var command = ToolCommand.FromShellParams("yosys", [
-                "-p", "hierarchy -auto-top; proc; opt; memory -nomap; wreduce -memx; opt_clean", "-o",
-                $"{verilog.Header}.json", verilog.Header
-            ],
-            Path.GetDirectoryName(verilog.FullPath)!, $"Create Netlist...");
+        var command = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
+            .WithWorkingDirectory(Path.GetDirectoryName(verilog.FullPath)!)
+            .WithStatus("Create Netlist...")
+            .Add("-p", "hierarchy -auto-top; proc; opt; memory -nomap; wreduce -memx; opt_clean")
+            .Add("-o")
+            .AddPath($"{verilog.Header}.json")
+            .AddPath(verilog.Header)
+            .Build();
 
         await toolExecutionDispatcherService.ExecuteAsync(command);
     }
@@ -304,9 +307,13 @@ public class YosysService(
         var buildpath = Path.Combine(file.Root.FullPath, "build");
         Directory.CreateDirectory(buildpath);
 
-        var command = ToolCommand.FromShellParams("yosys",
-            ["-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json"],
-            file.Root.FullPath, $"Running Yosys...", AppState.Loading, true);
+        var command = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
+            .WithWorkingDirectory(file.Root.FullPath)
+            .WithStatus("Running Yosys...")
+            .WithTimer(true)
+            .Add("-p", $"read_verilog {file.RelativePath}; proc; write_json build/yosys_nodes.json")
+            .Build();
+
         await toolExecutionDispatcherService.ExecuteAsync(command);
         return ReadJson(Path.Combine(buildpath, "yosys_nodes.json"));
     }

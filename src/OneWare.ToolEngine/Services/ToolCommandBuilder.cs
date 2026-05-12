@@ -1,123 +1,131 @@
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
 
-namespace OneWare.Essentials.ToolEngine;
+namespace OneWare.ToolEngine.Services;
 
-public class ToolCommandBuilder(string toolName)
+public class ToolCommandBuilder: IToolCommandBuilder
 {
+    private readonly string _toolName;
     private string? _executable;
     private readonly List<ICommandArgument> _args = new();
     private string _workingDir = ".";
     private string _status = "Running...";
     private AppState _state = AppState.Loading;
-    private bool _showTimer = false;
+    private bool _showTimer;
     private Func<string, bool>? _outputHandler;
     private Func<string, bool>? _errorHandler;
+    
+    internal ToolCommandBuilder(string toolName)
+    {
+        _toolName = toolName;
+    }
 
-    public ToolCommandBuilder WithExecutable(string path)
+    public IToolCommandBuilder WithExecutable(string path)
     {
         _executable = path;
         return this;
     }
 
-    public ToolCommandBuilder AddRange(IEnumerable<string> literals)
+    public IToolCommandBuilder AddRange(IEnumerable<string> literals)
     {
         foreach (var lit in literals) Add(lit);
         return this;
     }
 
-    public ToolCommandBuilder AddPaths(IEnumerable<string> paths)
+    public IToolCommandBuilder AddPaths(IEnumerable<string> paths)
     {
         foreach (var path in paths) AddPath(path);
         return this;
     }
     
-    public ToolCommandBuilder AddIf(bool condition, string literal)
+    public IToolCommandBuilder AddIf(bool condition, string literal)
     {
         if (condition) Add(literal);
         return this;
     }
 
-    public ToolCommandBuilder AddIfNotNull(string? literal)
+    public IToolCommandBuilder AddIfNotNull(string? literal)
     {
         if (!string.IsNullOrWhiteSpace(literal)) Add(literal);
         return this;
     }
     
-    public ToolCommandBuilder AddOption(string flag, string value)
+    public IToolCommandBuilder AddOption(string flag, string value)
     {
         Add(flag);
         return Add(value);
     }
 
-    public ToolCommandBuilder AddPathOption(string flag, string path)
+    public IToolCommandBuilder AddPathOption(string flag, string path)
     {
         Add(flag);
         return AddPath(path);
     }
     
-    public ToolCommandBuilder Add(string literal)
+    public IToolCommandBuilder Add(string literal)
     {
         _args.Add(new CommandArgument(literal));
         return this;
     }
     
-    public ToolCommandBuilder Add(params string[] literals)
+    public IToolCommandBuilder Add(params string[] literals)
     {
         foreach (var lit in literals) Add(lit);
         return this;
     }
 
-    public ToolCommandBuilder AddPath(string path)
+    public IToolCommandBuilder AddPath(string path)
     {
         _args.Add(new PathArgument(path));
         return this;
     }
     
-    public ToolCommandBuilder AddScript(string template, params (string placeholder, string value)[] literals)
+    public IToolCommandBuilder AddScript(string template, params (string placeholder, string value)[] literals)
     {
         var mappings = literals.Select(x => (x.placeholder, x.value, isPath: false)).ToArray();
         _args.Add(new TemplateArgument(template, mappings));
         return this;
     }
 
-    public ToolCommandBuilder AddScript(string template, params (string placeholder, string value, bool isPath)[] mappings)
+    public IToolCommandBuilder AddScript(string template, params (string placeholder, string value, bool isPath)[] mappings)
     {
         _args.Add(new TemplateArgument(template, mappings));
         return this;
     }
     
-    public ToolCommandBuilder WithWorkingDirectory(string dir)
+    public IToolCommandBuilder WithWorkingDirectory(string dir)
     {
         _workingDir = dir;
         return this;
     }
 
-    public ToolCommandBuilder WithStatus(string status, AppState state = AppState.Loading)
+    public IToolCommandBuilder WithStatus(string status, AppState state = AppState.Loading)
     {
         _status = status;
         _state = state;
         return this;
     }
 
-    public ToolCommandBuilder WithTimer(bool show)
+    public IToolCommandBuilder WithTimer(bool show)
     {
         _showTimer = show;
         return this;
     }
 
-    public ToolCommandBuilder WithOutputHandler(Func<string, bool> handler)
+    public IToolCommandBuilder WithOutputHandler(Func<string, bool> handler)
     {
         _outputHandler = handler;
         return this;
     }
 
-    public ToolCommandBuilder WithErrorHandler(Func<string, bool> handler)
+    public IToolCommandBuilder WithErrorHandler(Func<string, bool> handler)
     {
         _errorHandler = handler;
         return this;
     }
 
-    public ToolCommandBuilder AddRawArguments(string? rawArgs)
+    public IToolCommandBuilder AddRawArguments(string? rawArgs)
     {
         if (string.IsNullOrWhiteSpace(rawArgs)) return this;
         
@@ -128,17 +136,46 @@ public class ToolCommandBuilder(string toolName)
         return AddRange(parts);
     }
     
+    public IToolCommandBuilder AddOptionIfNotNull(string flag, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return this;
+        
+        Add(flag);
+        Add(value);
+        
+        return this;
+    }
+
+    public IToolCommandBuilder AddPathOptionIfNotNull(string flag, string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return this;
+        
+        Add(flag);
+        AddPath(path);
+        
+        return this;
+    }
+    
+    public IToolCommandBuilder AddPathFromMap<TKey>(TKey key, IDictionary<TKey, string> map) where TKey : notnull
+    {
+        if (map.TryGetValue(key, out var path))
+        {
+            AddPath(path);
+        }
+        return this;
+    }
+    
     public ToolCommand Build()
     {
-        if (string.IsNullOrWhiteSpace(toolName) && string.IsNullOrWhiteSpace(_executable))
+        if (string.IsNullOrWhiteSpace(_toolName) && string.IsNullOrWhiteSpace(_executable))
         {
             throw new InvalidOperationException("Tool name or executable must be set.");
         }
         
         return new ToolCommand
         {
-            ToolName = toolName,
-            Executable = _executable ?? toolName,
+            ToolName = _toolName,
+            Executable = _executable ?? _toolName,
             CommandArguments = _args.AsReadOnly(),
             WorkingDirectory = _workingDir,
             StatusMessage = _status,

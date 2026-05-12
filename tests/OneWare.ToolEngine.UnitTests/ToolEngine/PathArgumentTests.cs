@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using OneWare.Essentials.ToolEngine;
 using Xunit;
 
-namespace OneWare.Essentials.UnitTests.ToolEngine;
+namespace OneWare.ToolEngine.UnitTests.ToolEngine;
 
 public class PathArgumentTests
 {

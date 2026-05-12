@@ -14,22 +14,20 @@ public class GtkWaveService(IToolExecutionDispatcherService toolExecutionDispatc
         var context = await TestBenchContextManager.LoadContextAsync(filePath);
         var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
         
-        List<string> args = [Path.GetFileName(filePath)];
-
+        var builder = toolExecutionDispatcherService.CreateToolCommandBuilder("gtkwave")
+            .WithWorkingDirectory(directory)
+            .Add(Path.GetFileName(filePath));
+        
         foreach (var property in GtkProperties)
         {
             if (context.Properties.TryGetPropertyValue(property, out var jsonNode) && 
                 jsonNode?.GetValueKind() == System.Text.Json.JsonValueKind.String)
             {
-                var value = jsonNode.GetValue<string>();
-                if (!string.IsNullOrEmpty(value))
-                {
-                    args.Add(value);
-                }
+                builder.AddIfNotNull(jsonNode.GetValue<string>());
             }
         }
 
-        var toolCommand = ToolCommand.FromWeakParams("gtkwave", args, directory);
+        var toolCommand = builder.Build();
         toolExecutionDispatcherService.StartWeakProcess(toolCommand);
     }
 }

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.ToolEngine;
+using OneWare.ToolEngine.Services;
 using Xunit;
 
-namespace OneWare.Essentials.UnitTests.ToolEngine;
+namespace OneWare.ToolEngine.UnitTests.ToolEngine;
 
 public class ToolCommandBuilderTests
 {
