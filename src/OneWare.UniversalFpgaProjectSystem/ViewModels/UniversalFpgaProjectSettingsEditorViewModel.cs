@@ -27,6 +27,9 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     private readonly Dictionary<TitledSetting, string> _dynamicSettingsKeys = new();
 
+    // Maps CheckBoxSetting -> pre-compile step name for the "Build" category
+    private readonly Dictionary<CheckBoxSetting, string> _preCompileStepSettings = new();
+
     private readonly UniversalFpgaProjectRoot _root;
 
     private string? _selectedCategory;
@@ -69,12 +72,24 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     {
         SettingsCollection.Clear();
         _dynamicSettingsKeys.Clear();
+        _preCompileStepSettings.Clear();
 
         foreach (var setting in _projectSettingsService.GetProjectSettingsList(category))
         {
             var local = setting.Setting;
 
             if (!setting.ActivationFunction(_root)) continue;
+
+            // Handle pre-compile step checkboxes specially
+            if (setting.Key.StartsWith("preCompileStep:", StringComparison.Ordinal)
+                && local is CheckBoxSetting stepCheckBox)
+            {
+                var stepName = setting.Key["preCompileStep:".Length..];
+                stepCheckBox.Value = _root.HasPreCompileStep(stepName);
+                _preCompileStepSettings[stepCheckBox] = stepName;
+                SettingsCollection.SettingModels.Add(local);
+                continue;
+            }
 
             if (_root.Properties.ContainsKey(setting.Key))
             {
@@ -209,6 +224,20 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                 .WithCategory("Project")
                 .Build()
         );
+
+        // Register a CheckBoxSetting per available pre-compile step under "Build"
+        foreach (var step in _fpgaService.PreCompileSteps)
+        {
+            var stepKey = $"preCompileStep:{step.Name}";
+            _projectSettingsService.AddProjectSettingIfNotExists(
+                new ProjectSettingBuilder()
+                    .WithKey(stepKey)
+                    .WithSetting(new CheckBoxSetting(step.Name, false))
+                    .WithDisplayOrder(0)
+                    .WithCategory("Build")
+                    .Build()
+            );
+        }
     }
 
     public async Task SaveAsync()
@@ -216,6 +245,15 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         foreach (var (setting, key) in _dynamicSettingsKeys)
         {
             _root.Properties.SetNode(key, CreateSettingNode(setting, key));
+        }
+
+        // Save pre-compile steps: add enabled ones, remove disabled ones
+        foreach (var (checkBox, stepName) in _preCompileStepSettings)
+        {
+            if (checkBox.Value is true)
+                _root.AddPreCompileStep(stepName);
+            else
+                _root.RemovePreCompileStep(stepName);
         }
 
         await _projectExplorerService.SaveProjectAsync(_root);
