@@ -76,6 +76,27 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         set => Properties.SetString("loader", value);
     }
 
+    public string[] PreCompileSteps
+    {
+        get => Properties.GetStringArray("preCompileSteps")?.ToArray() ?? [];
+    }
+
+    public bool HasPreCompileStep(string name)
+    {
+        return PreCompileSteps.Contains(name, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public void AddPreCompileStep(string name)
+    {
+        if (!HasPreCompileStep(name))
+            Properties.AddToStringArray("preCompileSteps", name);
+    }
+
+    public void RemovePreCompileStep(string name)
+    {
+        Properties.RemoveFromStringArray("preCompileSteps", name);
+    }
+
     public bool IsTestBench(string relativePath)
     {
         return Properties.IsIncludedPathHelper(relativePath, "testBenches");

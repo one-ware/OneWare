@@ -262,9 +262,17 @@ public class FpgaService
                 fpgaModel = new FpgaModel(fpgaPackage.LoadFpga());
             }
 
-            foreach (var step in PreCompileSteps)
+            foreach (var stepName in project.PreCompileSteps)
+            {
+                var step = GetPreCompileStep(stepName);
+                if (step == null)
+                {
+                    _logger.Warning($"PreCompileStep '{stepName}' not found");
+                    continue;
+                }
                 if (!await step.PerformPreCompileStepAsync(project, fpgaModel))
                     return false;
+            }
             
             await toolchain.CompileAsync(project, fpgaModel);
             return true;
