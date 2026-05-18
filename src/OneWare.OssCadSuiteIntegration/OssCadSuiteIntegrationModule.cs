@@ -52,12 +52,12 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         var toolService = serviceProvider.Resolve<IToolService>();
         toolService.Register(new ToolContext("yosys", "Synth Tool", "yosys"), new NativeStrategy());
         
-        toolService.Register(new ToolContext("nextpnr-ecp5", "Place and Routing Tool", "nextpnr-ecp5"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-generic", "Place and Routing Tool", "nextpnr-generic"),new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-himbaechel", "Place and Routing Tool", "nextpnr-himbaechel"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-ice40", "Place and Routing Tool", "nextpnr-ice40"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-machxo2", "Place and Routing Tool", "nextpnr-machxo2"), new NativeStrategy());
-        toolService.Register(new ToolContext("nextpnr-nexus", "Place and Routing Tool", "nextpnr-nexus"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-ecp5", "Place and Routing Tool for ECP5", "nextpnr-ecp5"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-generic", "Place and Routing Tool for generic devices", "nextpnr-generic"),new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-himbaechel", "Place and Routing Tool for large archs", "nextpnr-himbaechel"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-ice40", "Place and Routing Tool for ICE40", "nextpnr-ice40"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-machxo2", "Place and Routing Tool MachXO2", "nextpnr-machxo2"), new NativeStrategy());
+        toolService.Register(new ToolContext("nextpnr-nexus", "Place and Routing Tool for nexus", "nextpnr-nexus"), new NativeStrategy());
         
         toolService.Register(new ToolContext("openFPGALoader", "FPGA Loader", "openFPGALoader"), new NativeStrategy());
         toolService.Register(new ToolContext("iceprog", "Packing", "FPGA Loader"), new NativeStrategy());
@@ -68,6 +68,8 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         toolService.Register(new ToolContext("gmupack", "Packing", "gmupack"), new NativeStrategy());
         
         toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
+        toolService.Register(new ToolContext("iverilog", "Simulation", "iverilog"), new NativeStrategy());
+        toolService.Register(new ToolContext("vvp", "Simulation", "vvp"), new NativeStrategy());
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadSuiteHelper.OssCadPackage);

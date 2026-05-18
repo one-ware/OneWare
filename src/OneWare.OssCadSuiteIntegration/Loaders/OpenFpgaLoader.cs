@@ -1,8 +1,6 @@
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
-using OneWare.Essentials.ToolEngine;
 using OneWare.OssCadSuiteIntegration.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
@@ -14,6 +12,14 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
     IToolExecutionDispatcherService toolExecutionDispatcherService)
     : IFpgaLoader
 {
+    
+    private static readonly Dictionary<string, string> BitstreamPaths = new()
+    {
+        { "bin", "./build/pack.bin" },
+        { "bit", "./build/pack.bit" },
+        { "fs", "./build/pack.fs" }
+    };
+    
     public const string LoaderId = "openFpgaLoader";
     public string Id => LoaderId;
     public string Name => "OpenFpgaLoader";
@@ -21,71 +27,36 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
     public async Task DownloadAsync(UniversalFpgaProjectRoot project)
     {
         var fpga = project.Properties.GetString("Fpga") ?? "unknown";
-
         var longTerm = settingsService.GetSettingValue<bool>("UniversalFpgaProjectSystem_LongTermProgramming");
-
         var properties = FpgaSettingsParser.LoadSettings(project, fpga);
 
         var board = properties.GetValueOrDefault("openFpgaLoaderBoard");
         var cable = properties.GetValueOrDefault("OpenFpgaLoader_Cable");
-
-        List<string> openFpgaLoaderArguments = [];
-        if (!string.IsNullOrEmpty(board))
-        {
-            openFpgaLoaderArguments.AddRange(["-b", board]);
-        }
-        else if (!string.IsNullOrEmpty(cable))
-        {
-            openFpgaLoaderArguments.AddRange(["-c", cable]);
-        }
-        else
-        {
-            logger.Error("Board/Cable not supported/configured for openFPGALoader!");
-            return;
-        }
-
-        if (longTerm)
-        {
-            if (properties.GetValueOrDefault("openFpgaLoaderLongTermFlags") is { } longFlags)
-                openFpgaLoaderArguments.Add(longFlags);
-        
-            openFpgaLoaderArguments.Add("-f");
-        }
-        else if (properties.GetValueOrDefault("openFpgaLoaderShortTermFlags") is { } shortFlags)
-        {
-            openFpgaLoaderArguments.Add(shortFlags);
-        }
-
-        openFpgaLoaderArguments.AddRange(properties.GetValueOrDefault("OpenFpgaLoaderFlags")?.Split(' ',
-            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? []);
-        
+        var loaderPath = settingsService.GetSettingValue<string>(OssCadSuiteHelper.OpenFpgaLoaderPathSetting);
         var bitstreamFormat = properties
             .GetValueOrDefault("openFpgaLoaderBitstreamFormat", "bin");
-        
-        switch (bitstreamFormat)
-        {
-            case "bin":
-                openFpgaLoaderArguments.Add("./build/pack.bin");
-                break;
-            case "bit":
-                openFpgaLoaderArguments.Add("./build/pack.bit");
-                break;
-            case "fs":
-                openFpgaLoaderArguments.Add("./build/pack.fs");
-                break;
-            default:
-                outputService.WriteLine($"Could not find output type: {bitstreamFormat}");
-                return;
-        }
-        
-        var path = settingsService.GetSettingValue<string>(OssCadSuiteHelper.OpenFpgaLoaderPathSetting);
-        outputService.WriteLine("Starting OpenFpgaLoader ...");
-        var command = ToolCommand.FromShellParams(path, openFpgaLoaderArguments!,
-            project.FullPath, $"Running {path}...", AppState.Loading, true, null, s =>
+
+        var command = toolExecutionDispatcherService.CreateToolCommandBuilder("openFPGALoader")
+            .WithExecutable(loaderPath)
+            .WithWorkingDirectory(project.FullPath)
+            .WithStatus($"Running {loaderPath}...")
+            .WithTimer(true)
+            .WithOutputHandler(s =>
             {
-                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
-                return true;
-            });
+                Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); }); return true;
+            })
+            
+            .AddOptionIfNotNull("-b", board)
+            .AddOptionIfNotNull("-c", string.IsNullOrEmpty(board) ? cable : null) 
+            
+            .AddIf(longTerm, "-f")
+            .AddRawArguments(longTerm 
+                ? properties.GetValueOrDefault("openFpgaLoaderLongTermFlags") 
+                : properties.GetValueOrDefault("openFpgaLoaderShortTermFlags"))
+            .AddRawArguments(properties.GetValueOrDefault("OpenFpgaLoaderFlags"))
+            .AddPathFromMap(bitstreamFormat, BitstreamPaths).Build();
+        
+        outputService.WriteLine("Starting OpenFpgaLoader ...");
         
         try 
         {
