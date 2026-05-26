@@ -215,9 +215,10 @@ public class ConfigurationProfileService : IConfigurationProfileService
 
             try
             {
+                if(!_packageService.Packages.TryGetValue(packageEntry.Id, out var existingState)) continue;
+                
                 // Skip if already installed
-                if (_packageService.Packages.TryGetValue(packageEntry.Id, out var existingState) &&
-                    existingState.InstalledVersion != null)
+                if (existingState.InstalledVersion != null)
                 {
                     _logger.Log($"Package '{packageEntry.Id}' is already installed, skipping.");
                     continue;
@@ -226,7 +227,8 @@ public class ConfigurationProfileService : IConfigurationProfileService
                 PackageVersion? targetVersion = null;
                 if (packageEntry.Version != null)
                 {
-                    targetVersion = new PackageVersion { Version = packageEntry.Version };
+                    targetVersion =
+                        existingState.Package.Versions?.FirstOrDefault(x => x.Version == packageEntry.Version);
                 }
 
                 var result = await _packageService.InstallAsync(packageEntry.Id, targetVersion, false, false,
