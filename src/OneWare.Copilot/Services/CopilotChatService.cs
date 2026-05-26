@@ -39,6 +39,20 @@ public sealed class CopilotChatService(
     private string? _requestedSessionId;
     private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
 
+    // Usage tracking
+    public long LastInputTokens { get; private set => SetProperty(ref field, value); }
+    public long LastOutputTokens { get; private set => SetProperty(ref field, value); }
+    public long? LastReasoningTokens { get; private set => SetProperty(ref field, value); }
+    public long SessionTotalRequests { get; private set => SetProperty(ref field, value); }
+    public long SessionTotalInputTokens { get; private set => SetProperty(ref field, value); }
+    public long SessionTotalOutputTokens { get; private set => SetProperty(ref field, value); }
+    public long ContextCurrentTokens { get; private set => SetProperty(ref field, value); }
+    public long ContextTokenLimit { get; private set => SetProperty(ref field, value); }
+    public double? QuotaRemainingPercent { get; private set => SetProperty(ref field, value); }
+    public bool QuotaIsUnlimited { get; private set => SetProperty(ref field, value); }
+    public DateTimeOffset? QuotaResetDate { get; private set => SetProperty(ref field, value); }
+    public bool HasUsageData { get; private set => SetProperty(ref field, value); }
+
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -432,6 +446,23 @@ public sealed class CopilotChatService(
         }
 
         CurrentSessionId = null;
+        ResetUsageStats();
+    }
+
+    private void ResetUsageStats()
+    {
+        LastInputTokens = 0;
+        LastOutputTokens = 0;
+        LastReasoningTokens = null;
+        SessionTotalRequests = 0;
+        SessionTotalInputTokens = 0;
+        SessionTotalOutputTokens = 0;
+        ContextCurrentTokens = 0;
+        ContextTokenLimit = 0;
+        QuotaRemainingPercent = null;
+        QuotaIsUnlimited = false;
+        QuotaResetDate = null;
+        HasUsageData = false;
     }
 
     private void HandleSessionEvent(SessionEvent evt)
@@ -481,7 +512,26 @@ public sealed class CopilotChatService(
             case SessionIdleEvent:
                 EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
+            case AssistantUsageEvent usage:
+                UpdateUsageFromAssistantEvent(usage.Data);
+                break;
+            case SessionUsageInfoEvent info:
+                ContextCurrentTokens = info.Data.CurrentTokens;
+                ContextTokenLimit = info.Data.TokenLimit;
+                break;
         }
+    }
+
+    private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
+    {
+        LastInputTokens = data.InputTokens ?? 0;
+        LastOutputTokens = data.OutputTokens ?? 0;
+        LastReasoningTokens = data.ReasoningTokens is > 0 ? data.ReasoningTokens : null;
+        SessionTotalRequests++;
+        SessionTotalInputTokens += data.InputTokens ?? 0;
+        SessionTotalOutputTokens += data.OutputTokens ?? 0;
+
+        HasUsageData = true;
     }
 
     private Task<PermissionDecision> OnPermissionRequestAsync(
