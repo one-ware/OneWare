@@ -1,13 +1,16 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
-using GitHub.Copilot.SDK;
+using GitHub.Copilot;
+using GitHub.Copilot.Rpc;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using OneWare.Copilot.Models;
 using OneWare.Copilot.ViewModels;
@@ -197,8 +200,8 @@ public sealed class CopilotChatService(
 
             _client = new CopilotClient(new CopilotClientOptions()
             {
-                Cwd = paths.ProjectsDirectory,
-                CliPath = cliPath
+                WorkingDirectory = paths.ProjectsDirectory,
+                Connection = RuntimeConnection.ForStdio(cliPath, [])
             });
 
             bool isAuthenticated;
@@ -279,7 +282,7 @@ public sealed class CopilotChatService(
         
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            var tools = toolProvider.GetTools();
+            var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
             _session = await _client.CreateSessionAsync(new SessionConfig
             {
                 Model = SelectedModel.Id,
@@ -304,7 +307,7 @@ public sealed class CopilotChatService(
             {
                 Streaming = true,
                 IncludeSubAgentStreamingEvents = false,
-                Tools = toolProvider.GetTools(),
+                Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync
             });
@@ -320,7 +323,7 @@ public sealed class CopilotChatService(
             return;
         }
 
-        _subscription = _session.On(HandleSessionEvent);
+        _subscription = _session.On<SessionEvent>(HandleSessionEvent);
     }
 
     private string BuildSystemMessage()
@@ -481,7 +484,7 @@ public sealed class CopilotChatService(
         }
     }
 
-    private Task<PermissionRequestResult> OnPermissionRequestAsync(
+    private Task<PermissionDecision> OnPermissionRequestAsync(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
@@ -496,7 +499,7 @@ public sealed class CopilotChatService(
             return Task.FromResult(CreateAllowPermissionResult());
         }
 
-        var responseSource = new TaskCompletionSource<PermissionRequestResult>(
+        var responseSource = new TaskCompletionSource<PermissionDecision>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
         var context = BuildPermissionContext(request, invocation);
@@ -611,22 +614,14 @@ public sealed class CopilotChatService(
         details.Add($"{label}: `{trimmed}`");
     }
 
-    private static PermissionRequestResult CreateAllowPermissionResult()
+    private static PermissionDecision CreateAllowPermissionResult()
     {
-        return new PermissionRequestResult
-        {
-            Kind = PermissionRequestResultKind.Approved,
-            Rules = null
-        };
+        return PermissionDecision.ApproveOnce();
     }
 
-    private static PermissionRequestResult CreateDenyPermissionResult()
+    private static PermissionDecision CreateDenyPermissionResult()
     {
-        return new PermissionRequestResult
-        {
-            Kind = PermissionRequestResultKind.Rejected,
-            Rules = null
-        };
+        return PermissionDecision.Reject("");
     }
 
     private static bool IsCustomToolPermissionRequest(PermissionRequest request)
