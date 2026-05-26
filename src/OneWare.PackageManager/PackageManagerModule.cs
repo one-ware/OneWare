@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Helpers;
@@ -213,6 +214,7 @@ public class PackageManagerModule : OneWareModuleBase
         services.AddSingleton<LibraryPackageInstaller>();
         services.AddSingleton<GenericPackageInstaller>();
         services.AddSingleton<IPackageService, PackageService>();
+        services.AddSingleton<IConfigurationProfileService, ConfigurationProfileService>();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<IPackageWindowService>(provider => provider.Resolve<PackageManagerViewModel>());
     }
@@ -263,5 +265,55 @@ public class PackageManagerModule : OneWareModuleBase
                                             - A Direct link to a package manifest
                                             """
                 });
+
+        var mainDockService = serviceProvider.Resolve<IMainDockService>();
+        var configProfileService = serviceProvider.Resolve<IConfigurationProfileService>();
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("ExportConfiguration")
+        {
+            Header = "Export Configuration...",
+            Command = new AsyncRelayCommand(async () =>
+            {
+                var owner = mainDockService.GetWindowOwner(mainDockService.Layout!);
+                if (owner == null) return;
+
+                var path = await StorageProviderHelper.SelectSaveFileAsync(
+                    owner,
+                    "Export Configuration Profile",
+                    null,
+                    ".onewareconfig",
+                    "configuration",
+                    true,
+                    new FilePickerFileType("OneWare Configuration Profile") { Patterns = ["*.onewareconfig"] });
+
+                if (path == null) return;
+
+                var profile = await configProfileService.ExportAsync();
+                await configProfileService.SaveToFileAsync(profile, path);
+            }),
+            Icon = new IconModel("VsImageLib.ExportPackage16X")
+        });
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("ImportConfiguration")
+        {
+            Header = "Import Configuration...",
+            Command = new AsyncRelayCommand(async () =>
+            {
+                var owner = mainDockService.GetWindowOwner(mainDockService.Layout!);
+                if (owner == null) return;
+
+                var path = await StorageProviderHelper.SelectFileAsync(
+                    owner,
+                    "Import Configuration Profile",
+                    null,
+                    new FilePickerFileType("OneWare Configuration Profile") { Patterns = ["*.onewareconfig"] });
+
+                if (path == null) return;
+
+                var profile = await configProfileService.LoadFromFileAsync(path);
+                await configProfileService.ImportAsync(profile);
+            }),
+            Icon = new IconModel("VsImageLib.ImportPackage16X")
+        });
     }
 }
