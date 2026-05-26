@@ -291,7 +291,8 @@ public class PackageManagerModule : OneWareModuleBase
                 var profile = await configProfileService.ExportAsync();
                 await configProfileService.SaveToFileAsync(profile, path);
             }),
-            Icon = new IconModel("VsImageLib.ExportPackage16X")
+            Icon = new IconModel("VsImageLib.ExportPackage16X"),
+            Priority = 101,
         });
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("ImportConfiguration")
@@ -313,7 +314,8 @@ public class PackageManagerModule : OneWareModuleBase
                 var profile = await configProfileService.LoadFromFileAsync(path);
                 await configProfileService.ImportAsync(profile);
             }),
-            Icon = new IconModel("VsImageLib.ImportPackage16X")
+            Icon = new IconModel("VsImageLib.ImportPackage16X"),
+            Priority = 102,
         });
     }
 }
