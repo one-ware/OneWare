@@ -126,6 +126,7 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
+    <Project Path="tests/OneWare.PackageManager.UnitTests/OneWare.PackageManager.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
     <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj" />
     <Project Path="tests/OneWare.ToolEngine.UnitTests/OneWare.ToolEngine.UnitTests.csproj" />
