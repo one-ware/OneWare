@@ -32,30 +32,53 @@ parts:
       - curl
       - tar
       - libicu74
+      - file
     override-build: |
+      set -eux
+
       export TZ=Europe/Berlin
       ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+      echo "SNAPCRAFT_TARGET_ARCH=${SNAPCRAFT_TARGET_ARCH:-}"
+      echo "SNAPCRAFT_BUILD_FOR=${SNAPCRAFT_BUILD_FOR:-}"
+      echo "CRAFT_TARGET_ARCH=${CRAFT_TARGET_ARCH:-}"
+
       curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
       chmod +x ./dotnet-install.sh
       ./dotnet-install.sh --channel 10.0
-      export DOTNET_ROOT=$HOME/.dotnet
-      export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+      export DOTNET_ROOT="$HOME/.dotnet"
+      export PATH="$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools"
       export DOTNET_NOLOGO=1
       export DOTNET_CLI_TELEMETRY_OPTOUT=1
-      
-      # Determine the correct .NET runtime identifier based on architecture
-      if [ "SNAPCRAFT_TARGET_ARCH" = "arm64" ]; then
-        DOTNET_RID="linux-arm64"
-      else
-        DOTNET_RID="linux-x64"
-      fi
-      
-      cd studio/OneWare.Studio.Desktop
-      dotnet publish -r $DOTNET_RID -c Release -o $SNAPCRAFT_PART_INSTALL
-      chmod +x $SNAPCRAFT_PART_INSTALL/OneWareStudio
-      chmod +x $SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper
 
-      sed -i 's|^Icon=.*$|Icon=${SNAP}/meta/gui/com.one_ware.OneWare.svg|' $SNAPCRAFT_PART_INSTALL/com.one_ware.OneWare.desktop
+      TARGET_ARCH="${SNAPCRAFT_TARGET_ARCH:-${SNAPCRAFT_BUILD_FOR:-${CRAFT_TARGET_ARCH:-}}}"
+
+      case "$TARGET_ARCH" in
+        arm64)
+          DOTNET_RID="linux-arm64"
+          ;;
+        amd64)
+          DOTNET_RID="linux-x64"
+          ;;
+        *)
+          echo "Unknown target architecture: $TARGET_ARCH"
+          exit 1
+          ;;
+      esac
+
+      echo "Using DOTNET_RID=$DOTNET_RID"
+
+      cd studio/OneWare.Studio.Desktop
+      dotnet publish -r "$DOTNET_RID" -c Release -o "$SNAPCRAFT_PART_INSTALL"
+
+      chmod +x "$SNAPCRAFT_PART_INSTALL/OneWareStudio"
+      chmod +x "$SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper"
+
+      file "$SNAPCRAFT_PART_INSTALL/OneWareStudio"
+      file "$SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper"
+
+      sed -i 's|^Icon=.*$|Icon=${SNAP}/meta/gui/com.one_ware.OneWare.svg|' "$SNAPCRAFT_PART_INSTALL/com.one_ware.OneWare.desktop"
     stage-packages:
       - libgtk-3-0
       - libx11-6
