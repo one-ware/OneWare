@@ -1,4 +1,4 @@
-﻿﻿name: oneware
+﻿name: oneware
 base: core24
 
 confinement: classic
