@@ -332,7 +332,11 @@ public class MainDockService : Factory, IMainDockService
 
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
     {
-        if (IsDockablePinned(dockable)) UnpinDockable(dockable);
+        if (IsDockablePinned(dockable))
+        {
+            PreviewPinnedDockable(dockable);
+            return;
+        }
 
         //Check if dockable already exists
         if (SearchView(dockable) is { } result)
