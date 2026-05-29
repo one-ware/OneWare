@@ -7,40 +7,138 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Copilot.Views.CopilotChatExtensionView" x:DataType="services:CopilotChatService">
-    <Button Name="MenuButton" VerticalAlignment="Center" Margin="0 0 5 0">
-        <Button.Flyout>
-            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                    Placement="TopEdgeAlignedRight">
-                <ListBox ItemsSource="{Binding Models}"
-                         SelectedItem="{Binding SelectedModel}" BorderThickness="0"
-                         MinWidth="200">
-                    <Interaction.Behaviors>
-                        <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
-                            <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
-                        </behaviors:PointerPressedHandledEventTrigger>
-                    </Interaction.Behaviors>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
-                                <TextBlock Text="{Binding Name}" />
-                                <TextBlock Grid.Column="1" Text="{Binding Billing}" />
+    <StackPanel Orientation="Horizontal" Spacing="4">
+
+        <!-- Model selector -->
+        <Button Name="MenuButton" VerticalAlignment="Center" Margin="0 0 0 0">
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        Placement="TopEdgeAlignedRight">
+                    <ListBox ItemsSource="{Binding Models}"
+                             SelectedItem="{Binding SelectedModel}" BorderThickness="0"
+                             MinWidth="200">
+                        <Interaction.Behaviors>
+                            <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
+                            </behaviors:PointerPressedHandledEventTrigger>
+                        </Interaction.Behaviors>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Billing}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </Flyout>
+            </Button.Flyout>
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
+                           FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                       Height="8" />
+            </StackPanel>
+        </Button>
+
+        <!-- Usage info button (visible only when usage data is available) -->
+        <Button Name="UsageButton" VerticalAlignment="Center"
+                IsVisible="{Binding HasUsageData}"
+                ToolTip.Tip="Token usage">
+            <Button.Flyout>
+                <Flyout Placement="TopEdgeAlignedRight">
+                    <StackPanel Spacing="10" Margin="8" MinWidth="220">
+
+                        <!-- Last request -->
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Last Request" FontWeight="SemiBold" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="↑ Input"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding LastInputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="↓ Output"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding LastOutputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="⟳ Reasoning"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                           IsVisible="{Binding LastReasoningTokens, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding LastReasoningTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right"
+                                           IsVisible="{Binding LastReasoningTokens, Converter={x:Static ObjectConverters.IsNotNull}}" />
                             </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ListBox>
-            </Flyout>
-        </Button.Flyout>
-        <StackPanel Orientation="Horizontal" Spacing="5" >
-            <TextBlock Text="{Binding SelectedModel.Name, FallbackValue=Select Model}"
-                       FontSize="11" VerticalAlignment="Center"
-                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
-                   Height="8" />
-        </StackPanel>
-    </Button>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Session totals -->
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Session Totals" FontWeight="SemiBold" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Requests"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SessionTotalRequests, StringFormat='{}{0:N0}'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="↑ Total input"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SessionTotalInputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="↓ Total output"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SessionTotalOutputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Context window (visible when limit is known) -->
+                        <StackPanel Spacing="3"
+                                    IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Separator />
+                            <TextBlock Text="Context Window" FontWeight="SemiBold" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Grid.Column="0" Text="Used"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Column="2" Text="{Binding ContextCurrentTokens, StringFormat='{}{0:N0}'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                            </Grid>
+                            <ProgressBar Minimum="0" Maximum="{Binding ContextTokenLimit}"
+                                         Value="{Binding ContextCurrentTokens}"
+                                         Height="4" />
+                            <TextBlock FontSize="10" HorizontalAlignment="Right"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0:N0} / {1:N0}">
+                                        <Binding Path="ContextCurrentTokens" />
+                                        <Binding Path="ContextTokenLimit" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Flyout>
+            </Button.Flyout>
+
+            <!-- Token summary label -->
+            <StackPanel Orientation="Horizontal" Spacing="3">
+                <TextBlock FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="↑{0:N0} ↓{1:N0}">
+                            <Binding Path="LastInputTokens" />
+                            <Binding Path="LastOutputTokens" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+            </StackPanel>
+        </Button>
+
+    </StackPanel>
 </UserControl>

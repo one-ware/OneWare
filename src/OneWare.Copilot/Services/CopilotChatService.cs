@@ -1,13 +1,16 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
-using GitHub.Copilot.SDK;
+using GitHub.Copilot;
+using GitHub.Copilot.Rpc;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using OneWare.Copilot.Models;
 using OneWare.Copilot.ViewModels;
@@ -35,6 +38,20 @@ public sealed class CopilotChatService(
     private bool _forceNewSession;
     private string? _requestedSessionId;
     private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
+
+    // Usage tracking
+    public long LastInputTokens { get; private set => SetProperty(ref field, value); }
+    public long LastOutputTokens { get; private set => SetProperty(ref field, value); }
+    public long? LastReasoningTokens { get; private set => SetProperty(ref field, value); }
+    public long SessionTotalRequests { get; private set => SetProperty(ref field, value); }
+    public long SessionTotalInputTokens { get; private set => SetProperty(ref field, value); }
+    public long SessionTotalOutputTokens { get; private set => SetProperty(ref field, value); }
+    public long ContextCurrentTokens { get; private set => SetProperty(ref field, value); }
+    public long ContextTokenLimit { get; private set => SetProperty(ref field, value); }
+    public double? QuotaRemainingPercent { get; private set => SetProperty(ref field, value); }
+    public bool QuotaIsUnlimited { get; private set => SetProperty(ref field, value); }
+    public DateTimeOffset? QuotaResetDate { get; private set => SetProperty(ref field, value); }
+    public bool HasUsageData { get; private set => SetProperty(ref field, value); }
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
@@ -197,8 +214,8 @@ public sealed class CopilotChatService(
 
             _client = new CopilotClient(new CopilotClientOptions()
             {
-                Cwd = paths.ProjectsDirectory,
-                CliPath = cliPath
+                WorkingDirectory = paths.ProjectsDirectory,
+                Connection = RuntimeConnection.ForStdio(cliPath, [])
             });
 
             bool isAuthenticated;
@@ -279,7 +296,7 @@ public sealed class CopilotChatService(
         
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            var tools = toolProvider.GetTools();
+            var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
             _session = await _client.CreateSessionAsync(new SessionConfig
             {
                 Model = SelectedModel.Id,
@@ -304,7 +321,7 @@ public sealed class CopilotChatService(
             {
                 Streaming = true,
                 IncludeSubAgentStreamingEvents = false,
-                Tools = toolProvider.GetTools(),
+                Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync
             });
@@ -320,7 +337,7 @@ public sealed class CopilotChatService(
             return;
         }
 
-        _subscription = _session.On(HandleSessionEvent);
+        _subscription = _session.On<SessionEvent>(HandleSessionEvent);
     }
 
     private string BuildSystemMessage()
@@ -429,6 +446,23 @@ public sealed class CopilotChatService(
         }
 
         CurrentSessionId = null;
+        ResetUsageStats();
+    }
+
+    private void ResetUsageStats()
+    {
+        LastInputTokens = 0;
+        LastOutputTokens = 0;
+        LastReasoningTokens = null;
+        SessionTotalRequests = 0;
+        SessionTotalInputTokens = 0;
+        SessionTotalOutputTokens = 0;
+        ContextCurrentTokens = 0;
+        ContextTokenLimit = 0;
+        QuotaRemainingPercent = null;
+        QuotaIsUnlimited = false;
+        QuotaResetDate = null;
+        HasUsageData = false;
     }
 
     private void HandleSessionEvent(SessionEvent evt)
@@ -478,10 +512,29 @@ public sealed class CopilotChatService(
             case SessionIdleEvent:
                 EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
+            case AssistantUsageEvent usage:
+                UpdateUsageFromAssistantEvent(usage.Data);
+                break;
+            case SessionUsageInfoEvent info:
+                ContextCurrentTokens = info.Data.CurrentTokens;
+                ContextTokenLimit = info.Data.TokenLimit;
+                break;
         }
     }
 
-    private Task<PermissionRequestResult> OnPermissionRequestAsync(
+    private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
+    {
+        LastInputTokens = data.InputTokens ?? 0;
+        LastOutputTokens = data.OutputTokens ?? 0;
+        LastReasoningTokens = data.ReasoningTokens is > 0 ? data.ReasoningTokens : null;
+        SessionTotalRequests++;
+        SessionTotalInputTokens += data.InputTokens ?? 0;
+        SessionTotalOutputTokens += data.OutputTokens ?? 0;
+
+        HasUsageData = true;
+    }
+
+    private Task<PermissionDecision> OnPermissionRequestAsync(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
@@ -496,7 +549,7 @@ public sealed class CopilotChatService(
             return Task.FromResult(CreateAllowPermissionResult());
         }
 
-        var responseSource = new TaskCompletionSource<PermissionRequestResult>(
+        var responseSource = new TaskCompletionSource<PermissionDecision>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
         var context = BuildPermissionContext(request, invocation);
@@ -611,22 +664,14 @@ public sealed class CopilotChatService(
         details.Add($"{label}: `{trimmed}`");
     }
 
-    private static PermissionRequestResult CreateAllowPermissionResult()
+    private static PermissionDecision CreateAllowPermissionResult()
     {
-        return new PermissionRequestResult
-        {
-            Kind = PermissionRequestResultKind.Approved,
-            Rules = null
-        };
+        return PermissionDecision.ApproveOnce();
     }
 
-    private static PermissionRequestResult CreateDenyPermissionResult()
+    private static PermissionDecision CreateDenyPermissionResult()
     {
-        return new PermissionRequestResult
-        {
-            Kind = PermissionRequestResultKind.Rejected,
-            Rules = null
-        };
+        return PermissionDecision.Reject("");
     }
 
     private static bool IsCustomToolPermissionRequest(PermissionRequest request)
