@@ -89,8 +89,8 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
     public async Task SaveAsync(FlexibleWindow window)
     {
-        var name = (string)_nameSetting.Value;
-        var folder = (string)_folderPathSetting.Value;
+        var name = ((string)_nameSetting.Value).Trim();
+        var folder = ((string)_folderPathSetting.Value).TrimEnd();
         var createNewFolder = (bool)_createNewFolderSetting.Value;
 
         if (string.IsNullOrWhiteSpace(name))

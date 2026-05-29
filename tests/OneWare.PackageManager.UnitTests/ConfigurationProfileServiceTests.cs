@@ -115,7 +115,22 @@ public class ConfigurationProfileServiceTests
             ]
         };
 
-        _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
+        var resolvedVersion = new PackageVersion { Version = "1.0.0" };
+        var packageState = Substitute.For<IPackageState>();
+        packageState.Package.Returns(new Package
+        {
+            Id = "test-plugin",
+            Versions =
+            [
+                resolvedVersion
+            ]
+        });
+        packageState.InstalledVersion.Returns((PackageVersion?)null);
+
+        _packageService.Packages.Returns(new Dictionary<string, IPackageState>
+        {
+            ["test-plugin"] = packageState
+        });
         _packageService.RefreshAsync().Returns(true);
         _packageService.InstallAsync(
                 Arg.Any<string>(),

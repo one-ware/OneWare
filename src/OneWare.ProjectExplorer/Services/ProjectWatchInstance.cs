@@ -29,7 +29,7 @@ public class ProjectWatchInstance : IDisposable
         _mainDockService = mainDockService;
         _logger = logger;
 
-        _fileSystemWatcher = new FileSystemWatcher(root.FullPath)
+        _fileSystemWatcher = new FileSystemWatcher(root.FullPath.TrimEnd())
         {
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
             IncludeSubdirectories = true,

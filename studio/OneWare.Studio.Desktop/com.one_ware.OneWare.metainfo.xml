@@ -37,21 +37,21 @@
     <url type="vcs-browser">https://github.com/one-ware/OneWare</url>
     <screenshots>
         <screenshot type="default">
-            <image>https://one-ware.com/img/studio/slides2/completion.png</image>
+            <image>https://one-ware.com/img/slides/studio/completion.png</image>
             <caption>Code Editor for HDL languages</caption>
         </screenshot>
         <screenshot>
-            <image>https://one-ware.com/img/studio/slides2/hardware.png</image>
+            <image>https://one-ware.com/img/slides/studio/hardware.png</image>
             <caption>Support for a wide range of hardware</caption>
         </screenshot>
         <screenshot>
-            <image>https://one-ware.com/img/studio/slides2/simulator.png</image>
+            <image>https://one-ware.com/img/slides/studio/simulator.png</image>
             <caption>Integrated support for simulation using the VCD format and all the popular
                 simulation tools
             </caption>
         </screenshot>
         <screenshot>
-            <image>https://one-ware.com/img/studio/slides2/extensions.png</image>
+            <image>https://one-ware.com/img/slides/studio/extensions.png</image>
             <caption>A growing collection of useful extensions</caption>
         </screenshot>
     </screenshots>
@@ -68,6 +68,7 @@
     </provides>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="1.0.16" date="2026-05-28" type="stable"/>
         <release version="1.0.15" date="2026-04-30" type="stable"/>
         <release version="1.0.14" date="2026-04-09" type="stable"/>
         <release version="1.0.13" date="2026-03-10" type="stable"/>

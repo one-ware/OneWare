@@ -225,7 +225,7 @@ public sealed class OneWareCloudLoginService
                 Email = mail
             });
 
-            RestClient restClient = new (_httpService.HttpClient);
+            RestClient restClient = new(_httpService.HttpClient, new RestClientOptions("https://cloud.one-ware.com"));
 
             var response = await restClient.ExecutePostAsync(request);
             return response.IsSuccessful;

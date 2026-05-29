@@ -20,20 +20,8 @@ apps:
     command: ./OneWareStudio
     common-id: com.one_ware.OneWare
     desktop: ./com.one_ware.OneWare.desktop
-    extensions: [gpu]
-    plugs:
-      - desktop
-      - desktop-legacy
-      - wayland
-      - x11
-      - opengl
-      - network
-      - home
-      - removable-media
-      - hardware-observe
     environment:
       PATH: "$SNAP/usr/bin:$SNAP/bin:$PATH"
-      LIBGL_DEBUG: verbose
 
 parts:
   oneware:
@@ -100,16 +88,3 @@ parts:
       - libglib2.0-0
       - libgobject-2.0-0
       - libgio-2.0-0
-      - libgl1
-      - libegl1
-      - libgles2
-      - libglx0
-      - libxrender1
-      - libxrandr2
-      - libxfixes3
-      - libxcursor1
-      - libxi6
-      - libxinerama1
-      - libfontconfig1
-      - libfreetype6
-      - mesa-utils
