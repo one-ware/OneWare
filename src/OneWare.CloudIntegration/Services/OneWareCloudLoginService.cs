@@ -53,16 +53,17 @@ public sealed class OneWareCloudLoginService
                     .OneWareAccountUserIdKey));
             });
 
-        OneWareCloudIsUsed =
-            _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) ==
-            OneWareCloudIntegrationModule.CredentialStore;
     }
 
-    public bool OneWareCloudIsUsed { get; }
+    public bool OneWareCloudIsUsed =>
+        OneWareCloudIntegrationModule.GetCloudHost(
+            _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)) ==
+        OneWareCloudIntegrationModule.CredentialStore;
 
     public RestClient GetRestClient()
     {
-        var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
+        var baseUrl = OneWareCloudIntegrationModule.GetCloudHost(
+            _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey));
         return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
     }
 
@@ -454,7 +455,8 @@ public sealed class OneWareCloudLoginService
                 await ExchangeCodeForTokensAsync(code2, authProviderBaseUrl, redirectUri,
                     persistTokens: true, codeVerifierOverride: _offlineCodeVerifier);
 
-                var cloudHost = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
+                var cloudHost = OneWareCloudIntegrationModule.GetCloudHost(
+                        _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey))
                     .TrimEnd('/');
                 step2Response.Redirect($"{cloudHost}/");
                 step2Response.KeepAlive = false;

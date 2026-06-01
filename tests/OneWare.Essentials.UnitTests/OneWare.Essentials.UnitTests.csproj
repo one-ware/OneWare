@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.CloudIntegration\OneWare.CloudIntegration.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
