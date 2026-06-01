@@ -12,6 +12,7 @@ using OneWare.Studio.Styles;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
+using ReactiveUI;
 
 namespace OneWare.Studio;
 
@@ -56,6 +57,8 @@ public class StudioApp : App
 
     public override void Initialize()
     {
+        Name = Paths.AppName;
+        
         var themeManager = new ThemeManager(SettingsService, Paths);
         base.Initialize();
         
