@@ -25,6 +25,7 @@ using OneWare.Core.Views.Extensions;
 using OneWare.Core.Views.Windows;
 using OneWare.ErrorList;
 using OneWare.Essentials.Commands;
+using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
@@ -425,6 +426,8 @@ public class App : Application
         });
 
         var applicationCommandService = Services.Resolve<IApplicationCommandService>();
+
+        ExtendedTextEditor.RegisterDefaultEditorCommands(applicationCommandService);
 
         applicationCommandService.RegisterCommand(new SimpleApplicationCommand("Active light theme",
             () =>
