@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             xmlns:vm="clr-namespace:OneWare.Debugger.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="420"
+             d:DesignHeight="420"
+             x:DataType="vm:DebuggerLocalsViewModel"
+             x:Class="OneWare.Debugger.Views.DebuggerLocalsView">
+    <Grid Background="{DynamicResource ThemeControlLowBrush}">
+        <TreeView ItemsSource="{Binding Children}"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  IsVisible="{Binding !IsRunning}">
+            <TreeView.DataTemplates>
+                <TreeDataTemplate DataType="models:DebugVariableViewModel" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="{Binding DisplayName}" />
+                        <TextBlock Text="=" />
+                        <TextBlock Text="{Binding Value}" Foreground="CornflowerBlue" />
+                        <TextBlock Text="{Binding TypeName}" Opacity="0.7" Margin="4,0,0,0" />
+                    </StackPanel>
+                </TreeDataTemplate>
+            </TreeView.DataTemplates>
+        </TreeView>
+        <TextBlock Text="Not available while the target is running"
+                   IsVisible="{Binding IsRunning}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Margin="20" />
+    </Grid>
+</UserControl>

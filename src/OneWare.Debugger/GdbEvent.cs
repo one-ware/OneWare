@@ -36,7 +36,7 @@ public class GdbEvent : ResultData
         ReadResults(line, i + 1);
         var reasons = GetAllValues("reason");
         if (reasons.Length > 0)
-            Reason = (string)reasons[0];
+            Reason = reasons[0] as string;
     }
 
     public string Name { get; set; }

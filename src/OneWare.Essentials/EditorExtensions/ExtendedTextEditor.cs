@@ -89,7 +89,7 @@ public class ExtendedTextEditor : TextEditor
     {
         TextArea.LeftMargins.RemoveMany(TextArea.LeftMargins.Where(x => x is BreakPointMargin));
         if (enable && !string.IsNullOrWhiteSpace(filePath))
-            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, new BreakpointStore()));
+            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, BreakpointStore.Instance));
     }
 
     public void SetEnableFolding(bool enable)
