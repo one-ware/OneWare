@@ -16,9 +16,10 @@ namespace OneWare.CloudIntegration;
 
 public class OneWareCloudIntegrationModule : OneWareModuleBase
 {
+    public const string OfficialHost = "https://cloud.one-ware.com";
     public const string OneWareCloudHostKey = "General_OneWareCloud_Host";
     public const string OneWareAccountUserIdKey = "General_OneWareCloud_AccountUserId";
-    public const string CredentialStore = "https://cloud.one-ware.com";
+    public const string CredentialStore = OfficialHost;
 
     public override void RegisterServices(IServiceCollection services)
     {
@@ -35,7 +36,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
 
         serviceProvider.Resolve<ISettingsService>()
             .RegisterSetting("Experimental", "OneWare Cloud", OneWareCloudHostKey,
-                new TextBoxSetting("Host", "https://cloud.one-ware.com", "https://cloud.one-ware.com"));
+                new TextBoxSetting("Host", OfficialHost, OfficialHost));
         serviceProvider.Resolve<ISettingsService>().RegisterCustom("General", "OneWare Cloud", OneWareAccountUserIdKey,
             serviceProvider.Resolve<OneWareCloudAccountSetting>());
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("MainWindow_BottomRightExtension",

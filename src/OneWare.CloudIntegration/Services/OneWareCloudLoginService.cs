@@ -12,6 +12,7 @@ using System.Web;
 using Avalonia.Threading;
 using GitCredentialManager;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using RestSharp;
@@ -52,13 +53,9 @@ public sealed class OneWareCloudLoginService
                 Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule
                     .OneWareAccountUserIdKey));
             });
-
-        OneWareCloudIsUsed =
-            _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey) ==
-            OneWareCloudIntegrationModule.CredentialStore;
     }
 
-    public bool OneWareCloudIsUsed { get; }
+    public bool OfficialCloudIsUsed => _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey).EqualUrls(OneWareCloudIntegrationModule.OfficialHost);
 
     public RestClient GetRestClient()
     {
@@ -204,17 +201,15 @@ public sealed class OneWareCloudLoginService
         try
         {
             RestRequest? request;
-            JwtSecurityToken? jwt = null;
-            if (OneWareCloudIsUsed) (jwt, _) = await GetLoggedInJwtTokenAsync();
-
-            if (jwt == null)
+            
+            if (OfficialCloudIsUsed && await GetLoggedInJwtTokenAsync() is ({ } token, _))
             {
-                request = new RestRequest("/api/feedback/anonymous");
+                request = new RestRequest("/api/feedback");
+                request.AddHeader("Authorization", $"Bearer {token.RawData}");
             }
             else
             {
-                request = new RestRequest("/api/feedback");
-                request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
+                request = new RestRequest("/api/feedback/anonymous");
             }
 
             request.AddHeader("Accept", "application/json");
@@ -225,7 +220,7 @@ public sealed class OneWareCloudLoginService
                 Email = mail
             });
 
-            RestClient restClient = new(_httpService.HttpClient, new RestClientOptions("https://cloud.one-ware.com"));
+            RestClient restClient = new(_httpService.HttpClient, new RestClientOptions(OneWareCloudIntegrationModule.OfficialHost));
 
             var response = await restClient.ExecutePostAsync(request);
             return response.IsSuccessful;

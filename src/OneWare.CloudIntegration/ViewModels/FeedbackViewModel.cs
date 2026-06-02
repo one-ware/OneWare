@@ -15,7 +15,7 @@ public class FeedbackViewModel : FlexibleWindowViewModelBase
     public FeedbackViewModel(OneWareCloudLoginService loginService, OneWareCloudAccountSetting setting)
     {
         _loginService = loginService;
-        UserIsAuthenticated = setting.IsLoggedIn;
+        UserIsAuthenticated = setting.IsLoggedIn && loginService.OfficialCloudIsUsed;
 
         Title = "Send Feedback";
         Category = "General Feedback";
