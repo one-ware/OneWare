@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia.Markup.Xaml.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Core;
@@ -28,17 +29,43 @@ public class StudioApp : App
     {
         SettingsService.Register("LastVersion", Global.VersionCode);
         SettingsService.RegisterSettingCategory("Experimental", 100, "MaterialDesign.Build");
-        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_UseManagedFileDialog",
-            new CheckBoxSetting("Use Managed File Dialog (restart required)", false)
-            {
-                HoverDescription =
-                    "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!"
-            });
-        SettingsService.RegisterSetting("Experimental", "Misc", "Experimental_AutoDownloadBinaries",
+        SettingsService.RegisterSetting("Experimental", "Environment", "Experimental_AutoDownloadBinaries",
             new CheckBoxSetting("Automatically download Binaries", true)
             {
                 HoverDescription = "Automatically download binaries for features when possible"
             });
+        SettingsService.RegisterSetting("Experimental", "Environment", "Experimental_MaxGpuResourceSizeBytes",
+            new ComboBoxSetting("Max GPU Resource Cache Size (restart required)", "Default (~28 MB)", new object[]
+            {
+                "Default (~28 MB)",
+                "128 MB",
+                "256 MB",
+                "512 MB",
+                "1 GB"
+            })
+            {
+                HoverDescription = "Sets the maximum GPU memory Skia can use for cached textures. Increase if you experience rendering glitches, decrease if the app uses too much VRAM. Restart required."
+            });
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            SettingsService.RegisterSetting("Experimental", "Environment", "Experimental_UseManagedFileDialog",
+                new CheckBoxSetting("Use Managed File Dialog (restart required)", false)
+                {
+                    HoverDescription =
+                        "On some linux distros, the default file dialog is not available or will crash the app. Use this option to fix this issue. Restart required to apply this setting!"
+                });
+            SettingsService.RegisterSetting("Experimental", "Environment", "Experimental_X11RenderingMode",
+                new ComboBoxSetting("X11 Rendering Mode (restart required)", "Default (Glx, Software)", new object[]
+                {
+                    "Default (Glx, Software)",
+                    "EGL",
+                    "Software",
+                    "Vulkan"
+                })
+                {
+                    HoverDescription = "Sets the X11 rendering backend. Use 'Software' if you experience GPU rendering issues on Linux. Restart required."
+                });
+        }
         SettingsService.Load(Paths.SettingsPath);
     }
 
