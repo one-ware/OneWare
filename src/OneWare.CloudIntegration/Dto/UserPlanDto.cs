@@ -2,7 +2,7 @@ namespace OneWare.CloudIntegration.Dto;
 
 public class UserPlanDto
 {
-    public required string Id { get; set; }
+    public required Guid Id { get; set; }
 
     public required string Name { get; set; }
 
@@ -31,4 +31,12 @@ public class UserPlanDto
     public DateTime? AssignedAt { get; set; }
 
     public int IncludedMonthlyCredits { get; set; }
+
+    public bool AllowOrganizations { get; set; }
+
+    public bool AllowProjectDownloads { get; set; }
+
+    public bool AllowSelfHostedWorker { get; set; }
+
+    public bool AllowApiAccess { get; set; }
 }
