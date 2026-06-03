@@ -12,6 +12,8 @@ public class OneWareCloudNotificationService
     private readonly OneWareCloudLoginService _loginService;
     private readonly ISettingsService _settingsService;
     private readonly List<HubSubscription> _subscriptions = [];
+    private readonly List<PersistentInvocation> _persistentInvocations = [];
+    private readonly Lock _persistentInvocationsLock = new();
 
     private HubConnection? _connection;
 
@@ -115,10 +117,111 @@ public class OneWareCloudNotificationService
         return Task.CompletedTask;
     }
 
-    private Task On_ReconnectedAsync(string? e)
+    private async Task On_ReconnectedAsync(string? e)
     {
         ConnectionStateChanged?.Invoke(this, HubConnectionState.Connected);
-        return Task.CompletedTask;
+
+        // Replay any persistent invocations (e.g. group subscriptions on the hub) that
+        // callers asked us to keep alive across reconnects.
+        PersistentInvocation[] invocations;
+        lock (_persistentInvocationsLock)
+        {
+            invocations = _persistentInvocations.ToArray();
+        }
+
+        foreach (var invocation in invocations)
+        {
+            try
+            {
+                if (_connection is { State: HubConnectionState.Connected })
+                    await _connection.InvokeCoreAsync(invocation.MethodName, invocation.Args);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to replay hub invocation '{invocation.MethodName}'", ex);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Invokes a method on the SignalR hub. No-ops with a warning if the hub is not connected.
+    /// </summary>
+    public async Task InvokeHubMethodAsync(string methodName, params object?[] args)
+    {
+        if (_connection is not { State: HubConnectionState.Connected })
+        {
+            _logger.Warning($"Cannot invoke hub method '{methodName}': not connected.");
+            return;
+        }
+
+        try
+        {
+            await _connection.InvokeCoreAsync(methodName, args);
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning($"Failed to invoke hub method '{methodName}'", ex);
+        }
+    }
+
+    /// <summary>
+    ///     Registers a hub invocation that should be replayed automatically every time the
+    ///     connection is (re)established. Typical use case: subscribing to server-side groups
+    ///     such as a job progress stream. Disposing the returned handle stops the replay and
+    ///     invokes the supplied <paramref name="unsubscribeMethodName"/> with the same args.
+    /// </summary>
+    /// <param name="subscribeMethodName">Hub method invoked now and on every reconnect.</param>
+    /// <param name="unsubscribeMethodName">Hub method invoked on dispose. Pass <c>null</c> to skip.</param>
+    /// <param name="args">Arguments forwarded to both methods.</param>
+    public async Task<IAsyncDisposable> RegisterPersistentInvocationAsync(
+        string subscribeMethodName,
+        string? unsubscribeMethodName,
+        params object?[] args)
+    {
+        var invocation = new PersistentInvocation
+        {
+            MethodName = subscribeMethodName,
+            Args = args
+        };
+
+        lock (_persistentInvocationsLock)
+        {
+            _persistentInvocations.Add(invocation);
+        }
+
+        if (_connection is { State: HubConnectionState.Connected })
+        {
+            try
+            {
+                await _connection.InvokeCoreAsync(subscribeMethodName, args);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to invoke hub method '{subscribeMethodName}'", ex);
+            }
+        }
+
+        return new AsyncSubscription(async () =>
+        {
+            lock (_persistentInvocationsLock)
+            {
+                _persistentInvocations.Remove(invocation);
+            }
+
+            if (unsubscribeMethodName is null) return;
+
+            if (_connection is { State: HubConnectionState.Connected })
+            {
+                try
+                {
+                    await _connection.InvokeCoreAsync(unsubscribeMethodName, args);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Failed to invoke hub method '{unsubscribeMethodName}'", ex);
+                }
+            }
+        });
     }
 
     /// <summary>
@@ -155,6 +258,12 @@ public class OneWareCloudNotificationService
         public required Action<HubConnection> Attach { get; init; }
     }
 
+    private class PersistentInvocation
+    {
+        public required string MethodName { get; init; }
+        public required object?[] Args { get; init; }
+    }
+
     private class Subscription : IDisposable
     {
         private readonly Action _unsubscribe;
@@ -170,6 +279,24 @@ public class OneWareCloudNotificationService
             if (_isDisposed) return;
             _unsubscribe();
             _isDisposed = true;
+        }
+    }
+
+    private class AsyncSubscription : IAsyncDisposable
+    {
+        private readonly Func<Task> _unsubscribe;
+        private bool _isDisposed;
+
+        public AsyncSubscription(Func<Task> unsubscribe)
+        {
+            _unsubscribe = unsubscribe;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_isDisposed) return;
+            _isDisposed = true;
+            await _unsubscribe();
         }
     }
 }
