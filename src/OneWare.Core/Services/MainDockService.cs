@@ -601,7 +601,6 @@ public class MainDockService : Factory, IMainDockService
                 {
                     using var stream = File.OpenRead(layoutPath);
                     layout = _serializer.Load<RootDock>(stream);
-                    if (layout != null) CleanNullDockables(layout);
                     wasLoadedFromFile = true;
                 }
             }
@@ -713,41 +712,6 @@ public class MainDockService : Factory, IMainDockService
                 }
             }
         }
-    }
-    
-    /// <summary>
-    /// Recursively removes null entries from all dockable collections in the layout.
-    /// This handles the case where an extension was uninstalled and its dockables
-    /// could not be resolved during deserialization.
-    /// </summary>
-    private static void CleanNullDockables(IDockable? dockable)
-    {
-        if (dockable is IDock dock)
-        {
-            RemoveNulls(dock.VisibleDockables);
-            if (dock.VisibleDockables != null)
-                foreach (var child in dock.VisibleDockables.ToList())
-                    CleanNullDockables(child);
-        }
-
-        if (dockable is IRootDock rootDock)
-        {
-            RemoveNulls(rootDock.LeftPinnedDockables);
-            RemoveNulls(rootDock.TopPinnedDockables);
-            RemoveNulls(rootDock.RightPinnedDockables);
-            RemoveNulls(rootDock.BottomPinnedDockables);
-
-            if (rootDock.Windows != null)
-                foreach (var win in rootDock.Windows.ToList())
-                    CleanNullDockables(win.Layout);
-        }
-    }
-    
-    private static void RemoveNulls(IList<IDockable>? list)
-    {
-        if (list == null) return;
-        for (var i = list.Count - 1; i >= 0; i--)
-            if (list[i] is null) list.RemoveAt(i);
     }
 
     private IEnumerable<IDockable> SearchAllDockables(IDockable? layout)
