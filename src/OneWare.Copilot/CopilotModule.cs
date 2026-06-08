@@ -118,8 +118,8 @@ public class CopilotModule : OneWareModuleBase
                                         """;
 
     public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
-
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
+    public const string CopilotRemoteSessionSettingKey = "AI_Chat_Copilot_RemoteSession";
 
     public static readonly Package CopilotPackage = new()
     {
@@ -263,6 +263,13 @@ public class CopilotModule : OneWareModuleBase
                 PlatformHelper.ExeFile)
             {
                 HoverDescription = "Path for Copilot CLI"
+            });
+
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+            CopilotRemoteSessionSettingKey,
+            new CheckBoxSetting("Create Remote Session", false)
+            {
+                HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
             });
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");

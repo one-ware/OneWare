@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:OneWare.Copilot.Services"
              xmlns:models="clr-namespace:OneWare.Copilot.Models"
+             xmlns:views="clr-namespace:OneWare.Copilot.Views"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Copilot.Views.CopilotChatExtensionView" x:DataType="services:CopilotChatService">
     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -126,18 +128,24 @@
                 </Flyout>
             </Button.Flyout>
 
-            <!-- Token summary label -->
-            <StackPanel Orientation="Horizontal" Spacing="3">
-                <TextBlock FontSize="11" VerticalAlignment="Center"
-                           Foreground="{DynamicResource ThemeForegroundLowBrush}">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="↑{0:N0} ↓{1:N0}">
-                            <Binding Path="LastInputTokens" />
-                            <Binding Path="LastOutputTokens" />
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-            </StackPanel>
+            <!-- Circular context-window progress, falls back to token counts when limit unknown -->
+            <Panel Width="20" Height="20">
+                <!-- Circular arc: visible when context limit is known -->
+                <controls:CircularProgressBar
+                    Value="{Binding ContextCurrentTokens}"
+                    Maximum="{Binding ContextTokenLimit}"
+                    StrokeThickness="2.5"
+                    TrackBrush="{DynamicResource ThemeBorderMidBrush}"
+                    ProgressBrush="{DynamicResource ThemeAccentBrush}"
+                    Width="18" Height="18"
+                    IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    ToolTip.Tip="{Binding ContextCurrentTokens, StringFormat='Context: {0:N0} tokens'}" />
+
+                <!-- Fallback dot when no context limit available -->
+                <Ellipse Width="6" Height="6"
+                         Fill="{DynamicResource ThemeForegroundLowBrush}"
+                         IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNull}}" />
+            </Panel>
         </Button>
 
     </StackPanel>

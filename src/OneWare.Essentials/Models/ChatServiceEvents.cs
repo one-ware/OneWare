@@ -99,6 +99,15 @@ public sealed class ChatIdleEvent()
 {
 }
 
+/// <summary>
+/// Signals the chat UI to clear all current messages and start fresh.
+/// Emitted when the service initiates a new session autonomously (e.g. a remote session),
+/// without going through the normal <see cref="IChatService.NewChatAsync"/> path.
+/// </summary>
+public sealed class ChatClearMessagesEvent() : ChatEvent()
+{
+}
+
 public sealed class StatusEvent(bool isConnected, string statusText)
 {
     public bool IsConnected { get; } = isConnected;

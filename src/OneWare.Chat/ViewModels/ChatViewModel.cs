@@ -32,6 +32,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
     private bool _initialized;
+    // Counts user messages sent locally so ChatUserMessageEvent duplicates are suppressed
+    private int _pendingLocalUserMessages;
 
     private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
     {
@@ -47,7 +49,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Title = "AI Chat";
 
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
-        aiFunctionProvider.FunctionPermissionRequested += OnFunctionPermissionRequested;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
 
         _mainDockService = mainDockService;
@@ -264,6 +265,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         AddMessage(userMessage);
         AddMessage(assistantMessage);
+        _pendingLocalUserMessages++;
 
         CurrentMessage = string.Empty;
         IsBusy = true;
@@ -438,8 +440,21 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 break;
             }
-            case ChatUserMessageEvent:
+            case ChatUserMessageEvent x:
             {
+                // If we sent this message locally it is already visible — skip.
+                // Otherwise it originates from a remote session user; show it and mark busy.
+                if (_pendingLocalUserMessages > 0)
+                {
+                    _pendingLocalUserMessages--;
+                    break;
+                }
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageUserViewModel(x.Content));
+                    IsBusy = true;
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
                 break;
             }
             case ChatButtonEvent x:
@@ -465,6 +480,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             case ChatIdleEvent:
             {
                 FinishTurn();
+                break;
+            }
+            case ChatClearMessagesEvent:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Messages.Clear();
+                    _assistantMessagesById.Clear();
+                    _assistantReasoningById.Clear();
+                    if (SelectedChatService != null)
+                        UpdateSelectedSessionFromService(SelectedChatService);
+                });
                 break;
             }
         }
@@ -508,36 +535,6 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         };
         AddMessage(newMessage);
         ContentAdded?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnFunctionPermissionRequested(object? sender, AiFunctionPermissionRequestEvent request)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            var allowCommand = new RelayCommand<Control?>(_ =>
-                request.DecisionSource.TrySetResult(AiFunctionPermissionDecision.AllowOnce));
-            var denyCommand = new RelayCommand<Control?>(_ =>
-                request.DecisionSource.TrySetResult(AiFunctionPermissionDecision.Deny));
-            var allowForSessionCommand = new RelayCommand<Control?>(_ =>
-                request.DecisionSource.TrySetResult(AiFunctionPermissionDecision.AllowForSession));
-
-            var message = request.Question;
-            if (!string.IsNullOrWhiteSpace(request.Detail))
-                message = $"{request.Question}\n\n{request.Detail}";
-
-            var msg = new ChatMessagePermissionRequestViewModel(new ChatPermissionRequestEvent(
-                message,
-                "Allow",
-                "Deny",
-                allowCommand,
-                denyCommand,
-                "Allow for session",
-                allowForSessionCommand));
-
-            msg.CloseAction = () => Messages.Remove(msg);
-            AddMessage(msg);
-            ContentAdded?.Invoke(this, EventArgs.Empty);
-        });
     }
 
     private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)
