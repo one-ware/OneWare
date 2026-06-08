@@ -94,8 +94,7 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog") &&
-            RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))
             app.UseManagedSystemDialogs();
 
         return app;
