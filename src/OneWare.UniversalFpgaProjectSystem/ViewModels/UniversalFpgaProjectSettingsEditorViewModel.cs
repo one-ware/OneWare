@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text.Json.Nodes;
-using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
@@ -18,18 +17,19 @@ namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewModelBase
 {
-    private readonly FpgaService _fpgaService;
-
     private readonly ILogger _logger;
     private readonly IProjectExplorerService _projectExplorerService;
-
     private readonly IProjectSettingsService _projectSettingsService;
-
-    private readonly Dictionary<TitledSetting, string> _dynamicSettingsKeys = new();
-
     private readonly UniversalFpgaProjectRoot _root;
 
+    /// <summary>
+    ///     All categories loaded upfront: category name → (collection to display, key map for saving).
+    /// </summary>
+    private readonly Dictionary<string, (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)>
+        _categoryData = new();
+
     private string? _selectedCategory;
+    private SettingsCollectionViewModel? _settingsCollection;
 
     public UniversalFpgaProjectSettingsEditorViewModel(UniversalFpgaProjectRoot root,
         IProjectExplorerService projectExplorerService, FpgaService fpgaService,
@@ -38,21 +38,30 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _root = root;
         _logger = logger;
         _projectExplorerService = projectExplorerService;
-        _fpgaService = fpgaService;
         _projectSettingsService = projectSettingsService;
         Title = $"{_root.Name} Settings";
 
         SetupMenu();
+
         SettingCategories = new ObservableCollection<string>(projectSettingsService.GetProjectCategories());
-        LoadSettingsForCategory(projectSettingsService.GetDefaultProjectCategory());
+
+        // Load every category upfront so settings are always in memory.
+        foreach (var category in SettingCategories)
+            _categoryData[category] = BuildCategoryCollection(category);
+
+        SelectedCategory = projectSettingsService.GetDefaultProjectCategory();
     }
 
-    public SettingsCollectionViewModel SettingsCollection { get; } = new("")
-    {
-        ShowTitle = false
-    };
-
     public ObservableCollection<string> SettingCategories { get; }
+
+    /// <summary>
+    ///     The collection currently shown in the view. Changes when <see cref="SelectedCategory"/> changes.
+    /// </summary>
+    public SettingsCollectionViewModel? SettingsCollection
+    {
+        get => _settingsCollection;
+        private set => SetProperty(ref _settingsCollection, value);
+    }
 
     public string? SelectedCategory
     {
@@ -60,15 +69,16 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         set
         {
             SetProperty(ref _selectedCategory, value);
-            if (value != null) LoadSettingsForCategory(value);
+            if (value != null && _categoryData.TryGetValue(value, out var data))
+                SettingsCollection = data.Collection;
         }
     }
 
-
-    private void LoadSettingsForCategory(string category)
+    private (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)
+        BuildCategoryCollection(string category)
     {
-        SettingsCollection.Clear();
-        _dynamicSettingsKeys.Clear();
+        var collection = new SettingsCollectionViewModel("") { ShowTitle = false };
+        var keys = new Dictionary<TitledSetting, string>();
 
         foreach (var setting in _projectSettingsService.GetProjectSettingsList(category))
         {
@@ -78,14 +88,13 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
             if (_root.Properties.ContainsKey(setting.Key))
             {
-                // load stored value
                 var node = _root.Properties[setting.Key];
                 if (node == null) continue;
 
                 switch (local)
                 {
                     case CheckBoxSetting:
-	                    local.Value = _root.Properties[setting.Key]!.ToString() == "True";
+                        local.Value = _root.Properties[setting.Key]!.ToString() == "True";
                         break;
 
                     case FolderPathSetting:
@@ -95,22 +104,20 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                         break;
 
                     case ListBoxSetting:
-	                    local.Value = new ObservableCollection<string>(_root.Properties[setting.Key]!.AsArray().Select(node => node!.ToString()));
+                        local.Value = new ObservableCollection<string>(
+                            _root.Properties[setting.Key]!.AsArray().Select(n => n!.ToString()));
                         break;
 
                     case ComboBoxSearchSetting:
-	                    local.Value = _root.Properties[setting.Key]!.ToString();
-                        break;
-                    
                     case ComboBoxSetting:
                         local.Value = _root.Properties[setting.Key]!.ToString();
                         break;
 
                     case SliderSetting:
-	                    local.Value = double.Parse(_root.Properties[setting.Key]!.ToString(),
-		                    CultureInfo.InvariantCulture);
+                        local.Value = double.Parse(_root.Properties[setting.Key]!.ToString(),
+                            CultureInfo.InvariantCulture);
                         break;
-                    
+
                     case ColorSetting:
                         Color.TryParse(_root.Properties[setting.Key]!.ToString(), out var color);
                         local.Value = color;
@@ -125,14 +132,14 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             }
             else
             {
-	            local.Value = local.DefaultValue;
+                local.Value = local.DefaultValue;
             }
 
-            _dynamicSettingsKeys.Add(local, setting.Key);
-            SettingsCollection.SettingModels.Add(local);
+            keys.Add(local, setting.Key);
+            collection.SettingModels.Add(local);
         }
 
-        // OnPropertyChanged();
+        return (collection, keys);
     }
 
     private void SetupMenu()
@@ -213,10 +220,9 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
     public async Task SaveAsync()
     {
-        foreach (var (setting, key) in _dynamicSettingsKeys)
-        {
+        foreach (var (_, (_, keys)) in _categoryData)
+        foreach (var (setting, key) in keys)
             _root.Properties.SetNode(key, CreateSettingNode(setting, key));
-        }
 
         await _projectExplorerService.SaveProjectAsync(_root);
         await _projectExplorerService.ReloadProjectAsync(_root);

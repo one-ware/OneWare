@@ -113,7 +113,6 @@
     <Project Path="src/OneWare.Verilog/OneWare.Verilog.csproj" />
     <Project Path="src/OneWare.Vhdl/OneWare.Vhdl.csproj" />
   </Folder>
-  <Folder Name="/Extensions/ProjectSystem/" />
   <Folder Name="/Extensions/Wave/">
     <Project Path="src/OneWare.Vcd.Parser/OneWare.Vcd.Parser.csproj" />
     <Project Path="src/OneWare.Vcd.Viewer/OneWare.Vcd.Viewer.csproj" />
