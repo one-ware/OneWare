@@ -290,8 +290,7 @@ public sealed class CopilotChatService(
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 WorkingDirectory = paths.ProjectsDirectory,
-                Connection = RuntimeConnection.ForStdio(cliPath, []),
-                EnableRemoteSessions = true
+                Connection = RuntimeConnection.ForStdio(cliPath, [])
             });
 
             bool isAuthenticated;
@@ -425,12 +424,6 @@ public sealed class CopilotChatService(
         }
 
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
-
-        // Enable remote session on-the-fly if the setting is active
-        if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotRemoteSessionSettingKey))
-        {
-            await EnableRemoteSessionAsync();
-        }
     }
 
     private string BuildSystemMessage()
