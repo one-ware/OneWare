@@ -54,7 +54,7 @@
                 IsVisible="{Binding HasUsageData}"
                 ToolTip.Tip="Token usage">
             <Button.Flyout>
-                <Flyout Placement="TopEdgeAlignedRight">
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="TopEdgeAlignedRight">
                     <StackPanel Spacing="10" Margin="8" MinWidth="220">
 
                         <!-- Last request -->
