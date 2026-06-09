@@ -179,13 +179,13 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     return;
             }
         }
-
-        _fpgaService.LoadGenericHardware();
+        
         RefreshHardware();
     }
 
     private void RefreshHardware()
     {
+        _fpgaService.LoadGenericHardware();
         var oldSelectedFpgaPackageName = SelectedFpgaPackage?.Name;
 
         FpgaPackages.Clear();
