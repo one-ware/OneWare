@@ -143,6 +143,11 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
 
             _nodes = nodesEnumerable.ToArray();
+
+            // Re-scan the hardware directory so that boards installed since
+            // application start (e.g. via the package manager) are picked up
+            // automatically, without requiring the user to click Reload.
+            _fpgaService.LoadGenericHardware();
             RefreshHardware();
 
             SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Properties.GetString("fpga")) ??
