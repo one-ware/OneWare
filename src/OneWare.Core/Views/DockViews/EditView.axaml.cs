@@ -84,6 +84,10 @@ public partial class EditView : UserControl
     public EditViewModel? ViewModel { get; set; }
     public ObjectValueModel? VaribleViewDataConext { get; }
 
+    // Tracks whether Setup() has been called at least once (editor is fully initialized).
+    // Used to decide whether to re-run Setup() after a visual-tree re-attach (dock float).
+    private bool _setupCompleted;
+
     private void Reset()
     {
         _compositeDisposable.Dispose();
@@ -96,6 +100,7 @@ public partial class EditView : UserControl
 
     private void Setup()
     {
+        _setupCompleted = true;
         Reset();
 
         //Attach Events
@@ -272,8 +277,28 @@ public partial class EditView : UserControl
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        // Null out the editor content BEFORE detaching from the visual tree.
+        // This prevents the "already has a visual parent" InvalidOperationException that
+        // Dock.Avalonia (11.3+) triggers when floating a tab: the dock moves the view
+        // between visual trees and the ContentPresenter tries to re-parent the
+        // ExtendedTextEditor while it still has an existing visual parent.
+        EditorWrapper.Content = null;
         Reset();
         base.OnDetachedFromVisualTree(e);
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        // If editor content was cleared during a prior detach (dock float scenario),
+        // restore it and re-run Setup() so event handlers are re-attached.
+        // On first attach the XAML binding already set the content, so Content != null here.
+        if (EditorWrapper.Content == null && ViewModel != null)
+        {
+            EditorWrapper.Content = ViewModel.Editor;
+            if (_setupCompleted)
+                Setup();
+        }
     }
 
     private string _enteredString = "";
