@@ -19,6 +19,10 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     
     public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
+        // "fpga" was the legacy key for the board; alias it so old plugins that call
+        // Properties.GetString("fpga") continue to receive the migrated "board" value.
+        Properties.RegisterAlias("fpga", "board");
+
         RegisterProjectEntryModification(x =>
         {
             if (x is IProjectFile file && IsTestBench(file.RelativePath))
@@ -74,6 +78,16 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     {
         get => Properties.GetString("loader");
         set => Properties.SetString("loader", value);
+    }
+
+    /// <summary>
+    /// The selected hardware board (evaluation board) for this project.
+    /// Stored as <c>board</c> in the project file; old files using <c>fpga</c> are migrated automatically.
+    /// </summary>
+    public string? Board
+    {
+        get => Properties.GetString("board");
+        set => Properties.SetString("board", value);
     }
 
     public bool IsTestBench(string relativePath)

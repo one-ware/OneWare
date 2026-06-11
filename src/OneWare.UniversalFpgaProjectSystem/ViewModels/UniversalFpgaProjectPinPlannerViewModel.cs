@@ -145,7 +145,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             _nodes = nodesEnumerable.ToArray();
             RefreshHardware();
 
-            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Properties.GetString("fpga")) ??
+            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Board) ??
                                   FpgaPackages.FirstOrDefault();
 
             IsDirty = false;
@@ -237,7 +237,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         if (SelectedFpgaModel != null)
         {
             FpgaSettingsParser.WriteDefaultSettingsIfEmpty(Project, SelectedFpgaModel.Fpga);
-            Project.Properties.SetString("fpga", SelectedFpgaModel.Fpga.Name);
+            Project.Board = SelectedFpgaModel.Fpga.Name;
             Toolchain?.SaveConnections(Project, SelectedFpgaModel);
             _ = _projectExplorerService.SaveProjectAsync(Project);
 

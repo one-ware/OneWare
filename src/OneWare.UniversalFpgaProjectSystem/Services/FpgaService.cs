@@ -252,7 +252,7 @@ public class FpgaService
 
             if (fpgaModel == null)
             {
-                var name = project.Properties.GetString("fpga");
+                var name = project.Board;
                 var fpgaPackage = FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                 if (fpgaPackage == null)
                 {
