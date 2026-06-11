@@ -37,7 +37,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         
         RegisterProjectEntryModification(x =>
         {
-            if (x is IProjectFile file && file.RelativePath.EqualPaths(TopEntity))
+            if (x is IProjectFile file && file.RelativePath.EqualPaths(TopEntityFile))
             {
                 x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
             }
@@ -62,10 +62,25 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public override string ProjectTypeId => ProjectType;
 
+    /// <summary>
+    /// The relative path to the file containing the top-level entity/module.
+    /// Stored as <c>topEntityFile</c>. Old files using <c>topEntity</c> as a file path
+    /// are migrated automatically on load.
+    /// </summary>
+    public string? TopEntityFile
+    {
+        get => Properties.GetString("topEntityFile");
+        set => Properties.SetString("topEntityFile", value?.ToUnixPath());
+    }
+
+    /// <summary>
+    /// The name of the top-level entity or module within <see cref="TopEntityFile"/>.
+    /// Stored as <c>topEntity</c>.
+    /// </summary>
     public string? TopEntity
     {
         get => Properties.GetString("topEntity");
-        set => Properties.SetString("topEntity", value?.ToUnixPath());
+        set => Properties.SetString("topEntity", value);
     }
 
     public string? Toolchain

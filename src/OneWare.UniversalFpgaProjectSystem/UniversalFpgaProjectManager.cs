@@ -36,6 +36,18 @@ public class UniversalFpgaProjectManager : IProjectManager
         
         await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
 
+        // Backwards-compat: old files stored the top-entity FILE PATH in "topEntity".
+        // Migrate it to "topEntityFile" and derive the entity name from the file name.
+        var legacyTopEntity = root.Properties.GetString("topEntity");
+        if (legacyTopEntity != null && (legacyTopEntity.Contains('/') || legacyTopEntity.Contains('\\')))
+        {
+            if (root.TopEntityFile == null)
+                root.TopEntityFile = legacyTopEntity;
+            // Derive entity name from file name as best-effort
+            if (root.TopEntity == null || root.TopEntity.Contains('/'))
+                root.Properties.SetString("topEntity", Path.GetFileNameWithoutExtension(legacyTopEntity));
+        }
+
         foreach (var entryModification in _fpgaService.ProjectEntryModificationHandlers)
         {
             root.RegisterProjectEntryModification(entryModification);
@@ -132,12 +144,13 @@ public class UniversalFpgaProjectManager : IProjectManager
                     if (file.Extension is ".vhd" or ".vhdl" or ".v" or ".sv")
                     {
                         //Set Top
-                        if (universalFpgaProjectRoot.TopEntity == file.RelativePath)
+                        if (universalFpgaProjectRoot.TopEntityFile == file.RelativePath)
                             menuItems.Add(new MenuItemModel("Unset Top Entity")
                             {
                                 Header = "Unset Top Entity",
                                 Command = new RelayCommand(() =>
                                 {
+                                    universalFpgaProjectRoot.TopEntityFile = null;
                                     universalFpgaProjectRoot.TopEntity = null;
                                     _ = SaveProjectAsync(universalFpgaProjectRoot);
                                 })
@@ -146,11 +159,8 @@ public class UniversalFpgaProjectManager : IProjectManager
                             menuItems.Add(new MenuItemModel("Set Top Entity")
                             {
                                 Header = "Set Top Entity",
-                                Command = new RelayCommand(() =>
-                                {
-                                    universalFpgaProjectRoot.TopEntity = file.RelativePath;
-                                    _ = SaveProjectAsync(universalFpgaProjectRoot);
-                                })
+                                Command = new AsyncRelayCommand(() =>
+                                    SetTopEntityAsync(universalFpgaProjectRoot, file))
                             });
 
                         //Exclude from compile
@@ -227,5 +237,41 @@ public class UniversalFpgaProjectManager : IProjectManager
                 Directory.CreateDirectory(buildFolderPath);
             });
         }
+    }
+
+    private async Task SetTopEntityAsync(UniversalFpgaProjectRoot root, FpgaProjectFile file)
+    {
+        var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+
+        IEnumerable<string> entities;
+        if (nodeProvider != null)
+            entities = await nodeProvider.ExtractTopEntitiesAsync(file);
+        else
+            entities = new[] { Path.GetFileNameWithoutExtension(file.FullPath) };
+
+        var entityList = entities.ToList();
+
+        string? selectedEntity;
+        if (entityList.Count <= 1)
+        {
+            selectedEntity = entityList.FirstOrDefault()
+                             ?? Path.GetFileNameWithoutExtension(file.FullPath);
+        }
+        else
+        {
+            // Multiple entities — let the user pick
+            selectedEntity = await _windowService.ShowInputSelectAsync(
+                "Select Top Entity",
+                $"Multiple entities found in {file.Header}. Select the top entity:",
+                Essentials.Enums.MessageBoxIcon.Info,
+                entityList.Cast<object>(),
+                entityList[0]) as string;
+
+            if (selectedEntity == null) return; // user cancelled
+        }
+
+        root.TopEntityFile = file.RelativePath;
+        root.TopEntity = selectedEntity;
+        _ = SaveProjectAsync(root);
     }
 }

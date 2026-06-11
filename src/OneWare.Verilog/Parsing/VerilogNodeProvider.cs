@@ -67,6 +67,44 @@ public class VerilogNodeProvider : INodeProvider
         return Task.FromResult<IEnumerable<FpgaNode>>(result);
     }
 
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file, string topEntityName)
+    {
+        if (file == null || string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
+            return Task.FromResult<IEnumerable<FpgaNode>>(Array.Empty<FpgaNode>());
+
+        var cleaned = RemoveComments(File.ReadAllText(file.FullPath));
+        var target = ParseModules(cleaned)
+            .FirstOrDefault(m => string.Equals(m.name, topEntityName, StringComparison.Ordinal));
+
+        if (target == default)
+            return ExtractNodesAsync(file); // fall back to all modules
+
+        var ports = new Dictionary<string, (string direction, string? range)>(StringComparer.Ordinal);
+        ExtractPortsFromText(target.ports, ports);
+        ExtractPortsFromText(target.body, ports);
+
+        var result = ports
+            .SelectMany(kvp => ExpandPort(kvp.Key, kvp.Value.range)
+                .Select(expanded => new FpgaNode(expanded, kvp.Value.direction)))
+            .ToList();
+
+        return Task.FromResult<IEnumerable<FpgaNode>>(result);
+    }
+
+    public Task<IEnumerable<string>> ExtractTopEntitiesAsync(IProjectFile file)
+    {
+        if (file == null || string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
+            return Task.FromResult<IEnumerable<string>>(new[] { Path.GetFileNameWithoutExtension(file.FullPath) });
+
+        var cleaned = RemoveComments(File.ReadAllText(file.FullPath));
+        var names = ParseModules(cleaned).Select(m => m.name).ToList();
+
+        if (names.Count == 0)
+            names.Add(Path.GetFileNameWithoutExtension(file.FullPath));
+
+        return Task.FromResult<IEnumerable<string>>(names);
+    }
+
     private static string RemoveComments(string text)
     {
         text = BlockCommentRegex.Replace(text, string.Empty);

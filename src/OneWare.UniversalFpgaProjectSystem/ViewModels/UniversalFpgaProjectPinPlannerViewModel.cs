@@ -128,7 +128,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            var file = Project.GetFile(Project.TopEntity);
+            var file = Project.GetFile(Project.TopEntityFile);
             if (file == null) return;
 
             var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
@@ -140,7 +140,10 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                 return;
             }
 
-            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
+            // Use the entity-scoped overload when a top entity name is known
+            var nodesEnumerable = Project.TopEntity is { } entityName
+                ? await nodeProvider.ExtractNodesAsync(file, entityName)
+                : await nodeProvider.ExtractNodesAsync(file);
 
             _nodes = nodesEnumerable.ToArray();
             RefreshHardware();
