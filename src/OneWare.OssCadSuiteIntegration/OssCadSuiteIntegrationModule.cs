@@ -93,7 +93,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             {
                 if (x is not UniversalFpgaProjectRoot { Toolchain: YosysToolchain.ToolChainId } root) return null;
 
-                var name = root.Properties["Fpga"]?.ToString();
+                var name = root.Board;
                 var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                 var fpga = fpgaPackage?.LoadFpga();
 
@@ -144,7 +144,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                 if (projectExplorerService
                                         .ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
                                 {
-                                    var selectedFpga = root.Properties["Fpga"]?.ToString();
+                                    var selectedFpga = root.Board;
                                     var selectedFpgaPackage =
                                         fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == selectedFpga);
 

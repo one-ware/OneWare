@@ -123,6 +123,8 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
         fpgaService.RegisterProjectPropertyMigration("VHDL_Standard", "vhdlStandard");
         fpgaService.RegisterProjectPropertyMigration("Toolchain", "toolchain", NormalizeToolchain);
         fpgaService.RegisterProjectPropertyMigration("Loader", "loader", NormalizeLoader);
+        fpgaService.RegisterProjectPropertyMigration("fpga", "board"); // legacy key renamed to "board"
+        fpgaService.RegisterProjectPropertyMigration("Fpga", "board"); // PascalCase variant also migrated
     }
 
     private static JsonNode? NormalizeToolchain(JsonNode? node)

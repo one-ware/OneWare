@@ -29,6 +29,12 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
 {
     private JsonObject _data;
 
+    /// <summary>
+    /// Read-only aliases: when a key is not found, look up its alias target instead.
+    /// Registered via <see cref="RegisterAlias"/>.
+    /// </summary>
+    private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -76,6 +82,16 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
     public bool Remove(string key)
     {
         return RemoveNodeInternal(key, out _);
+    }
+
+    /// <summary>
+    /// Registers a read-only alias so that looking up <paramref name="alias"/> transparently
+    /// returns the value stored under <paramref name="canonical"/> when the alias key itself is
+    /// absent from the project file. Useful for backwards-compatibility with old key names.
+    /// </summary>
+    public void RegisterAlias(string alias, string canonical)
+    {
+        _aliases[alias] = canonical;
     }
 
     public async Task<bool> LoadAsync(string path, IEnumerable<ProjectPropertyMigration>? migrations = null)
@@ -289,7 +305,16 @@ public class UniversalProjectProperties : IEnumerable<KeyValuePair<string, JsonN
                 return null;
 
             if (!TryGetNode(obj, segment, out var next))
+            {
+                // Fall back to a registered alias when the segment itself is absent
+                if (_aliases.TryGetValue(segment, out var aliasTarget) &&
+                    TryGetNode(obj, aliasTarget, out next))
+                {
+                    current = next;
+                    continue;
+                }
                 return null;
+            }
 
             current = next;
         }

@@ -393,7 +393,7 @@ model for FPGA workflows. It is designed to be extended by plugins.
   - `topEntity`: relative path to the top-level HDL file.
   - `toolchain`: toolchain ID to run on compile.
   - `loader`: loader ID to use for programming.
-  - `fpga`: selected FPGA package name.
+  - `board`: selected hardware board (evaluation board) name. The legacy key `fpga` is automatically migrated to `board` on load.
   - `testBenches`: list of relative paths flagged as test benches.
   - `compileExcluded`: list of relative paths excluded from compile.
 
