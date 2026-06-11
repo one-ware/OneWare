@@ -24,8 +24,6 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
 {
     private readonly MessageBoxRequest _request;
     private string? _input;
-    private object? _selectedItem;
-    private ObservableCollection<object> _selectionItems = new();
     private FlexibleWindow? _window;
 
     public MessageBoxViewModel(MessageBoxRequest request)
@@ -63,19 +61,19 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
 
     public object? SelectedItem
     {
-        get => _selectedItem;
+        get;
         set
         {
-            if (SetProperty(ref _selectedItem, value))
+            if (SetProperty(ref field, value))
                 ButtonCommand.NotifyCanExecuteChanged();
         }
     }
 
     public ObservableCollection<object> SelectionItems
     {
-        get => _selectionItems;
-        set => SetProperty(ref _selectionItems, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
 
     public ObservableCollection<MessageBoxButtonViewModel> Buttons { get; }
 
