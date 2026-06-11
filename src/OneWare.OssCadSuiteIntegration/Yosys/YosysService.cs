@@ -114,7 +114,7 @@ public class YosysService(
             else
             {
                 builder.AddScript(customCommandTemplate,
-                    ("$TOP", Path.GetFileNameWithoutExtension(top), false), 
+                    ("$TOP", top, false), 
                     ("$SYNTH_TOOL", yosysSynthTool, false), 
                     ("$OUTPUT", "build/synth.json", true)   
                 );

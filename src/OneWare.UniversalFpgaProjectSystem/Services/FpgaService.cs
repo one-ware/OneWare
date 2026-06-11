@@ -181,6 +181,66 @@ public class FpgaService
         return null;
     }
 
+    /// <summary>
+    /// Scans all HDL files in the project and returns the first file (and its provider) that
+    /// declares an entity or module named <paramref name="topEntityName"/>.
+    /// Returns <c>(null, null)</c> when no matching file is found.
+    /// </summary>
+    public async Task<(IProjectFile? File, INodeProvider? Provider)> FindTopEntityAsync(
+        UniversalFpgaProjectRoot project, string topEntityName)
+    {
+        var extensions = new[] { "*.vhd", "*.vhdl", "*.v", "*.sv" };
+        foreach (var pattern in extensions)
+        {
+            foreach (var relPath in project.GetFiles(pattern))
+            {
+                var file = project.GetFile(relPath);
+                if (file == null) continue;
+
+                var provider = GetNodeProviderByExtension(file.Extension);
+                if (provider == null) continue;
+
+                var entities = await provider.ExtractTopEntitiesAsync(file);
+                if (entities.Any(e => string.Equals(e, topEntityName, StringComparison.Ordinal)))
+                    return (file, provider);
+            }
+        }
+
+        return (null, null);
+    }
+
+    /// <summary>
+    /// Scans all HDL files in the project and returns the names of all discovered top entities/modules.
+    /// </summary>
+    public async Task<IReadOnlyList<string>> GetAllTopEntitiesAsync(UniversalFpgaProjectRoot project)
+    {
+        var result = new List<string>();
+        var extensions = new[] { "*.vhd", "*.vhdl", "*.v", "*.sv" };
+        foreach (var pattern in extensions)
+        {
+            foreach (var relPath in project.GetFiles(pattern))
+            {
+                var file = project.GetFile(relPath);
+                if (file == null) continue;
+
+                var provider = GetNodeProviderByExtension(file.Extension);
+                if (provider == null) continue;
+
+                try
+                {
+                    var entities = await provider.ExtractTopEntitiesAsync(file);
+                    result.AddRange(entities);
+                }
+                catch
+                {
+                    // ignore parse errors for individual files
+                }
+            }
+        }
+
+        return result.Distinct().ToList();
+    }
+
     public INodeProvider? GetNodeProvider(string language)
     {
         var possibleNodeProviders = NodeProviders

@@ -74,8 +74,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         }
     }
 
-    private (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)
-        BuildCategoryCollection(string category)
+    private (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys) BuildCategoryCollection(string category)
     {
         var collection = new SettingsCollectionViewModel("") { ShowTitle = false };
         var keys = new Dictionary<TitledSetting, string>();
@@ -152,18 +151,37 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
             .Select(toolchain => toolchain.Id)
-            .ToArray();
+            .ToArray<object>();
+        
         var currentToolchain = _root.Properties.GetString("toolchain") ?? "";
         var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
         var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
             .Select(loader => loader.Id)
-            .ToArray();
+            .ToArray<object>();
+        
         var currentLoader = _root.Properties.GetString("loader") ?? "";
         var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
 
         var includesSettings = new ListBoxSetting("Files to Include", includes);
         var excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
+
+        // Build Top Entity dropdown from all HDL files in the project
+        var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
+        
+        var allEntities = fpgaService.GetAllTopEntitiesAsync(_root).GetAwaiter().GetResult();
+        var topEntitySetting = new ComboBoxSetting("Top Entity", _root.TopEntity ?? "", allEntities.ToArray<object>())
+        {
+            MarkdownDocumentation = "The top-level entity or module used for synthesis and pin planning."
+        };
+        
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("topEntity")
+                .WithSetting(topEntitySetting)
+                .WithDisplayOrder(60)
+                .Build()
+        );
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
@@ -189,11 +207,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                 .WithActivation(file =>
                 {
                     if (file is UniversalFpgaProjectRoot root)
-                    {
-                        if (root.TopEntity is not null) return Path.GetExtension(root.TopEntity) is ".vhd" or ".vhdl";
-                        return root.GetFiles().Any(projectFile => Path.GetExtension(projectFile) is ".vhd" or ".vhdl");
-                    }
-
+                        return root.GetFiles().Any(projectFile =>
+                            Path.GetExtension(projectFile) is ".vhd" or ".vhdl");
                     return false;
                 })
                 .Build()

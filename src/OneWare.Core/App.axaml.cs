@@ -13,6 +13,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Dock.Controls.DeferredContentControl;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
@@ -591,6 +592,12 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        DeferredContentPresentationSettings.BudgetMode = DeferredContentPresentationBudgetMode.ItemCount;
+        DeferredContentPresentationSettings.MaxPresentationsPerPass = 10;
+        DeferredContentPresentationSettings.InitialDelay = TimeSpan.Zero;
+        DeferredContentPresentationSettings.FollowUpDelay = TimeSpan.FromMilliseconds(1);
+        DeferredContentPresentationSettings.RevealDuration = TimeSpan.Zero;
+        
         var services = new ServiceCollection();
 
         services.AddSingleton(ModuleCatalog);

@@ -390,7 +390,7 @@ model for FPGA workflows. It is designed to be extended by plugins.
 - Project files use JSON via `UniversalProjectProperties`. Keys are case-insensitive and stored in
   the project file. Common keys:
   - `include` / `exclude`: arrays of glob-like patterns used by `IsPathIncluded`.
-  - `topEntity`: relative path to the top-level HDL file.
+  - `topEntity`: name of the top-level entity or module within `topEntityFile`. Old files that stored a file path in `topEntity` are migrated automatically on load.
   - `toolchain`: toolchain ID to run on compile.
   - `loader`: loader ID to use for programming.
   - `board`: selected hardware board (evaluation board) name. The legacy key `fpga` is automatically migrated to `board` on load.

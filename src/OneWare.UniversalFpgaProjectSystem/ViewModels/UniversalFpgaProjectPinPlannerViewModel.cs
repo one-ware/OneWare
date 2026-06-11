@@ -24,7 +24,6 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     private readonly IWindowService _windowService;
 
     private CompositeDisposable? _compositeDisposable;
-
     private FpgaNode[]? _nodes;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
@@ -43,10 +42,88 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         });
 
         Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
-        _ = InitializeAsync();
+
+        // Determine if required settings are missing — show setup overlay before loading
+        IsSetupRequired = Project.Toolchain == null || Project.TopEntity == null;
+
+        if (IsSetupRequired)
+            _ = LoadSetupOptionsAsync();
+        else
+            _ = InitializeAsync();
     }
 
-    public IFpgaToolchain? Toolchain { get; }
+    // ── Setup overlay ──────────────────────────────────────────────────────────
+
+    public bool IsSetupRequired
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool IsSetupLoading
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public ObservableCollection<string> SetupAvailableToolchains { get; } = new();
+    public ObservableCollection<string> SetupAvailableTopEntities { get; } = new();
+
+    public string? SetupSelectedToolchain
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public string? SetupSelectedTopEntity
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    private async Task LoadSetupOptionsAsync()
+    {
+        IsSetupLoading = true;
+        try
+        {
+            foreach (var tc in _fpgaService.Toolchains)
+                SetupAvailableToolchains.Add(tc.Id);
+            SetupSelectedToolchain = Project.Toolchain ?? SetupAvailableToolchains.FirstOrDefault();
+
+            var entities = await _fpgaService.GetAllTopEntitiesAsync(Project);
+            foreach (var e in entities)
+                SetupAvailableTopEntities.Add(e);
+            SetupSelectedTopEntity = Project.TopEntity ?? SetupAvailableTopEntities.FirstOrDefault();
+        }
+        finally
+        {
+            IsSetupLoading = false;
+        }
+    }
+
+    public async Task ApplySetupAsync()
+    {
+        if (SetupSelectedToolchain != null)
+            Project.Toolchain = SetupSelectedToolchain;
+        if (SetupSelectedTopEntity != null)
+            Project.TopEntity = SetupSelectedTopEntity;
+
+        await _projectExplorerService.SaveProjectAsync(Project);
+
+        // Re-resolve the toolchain object from the updated project setting
+        Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
+
+        IsSetupRequired = false;
+        await InitializeAsync();
+    }
+
+    // ── Main planner ───────────────────────────────────────────────────────────
+
+    public IFpgaToolchain? Toolchain
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
 
     public bool IsLoading
     {
@@ -128,21 +205,21 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            var file = Project.GetFile(Project.TopEntity);
-            if (file == null) return;
+            if (Project.TopEntity is not { } entityName)
+                return;
 
-            var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+            var (topFile, nodeProvider) = await _fpgaService.FindTopEntityAsync(Project, entityName);
 
-            if (nodeProvider == null)
+            if (topFile == null || nodeProvider == null)
             {
                 ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"No node provider found for extension {file.Extension}");
+                    .Error($"Could not find a file containing top entity '{entityName}'");
                 return;
             }
 
-            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
-
+            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(topFile, entityName);
             _nodes = nodesEnumerable.ToArray();
+
             RefreshHardware();
 
             SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Board) ??
