@@ -128,22 +128,19 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            var file = Project.GetFile(Project.TopEntityFile);
-            if (file == null) return;
+            if (Project.TopEntity is not { } entityName)
+                return;
 
-            var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+            var (topFile, nodeProvider) = await _fpgaService.FindTopEntityAsync(Project, entityName);
 
-            if (nodeProvider == null)
+            if (topFile == null || nodeProvider == null)
             {
                 ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"No node provider found for extension {file.Extension}");
+                    .Error($"Could not find a file containing top entity '{entityName}'");
                 return;
             }
 
-            // Use the entity-scoped overload when a top entity name is known
-            var nodesEnumerable = Project.TopEntity is { } entityName
-                ? await nodeProvider.ExtractNodesAsync(file, entityName)
-                : await nodeProvider.ExtractNodesAsync(file);
+            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(topFile, entityName);
 
             _nodes = nodesEnumerable.ToArray();
             RefreshHardware();
