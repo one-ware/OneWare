@@ -35,12 +35,7 @@ public class UniversalFpgaProjectManager : IProjectManager
         var root = new UniversalFpgaProjectRoot(path);
         
         await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
-
-        // Backwards-compat: old files stored the top-entity FILE PATH in "topEntity".
-        // When it looks like a path, migrate it to a plain entity name (file name without extension).
-        var legacyTopEntity = root.Properties.GetString("topEntity");
-        if (legacyTopEntity != null && (legacyTopEntity.Contains('/') || legacyTopEntity.Contains('\\')))
-            root.Properties.SetString("topEntity", Path.GetFileNameWithoutExtension(legacyTopEntity));
+        await MigrateLegacyTopEntityAsync(root);
 
         foreach (var entryModification in _fpgaService.ProjectEntryModificationHandlers)
         {
@@ -57,6 +52,7 @@ public class UniversalFpgaProjectManager : IProjectManager
         if (project is not UniversalFpgaProjectRoot root) return;
         
         await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
+        await MigrateLegacyTopEntityAsync(root);
         await root.InitializeAsync();
         
         //TODO reload open files
@@ -68,6 +64,56 @@ public class UniversalFpgaProjectManager : IProjectManager
         // foreach (var refreshed in filesOpenInProject)
         //     if (_mainDockService.OpenFiles.TryGetValue(refreshed.Key, out var vm))
         //         vm.InitializeContent();
+    }
+
+    /// <summary>
+    /// Detects a legacy <c>topEntity</c> value that is a file path rather than an entity name,
+    /// opens the referenced file, and replaces the value with the real entity/module name found inside.
+    /// Falls back to the file name without extension when the file cannot be parsed.
+    /// </summary>
+    private async Task MigrateLegacyTopEntityAsync(UniversalFpgaProjectRoot root)
+    {
+        var legacyValue = root.Properties.GetString("topEntity");
+        if (legacyValue == null) return;
+
+        // Detect path-like values: contains a directory separator, OR has a known HDL extension
+        var looksLikePath = legacyValue.Contains('/') || legacyValue.Contains('\\') ||
+                            Path.GetExtension(legacyValue) is ".vhd" or ".vhdl" or ".v" or ".sv";
+        if (!looksLikePath) return;
+
+        // Best-effort entity name derived from the file name
+        var candidateName = Path.GetFileNameWithoutExtension(legacyValue);
+
+        // Try to read the actual entity/module name from the file
+        var file = root.GetFile(legacyValue);
+        if (file != null)
+        {
+            var provider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+            if (provider != null)
+            {
+                try
+                {
+                    var entities = (await provider.ExtractTopEntitiesAsync(file)).ToList();
+                    if (entities.Count == 1)
+                    {
+                        candidateName = entities[0];
+                    }
+                    else if (entities.Count > 1)
+                    {
+                        // Prefer one whose name matches the file name; otherwise take the first
+                        candidateName = entities.FirstOrDefault(e =>
+                                            string.Equals(e, candidateName, StringComparison.OrdinalIgnoreCase))
+                                        ?? entities[0];
+                    }
+                }
+                catch
+                {
+                    // Ignore parse errors — candidateName stays as the file name without extension
+                }
+            }
+        }
+
+        root.Properties.SetString("topEntity", candidateName);
     }
     
     private static bool IsUnderRoot(string rootPath, string filePath)
