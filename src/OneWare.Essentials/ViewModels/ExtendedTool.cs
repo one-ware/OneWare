@@ -1,12 +1,13 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Dock.Controls.DeferredContentControl;
 using Dock.Model.Mvvm.Controls;
 using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.ViewModels;
 
-public abstract class ExtendedTool : Tool, IExtendedTool
+public abstract class ExtendedTool : Tool, IExtendedTool, IDeferredContentPresentation
 {
     private IImage? _icon;
 
@@ -31,4 +32,6 @@ public abstract class ExtendedTool : Tool, IExtendedTool
     public virtual void InitializeContent()
     {
     }
+
+    public bool DeferContentPresentation => false;
 }

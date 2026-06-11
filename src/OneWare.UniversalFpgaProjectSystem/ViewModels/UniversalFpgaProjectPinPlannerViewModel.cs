@@ -122,8 +122,23 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     public IFpgaToolchain? Toolchain
     {
         get;
-        private set => SetProperty(ref field, value);
+        private set
+        {
+            SetProperty(ref field, value);
+            UpdateActivePinProperties();
+        }
     }
+
+    /// <summary>
+    /// Per-pin property definitions for the current hardware+toolchain combination.
+    /// Prefers properties declared in the hardware JSON (<c>allowedPinProperties</c>);
+    /// falls back to the toolchain's own <see cref="IFpgaToolchain.PinProperties"/> list.
+    /// </summary>
+    public IReadOnlyList<PinPropertyDefinition> ActivePinProperties
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = [];
 
     public bool IsLoading
     {
@@ -171,6 +186,8 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             _compositeDisposable?.Dispose();
             _compositeDisposable = new CompositeDisposable();
 
+            UpdateActivePinProperties();
+
             if (value is not null)
             {
                 if (_nodes != null)
@@ -183,8 +200,22 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     .DisposeWith(_compositeDisposable);
                 Observable.FromEventPattern(value, nameof(value.NodeDisconnected)).Subscribe(_ => { IsDirty = true; })
                     .DisposeWith(_compositeDisposable);
+                Observable.FromEventPattern(value, nameof(value.PinPropertyChanged)).Subscribe(_ => { IsDirty = true; })
+                    .DisposeWith(_compositeDisposable);
             }
         }
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="ActivePinProperties"/>: hardware-defined properties take precedence,
+    /// falling back to the toolchain's own list.
+    /// </summary>
+    private void UpdateActivePinProperties()
+    {
+        var hardwareProps = SelectedFpgaModel?.AllowedPinProperties;
+        ActivePinProperties = hardwareProps is { Count: > 0 }
+            ? hardwareProps
+            : (IReadOnlyList<PinPropertyDefinition>)(Toolchain?.PinProperties ?? []).ToArray();
     }
 
     public FpgaViewModelBase? SelectedFpgaViewModel
