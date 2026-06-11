@@ -326,12 +326,11 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         {
             _ = serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x);
             if (!settingsService.GetSettingValue<bool>(OpenGhwWithGtkWaveSetting)) return false;
-            if (!IsOssPathValid(settingsService.GetSettingValue<string>(OssPathSetting))) return false;
+            if (!IsOssPathValid(settingsService.GetSettingValue<string>(OssCadSuiteHelper.OssPathSetting))) return false;
 
             serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
             return true;
         }, ".ghw", ".fst", ".lxt");
-        }, ".ghw");
         
         serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
         {
