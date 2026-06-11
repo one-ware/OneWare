@@ -54,7 +54,14 @@ internal static class AiBuiltInFunctions
                     [Description("1-based start line for partial reads (omit for full file)")] int? startLine = null,
                     [Description("number of lines to read from startLine (omit for full file)")] int? lineCount =
                         null) =>
-                ReadFileAsync(projectExplorerService, aiFileEditService, path, startLine, lineCount)
+                ReadFileAsync(projectExplorerService, aiFileEditService, path, startLine, lineCount),
+            ConfirmationCheck = args =>
+            {
+                var rawPath = TryGetStringArgument(args, "path");
+                var resolved = ResolvePath(projectExplorerService, rawPath);
+                if (IsInsideWorkspace(projectExplorerService, resolved)) return null;
+                return $"**Copilot wants to read a file outside the workspace.**\n\n`{resolved ?? rawPath ?? "?"}`";
+            }
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -62,10 +69,6 @@ internal static class AiBuiltInFunctions
             Name = "editFile",
             FriendlyName = "Edit File",
             RunOnUiThread = true,
-            RequirePermission = true,
-            PermissionScope = "edit",
-            PermissionQuestion = "Allow editing this file?",
-            PermissionDetailFactory = args => $"File: `{TryGetStringArgument(args, "path") ?? "<unknown>"}`",
             Description =
                 "Edit file contents with new text (optionally by line range). Creates missing files automatically. Always pass an absolute path.",
             Handler = ([Description("absolute path of the file to edit")] string path,
@@ -73,7 +76,14 @@ internal static class AiBuiltInFunctions
                     [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
                     [Description("number of lines to replace from startLine; 0 inserts before startLine")] int?
                         lineCount = null) =>
-                EditFileAsync(projectExplorerService, aiFileEditService, path, content, startLine, lineCount)
+                EditFileAsync(projectExplorerService, aiFileEditService, path, content, startLine, lineCount),
+            ConfirmationCheck = args =>
+            {
+                var rawPath = TryGetStringArgument(args, "path");
+                var resolved = ResolvePath(projectExplorerService, rawPath);
+                if (IsInsideWorkspace(projectExplorerService, resolved)) return null;
+                return $"**Copilot wants to edit a file outside the workspace.**\n\n`{resolved ?? rawPath ?? "?"}`";
+            }
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -113,11 +123,6 @@ internal static class AiBuiltInFunctions
             Name = "movePath",
             FriendlyName = "Move Path",
             RunOnUiThread = true,
-            RequirePermission = true,
-            PermissionScope = "edit",
-            PermissionQuestion = "Move or rename a file/directory.",
-            PermissionDetailFactory = args =>
-                $"{TryGetStringArgument(args, "sourcePath") ?? "<source>"} -> {TryGetStringArgument(args, "destinationPath") ?? "<destination>"}",
             Description = "Moves or renames a file/directory.",
             Handler = ([Description("absolute source file or directory path")] string sourcePath,
                     [Description("absolute destination file or directory path")] string destinationPath,
@@ -130,14 +135,16 @@ internal static class AiBuiltInFunctions
             Name = "deletePath",
             FriendlyName = "Delete Path",
             RunOnUiThread = true,
-            RequirePermission = true,
-            PermissionScope = "edit",
-            PermissionQuestion = "Delete a file or directory.",
-            PermissionDetailFactory = args => TryGetStringArgument(args, "path") ?? "<unknown>",
             Description = "Deletes a file or directory.",
             Handler = ([Description("absolute file or directory path to delete")] string path,
                     [Description("for directories: delete recursively")] bool recursive = true) =>
-                DeletePath(projectExplorerService, path, recursive)
+                DeletePath(projectExplorerService, path, recursive),
+            ConfirmationCheck = args =>
+            {
+                var rawPath = TryGetStringArgument(args, "path");
+                var resolved = ResolvePath(projectExplorerService, rawPath) ?? rawPath ?? "?";
+                return $"**Copilot wants to delete a path.**\n\n`{resolved}`";
+            }
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -214,11 +221,6 @@ internal static class AiBuiltInFunctions
             Name = "runTerminalCommand",
             FriendlyName = "Execute In Terminal",
             RunOnUiThread = true,
-            RequirePermission = true,
-            PermissionScope = "runTerminalCommand",
-            PermissionQuestion = "Allow this command?",
-            PermissionDetailFactory = args =>
-                $"```bash\n{TryGetStringArgument(args, "command") ?? "<unknown command>"}\n```",
             Description = """
                           Executes a command in the terminal and returns the output.
                           This is the only supported way to execute shell commands.
@@ -227,7 +229,12 @@ internal static class AiBuiltInFunctions
             Handler = ([Description("Shell command to execute")] string command,
                     [Description("Absolute working directory for execution (optional, defaults to active project).")]
                     string? workDir = null) =>
-                RunTerminalCommandAsync(projectExplorerService, terminalManagerService, command, workDir)
+                RunTerminalCommandAsync(projectExplorerService, terminalManagerService, command, workDir),
+            ConfirmationCheck = args =>
+            {
+                var cmd = TryGetStringArgument(args, "command") ?? "?";
+                return $"**Copilot wants to execute a command in the terminal.**\n\n```\n{cmd}\n```";
+            }
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -666,6 +673,25 @@ internal static class AiBuiltInFunctions
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
             Directory.CreateDirectory(directory);
+    }
+
+    /// <summary>
+    /// Returns true when <paramref name="resolvedPath"/> is under the active project root,
+    /// meaning no confirmation is needed for that path.
+    /// </summary>
+    private static bool IsInsideWorkspace(IProjectExplorerService projectExplorerService, string? resolvedPath)
+    {
+        if (string.IsNullOrEmpty(resolvedPath)) return false;
+
+        var projectRoot = projectExplorerService.ActiveProject?.FullPath;
+        if (string.IsNullOrEmpty(projectRoot)) return false;
+
+        var normalizedRoot = Path.GetFullPath(projectRoot);
+        var normalizedPath = Path.GetFullPath(resolvedPath);
+
+        return normalizedPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar,
+                   StringComparison.OrdinalIgnoreCase)
+               || string.Equals(normalizedPath, normalizedRoot, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? TryGetStringArgument(Microsoft.Extensions.AI.AIFunctionArguments arguments, string name)

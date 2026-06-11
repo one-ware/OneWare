@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
 using Dock.Model.Core;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -10,7 +11,7 @@ public sealed class OneWareDockSerializer : IDockSerializer
 {
     private readonly JsonSerializerSettings _settings;
     
-    public OneWareDockSerializer(IServiceProvider provider)
+    public OneWareDockSerializer(IServiceProvider provider, ILogger logger)
     {
         _settings = new JsonSerializerSettings
         {
@@ -20,10 +21,16 @@ public sealed class OneWareDockSerializer : IDockSerializer
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
             ContractResolver = new OneWareContractResolver(typeof(ObservableCollection<>), provider),
             NullValueHandling = NullValueHandling.Ignore,
+            SerializationBinder = new SilentErrorSerializationBinder(),
             Converters =
             {
                 new NoSerializeLayoutListConverter(),
                 new KeyValuePairConverter()
+            },
+            Error = (sender, args) => 
+            {
+                logger.LogError($"JSON Deserialization Error at {args.ErrorContext.Path}: {args.ErrorContext.Error.Message}");
+                args.ErrorContext.Handled = true;
             }
         };
     }

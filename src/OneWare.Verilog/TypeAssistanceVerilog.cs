@@ -6,6 +6,7 @@ using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Verilog.Folding;
+using OneWare.Verilog.Indentation;
 
 namespace OneWare.Verilog;
 
@@ -20,7 +21,7 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
         _settingsService = settingsService;
 
         CodeBox.TextArea.IndentationStrategy =
-            IndentationStrategy = new LspIndentationStrategy(CodeBox.Options, ls, CurrentFilePath);
+            IndentationStrategy = new VerilogIndentationStrategy(CodeBox.Options);
         FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
 
         LineCommentSequence = "//";

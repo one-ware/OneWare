@@ -1,8 +1,11 @@
 ﻿using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine;
+using OneWare.OssCadSuiteIntegration.Tools;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.UniversalFpgaProjectSystem.Context;
@@ -13,16 +16,21 @@ namespace OneWare.OssCadSuiteIntegration.Simulators;
 
 public class IcarusVerilogSimulator : IFpgaSimulator
 {
-    private readonly IChildProcessService _childProcessService;
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly GtkWaveService _gtkWaveService;
+    private readonly IToolExecutionDispatcherService  _toolExecutionDispatcherService;
+    private readonly ILogger _logger;
 
-    public IcarusVerilogSimulator(IChildProcessService childProcessService, IMainDockService mainDockService,
-        IProjectExplorerService projectExplorerService)
+    public IcarusVerilogSimulator(ILogger logger, IMainDockService mainDockService,
+        IProjectExplorerService projectExplorerService, GtkWaveService gtkWaveService,
+        IToolExecutionDispatcherService toolExecutionDispatcherService)
     {
-        _childProcessService = childProcessService;
+        _logger = logger;
+        _toolExecutionDispatcherService =  toolExecutionDispatcherService;
         _mainDockService = mainDockService;
         _projectExplorerService = projectExplorerService;
+        _gtkWaveService = gtkWaveService;
         TestBenchToolbarTopUiExtension = new OneWareUiExtension(x =>
         {
             if (x is TestBenchContext tb)
@@ -56,30 +64,66 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             .Select(x => x.ToUnixPath());
 
         _mainDockService.Show<IOutputService>();
-
-        List<string> icarusVerilogArguments = ["-o", vvpPath];
-        icarusVerilogArguments.AddRange(verilogFiles);
-
-        var (result, _) = await _childProcessService.ExecuteShellAsync("iverilog", icarusVerilogArguments,
-            root.FullPath, "Running IVerilog...", AppState.Loading, true);
-
-        if (!result) return false;
-
-        var (success2, output) = await _childProcessService.ExecuteShellAsync("vvp", [vvpPath],
-            root.FullPath, "Running VVP Simulation...", AppState.Loading, true);
-
-        if (!success2) return false;
-
-        var vcdFileRegex = new Regex(@"VCD info: dumpfile\s+(.+\.vcd)\s+opened for output.");
-
-        var match = vcdFileRegex.Match(output);
-
-        if (match.Success)
+        
+        var settings = await TestBenchContextManager.LoadContextAsync(fullPath);
+        var waveOutput = settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.WaveOutputFormat)) ?? "VCD";
+        
+        var command = _toolExecutionDispatcherService.CreateToolCommandBuilder("iverilog")
+            .WithWorkingDirectory(root.FullPath)
+            .WithStatus("Running IVerilog..", AppState.Loading)
+            .WithTimer(true)
+            .AddPathOption("-o", vvpPath)
+            .AddRawArguments(settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.IcarusVerilogArguments)))
+            .AddPaths(verilogFiles)
+            .Build();
+        
+        var (resultIVerilog, _) = await _toolExecutionDispatcherService.ExecuteAsync(command);
+        
+        if (!resultIVerilog)
         {
-            var vcdFileRelativePath = match.Groups[1].Value;
-            var vcdFileFullPath = Path.Combine(root.FullPath, vcdFileRelativePath);
+            _logger.LogWarning("IVerilog failed");
+            return false;
+        }
+        
 
-            var doc = await _mainDockService.OpenFileAsync(vcdFileFullPath);
+        var vvpCommand = _toolExecutionDispatcherService.CreateToolCommandBuilder("vvp").WithWorkingDirectory(root.FullPath)
+            .WithStatus("Running VPP Simulation", AppState.Loading)
+            .WithTimer(true)
+            .Add(vvpPath)
+            .AddIf(waveOutput == "LXT2", "-lxt2")
+            .AddIf(waveOutput == "FST", "-fst").Build();
+        
+        var (resultVvp, outputVvp) = await _toolExecutionDispatcherService.ExecuteAsync(vvpCommand);
+        
+        if (!resultVvp)
+        {
+            _logger.LogWarning("VVP failed");
+            return false;
+        }
+        
+        var escapedEnding = waveOutput switch
+        {
+            "VCD" => ".vcd",
+            "LXT2" => ".lxt",
+            "FST" => ".fst",
+            _ => string.Empty
+        };
+        
+        var vcdFileRegex = new Regex($@".*info: dumpfile\s+(.+\{escapedEnding})\s+opened for output.");
+
+        var match = vcdFileRegex.Match(outputVvp);
+        if (!match.Success) return true;
+        
+        var fileRelativePath = match.Groups[1].Value;
+        var fileFullPath = Path.Combine(root.FullPath, fileRelativePath);
+        
+        if (waveOutput == "VCD")
+        {
+            _ = await _mainDockService.OpenFileAsync(fileFullPath);
+        }
+        else
+        {
+            _ = _gtkWaveService.OpenInGtkWaveAsync(fileFullPath);
         }
 
         return true;

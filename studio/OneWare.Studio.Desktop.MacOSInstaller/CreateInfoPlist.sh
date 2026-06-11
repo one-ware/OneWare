@@ -16,6 +16,9 @@ cat > "$plist_file" <<EOF
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
 
+    <key>CFBundleDisplayName</key>
+    <string>OneWare Studio</string>
+
     <key>CFBundleExecutable</key>
     <string>OneWareStudio</string>
 

@@ -8,10 +8,11 @@
 
     <PropertyGroup>
         <CopilotSkipCliDownload>true</CopilotSkipCliDownload>
+        <NoWarn>$(NoWarn);GHCP001</NoWarn>
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="GitHub.Copilot.SDK" Version="0.1.29" />
+        <PackageReference Include="GitHub.Copilot.SDK" Version="1.0.0" />
     </ItemGroup>
 
 </Project>

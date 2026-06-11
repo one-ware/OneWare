@@ -113,7 +113,6 @@
     <Project Path="src/OneWare.Verilog/OneWare.Verilog.csproj" />
     <Project Path="src/OneWare.Vhdl/OneWare.Vhdl.csproj" />
   </Folder>
-  <Folder Name="/Extensions/ProjectSystem/" />
   <Folder Name="/Extensions/Wave/">
     <Project Path="src/OneWare.Fst.Parser/OneWare.Fst.Parser.csproj" />
     <Project Path="src/OneWare.Ghw.Parser/OneWare.Ghw.Parser.csproj" />
@@ -128,10 +127,12 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
+    <Project Path="tests/OneWare.PackageManager.UnitTests/OneWare.PackageManager.UnitTests.csproj" />
     <Project Path="tests/OneWare.Fst.Parser.UnitTests/OneWare.Fst.Parser.UnitTests.csproj" />
     <Project Path="tests/OneWare.Ghw.Parser.UnitTests/OneWare.Ghw.Parser.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
     <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj" />
+    <Project Path="tests/OneWare.ToolEngine.UnitTests/OneWare.ToolEngine.UnitTests.csproj" />
     <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj" />
     <Project Path="tests/OneWare.Vcd.Parser.UnitTests/OneWare.Vcd.Parser.UnitTests.csproj" />
     <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj" />

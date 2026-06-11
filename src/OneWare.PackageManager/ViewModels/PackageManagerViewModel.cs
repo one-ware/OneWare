@@ -215,6 +215,15 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return quickInstallViewModel.Success;
     }
 
+    public async Task<bool> ShowAndUpdateAllAsync()
+    {
+        ShowExtensionManager();
+
+        await Task.Delay(100);
+        
+        return await UpdateAllAsync();
+    }
+
     private bool FocusCategory(string category, string? subcategory)
     {
         var categoryVm = PackageCategories
@@ -323,7 +332,65 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> UpdateAllAsync()
     {
-        var packages = _packageService.Packages.Values.Where(x => x.Status == PackageStatus.UpdateAvailable).ToList();
+        var packages = _packageService.Packages.Values
+            .Where(x => x.Status == PackageStatus.UpdateAvailable)
+            .OrderBy(x => x.Package.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (packages.Count == 0)
+            return true;
+
+        var requiresRestart = packages.Any(x =>
+            string.Equals(x.Package.Type, "Plugin", StringComparison.OrdinalIgnoreCase));
+
+        var packageLines = packages.Select(x =>
+        {
+            var installedVersion = x.InstalledVersion?.Version ?? "?";
+            var targetVersion = x.Package.Versions?
+                .Where(v => !v.IsPrerelease)
+                .OrderByDescending(v =>
+                {
+                    if (Version.TryParse(v.Version, out var parsedVersion))
+                        return parsedVersion;
+
+                    return new Version(0, 0);
+                })
+                .FirstOrDefault()?.Version ?? "latest";
+
+            return $"- **{x.Package.Name}** `{installedVersion} -> {targetVersion}`";
+        });
+
+        var message =
+            $"The following packages will be updated:\n\n{string.Join("\n", packageLines)}\n\n" +
+            (requiresRestart
+                ? "> Restart will be required after the update completes."
+                : "Do you want to continue?");
+
+        var confirmation = await _windowService.ShowMessageBoxAsync(new MessageBoxRequest
+        {
+            Title = "Update Packages",
+            Message = message,
+            Icon = MessageBoxIcon.Info,
+            Buttons =
+            [
+                new MessageBoxButton
+                {
+                    Text = "Update All",
+                    Role = MessageBoxButtonRole.Yes,
+                    Style = MessageBoxButtonStyle.Primary,
+                    IsDefault = true
+                },
+                new MessageBoxButton
+                {
+                    Text = "Cancel",
+                    Role = MessageBoxButtonRole.Cancel,
+                    Style = MessageBoxButtonStyle.Secondary
+                }
+            ]
+        });
+
+        if (!confirmation.IsAccepted)
+            return false;
         
         foreach (var package in packages)
         {

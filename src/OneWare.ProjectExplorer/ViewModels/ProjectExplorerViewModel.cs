@@ -182,6 +182,7 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
     public async Task<IProjectRoot?> LoadProjectAsync(string path, IProjectManager manager, bool expand = true,
         bool setActive = true)
     {
+        path = path.TrimEnd();
         var project = await manager.LoadProjectAsync(path);
         
         if (project == null)

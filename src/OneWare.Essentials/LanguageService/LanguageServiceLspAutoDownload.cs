@@ -10,11 +10,16 @@ public abstract class LanguageServiceLspAutoDownload : LanguageServiceLsp
     private bool _enableAutoDownload;
 
     protected LanguageServiceLspAutoDownload(IObservable<string> executablePath, Package package, string name,
-        string? workspace, IPackageService packageService, IObservable<bool> enableAutoDownload)
+        string? workspace, IPackageService packageService, IObservable<bool> enableAutoDownload,
+        string? arguments = null)
         : base(name, workspace)
     {
         _package = package;
         _packageService = packageService;
+
+        // Set Arguments before subscribing so the value is available when
+        // ActivateAsync() fires synchronously on the first observable emission.
+        Arguments = arguments;
 
         enableAutoDownload.Subscribe(x => { _enableAutoDownload = x; });
         executablePath.Subscribe(x =>

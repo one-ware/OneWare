@@ -47,11 +47,38 @@ internal abstract class Program
     // This method is needed for IDE previewer infrastructure
     private static AppBuilder BuildAvaloniaApp()
     {
+        var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
+        var maxGpuCacheBytes =
+            StudioApp.SettingsService.GetSettingValue<string>("Experimental_MaxGpuResourceSizeBytes") switch
+            {
+                "128 MB" => 128L * 1024 * 1024,
+                "256 MB" => 256L * 1024 * 1024,
+                "512 MB" => 512L * 1024 * 1024,
+                "1 GB" => 1024L * 1024 * 1024,
+                _ => 1024L * 600 * 4 * 12 // Avalonia default ~28 MB
+            };
+
+        var x11RenderingModes = isLinux
+            ? StudioApp.SettingsService.GetSettingValue<string>("Experimental_X11RenderingMode") switch
+            {
+                "EGL"      => new[] { X11RenderingMode.Egl, X11RenderingMode.Software },
+                "Software" => new[] { X11RenderingMode.Software },
+                "Vulkan"   => new[] { X11RenderingMode.Vulkan, X11RenderingMode.Software },
+                _          => new[] { X11RenderingMode.Glx, X11RenderingMode.Software } // Default
+            }
+            : [X11RenderingMode.Glx, X11RenderingMode.Software];
+
         var app = AppBuilder.Configure<DesktopStudioApp>().UsePlatformDetect()
+            .With(new SkiaOptions()
+            {
+                MaxGpuResourceSizeBytes = maxGpuCacheBytes
+            })
             .With(new X11PlatformOptions
             {
                 EnableMultiTouch = true,
-                WmClass = "OneWare"
+                WmClass = "OneWare",
+                RenderingMode = x11RenderingModes
             })
             .With(new Win32PlatformOptions
             {
@@ -67,8 +94,7 @@ internal abstract class Program
             })
             .LogToTrace();
 
-        if (StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog") &&
-            RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))
             app.UseManagedSystemDialogs();
 
         return app;

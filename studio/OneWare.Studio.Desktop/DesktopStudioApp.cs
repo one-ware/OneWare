@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -214,23 +215,19 @@ public class DesktopStudioApp : StudioApp
                 });
             }
 
-            //Add Notifications for all updatable packages
+            //Add a single notification for all updatable packages
             if (updatePackages?.Count > 0)
             {
-                foreach (var updatePackage in updatePackages)
-                {
-                    Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
-                    {
-                        Message =
-                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
-                        Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
-                            .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
-                    });
-                }
+                var packageCount = updatePackages.Count;
+                var packageLabel = packageCount == 1 ? "plugin update" : "plugin updates";
+
+                Services.Resolve<IWindowService>().ShowNotificationWithButton("Plugin updates available",
+                    $"{packageCount} {packageLabel} available.",
+                    "Update all", () => _ = Services.Resolve<IPackageWindowService>().ShowAndUpdateAllAsync());
             }
             
             //Ask to install the OneWare.AI extension
-            else if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
+            if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
                      Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {
                 var aiReleaseWindowVm = Services.Resolve<AiReleaseWindowViewModel>();

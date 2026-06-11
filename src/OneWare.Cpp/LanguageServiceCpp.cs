@@ -10,23 +10,10 @@ public class LanguageServiceCpp : LanguageServiceLspAutoDownload
     public LanguageServiceCpp(ISettingsService settingsService, IPackageService packageService)
         : base(settingsService.GetSettingObservable<string>(CppModule.LspPathSetting), CppModule.ClangdPackage,
             CppModule.LspName, null, packageService,
-            settingsService.GetSettingObservable<bool>("Experimental_AutoDownloadBinaries"))
+            settingsService.GetSettingObservable<bool>("Experimental_AutoDownloadBinaries"),
+            arguments: "--log=error")
     {
-        Arguments = "--log=error";
-
-        // Global.Options.WhenAnyValue(x => x.CppLspNiosMode).Subscribe(x =>
-        // {
-        //     if (IsActivated) _ = RestartAsync();
-        // });
-        //t
-        // Global.Options.WhenAnyValue(x => x.CppLspActivated).Subscribe(x =>
-        // {
-        //     //Check if file is open
-        //     var anyFile = MainDock.OpenDocuments.Any(
-        //         keyValuePair => SupportedFileTypes.Contains(keyValuePair.Key.Type) && Path.GetFullPath(keyValuePair.Key.FullPath).StartsWith(Path.GetFullPath(workspace)));
-        //     if (anyFile && x && !IsActivated) _ = ActivateAsync();
-        //     else if (!x && IsActivated) _ = DeactivateAsync();
-        // });
+        // ...existing code...
     }
 
     public override ITypeAssistance GetTypeAssistance(IEditor editor)

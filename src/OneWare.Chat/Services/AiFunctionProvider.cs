@@ -13,14 +13,12 @@ public class AiFunctionProvider(
     IWindowService windowService,
     AiFileEditService aiFileEditService) : IAiFunctionProvider
 {
-    private readonly HashSet<string> _allowedForSession = new(StringComparer.Ordinal);
     private readonly Lock _registrationLock = new();
     private readonly List<IOneWareAiFunction> _registeredFunctions = [];
     private readonly List<string> _promptAdditions = [];
     private bool _builtInsRegistered;
 
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
-    public event EventHandler<AiFunctionPermissionRequestEvent>? FunctionPermissionRequested;
     public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
 
     public void RegisterFunction(IOneWareAiFunction function)
@@ -53,6 +51,17 @@ public class AiFunctionProvider(
         lock (_registrationLock)
         {
             return _promptAdditions.ToArray();
+        }
+    }
+
+    public Func<AIFunctionArguments, string?>? GetConfirmationCheck(string functionName)
+    {
+        EnsureBuiltInsRegistered();
+        lock (_registrationLock)
+        {
+            return _registeredFunctions
+                .FirstOrDefault(f => string.Equals(f.Name, functionName, StringComparison.Ordinal))
+                ?.ConfirmationCheck;
         }
     }
 
@@ -98,59 +107,6 @@ public class AiFunctionProvider(
             aiFileEditService);
     }
 
-    private async Task<AiFunctionPermissionDecision> RequestPermissionAsync(
-        string functionName,
-        string question,
-        string? detail)
-    {
-        var requestId = Guid.NewGuid().ToString();
-        var decisionSource =
-            new TaskCompletionSource<AiFunctionPermissionDecision>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
-            FunctionPermissionRequested?.Invoke(this, new AiFunctionPermissionRequestEvent
-            {
-                Id = requestId,
-                FunctionName = functionName,
-                Question = question,
-                Detail = detail,
-                DecisionSource = decisionSource
-            }));
-
-        return await decisionSource.Task.ConfigureAwait(false);
-    }
-
-    private async Task EnsurePermissionAsync(
-        string friendlyName,
-        bool requiresPermission,
-        string? permissionScope,
-        string? permissionQuestion,
-        string? permissionDetail)
-    {
-        if (!requiresPermission) return;
-
-        var scope = string.IsNullOrWhiteSpace(permissionScope) ? friendlyName : permissionScope;
-        if (_allowedForSession.Contains(scope))
-            return;
-
-        var question = string.IsNullOrWhiteSpace(permissionQuestion)
-            ? $"Allow {friendlyName}?"
-            : permissionQuestion;
-        var detail = string.IsNullOrWhiteSpace(permissionDetail) ? null : permissionDetail;
-        var decision = await RequestPermissionAsync(friendlyName, question, detail);
-
-        switch (decision)
-        {
-            case AiFunctionPermissionDecision.AllowForSession:
-                _allowedForSession.Add(scope);
-                return;
-            case AiFunctionPermissionDecision.AllowOnce:
-                return;
-            default:
-                throw new InvalidOperationException($"{friendlyName} was denied by user.");
-        }
-    }
-
     private async Task<string> NotifyFunctionStartedAsync(string functionName, string? detail = null)
     {
         var id = Guid.NewGuid().ToString();
@@ -188,14 +144,6 @@ public class AiFunctionProvider(
             var friendlyName = string.IsNullOrWhiteSpace(definition.FriendlyName)
                 ? definition.Name
                 : definition.FriendlyName;
-            var permissionDetail = definition.PermissionDetailFactory?.Invoke(arguments) ?? definition.PermissionDetail;
-
-            await provider.EnsurePermissionAsync(
-                friendlyName!,
-                definition.RequirePermission,
-                definition.PermissionScope,
-                definition.PermissionQuestion,
-                permissionDetail);
 
             var id = await provider.NotifyFunctionStartedAsync(friendlyName!);
             Exception? exception = null;

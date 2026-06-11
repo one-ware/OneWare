@@ -2,6 +2,7 @@
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -139,15 +140,25 @@ public class UpdaterViewModel : ObservableObject
                     
                     Dispatcher.UIThread.Post(() =>
                     {
-                        _applicationStateService.AddNotification(new ApplicationNotification()
+                        void OpenUpdater()
                         {
-                            Command = new RelayCommand(() => _windowService.Show(new UpdaterView
+                            _windowService.ActivateMainWindow();
+                            _windowService.Show(new UpdaterView
                             {
                                 DataContext = this
-                            })),
+                            });
+                        }
+
+                        _applicationStateService.AddNotification(new ApplicationNotification()
+                        {
+                            Command = new RelayCommand(OpenUpdater),
                             Kind = ApplicationNotificationKind.Info,
                             Message = $"Update available: {_paths.AppName} {NewVersion}\nClick here to download.",
                         });
+
+                        _windowService.ShowNotificationWithButton("Update available",
+                            $"{_paths.AppName} {NewVersion} is available.",
+                            "Download", OpenUpdater, type: NotificationType.Information);
                     });
                     
                     return true;

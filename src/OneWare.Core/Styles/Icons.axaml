@@ -8,6 +8,11 @@
                              Geometry="{DynamicResource FluentIconsFilled.LightbulbFilled.Geometry}" />
         </DrawingGroup>
     </DrawingImage>
+    
+    <DrawingImage x:Key="Bootstrap.Cloudy">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}"
+                         Geometry="M13.4,4.029 A5.002,-5.002 0 0 0 3.901,3.024 A3.5,-3.5 0 1 0 3.495,10 L13,10 A3,-3 0 0 0 13.4,4.029 z M8.496,1.001 A4,-4 0 0 1 12.47,4.557 A0.5001,-0.5001 0 0 0 12.97,5.002 L13,5.002 A2,-2 0 0 1 13,9.002 L3.495,9.002 A2.5,-2.5 0 1 1 4.1,4.076 A0.5001,-0.5001 0 0 0 4.696,3.747 A4.002,-4.002 0 0 1 8.496,1.001 z" />
+    </DrawingImage>
 
     <DrawingImage x:Key="FluentIcons.send_regular">
         <DrawingGroup>

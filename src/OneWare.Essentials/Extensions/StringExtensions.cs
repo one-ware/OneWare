@@ -17,6 +17,24 @@ public static class StringExtensions
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
         return string.Equals(input.NormalizePath(), otherPath.NormalizePath(), comparison);
     }
+    
+    public static bool EqualUrls(this string url1, string url2)
+    {
+        if (!Uri.TryCreate(url1, UriKind.Absolute, out var uri1))
+            return false;
+
+        if (!Uri.TryCreate(url2, UriKind.Absolute, out var uri2))
+            return false;
+
+        return string.Equals(uri1.Scheme, uri2.Scheme, StringComparison.OrdinalIgnoreCase)
+               && string.Equals(uri1.Host, uri2.Host, StringComparison.OrdinalIgnoreCase)
+               && uri1.Port == uri2.Port
+               && string.Equals(
+                   uri1.AbsolutePath.TrimEnd('/'),
+                   uri2.AbsolutePath.TrimEnd('/'),
+                   StringComparison.OrdinalIgnoreCase)
+               && string.Equals(uri1.Query, uri2.Query, StringComparison.Ordinal);
+    }
 
     public static bool ContainsSubPath(this string pathToFile, string subPath)
     {

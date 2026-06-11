@@ -48,19 +48,22 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\Startup.png"/>
     </ItemGroup>
-    
+
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64'">
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.mime.xml" CopyToOutputDirectory="PreserveNewest"/>
-
-        <!-- Temporary fix for DBus issue on Linux-->
-        <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0"/>
     </ItemGroup>
 
     <!--Exclude Terminal on Linux to stop crashes on SetWindowSize. TODO: Check if this is still needed-->
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll"/>
     </ItemGroup>
+
+    <Target Name="CreateWindowsCommandAlias" AfterTargets="Publish"
+        Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
+        <Copy SourceFiles="$(PublishDir)OneWareStudio.exe" DestinationFiles="$(PublishDir)oneware.exe"
+            SkipUnchangedFiles="true"/>
+    </Target>
 
 </Project>

@@ -118,7 +118,6 @@ public class CopilotModule : OneWareModuleBase
                                         """;
 
     public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
-
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
 
     public static readonly Package CopilotPackage = new()
@@ -162,13 +161,13 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "0.0.418",
+                Version = "1.0.60",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-win32-x64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-win32-x64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -181,7 +180,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-win32-arm64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-win32-arm64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -194,7 +193,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-linux-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-linux-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -207,7 +206,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-linux-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-linux-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -220,7 +219,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-darwin-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-darwin-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -233,7 +232,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v0.0.418/copilot-darwin-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-darwin-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -264,6 +263,13 @@ public class CopilotModule : OneWareModuleBase
             {
                 HoverDescription = "Path for Copilot CLI"
             });
+
+        // serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        //     CopilotRemoteSessionSettingKey,
+        //     new CheckBoxSetting("Create Remote Session", false)
+        //     {
+        //         HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
+        //     });
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
 

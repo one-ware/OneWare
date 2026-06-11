@@ -44,13 +44,13 @@ public class MainDockService : Factory, IMainDockService
     public MainDockService(ICompositeServiceProvider serviceProvider, IPaths paths, IWindowService windowService,
         IApplicationStateService applicationStateService,
         WelcomeScreenViewModel welcomeScreenViewModel, IFileWatchService fileWatchService,
-        MainDocumentDockViewModel mainDocumentDockViewModel)
+        MainDocumentDockViewModel mainDocumentDockViewModel, ILogger logger)
     {
         _paths = paths;
         _welcomeScreenViewModel = welcomeScreenViewModel;
         _mainDocumentDockViewModel = mainDocumentDockViewModel;
         _fileWatchService = fileWatchService;
-        _serializer = new OneWareDockSerializer(serviceProvider);
+        _serializer = new OneWareDockSerializer(serviceProvider, logger);
 
         _documentViewRegistrations.Add("*", typeof(EditViewModel));
 
@@ -332,7 +332,11 @@ public class MainDockService : Factory, IMainDockService
 
     public void Show(IDockable dockable, DockShowLocation location = DockShowLocation.Window)
     {
-        if (IsDockablePinned(dockable)) UnpinDockable(dockable);
+        if (IsDockablePinned(dockable))
+        {
+            PreviewPinnedDockable(dockable);
+            return;
+        }
 
         //Check if dockable already exists
         if (SearchView(dockable) is { } result)
@@ -568,9 +572,15 @@ public class MainDockService : Factory, IMainDockService
                 break;
         }
         
-        //InitActiveDockable(dockable, rootDock);
-        SetActiveDockable(dockable);
+        InitDockable(dockable, rootDock);
         PreviewPinnedDockable(dockable);
+        
+        // After PreviewPinnedDockable, the dockable has been moved into rootDock.PinnedDock.
+        // Set focus on PinnedDock (not rootDock) so the panel is interactive (IsActive = true)
+        // without stealing the ActiveDockable of the root layout.
+        // This fixes an issue where dockables can be grayed out if served from a freshly installed extension
+        if (rootDock.PinnedDock is { } pinnedDock)
+            SetFocusedDockable(pinnedDock, dockable);
     }
 
     #endregion
@@ -703,7 +713,7 @@ public class MainDockService : Factory, IMainDockService
             }
         }
     }
-    
+
     private IEnumerable<IDockable> SearchAllDockables(IDockable? layout)
     {
         if (layout is IDock { VisibleDockables: not null } dock)

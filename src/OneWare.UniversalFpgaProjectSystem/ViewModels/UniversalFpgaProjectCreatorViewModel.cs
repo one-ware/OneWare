@@ -59,7 +59,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         _toolchainSetting = new ComboBoxSetting("Toolchain",
             fpgaService.Toolchains.FirstOrDefault()?.Id ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Toolchains
-                .Select(x => x.Id)).ToArray())
+                .Select(x => x.Id)).ToArray<object>())
         {
             HoverDescription = "Set the toolchain to use for the project (can be changed later)"
         };
@@ -67,7 +67,7 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
         _loaderSetting = new ComboBoxSetting("Loader",
             fpgaService.Loaders.FirstOrDefault()?.Id ?? "Unset",
             new[] { "Unset" }.Concat(fpgaService.Loaders
-                .Select(x => x.Id)).ToArray())
+                .Select(x => x.Id)).ToArray<object>())
         {
             HoverDescription = "Set the loader to use for the project (can be changed later)"
         };
@@ -89,8 +89,8 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
     public async Task SaveAsync(FlexibleWindow window)
     {
-        var name = (string)_nameSetting.Value;
-        var folder = (string)_folderPathSetting.Value;
+        var name = ((string)_nameSetting.Value).Trim();
+        var folder = ((string)_folderPathSetting.Value).TrimEnd();
         var createNewFolder = (bool)_createNewFolderSetting.Value;
 
         if (string.IsNullOrWhiteSpace(name))

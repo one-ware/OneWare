@@ -36,9 +36,6 @@
             <Setter Property="(ControlRecyclingDataTemplate.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
         </Style>
         
-        <Style Selector="DocumentControl">
-            <Setter Property="(ControlRecyclingDataTemplate.ControlRecycling)" Value="{x:Null}" />
-        </Style>
     </Application.Styles>
 
 </Application>

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
@@ -8,7 +9,9 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
-using GitHub.Copilot.SDK;
+using GitHub.Copilot;
+using GitHub.Copilot.Rpc;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using OneWare.Copilot.Models;
 using OneWare.Copilot.ViewModels;
@@ -33,11 +36,95 @@ public sealed class CopilotChatService(
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
     private IDisposable? _subscription;
-    private bool _forceNewSession;
     private string? _requestedSessionId;
-    private readonly HashSet<string> _allowedPermissionScopes = new(StringComparer.OrdinalIgnoreCase);
+
+    // Usage tracking
+    public long LastInputTokens
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long LastOutputTokens
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long? LastReasoningTokens
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long SessionTotalRequests
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long SessionTotalInputTokens
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long SessionTotalOutputTokens
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long ContextCurrentTokens
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public long ContextTokenLimit
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public double? QuotaRemainingPercent
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool QuotaIsUnlimited
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public DateTimeOffset? QuotaResetDate
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool HasUsageData
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool IsRemoteSession
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public string? RemoteSessionUrl
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
+
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -86,19 +173,19 @@ public sealed class CopilotChatService(
             var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
             if (PlatformHelper.ExistsOnPath(cliPath)) return true;
         }
-        
+
         var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
 
         if (!installResult) return false;
-        
+
         SessionReset?.Invoke(this, EventArgs.Empty);
-        
+
         await InitializeAsync();
         await AuthenticateAsync(owner);
-        
+
         return installResult;
     }
-    
+
     private async Task<bool> AuthenticateAsync(Control? owner)
     {
         if (_client == null) return false;
@@ -111,16 +198,17 @@ public sealed class CopilotChatService(
                 var currentAuthStatus = await _client.GetAuthStatusAsync();
                 isAuthenticated = currentAuthStatus.IsAuthenticated;
             }
-            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" && 
+            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
                                          ex.Message.Contains("401"))
             {
                 // Treat 401 authentication errors as unauthenticated
-                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Authentication check failed with 401, treating as unauthenticated.");
+                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
+                    "Authentication check failed with 401, treating as unauthenticated.");
                 isAuthenticated = false;
             }
-            
+
             if (isAuthenticated) return true;
-            
+
             var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
 
             if (!PlatformHelper.ExistsOnPath(cliPath)) return false;
@@ -171,16 +259,18 @@ public sealed class CopilotChatService(
     {
         var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
 
+
         await _sync.WaitAsync().ConfigureAwait(false);
         await DisposeAsync();
-        
+
         try
         {
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
                 EventReceived?.Invoke(this, new ChatButtonEvent(
-                    "Copilot CLI not found.", "Install Copilot CLI", new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))));
+                    "Copilot CLI not found.", "Install Copilot CLI",
+                    new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))));
                 return false;
             }
 
@@ -191,15 +281,16 @@ public sealed class CopilotChatService(
                 {
                     StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
                     EventReceived?.Invoke(this, new ChatButtonEvent(
-                        "Copilot CLI update found", "Update Copilot CLI", new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))));
+                        "Copilot CLI update found", "Update Copilot CLI",
+                        new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))));
                     return false;
                 }
             }
 
             _client = new CopilotClient(new CopilotClientOptions()
             {
-                Cwd = paths.ProjectsDirectory,
-                CliPath = cliPath
+                WorkingDirectory = paths.ProjectsDirectory,
+                Connection = RuntimeConnection.ForStdio(cliPath, [])
             });
 
             bool isAuthenticated;
@@ -208,19 +299,21 @@ public sealed class CopilotChatService(
                 var authStatus = await _client.GetAuthStatusAsync();
                 isAuthenticated = authStatus.IsAuthenticated;
             }
-            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" && 
+            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
                                          ex.Message.Contains("401"))
             {
                 // Treat 401 authentication errors as unauthenticated
-                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Authentication check failed with 401, treating as unauthenticated.");
+                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
+                    "Authentication check failed with 401, treating as unauthenticated.");
                 isAuthenticated = false;
             }
-            
+
             if (!isAuthenticated)
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
                 EventReceived?.Invoke(this, new ChatButtonEvent(
-                    "Not Authenticated to Copilot CLI.", "Login with GitHub", new AsyncRelayCommand<Control?>(AuthenticateAsync)));
+                    "Not Authenticated to Copilot CLI.", "Login with GitHub",
+                    new AsyncRelayCommand<Control?>(AuthenticateAsync)));
                 return false;
             }
 
@@ -277,41 +370,51 @@ public sealed class CopilotChatService(
 
         var sessionId = _requestedSessionId;
         _requestedSessionId = null;
-        
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            var tools = toolProvider.GetTools();
-            _session = await _client.CreateSessionAsync(new SessionConfig
+            var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
+            var sessionConfig = new SessionConfig
             {
                 Model = SelectedModel.Id,
                 Streaming = true,
+                // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
+                IncludeSubAgentStreamingEvents = false,
                 SystemMessage = new SystemMessageConfig
                 {
                     Content = BuildSystemMessage()
                 },
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
+                ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
-                Hooks = BuildPermissionHooks(),
-                OnUserInputRequest = OnUserInputRequestAsync
-            });
+                OnUserInputRequest = OnUserInputRequestAsync,
+                Hooks = new SessionHooks
+                {
+                    OnPreToolUse = OnPreToolUseAsync
+                }
+            };
 
-            _forceNewSession = false;
+            _session = await _client.CreateSessionAsync(sessionConfig);
         }
         else
         {
             _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
             {
                 Streaming = true,
-                Tools = toolProvider.GetTools(),
+                IncludeSubAgentStreamingEvents = false,
+                Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 OnPermissionRequest = OnPermissionRequestAsync,
-                Hooks = BuildPermissionHooks(),
-                OnUserInputRequest = OnUserInputRequestAsync
+                OnUserInputRequest = OnUserInputRequestAsync,
+                Hooks = new SessionHooks
+                {
+                    OnPreToolUse = OnPreToolUseAsync
+                }
             });
         }
 
         CurrentSessionId = _session?.SessionId ?? sessionId;
-        
+
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
 
         if (_session == null)
@@ -320,7 +423,7 @@ public sealed class CopilotChatService(
             return;
         }
 
-        _subscription = _session.On(HandleSessionEvent);
+        _subscription = _session.On<SessionEvent>(HandleSessionEvent);
     }
 
     private string BuildSystemMessage()
@@ -358,7 +461,6 @@ public sealed class CopilotChatService(
     public async Task NewChatAsync()
     {
         _requestedSessionId = null;
-        _forceNewSession = true;
         await InitializeSessionAsync();
     }
 
@@ -367,7 +469,6 @@ public sealed class CopilotChatService(
         if (string.IsNullOrWhiteSpace(sessionId)) return false;
 
         _requestedSessionId = sessionId;
-        _forceNewSession = false;
 
         try
         {
@@ -429,6 +530,23 @@ public sealed class CopilotChatService(
         }
 
         CurrentSessionId = null;
+        ResetUsageStats();
+    }
+
+    private void ResetUsageStats()
+    {
+        LastInputTokens = 0;
+        LastOutputTokens = 0;
+        LastReasoningTokens = null;
+        SessionTotalRequests = 0;
+        SessionTotalInputTokens = 0;
+        SessionTotalOutputTokens = 0;
+        ContextCurrentTokens = 0;
+        ContextTokenLimit = 0;
+        QuotaRemainingPercent = null;
+        QuotaIsUnlimited = false;
+        QuotaResetDate = null;
+        HasUsageData = false;
     }
 
     private void HandleSessionEvent(SessionEvent evt)
@@ -478,179 +596,144 @@ public sealed class CopilotChatService(
             case SessionIdleEvent:
                 EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
+            case AssistantUsageEvent usage:
+                UpdateUsageFromAssistantEvent(usage.Data);
+                break;
+            case SessionUsageInfoEvent info:
+                ContextCurrentTokens = info.Data.CurrentTokens;
+                ContextTokenLimit = info.Data.TokenLimit;
+                break;
+            case SessionInfoEvent sessionInfo when sessionInfo.Data.InfoType == "remote"
+                                                   && !string.IsNullOrWhiteSpace(sessionInfo.Data.Url):
+                RemoteSessionUrl = sessionInfo.Data.Url;
+                IsRemoteSession = true;
+                break;
         }
     }
 
-    private Task<PermissionRequestResult> OnPermissionRequestAsync(
+    private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
+    {
+        LastInputTokens = data.InputTokens ?? 0;
+        LastOutputTokens = data.OutputTokens ?? 0;
+        LastReasoningTokens = data.ReasoningTokens is > 0 ? data.ReasoningTokens : null;
+        SessionTotalRequests++;
+        SessionTotalInputTokens += data.InputTokens ?? 0;
+        SessionTotalOutputTokens += data.OutputTokens ?? 0;
+
+        HasUsageData = true;
+    }
+
+    // ── Remote session ────────────────────────────────────────────────────────
+
+    public async Task EnableRemoteSessionAsync()
+    {
+        if (_session == null) return;
+        try
+        {
+            var result = await _session.Rpc.Remote.EnableAsync();
+            RemoteSessionUrl = result.Url;
+            IsRemoteSession = !string.IsNullOrWhiteSpace(result.Url);
+            if (IsRemoteSession)
+                EventReceived?.Invoke(this, new ChatMessageEvent($"Remote session active: {result.Url}"));
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to enable remote session.");
+        }
+    }
+
+    public async Task DisableRemoteSessionAsync()
+    {
+        if (_session == null) return;
+        try
+        {
+            await _session.Rpc.Remote.DisableAsync();
+            IsRemoteSession = false;
+            RemoteSessionUrl = null;
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to disable remote session.");
+        }
+    }
+
+    // ── OnPreToolUse — returns "ask" to escalate to OnPermissionRequest ────────
+
+    private Task<PreToolUseHookOutput?> OnPreToolUseAsync(PreToolUseHookInput input, HookInvocation invocation)
+    {
+        var check = toolProvider.GetConfirmationCheck(input.ToolName);
+        if (check == null)
+            return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
+
+        // ToolArgs can arrive as a JSON object or as a JSON-encoded string containing an object
+        var rawDict = new Dictionary<string, object?>();
+        var toolArgs = input.ToolArgs;
+        if (toolArgs is { ValueKind: JsonValueKind.String } strEl)
+        {
+            var jsonStr = strEl.GetString();
+            if (!string.IsNullOrWhiteSpace(jsonStr))
+                toolArgs = JsonDocument.Parse(jsonStr).RootElement;
+        }
+        if (toolArgs is { ValueKind: JsonValueKind.Object } objEl)
+            foreach (var prop in objEl.EnumerateObject())
+                rawDict[prop.Name] = prop.Value;
+
+        var reason = check(new AIFunctionArguments(rawDict));
+
+        return reason == null
+            ? Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" })
+            : Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "ask", PermissionDecisionReason = reason });
+    }
+
+    // OnPermissionRequest — single place for all permission dialogs
+
+    private Task<PermissionDecision> OnPermissionRequestAsync(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
-        if (IsCustomToolPermissionRequest(request))
-        {
-            return Task.FromResult(CreateAllowPermissionResult());
-        }
+        if (request is PermissionRequestCustomTool)
+            return Task.FromResult(PermissionDecision.ApproveOnce());
+        
+        var message = BuildPermissionMessage(request);
 
-        var scope = string.IsNullOrWhiteSpace(request.Kind) ? "tool" : request.Kind;
-        if (_allowedPermissionScopes.Contains(scope))
-        {
-            return Task.FromResult(CreateAllowPermissionResult());
-        }
-
-        var responseSource = new TaskCompletionSource<PermissionRequestResult>(
+        var responseSource = new TaskCompletionSource<PermissionDecision>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var context = BuildPermissionContext(request, invocation);
-        var title = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
-            ? "Copilot wants to edit something."
-            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
-                ? "Copilot wants to execute in terminal."
-                : "Copilot wants to use a tool.";
-        var question = request.Kind?.Equals("editFile", StringComparison.OrdinalIgnoreCase) == true
-            ? "Copilot wants to edit this file."
-            : request.Kind?.Equals("runTerminalCommand", StringComparison.OrdinalIgnoreCase) == true
-                ? "Allow this command?"
-                : "Allow this action?";
-
-        var prompt = string.IsNullOrWhiteSpace(context)
-            ? $"**{title}**\n\n{question}"
-            : $"**{title}**\n\n{question}\n\n{context}";
-
-        var allowCommand = new RelayCommand<Control?>(_ =>
+        var allowCommand =
+            new RelayCommand<Control?>(_ => responseSource.TrySetResult(PermissionDecision.ApproveOnce()));
+        var denyCommand =
+            new RelayCommand<Control?>(_ => responseSource.TrySetResult(PermissionDecision.Reject("Denied by User")));
+        var allowForSessionCmd = new RelayCommand<Control?>(_ =>
         {
-            responseSource.TrySetResult(CreateAllowPermissionResult());
-        });
-
-        var denyCommand = new RelayCommand<Control?>(_ =>
-        {
-            responseSource.TrySetResult(CreateDenyPermissionResult());
-        });
-
-        var allowForSessionCommand = new RelayCommand<Control?>(_ =>
-        {
-            _allowedPermissionScopes.Add(scope);
-            responseSource.TrySetResult(CreateAllowPermissionResult());
+            responseSource.TrySetResult(new PermissionDecisionApproveForSession());
         });
 
         EventReceived?.Invoke(this, new ChatPermissionRequestEvent(
-            prompt,
-            "Allow",
-            "Deny",
-            allowCommand,
-            denyCommand,
-            "Allow for session",
-            allowForSessionCommand));
+            message, "Allow", "Deny", allowCommand, denyCommand, "Allow for session", allowForSessionCmd));
 
         return responseSource.Task;
     }
 
-    private static string BuildPermissionContext(PermissionRequest request, PermissionInvocation invocation)
+    private static string BuildPermissionMessage(PermissionRequest request) => request switch
     {
-        var details = new List<string>();
+        PermissionRequestHook { HookMessage: { Length: > 0 } msg } => msg,
+        PermissionRequestHook hook => $"**Copilot wants to run `{hook.ToolName}`.**",
+        PermissionRequestShell shell => BuildShellMessage(shell),
+        PermissionRequestWrite write => $"**Copilot wants to edit a file.**\n\n`{write.FileName}`",
+        PermissionRequestRead read => $"**Copilot wants to read a file.**\n\n`{read.Path}`",
+        PermissionRequestUrl url => $"**Copilot wants to open a URL.**\n\n`{url.Url}`",
+        PermissionRequestMcp mcp =>
+            $"**Copilot wants to invoke an MCP tool.**\n\nServer: `{mcp.ServerName}`, Tool: `{mcp.ToolName}`",
+        PermissionRequestMemory mem => $"**Copilot wants to update its memory.**\n\nSubject: `{mem.Subject}`",
+        _ => $"**Copilot wants to use a tool.**\n\nKind: `{request.Kind ?? "unknown"}`"
+    };
 
-        AddDetail(details, "Kind", request.Kind);
-        AddDetail(details, "Tool call", request.ToolCallId);
-        AddDetail(details, "Session", invocation.SessionId);
-
-        if (request.ExtensionData != null)
-        {
-            AddExtensionValue(details, request.ExtensionData, "toolName", "Tool");
-            AddExtensionValue(details, request.ExtensionData, "name", "Tool");
-            AddExtensionValue(details, request.ExtensionData, "command", "Command");
-            AddExtensionValue(details, request.ExtensionData, "filePath", "File");
-            AddExtensionValue(details, request.ExtensionData, "path", "Path");
-            AddExtensionValue(details, request.ExtensionData, "reason", "Reason");
-
-            var extraKeys = request.ExtensionData.Keys
-                .Where(x => x is not ("toolName" or "name" or "command" or "filePath" or "path" or "reason"))
-                .Take(6)
-                .ToArray();
-
-            if (extraKeys.Length > 0)
-            {
-                details.Add($"Metadata: {string.Join(", ", extraKeys)}");
-            }
-        }
-
-        return details.Count == 0
-            ? string.Empty
-            : string.Join("\n", details.Select(x => $"- {x}"));
-    }
-
-    private static void AddExtensionValue(
-        ICollection<string> details,
-        IReadOnlyDictionary<string, object> extensionData,
-        string key,
-        string label)
+    private static string BuildShellMessage(PermissionRequestShell shell)
     {
-        if (!extensionData.TryGetValue(key, out var rawValue)) return;
-        var value = NormalizeExtensionValue(rawValue);
-        AddDetail(details, label, value);
-    }
-
-    private static string? NormalizeExtensionValue(object? rawValue)
-    {
-        if (rawValue == null) return null;
-        if (rawValue is JsonElement element)
-        {
-            return element.ValueKind switch
-            {
-                JsonValueKind.String => element.GetString(),
-                JsonValueKind.Array or JsonValueKind.Object => element.GetRawText(),
-                _ => element.ToString()
-            };
-        }
-
-        return rawValue.ToString();
-    }
-
-    private static void AddDetail(ICollection<string> details, string label, string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return;
-        var trimmed = value.Length > 240 ? value[..240] + "..." : value;
-        details.Add($"{label}: `{trimmed}`");
-    }
-
-    private static SessionHooks BuildPermissionHooks()
-    {
-        return new SessionHooks
-        {
-            OnPreToolUse = (input, invocation) =>
-            {
-                if (input.ToolName is "runTerminalCommand" or "editFile")
-                {
-                    return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput
-                    {
-                        PermissionDecision = "ask",
-                        PermissionDecisionReason = $"Awaiting user approval for '{input.ToolName}'."
-                    });
-                }
-
-                return Task.FromResult<PreToolUseHookOutput?>(null);
-            }
-        };
-    }
-
-    private static PermissionRequestResult CreateAllowPermissionResult()
-    {
-        return new PermissionRequestResult
-        {
-            Kind = "approved",
-            Rules = null
-        };
-    }
-
-    private static PermissionRequestResult CreateDenyPermissionResult()
-    {
-        return new PermissionRequestResult
-        {
-            Kind = "denied",
-            Rules = null
-        };
-    }
-
-    private static bool IsCustomToolPermissionRequest(PermissionRequest request)
-    {
-        return request.Kind?.Equals("custom-tool", StringComparison.OrdinalIgnoreCase) == true;
+        var msg = $"**Copilot wants to execute a command in the terminal.**\n\n```\n{shell.FullCommandText}\n```";
+        if (!string.IsNullOrWhiteSpace(shell.Warning))
+            msg += $"\n\n⚠️ {shell.Warning}";
+        return msg;
     }
 
     private Task<UserInputResponse> OnUserInputRequestAsync(

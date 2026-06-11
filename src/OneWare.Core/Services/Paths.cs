@@ -71,7 +71,7 @@ public class Paths : IPaths
     public string PluginsDirectory => Path.Combine(PackagesDirectory, "Plugins");
 
     public string ChangelogUrl =>
-        "https://raw.githubusercontent.com/one-ware/one-ware.com/main/docs/studio/02-changelog.md";
+        "https://raw.githubusercontent.com/one-ware/OneWare/refs/heads/main/docs/changelog.md";
 
     public string UpdateInfoUrl => "https://cdn.one-ware.com/onewarestudio";
 

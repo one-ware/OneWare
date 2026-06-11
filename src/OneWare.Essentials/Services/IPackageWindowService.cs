@@ -35,5 +35,9 @@ public interface IPackageWindowService
     Task<bool> QuickInstallPackageAsync(string packageId);
     
     Task<bool> QuickInstallPackageAsync(string packageId, Window? owner);
-}
 
+    /// <summary>
+    /// Updates all packages with available updates.
+    /// </summary>
+    Task<bool> ShowAndUpdateAllAsync();
+}

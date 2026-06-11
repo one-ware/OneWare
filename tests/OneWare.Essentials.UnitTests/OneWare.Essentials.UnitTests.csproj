@@ -16,4 +16,8 @@
         <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="ToolEngine\" />
+    </ItemGroup>
+
 </Project>
