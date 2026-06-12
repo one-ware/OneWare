@@ -218,10 +218,21 @@ public class DesktopStudioApp : StudioApp
             //Add a single notification for all updatable packages
             if (updatePackages?.Count > 0)
             {
+                foreach (var updatePackage in updatePackages)
+                {
+                    Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
+                    {
+                        Message =
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
+                        Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
+                            .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
+                    });
+                }
+                
                 var packageCount = updatePackages.Count;
-                var packageLabel = packageCount == 1 ? "plugin update" : "plugin updates";
+                var packageLabel = packageCount == 1 ? "package update" : "package updates";
 
-                Services.Resolve<IWindowService>().ShowNotificationWithButton("Plugin updates available",
+                Services.Resolve<IWindowService>().ShowNotificationWithButton("Package updates available",
                     $"{packageCount} {packageLabel} available.",
                     "Update all", () => _ = Services.Resolve<IPackageWindowService>().ShowAndUpdateAllAsync());
             }
