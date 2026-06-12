@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Nodes;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
@@ -14,12 +15,15 @@ public class FpgaService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+    private readonly IProjectSettingsService _projectSettingsService;
 
-    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService, IWindowService windowService)
+    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService,
+        IWindowService windowService, IProjectSettingsService projectSettingsService)
     {
         _logger = logger;
         _settingsService = settingsService;
         _windowService = windowService;
+        _projectSettingsService = projectSettingsService;
 
         HardwareDirectory = Path.Combine(paths.PackagesDirectory, "Hardware");
         Directory.CreateDirectory(HardwareDirectory);
@@ -158,12 +162,31 @@ public class FpgaService
 
     public void RegisterPreCompileStep<T>() where T : IFpgaPreCompileStep
     {
-        PreCompileSteps.Add(ContainerLocator.Container.Resolve<T>());
+        var step = ContainerLocator.Container.Resolve<T>();
+        PreCompileSteps.Add(step);
+
+        var key = $"preCompileStep_{step.Id}";
+        var displayOrder = 120 + PreCompileSteps.Count;
+        var stepSetting = new CheckBoxSetting($"Pre-Compile: {step.Name}", false)
+        {
+            HoverDescription = $"Run '{step.Name}' as a pre-compile step before the toolchain.",
+            MarkdownDocumentation =
+                $"When enabled, **{step.Name}** runs before the toolchain on every compile.\n\n" +
+                $"Enabled steps are stored in the `preCompileSteps` array in the project file."
+        };
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey(key)
+                .WithSetting(stepSetting)
+                .WithCategory("Project")
+                .WithDisplayOrder(displayOrder)
+                .Build()
+        );
     }
 
-    public IFpgaPreCompileStep? GetPreCompileStep(string name)
+    public IFpgaPreCompileStep? GetPreCompileStep(string id)
     {
-        return PreCompileSteps.FirstOrDefault(x => x.Name == name);
+        return PreCompileSteps.FirstOrDefault(x => x.Id == id);
     }
 
     public string? GetLanguage(string extension)
@@ -308,7 +331,7 @@ public class FpgaService
 
             foreach (var step in PreCompileSteps)
             {
-                if (enabledSteps.Contains(step.Name) &&
+                if (enabledSteps.Contains(step.Id) &&
                     !await step.PerformPreCompileStepAsync(project, fpgaModel))
                     return false;
             }
