@@ -182,43 +182,17 @@ public class FpgaService
     }
 
     /// <summary>
-    /// Scans all HDL files in the project and returns the first file (and its provider) that
-    /// declares an entity or module named <paramref name="topEntityName"/>.
-    /// Returns <c>(null, null)</c> when no matching file is found.
-    /// </summary>
-    public async Task<(IProjectFile? File, INodeProvider? Provider)> FindTopEntityAsync(
-        UniversalFpgaProjectRoot project, string topEntityName)
-    {
-        var extensions = new[] { "*.vhd", "*.vhdl", "*.v", "*.sv" };
-        foreach (var pattern in extensions)
-        {
-            foreach (var relPath in project.GetFiles(pattern))
-            {
-                var file = project.GetFile(relPath);
-                if (file == null) continue;
-
-                var provider = GetNodeProviderByExtension(file.Extension);
-                if (provider == null) continue;
-
-                var entities = await provider.ExtractTopEntitiesAsync(file);
-                if (entities.Any(e => string.Equals(e, topEntityName, StringComparison.Ordinal)))
-                    return (file, provider);
-            }
-        }
-
-        return (null, null);
-    }
-
-    /// <summary>
     /// Scans all HDL files in the project and returns the names of all discovered top entities/modules.
     /// </summary>
-    public async Task<IReadOnlyList<string>> GetAllTopEntitiesAsync(UniversalFpgaProjectRoot project)
+    public async Task<IReadOnlyList<FpgaTopEntityResult>> GetAllTopEntitiesAsync(UniversalFpgaProjectRoot project)
     {
-        var result = new List<string>();
+        var result = new List<FpgaTopEntityResult>();
         var extensions = new[] { "*.vhd", "*.vhdl", "*.v", "*.sv" };
         foreach (var pattern in extensions)
         {
-            foreach (var relPath in project.GetFiles(pattern))
+            foreach (var relPath in project.GetFiles(pattern)
+                         .Where(x => !project.IsCompileExcluded(x))
+                         .Where(x => !project.IsTestBench(x)))
             {
                 var file = project.GetFile(relPath);
                 if (file == null) continue;
@@ -229,7 +203,12 @@ public class FpgaService
                 try
                 {
                     var entities = await provider.ExtractTopEntitiesAsync(file);
-                    result.AddRange(entities);
+                    result.AddRange(entities.Select(e => new FpgaTopEntityResult
+                    {
+                        TopEntity = e,
+                        File = file,
+                        NodeProvider = provider,
+                    }));
                 }
                 catch
                 {
@@ -316,14 +295,16 @@ public class FpgaService
                 var fpgaPackage = FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                 if (fpgaPackage == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Warning($"No FPGA Selected (or {name} not found). Open Pin Planner first");
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        .Warning($"No FPGA Selected (or {name} not found). Open Pin Planner first");
                     return false;
                 }
+
                 fpgaModel = new FpgaModel(fpgaPackage.LoadFpga());
             }
 
             var enabledSteps = project.Properties.GetStringArray("preCompileSteps")
-                               ?.ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
+                ?.ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
 
             foreach (var step in PreCompileSteps)
             {
@@ -331,7 +312,7 @@ public class FpgaService
                     !await step.PerformPreCompileStepAsync(project, fpgaModel))
                     return false;
             }
-            
+
             await toolchain.CompileAsync(project, fpgaModel);
             return true;
         }

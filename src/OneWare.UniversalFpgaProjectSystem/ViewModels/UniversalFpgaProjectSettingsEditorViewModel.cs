@@ -25,7 +25,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     /// <summary>
     ///     All categories loaded upfront: category name → (collection to display, key map for saving).
     /// </summary>
-    private readonly Dictionary<string, (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)>
+    private readonly Dictionary<string, (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys
+            )>
         _categoryData = new();
 
     private string? _selectedCategory;
@@ -74,7 +75,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         }
     }
 
-    private (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys) BuildCategoryCollection(string category)
+    private (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys) BuildCategoryCollection(
+        string category)
     {
         var collection = new SettingsCollectionViewModel("") { ShowTitle = false };
         var keys = new Dictionary<TitledSetting, string>();
@@ -160,33 +162,35 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
 
         var includes = _root.Properties.GetStringArray("include")?.ToArray() ?? [];
         var exclude = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
+        var compileExcluded = _root.Properties.GetStringArray("compileExcluded")?.ToArray() ?? [];
 
         var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
             .Select(toolchain => toolchain.Id)
             .ToArray<object>();
-        
+
         var currentToolchain = _root.Properties.GetString("toolchain") ?? "";
         var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
 
         var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
             .Select(loader => loader.Id)
             .ToArray<object>();
-        
+
         var currentLoader = _root.Properties.GetString("loader") ?? "";
         var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
 
         var includesSettings = new ListBoxSetting("Files to Include", includes);
         var excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
+        var compileExcludedSettings = new ListBoxSetting("Compile Excluded", compileExcluded);
 
         // Build Top Entity dropdown from all HDL files in the project
         var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
-        
+
         var allEntities = fpgaService.GetAllTopEntitiesAsync(_root).GetAwaiter().GetResult();
         var topEntitySetting = new ComboBoxSetting("Top Entity", _root.TopEntity ?? "", allEntities.ToArray<object>())
         {
             MarkdownDocumentation = "The top-level entity or module used for synthesis and pin planning."
         };
-        
+
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
                 .WithKey("topEntity")
@@ -227,6 +231,15 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                             Path.GetExtension(projectFile) is ".vhd" or ".vhdl");
                     return false;
                 })
+                .Build()
+        );
+
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("compileExcluded")
+                .WithSetting(compileExcludedSettings)
+                .WithCategory("Project")
+                .WithDisplayOrder(100)
                 .Build()
         );
 

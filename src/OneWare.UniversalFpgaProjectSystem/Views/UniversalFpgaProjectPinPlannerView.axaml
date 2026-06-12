@@ -59,7 +59,7 @@
 
                 <!-- Top Entity selector (only when not set) -->
                 <StackPanel Spacing="4"
-                            IsVisible="{Binding Project.TopEntity, Converter={x:Static ObjectConverters.IsNull}}">
+                            IsVisible="{Binding TopEntity, Converter={x:Static ObjectConverters.IsNull}}">
                     <TextBlock Text="Top Entity:" FontWeight="SemiBold" />
                     <ComboBox ItemsSource="{Binding SetupAvailableTopEntities}"
                               SelectedItem="{Binding SetupSelectedTopEntity, Mode=TwoWay}"
