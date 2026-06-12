@@ -5,6 +5,24 @@ title: ONE WARE Studio Changelog
 sidebar_label:  Changelog
 ---
 
+## 1.0.19
+
+- Reworked Project Settings
+- TopEntity is no longer a file but a real entity
+- Update Copilot Integration
+- Improved Update Notifictions
+- Auto reloading packages after installing them
+- Fix PreCompileSteps
+- Fix bug where yosys toolchain would add one file twice
+- Rename "fpga" Property to "board"
+- Improved Verilog Support
+
+## 1.0.16
+
+- Add "oneware" command to windows installer
+- Enhanced Verilog Simulator
+- Added baud rate 74880
+  
 ## 1.0.15
 
 - Fix VCD Parsing cases
