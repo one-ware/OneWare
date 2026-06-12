@@ -69,8 +69,18 @@ public class YosysService(
             var includedFiles = project.GetFiles("*.v").Concat(project.GetFiles("*.sv"))
                 .Where(x => !project.IsCompileExcluded(x))
                 .Where(x => !project.IsTestBench(x))
-                .ToList();
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+            var genVerilogPath = Path.Combine(project.RootFolderPath, "build", "gen_verilog");
+            if (Directory.Exists(genVerilogPath))
+            {
+                foreach (var absFile in Directory.EnumerateFiles(genVerilogPath, "*.v", SearchOption.AllDirectories))
+                {
+                    var rel = Path.GetRelativePath(project.RootFolderPath, absFile);
+                    includedFiles.Add(rel);
+                }
+            }
+            
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set. This hardware might not be configured to be used with Yosys Toolchain");
             
