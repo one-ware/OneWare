@@ -68,7 +68,47 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         foreach (var category in SettingCategories)
             _categoryData[category] = await BuildCategoryCollectionAsync(category);
 
+        AddMissingPreCompileStepDummies();
+
         SelectedCategory = SettingCategories.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// For every step name stored in the project's <c>preCompileSteps</c> array that has no
+    /// corresponding registered <c>preCompileStep_*</c> setting (because the plugin is disabled),
+    /// inject a checked dummy <see cref="CheckBoxSetting"/> into the Project category so the
+    /// entry is preserved and visible.
+    /// </summary>
+    private void AddMissingPreCompileStepDummies()
+    {
+        var enabledSteps = _root.Properties.GetStringArray("preCompileSteps")?.ToHashSet() ?? [];
+        if (enabledSteps.Count == 0) return;
+
+        // Collect step names already covered by registered settings
+        var coveredSteps = _categoryData.Values
+            .SelectMany(v => v.Keys.Values)
+            .Where(k => k.StartsWith("preCompileStep_"))
+            .Select(k => k["preCompileStep_".Length..])
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var missingSteps = enabledSteps.Where(s => !coveredSteps.Contains(s)).ToList();
+        if (missingSteps.Count == 0) return;
+
+        if (!_categoryData.TryGetValue("Project", out var projectData)) return;
+        var (collection, keys) = projectData;
+
+        foreach (var stepName in missingSteps)
+        {
+            var dummy = new CheckBoxSetting($"Pre-Compile: {stepName} (plugin unavailable)", true)
+            {
+                HoverDescription =
+                    $"The plugin providing the '{stepName}' pre-compile step is not currently loaded. " +
+                    "The step remains configured in your project and will run when the plugin is re-enabled.",
+                Priority = 250
+            };
+            keys.Add(dummy, $"preCompileStep_{stepName}");
+            collection.SettingModels.Add(dummy);
+        }
     }
 
     private async Task<(SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)>
