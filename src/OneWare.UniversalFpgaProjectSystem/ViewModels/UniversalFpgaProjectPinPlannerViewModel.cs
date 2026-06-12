@@ -44,7 +44,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
 
         // Determine if required settings are missing — show setup overlay before loading
-        IsSetupRequired = Project.Toolchain == null || Project.TopEntity == null;
+        IsSetupRequired = Toolchain == null || Project.TopEntity == null;
 
         if (IsSetupRequired)
             _ = LoadSetupOptionsAsync();
@@ -88,7 +88,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             foreach (var tc in _fpgaService.Toolchains)
                 SetupAvailableToolchains.Add(tc.Id);
-            SetupSelectedToolchain = Project.Toolchain ?? SetupAvailableToolchains.FirstOrDefault();
+            SetupSelectedToolchain = Toolchain?.Name ?? SetupAvailableToolchains.FirstOrDefault();
 
             var entities = await _fpgaService.GetAllTopEntitiesAsync(Project);
             foreach (var e in entities)
