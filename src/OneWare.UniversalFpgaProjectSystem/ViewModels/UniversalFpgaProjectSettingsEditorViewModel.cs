@@ -42,15 +42,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _projectSettingsService = projectSettingsService;
         Title = $"{_root.Name} Settings";
 
-        SetupMenu();
-
-        SettingCategories = new ObservableCollection<string>(projectSettingsService.GetProjectCategories());
-
-        // Load every category upfront so settings are always in memory.
-        foreach (var category in SettingCategories)
-            _categoryData[category] = BuildCategoryCollection(category);
-
-        SelectedCategory = SettingCategories.FirstOrDefault();
+        SettingCategories = new ObservableCollection<string>();
+        _ = InitializeAsync();
     }
 
     public ObservableCollection<string> SettingCategories { get; }
@@ -157,46 +150,89 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         return (collection, keys);
     }
 
-    private void SetupMenu()
+    private async Task InitializeAsync()
     {
-        var value = _root.Properties.GetString("vhdlStandard") ?? "";
-        var vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
+        await SetupMenuAsync();
+
+        foreach (var category in _projectSettingsService.GetProjectCategories())
+            SettingCategories.Add(category);
+
+        foreach (var category in SettingCategories)
+            _categoryData[category] = BuildCategoryCollection(category);
+
+        SelectedCategory = SettingCategories.FirstOrDefault();
+    }
+
+    private async Task SetupMenuAsync()
+    {
+        var vhdlStandard = new ComboBoxSetting("VHDL Standard",
+            _root.Properties.GetString("vhdlStandard") ?? "",
+            ["87", "93", "93c", "00", "02", "08", "19"])
+        {
+            MarkdownDocumentation =
+                "The VHDL language standard version used when analysing and simulating VHDL files.\n\n" +
+                "Common choices:\n- `08` — VHDL-2008 (recommended)\n- `93` — VHDL-93\n- `02` — VHDL-2002"
+        };
 
         var includes = _root.Properties.GetStringArray("include")?.ToArray() ?? [];
-        var exclude = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
+        var exclude  = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
         var compileExcluded = _root.Properties.GetStringArray("compileExcluded")?.ToArray() ?? [];
 
-        var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
-            .Select(toolchain => toolchain.Id)
-            .ToArray<object>();
-
-        var currentToolchain = _root.Properties.GetString("toolchain") ?? "";
-        var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
-
-        var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
-            .Select(loader => loader.Id)
-            .ToArray<object>();
-
-        var currentLoader = _root.Properties.GetString("loader") ?? "";
-        var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
-
-        var includesSettings = new ListBoxSetting("Files to Include", includes);
-        var excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
-        var compileExcludedSettings = new ListBoxSetting("Compile Excluded", compileExcluded);
-
-        // Build Top Entity dropdown from all HDL files in the project
         var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
 
-        var allEntities = fpgaService.GetAllTopEntitiesAsync(_root).GetAwaiter().GetResult();
-        var entryOptions = allEntities.Select(x => new AdvancedComboBoxOption()
+        var toolchains = fpgaService.Toolchains.Select(tc => tc.Id).ToArray<object>();
+        var toolchain  = new ComboBoxSetting("Toolchain",
+            _root.Properties.GetString("toolchain") ?? "", toolchains)
+        {
+            MarkdownDocumentation =
+                "The synthesis and place-and-route toolchain used to compile this project.\n\n" +
+                "The toolchain determines the full compile pipeline (synthesis, fit, assemble)."
+        };
+
+        var loaders = fpgaService.Loaders.Select(l => l.Id).ToArray<object>();
+        var loader  = new ComboBoxSetting("Loader",
+            _root.Properties.GetString("loader") ?? "", loaders)
+        {
+            MarkdownDocumentation =
+                "The programming tool used to download the bitstream to the FPGA.\n\n" +
+                "Examples: `openFPGALoader`, `iceprog`."
+        };
+
+        var includesSettings = new ListBoxSetting("Files to Include", includes)
+        {
+            MarkdownDocumentation =
+                "Glob patterns or relative paths that are **explicitly included** in the project file set.\n\n" +
+                "Leave empty to include all files in the project directory."
+        };
+
+        var excludesSettings = new ListBoxSetting("Files to Exclude", exclude)
+        {
+            MarkdownDocumentation =
+                "Glob patterns or relative paths that are **excluded** from the project file set.\n\n" +
+                "Excluded files are hidden from the project explorer and not passed to any tool."
+        };
+
+        var compileExcludedSettings = new ListBoxSetting("Compile Excluded", compileExcluded)
+        {
+            MarkdownDocumentation =
+                "Relative paths of source files that are **excluded from compilation**.\n\n" +
+                "The files remain visible in the project explorer but are not passed to the synthesiser/simulation."
+        };
+
+        // Async: scan project files for top-level entities
+        var allEntities = await fpgaService.GetAllTopEntitiesAsync(_root);
+
+        var entryOptions = allEntities.Select(x => new AdvancedComboBoxOption
         {
             Title = $"{x.TopEntity} ({x.File.RelativePath})",
             Value = x.TopEntity
         }).ToArray();
-        
-        var topEntitySetting = new AdvancedComboBoxSearchSetting("Top Entity", _root.TopEntity, entryOptions)
+
+        var topEntitySetting = new AdvancedComboBoxSearchSetting("Top Entity", _root.TopEntity ?? "", entryOptions)
         {
-            MarkdownDocumentation = "The top-level entity or module used for synthesis and pin planning."
+            MarkdownDocumentation =
+                "The top-level entity or module used for synthesis and pin planning.\n\n" +
+                "This name must match the entity/module declaration in your HDL source files."
         };
 
         _projectSettingsService.AddProjectSettingIfNotExists(
@@ -276,7 +312,10 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             var key = $"preCompileStep_{step.Name}";
             var stepSetting = new CheckBoxSetting($"Pre-Compile: {step.Name}", false)
             {
-                HoverDescription = $"Run '{step.Name}' as a pre-compile step before the toolchain."
+                HoverDescription = $"Run '{step.Name}' as a pre-compile step before the toolchain.",
+                MarkdownDocumentation =
+                    $"When enabled, **{step.Name}** runs before the toolchain on every compile.\n\n" +
+                    $"The step name is stored in the `preCompileSteps` array in the project file."
             };
             _projectSettingsService.AddProjectSettingIfNotExists(
                 new ProjectSettingBuilder()
