@@ -30,7 +30,16 @@ public class ProjectSettingsService : IProjectSettingsService
     /// <inheritdoc />
     public List<string> GetProjectCategories()
     {
-        return ProjectSettingsByCategory.Keys.ToList();
+        return ProjectSettingsByCategory.Keys
+            .OrderBy(c => c switch
+            {
+                "Project" => 0,
+                "Files"   => 1,
+                "Other"   => int.MaxValue,
+                _         => 2
+            })
+            .ThenBy(c => c)
+            .ToList();
     }
 
     /// <inheritdoc />
@@ -41,7 +50,7 @@ public class ProjectSettingsService : IProjectSettingsService
 
     public string GetDefaultProjectCategory()
     {
-        return "General";
+        return "Other";
     }
 
     public List<ProjectSetting> GetProjectSettingsList()

@@ -49,7 +49,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         foreach (var category in SettingCategories)
             _categoryData[category] = BuildCategoryCollection(category);
 
-        SelectedCategory = projectSettingsService.GetDefaultProjectCategory();
+        SelectedCategory = SettingCategories.FirstOrDefault();
     }
 
     public ObservableCollection<string> SettingCategories { get; }
@@ -84,6 +84,18 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             var local = setting.Setting;
 
             if (!setting.ActivationFunction(_root)) continue;
+
+            // Pre-compile step checkboxes are backed by the shared preCompileSteps array
+            if (local is CheckBoxSetting && setting.Key.StartsWith("preCompileStep_"))
+            {
+                var stepName = setting.Key["preCompileStep_".Length..];
+                var enabledSteps = _root.Properties.GetStringArray("preCompileSteps")?.ToHashSet() ?? [];
+                local.Value = enabledSteps.Contains(stepName);
+                local.Priority = setting.Setting.Priority;
+                keys.Add(local, setting.Key);
+                collection.SettingModels.Add(local);
+                continue;
+            }
 
             if (_root.Properties.ContainsKey(setting.Key))
             {
@@ -179,6 +191,7 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             new ProjectSettingBuilder()
                 .WithKey("topEntity")
                 .WithSetting(topEntitySetting)
+                .WithCategory("Project")
                 .WithDisplayOrder(60)
                 .Build()
         );
@@ -186,15 +199,17 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
                 .WithKey("toolchain")
+                .WithCategory("Project")
+                .WithDisplayOrder(70)
                 .WithSetting(toolchain)
-                .WithDisplayOrder(100)
                 .Build()
         );
 
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
                 .WithKey("loader")
-                .WithDisplayOrder(90)
+                .WithCategory("Project")
+                .WithDisplayOrder(80)
                 .WithSetting(loader)
                 .Build()
         );
@@ -202,7 +217,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _projectSettingsService.AddProjectSettingIfNotExists(
             new ProjectSettingBuilder()
                 .WithKey("vhdlStandard")
-                .WithDisplayOrder(80)
+                .WithCategory("Project")
+                .WithDisplayOrder(90)
                 .WithSetting(vhdlStandard)
                 .WithActivation(file =>
                 {
@@ -218,8 +234,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             new ProjectSettingBuilder()
                 .WithKey("include")
                 .WithSetting(includesSettings)
-                .WithDisplayOrder(200)
-                .WithCategory("Project")
+                .WithCategory("Files")
+                .WithDisplayOrder(100)
                 .Build()
         );
 
@@ -227,17 +243,51 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
             new ProjectSettingBuilder()
                 .WithKey("exclude")
                 .WithSetting(excludesSettings)
-                .WithDisplayOrder(100)
-                .WithCategory("Project")
+                .WithCategory("Files")
+                .WithDisplayOrder(110)
                 .Build()
         );
+
+        // Register a CheckBoxSetting for every registered pre-compile step
+        var order = 120;
+        foreach (var step in fpgaService.PreCompileSteps)
+        {
+            var key = $"preCompileStep_{step.Name}";
+            var stepSetting = new CheckBoxSetting($"Pre-Compile: {step.Name}", false)
+            {
+                HoverDescription = $"Run '{step.Name}' as a pre-compile step before the toolchain."
+            };
+            _projectSettingsService.AddProjectSettingIfNotExists(
+                new ProjectSettingBuilder()
+                    .WithKey(key)
+                    .WithSetting(stepSetting)
+                    .WithCategory("Project")
+                    .WithDisplayOrder(order++)
+                    .Build()
+            );
+        }
     }
 
     public async Task SaveAsync()
     {
+        var enabledPreCompileSteps = new List<string>();
+
         foreach (var (_, (_, keys)) in _categoryData)
         foreach (var (setting, key) in keys)
+        {
+            // Pre-compile step checkboxes are saved collectively as the preCompileSteps array
+            if (key.StartsWith("preCompileStep_"))
+            {
+                if (setting is CheckBoxSetting { Value: true })
+                    enabledPreCompileSteps.Add(key["preCompileStep_".Length..]);
+                continue;
+            }
+
             _root.Properties.SetNode(key, CreateSettingNode(setting, key));
+        }
+
+        _root.Properties.SetNode("preCompileSteps",
+            new JsonArray(enabledPreCompileSteps.Select(x => JsonValue.Create(x)).ToArray<JsonNode?>()));
 
         await _projectExplorerService.SaveProjectAsync(_root);
         await _projectExplorerService.ReloadProjectAsync(_root);
