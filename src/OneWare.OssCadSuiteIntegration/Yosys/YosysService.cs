@@ -59,8 +59,7 @@ public class YosysService(
         return await SynthAsync(project, fpgaModel, null);
     }
 
-    public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel,
-        IEnumerable<string>? mandatoryFiles = null)
+    public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, IEnumerable<string>? mandatoryFiles = null)
     {
         try
         {
@@ -71,12 +70,6 @@ public class YosysService(
                 .Where(x => !project.IsCompileExcluded(x))
                 .Where(x => !project.IsTestBench(x))
                 .ToList();
-
-            var genVerilogPath = Path.Combine(project.RootFolderPath, "build", "gen_verilog");
-            if (Directory.Exists(genVerilogPath))
-            {
-                includedFiles.AddRange(Directory.EnumerateFiles(genVerilogPath, "*.v", SearchOption.AllDirectories));
-            }
 
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set!");

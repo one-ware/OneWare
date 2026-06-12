@@ -322,9 +322,15 @@ public class FpgaService
                 fpgaModel = new FpgaModel(fpgaPackage.LoadFpga());
             }
 
+            var enabledSteps = project.Properties.GetStringArray("preCompileSteps")
+                               ?.ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
+
             foreach (var step in PreCompileSteps)
-                if (!await step.PerformPreCompileStepAsync(project, fpgaModel))
+            {
+                if (enabledSteps.Contains(step.Name) &&
+                    !await step.PerformPreCompileStepAsync(project, fpgaModel))
                     return false;
+            }
             
             await toolchain.CompileAsync(project, fpgaModel);
             return true;

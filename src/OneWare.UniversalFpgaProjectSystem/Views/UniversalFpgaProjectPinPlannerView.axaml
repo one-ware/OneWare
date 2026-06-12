@@ -50,7 +50,7 @@
 
                 <!-- Toolchain selector (only when not set) -->
                 <StackPanel Spacing="4"
-                            IsVisible="{Binding Project.Toolchain, Converter={x:Static ObjectConverters.IsNull}}">
+                            IsVisible="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNull}}">
                     <TextBlock Text="Toolchain:" FontWeight="SemiBold" />
                     <ComboBox ItemsSource="{Binding SetupAvailableToolchains}"
                               SelectedItem="{Binding SetupSelectedToolchain, Mode=TwoWay}"

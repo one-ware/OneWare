@@ -96,6 +96,9 @@ public class SettingsCollectionViewModel : ObservableObject, ISearchableSettings
                 case ListBoxSetting lS:
                     SettingViewModels.Add(new ListBoxSettingViewModel(lS));
                     break;
+                case ComboListBoxSetting clS:
+                    SettingViewModels.Add(new ComboListBoxSettingViewModel(clS));
+                    break;
                 case CheckBoxSetting cbS:
                     SettingViewModels.Add(new CheckBoxSettingViewModel(cbS));
                     break;
