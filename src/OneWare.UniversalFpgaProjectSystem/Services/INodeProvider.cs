@@ -19,7 +19,7 @@ public interface INodeProvider
     /// Default implementation returns the file name without extension as a single entry.
     /// </summary>
     public Task<IEnumerable<string>> ExtractTopEntitiesAsync(IProjectFile file) =>
-        Task.FromResult<IEnumerable<string>>(new[] { Path.GetFileNameWithoutExtension(file.FullPath) });
+        Task.FromResult<IEnumerable<string>>([Path.GetFileNameWithoutExtension(file.FullPath)]);
 
     /// <summary>
     /// Extracts I/O nodes for a specific named entity or module within the file.

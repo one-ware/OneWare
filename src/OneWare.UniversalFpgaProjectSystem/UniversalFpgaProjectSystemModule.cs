@@ -4,6 +4,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -119,12 +120,169 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
         serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".deviceconf", ".json");
 
         var fpgaService = serviceProvider.Resolve<FpgaService>();
+        var projectSettingsService = serviceProvider.Resolve<IProjectSettingsService>();
         
         fpgaService.RegisterProjectPropertyMigration("VHDL_Standard", "vhdlStandard");
         fpgaService.RegisterProjectPropertyMigration("Toolchain", "toolchain", NormalizeToolchain);
         fpgaService.RegisterProjectPropertyMigration("Loader", "loader", NormalizeLoader);
         fpgaService.RegisterProjectPropertyMigration("fpga", "board"); // legacy key renamed to "board"
         fpgaService.RegisterProjectPropertyMigration("Fpga", "board"); // PascalCase variant also migrated
+
+        RegisterProjectSettings(projectSettingsService, fpgaService);
+    }
+
+    private static void RegisterProjectSettings(IProjectSettingsService svc, FpgaService fpgaService)
+    {
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("topEntity")
+                .WithCategory("Project")
+                .WithDisplayOrder(60)
+                .WithFactory(async root =>
+                {
+                    if (root is not UniversalFpgaProjectRoot fpgaRoot)
+                        return new AdvancedComboBoxSearchSetting("Top Entity", "", []);
+
+                    var allEntities = await fpgaService.GetAllTopEntitiesAsync(fpgaRoot);
+                    var options = allEntities.Select(x => new AdvancedComboBoxOption
+                    {
+                        Title = $"{x.TopEntity} ({x.File.RelativePath})",
+                        Value = x.TopEntity
+                    }).ToArray();
+                    return new AdvancedComboBoxSearchSetting("Top Entity", fpgaRoot.TopEntity ?? "", options)
+                    {
+                        MarkdownDocumentation =
+                            "The top-level entity or module used for synthesis and pin planning.\n\n" +
+                            "This name must match the entity/module declaration in your HDL source files."
+                    };
+                })
+                .Build()
+        );
+
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("toolchain")
+                .WithCategory("Project")
+                .WithDisplayOrder(70)
+                .WithFactory(root =>
+                {
+                    var options = fpgaService.Toolchains.Select(tc => tc.Id).ToArray<object>();
+                    var current = root is UniversalFpgaProjectRoot r ? r.Toolchain ?? "" : "";
+                    return Task.FromResult<TitledSetting>(new ComboBoxSetting("Toolchain", current, options)
+                    {
+                        MarkdownDocumentation =
+                            "The synthesis and place-and-route toolchain used to compile this project.\n\n" +
+                            "The toolchain determines the full compile pipeline (synthesis, fit, assemble)."
+                    });
+                })
+                .Build()
+        );
+
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("loader")
+                .WithCategory("Project")
+                .WithDisplayOrder(80)
+                .WithFactory(root =>
+                {
+                    var options = fpgaService.Loaders.Select(l => l.Id).ToArray<object>();
+                    var current = root is UniversalFpgaProjectRoot r ? r.Loader ?? "" : "";
+                    return Task.FromResult<TitledSetting>(new ComboBoxSetting("Loader", current, options)
+                    {
+                        MarkdownDocumentation =
+                            "The programming tool used to download the bitstream to the FPGA.\n\n" +
+                            "Examples: `openFPGALoader`, `iceprog`."
+                    });
+                })
+                .Build()
+        );
+
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("vhdlStandard")
+                .WithCategory("Project")
+                .WithDisplayOrder(90)
+                .WithFactory(root =>
+                {
+                    var current = root is UniversalFpgaProjectRoot r
+                        ? r.Properties.GetString("vhdlStandard") ?? "" : "";
+                    return Task.FromResult<TitledSetting>(
+                        new ComboBoxSetting("VHDL Standard", current,
+                            ["87", "93", "93c", "00", "02", "08", "19"])
+                        {
+                            MarkdownDocumentation =
+                                "The VHDL language standard version used when analysing and simulating VHDL files.\n\n" +
+                                "Common choices:\n- `08` — VHDL-2008 (recommended)\n- `93` — VHDL-93\n- `02` — VHDL-2002"
+                        });
+                })
+                .WithActivation(file =>
+                {
+                    if (file is UniversalFpgaProjectRoot root)
+                        return root.GetFiles().Any(f => Path.GetExtension(f) is ".vhd" or ".vhdl");
+                    return false;
+                })
+                .Build()
+        );
+
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("include")
+                .WithCategory("Files")
+                .WithDisplayOrder(100)
+                .WithFactory(root =>
+                {
+                    var items = root is UniversalFpgaProjectRoot r
+                        ? r.Properties.GetStringArray("include")?.ToArray() ?? []
+                        : Array.Empty<string>();
+                    return Task.FromResult<TitledSetting>(new ListBoxSetting("Files to Include", items)
+                    {
+                        MarkdownDocumentation =
+                            "Glob patterns or relative paths that are **explicitly included** in the project file set.\n\n" +
+                            "Leave empty to include all files in the project directory."
+                    });
+                })
+                .Build()
+        );
+
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("exclude")
+                .WithCategory("Files")
+                .WithDisplayOrder(110)
+                .WithFactory(root =>
+                {
+                    var items = root is UniversalFpgaProjectRoot r
+                        ? r.Properties.GetStringArray("exclude")?.ToArray() ?? []
+                        : Array.Empty<string>();
+                    return Task.FromResult<TitledSetting>(new ListBoxSetting("Files to Exclude", items)
+                    {
+                        MarkdownDocumentation =
+                            "Glob patterns or relative paths that are **excluded** from the project file set.\n\n" +
+                            "Excluded files are hidden from the project explorer and not passed to any tool."
+                    });
+                })
+                .Build()
+        );
+        
+        svc.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey("compileExcluded")
+                .WithCategory("Files")
+                .WithDisplayOrder(120)
+                .WithFactory(root =>
+                {
+                    var items = root is UniversalFpgaProjectRoot r
+                        ? r.Properties.GetStringArray("compileExcluded")?.ToArray() ?? []
+                        : Array.Empty<string>();
+                    return Task.FromResult<TitledSetting>(new ListBoxSetting("Compile Excluded", items)
+                    {
+                        MarkdownDocumentation =
+                            "Relative paths of source files that are **excluded from compilation**.\n\n" +
+                            "The files remain visible in the project explorer but are not passed to the synthesiser."
+                    });
+                })
+                .Build()
+        );
     }
 
     private static JsonNode? NormalizeToolchain(JsonNode? node)

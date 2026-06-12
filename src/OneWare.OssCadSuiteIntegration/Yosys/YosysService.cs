@@ -72,7 +72,7 @@ public class YosysService(
                 .ToList();
 
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
-                                 throw new Exception("Yosys Tool not set!");
+                                 throw new Exception("Yosys Tool not set. This hardware might not be configured to be used with Yosys Toolchain");
             
             var builder = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
                 .WithWorkingDirectory(project.FullPath)

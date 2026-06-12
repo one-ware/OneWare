@@ -41,15 +41,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
         });
 
-        Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
-
-        // Determine if required settings are missing — show setup overlay before loading
-        IsSetupRequired = Toolchain == null || Project.TopEntity == null;
-
-        if (IsSetupRequired)
-            _ = LoadSetupOptionsAsync();
-        else
-            _ = InitializeAsync();
+        _ = InitializeAsync();
     }
 
     // ── Setup overlay ──────────────────────────────────────────────────────────
@@ -67,7 +59,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     }
 
     public ObservableCollection<string> SetupAvailableToolchains { get; } = new();
-    public ObservableCollection<string> SetupAvailableTopEntities { get; } = new();
+    public ObservableCollection<FpgaTopEntityResult> SetupAvailableTopEntities { get; } = new();
 
     public string? SetupSelectedToolchain
     {
@@ -75,25 +67,26 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         set => SetProperty(ref field, value);
     }
 
-    public string? SetupSelectedTopEntity
+    public FpgaTopEntityResult? SetupSelectedTopEntity
     {
         get;
         set => SetProperty(ref field, value);
     }
 
-    private async Task LoadSetupOptionsAsync()
+    private async Task LoadSetupOptionsAsync(IEnumerable<FpgaTopEntityResult> topEntities)
     {
         IsSetupLoading = true;
         try
         {
             foreach (var tc in _fpgaService.Toolchains)
                 SetupAvailableToolchains.Add(tc.Id);
-            SetupSelectedToolchain = Toolchain?.Name ?? SetupAvailableToolchains.FirstOrDefault();
-
-            var entities = await _fpgaService.GetAllTopEntitiesAsync(Project);
-            foreach (var e in entities)
+            SetupSelectedToolchain = Toolchain?.Id ?? SetupAvailableToolchains.FirstOrDefault();
+            
+            foreach (var e in topEntities)
                 SetupAvailableTopEntities.Add(e);
-            SetupSelectedTopEntity = Project.TopEntity ?? SetupAvailableTopEntities.FirstOrDefault();
+            
+            SetupSelectedTopEntity = SetupAvailableTopEntities.FirstOrDefault(x => x.TopEntity == Project.TopEntity) 
+                                     ?? SetupAvailableTopEntities.FirstOrDefault();
         }
         finally
         {
@@ -106,7 +99,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         if (SetupSelectedToolchain != null)
             Project.Toolchain = SetupSelectedToolchain;
         if (SetupSelectedTopEntity != null)
-            Project.TopEntity = SetupSelectedTopEntity;
+            Project.TopEntity = SetupSelectedTopEntity.TopEntity;
 
         await _projectExplorerService.SaveProjectAsync(Project);
 
@@ -139,6 +132,12 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         get;
         private set => SetProperty(ref field, value);
     } = [];
+
+    public FpgaTopEntityResult? TopEntity
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
 
     public bool IsLoading
     {
@@ -236,19 +235,21 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            if (Project.TopEntity is not { } entityName)
-                return;
+            var topEntities = await _fpgaService.GetAllTopEntitiesAsync(Project);
+            
+            if(topEntities.FirstOrDefault(x => x.TopEntity == Project.TopEntity) is {} topEntity)
+                TopEntity = topEntity;
 
-            var (topFile, nodeProvider) = await _fpgaService.FindTopEntityAsync(Project, entityName);
-
-            if (topFile == null || nodeProvider == null)
+            Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
+            
+            if (TopEntity == null || Toolchain == null)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"Could not find a file containing top entity '{entityName}'");
+                IsSetupRequired = true;
+                await LoadSetupOptionsAsync(topEntities);
                 return;
             }
 
-            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(topFile, entityName);
+            var nodesEnumerable = await TopEntity.NodeProvider.ExtractNodesAsync(TopEntity.File, TopEntity.TopEntity);
             _nodes = nodesEnumerable.ToArray();
 
             RefreshHardware();
@@ -287,7 +288,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     return;
             }
         }
-        
+
         RefreshHardware();
     }
 
@@ -362,7 +363,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     public void SaveAndCompile(FlexibleWindow window)
     {
         if (SelectedFpgaModel == null) return;
-        
+
         SaveAndClose(window);
         _ = _fpgaService.RunToolchainAsync(Project, SelectedFpgaModel);
     }
