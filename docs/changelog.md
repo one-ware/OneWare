@@ -1,9 +1,6 @@
----
-sidebar_position: 2
-id: changelog
-title: ONE WARE Studio Changelog
-sidebar_label:  Changelog
----
+## 1.0.20
+
+- Yosys will always find ghdl generated verilog files now, even if they are excluded
 
 ## 1.0.19
 

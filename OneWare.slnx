@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/build/">
     <File Path="Directory.Build.props" />
+    <File Path="docs\changelog.md" />
   </Folder>
   <Folder Name="/build/actions/">
     <File Path=".github/workflows/publish-nuget.yml" />
