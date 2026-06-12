@@ -16,6 +16,7 @@ sidebar_label:  Changelog
 - Fix bug where yosys toolchain would add one file twice
 - Rename "fpga" Property to "board"
 - Improved Verilog Support
+- Drastically improved rendering performance for large files
 
 ## 1.0.16
 
