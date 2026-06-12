@@ -42,6 +42,12 @@ public abstract class FpgaExtensionBase : IFpgaExtension
 
             if (properties == null) return;
 
+            // ── defaultPinProperties ─────────────────────────────────────────────
+            var defaultPinProperties = new Dictionary<string, string>();
+            if (properties["defaultPinProperties"]?.AsObject() is { } defaultProps)
+                foreach (var (k, v) in defaultProps)
+                    if (v != null) defaultPinProperties[k] = v.ToString();
+
             foreach (var pin in properties["pins"]?.AsArray() ?? [])
             {
                 if (pin == null) continue;
@@ -52,7 +58,17 @@ public abstract class FpgaExtensionBase : IFpgaExtension
 
                 if (name == null || interfacePin == null) continue;
 
-                Pins.Add(new HardwarePin(name, description, interfacePin));
+                // Merge defaultPinProperties with per-pin "properties" (pin-level wins)
+                Dictionary<string, string>? pinProperties = null;
+                if (defaultPinProperties.Count > 0 || pin["properties"]?.AsObject() is { })
+                {
+                    pinProperties = new Dictionary<string, string>(defaultPinProperties);
+                    if (pin["properties"]?.AsObject() is { } pinProps)
+                        foreach (var (k, v) in pinProps)
+                            if (v != null) pinProperties[k] = v.ToString();
+                }
+
+                Pins.Add(new HardwarePin(name, description, interfacePin, pinProperties));
             }
 
             if (properties["interfaces"]?.AsArray() is { } fpgaInterfaces)
@@ -88,3 +104,4 @@ public abstract class FpgaExtensionBase : IFpgaExtension
         }
     }
 }
+

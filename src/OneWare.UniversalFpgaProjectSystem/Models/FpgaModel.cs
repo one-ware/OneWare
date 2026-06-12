@@ -58,6 +58,9 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     public Dictionary<string, FpgaNodeModel> NodeModels { get; } = new();
     public ObservableCollection<FpgaNodeModel> VisibleNodeModels { get; } = new();
 
+    /// <summary>Per-pin property definitions declared by the hardware JSON <c>allowedPinProperties</c> block.</summary>
+    public IReadOnlyList<PinPropertyDefinition> AllowedPinProperties => Fpga.AllowedPinProperties;
+
     public HardwarePinModel? SelectedPinModel
     {
         get => _selectedPinModel;
@@ -116,6 +119,9 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     public event EventHandler? NodeConnected;
 
     public event EventHandler? NodeDisconnected;
+
+    /// <summary>Raised when any pin's per-pin property value changes (triggers IsDirty in the pin planner).</summary>
+    public event EventHandler? PinPropertyChanged;
 
     private void SearchPins(string? search)
     {
@@ -200,6 +206,7 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
     private void AddPin(HardwarePin pin)
     {
         var model = new HardwarePinModel(pin, this);
+        model.PinPropertyChanged += (_, _) => PinPropertyChanged?.Invoke(this, EventArgs.Empty);
         PinModels.Add(pin.Name, model);
         VisiblePinModels.Add(model);
     }
