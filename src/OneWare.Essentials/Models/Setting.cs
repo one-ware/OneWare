@@ -239,6 +239,29 @@ public class ListBoxSetting : TitledSetting
     }
 }
 
+/// <summary>
+/// A setting that holds an ordered list of items chosen from a fixed set of predefined options.
+/// The user picks an option from the dropdown and adds it to the list; duplicate entries are allowed.
+/// </summary>
+public class ComboListBoxSetting : TitledSetting
+{
+    public ComboListBoxSetting(string title, string[] options, params string[] defaultItems)
+        : base(title, new ObservableCollection<string>(defaultItems))
+    {
+        Options = options;
+    }
+
+    /// <summary>The fixed set of values the user can pick from.</summary>
+    public string[] Options { get; }
+
+    /// <summary>The ordered list of currently selected items.</summary>
+    public ObservableCollection<string> Items
+    {
+        get => (Value as ObservableCollection<string>)!;
+        set => Value = value;
+    }
+}
+
 public class ComboBoxSearchSetting(string title, object defaultValue, IEnumerable<object> options)
     : ComboBoxSetting(title, defaultValue, options.ToArray());
 
@@ -354,7 +377,7 @@ public class ProjectSetting(
     string? category = null,
     int displayOrder = 0)
 {
-    public string Category { get; } = category ?? "General";
+    public string Category { get; } = category ?? "Other";
 
     public string Key { get; } = key;
     public TitledSetting Setting { get; } = setting;
