@@ -121,6 +121,8 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
                             _root.Properties[setting.Key]!.AsArray().Select(n => n!.ToString()));
                         break;
 
+                    case AdvancedComboBoxSearchSetting:
+                    case AdvancedComboBoxSetting:
                     case ComboBoxSearchSetting:
                     case ComboBoxSetting:
                         local.Value = _root.Properties[setting.Key]!.ToString();
@@ -186,7 +188,13 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         var fpgaService = ContainerLocator.Container.Resolve<FpgaService>();
 
         var allEntities = fpgaService.GetAllTopEntitiesAsync(_root).GetAwaiter().GetResult();
-        var topEntitySetting = new ComboBoxSetting("Top Entity", _root.TopEntity ?? "", allEntities.ToArray<object>())
+        var entryOptions = allEntities.Select(x => new AdvancedComboBoxOption()
+        {
+            Title = $"{x.TopEntity} ({x.File.RelativePath})",
+            Value = x.TopEntity
+        }).ToArray();
+        
+        var topEntitySetting = new AdvancedComboBoxSearchSetting("Top Entity", _root.TopEntity, entryOptions)
         {
             MarkdownDocumentation = "The top-level entity or module used for synthesis and pin planning."
         };

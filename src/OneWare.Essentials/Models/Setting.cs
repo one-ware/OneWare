@@ -158,7 +158,7 @@ public class ComboBoxSetting : TitledSetting
     }
 }
 
-public class AdvancedComboBoxSearchSetting(string title, object defaultValue, AdvancedComboBoxOption[] options)
+public class AdvancedComboBoxSearchSetting(string title, object? defaultValue, AdvancedComboBoxOption[] options)
     : AdvancedComboBoxSetting(title, defaultValue, options)
 {
 }
