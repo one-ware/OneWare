@@ -20,7 +20,7 @@ public class VerilogBlinkTemplate(ILogger logger, IMainDockService mainDockServi
             TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
             var file = root.AddFile(name + ".v");
 
-            root.TopEntity = file.RelativePath;
+            root.TopEntity = name;
             
             _ = mainDockService.OpenFileAsync(file.FullPath);
         }
