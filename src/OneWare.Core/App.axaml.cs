@@ -593,9 +593,9 @@ public class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         DeferredContentPresentationSettings.BudgetMode = DeferredContentPresentationBudgetMode.ItemCount;
-        DeferredContentPresentationSettings.MaxPresentationsPerPass = 10;
+        DeferredContentPresentationSettings.MaxPresentationsPerPass = 1000;
         DeferredContentPresentationSettings.InitialDelay = TimeSpan.Zero;
-        DeferredContentPresentationSettings.FollowUpDelay = TimeSpan.FromMilliseconds(1);
+        DeferredContentPresentationSettings.FollowUpDelay = TimeSpan.Zero;
         DeferredContentPresentationSettings.RevealDuration = TimeSpan.Zero;
         
         var services = new ServiceCollection();
