@@ -17,6 +17,13 @@ public interface IOneWareAiFunction
     /// <see cref="SessionHooks.OnPreToolUse"/> returning <c>"ask"</c>.
     /// </summary>
     Func<AIFunctionArguments, string?>? ConfirmationCheck { get; }
+
+    /// <summary>
+    /// Optional delegate that extracts a short human-readable detail (e.g. a relative file path)
+    /// from the invocation arguments. The returned string is shown in the chat tool message
+    /// while the tool is running.
+    /// </summary>
+    Func<AIFunctionArguments, string?>? DetailExtractor { get; }
 }
 
 public sealed class OneWareAiFunction : IOneWareAiFunction
@@ -28,4 +35,6 @@ public sealed class OneWareAiFunction : IOneWareAiFunction
     public bool RunOnUiThread { get; init; }
     /// <inheritdoc />
     public Func<AIFunctionArguments, string?>? ConfirmationCheck { get; init; }
+    /// <inheritdoc />
+    public Func<AIFunctionArguments, string?>? DetailExtractor { get; init; }
 }
