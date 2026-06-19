@@ -89,6 +89,7 @@
   </Folder>
   <Folder Name="/Extensions/">
     <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj" />
+    <Project Path="src/OneWare.Copilot/OneWare.Copilot.csproj" />
     <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj" />
     <Project Path="src/OneWare.MarkdownViewer/OneWare.MarkdownViewer.csproj" />
     <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj" />
