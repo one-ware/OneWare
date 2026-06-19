@@ -252,7 +252,7 @@ public class ProjectFolder : ProjectEntry, IProjectFolder
 
         foreach (var file in Directory.EnumerateFiles(path, searchPattern, options))
         {
-            var relativeToRoot = Path.GetRelativePath(path, file);
+            var relativeToRoot = Path.GetRelativePath(Root.RootFolderPath, file);
             if (Root.IsPathIncluded(relativeToRoot)) yield return Path.GetRelativePath(FullPath, file);
         }
     }
