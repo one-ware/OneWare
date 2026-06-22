@@ -1,11 +1,12 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using dotacp.client;
-using dotacp.protocol;
+using dotacp.client.unstable;
+using dotacp.protocol.unstable;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -29,8 +30,97 @@ public abstract class AcpChatService(IPaths paths, ILogger logger)
     /// <summary>Command-line arguments for the agent. Override to add e.g. <c>["--acp"]</c>.</summary>
     protected virtual IEnumerable<string> GetAgentArguments() => [];
 
+    /// <summary>
+    /// Environment variables to inject into the agent process.
+    /// Override to supply e.g. <c>OPENAI_API_KEY</c> from a setting.
+    /// </summary>
+    protected virtual IReadOnlyDictionary<string, string> GetEnvironmentVariables() =>
+        new Dictionary<string, string>();
+
     /// <summary>Called when the binary could not be found. Fire an install button via EventReceived.</summary>
     protected abstract void OnAgentNotFound();
+
+    /// <summary>
+    /// Called when the agent requires env-var credentials that are not yet configured.
+    /// Default implementation emits a <see cref="ChatErrorEvent"/> listing the missing variables.
+    /// </summary>
+    protected virtual void OnAuthRequired(AuthMethodEnvVar method, IReadOnlyList<AuthEnvVar> missingVars)
+    {
+        var varNames = string.Join(", ", missingVars.Select(v => v.Label ?? v.Name));
+        var link = method.Link;
+        var msg = link != null
+            ? $"Authentication required. Please configure: {varNames}\n\nGet your API key: {link}"
+            : $"Authentication required. Please configure: {varNames}";
+        EventReceived?.Invoke(this, new ChatErrorEvent(msg));
+    }
+
+    /// <summary>
+    /// Called when the agent requires interactive terminal authentication (e.g. ChatGPT OAuth).
+    /// Override to show a login button or otherwise guide the user.
+    /// </summary>
+    protected virtual void OnTerminalAuthRequired(AuthMethodTerminal method)
+    {
+        var name = method.Name ?? "interactive login";
+        EventReceived?.Invoke(this, new ChatErrorEvent(
+            $"Authentication requires {name}. " +
+            "Please authenticate via a terminal before connecting."));
+    }
+
+    /// <summary>
+    /// Called when the agent advertises an agent-managed auth method (e.g. browser-based
+    /// ChatGPT OAuth via <c>AuthMethodAgent</c>).  The connection is kept alive so that
+    /// <see cref="PerformAgentAuthAndOpenSessionAsync"/> can be called from the button handler.
+    /// Override to surface a login button.  Default implementation emits a
+    /// <see cref="ChatErrorEvent"/> with the method description.
+    /// </summary>
+    protected virtual void OnAgentAuthRequired(AuthMethodAgent method)
+    {
+        var name = method.Description ?? method.Name ?? "agent-managed login";
+        EventReceived?.Invoke(this, new ChatErrorEvent(
+            $"Authentication required: {name}. " +
+            "Please complete the login flow before connecting."));
+    }
+
+    /// <summary>
+    /// Authenticates using the given <paramref name="methodId"/> on the current live connection
+    /// and then opens a new session.  Call this from an <see cref="OnAgentAuthRequired"/>
+    /// override button handler.  If the connection has been lost in the meantime, falls back
+    /// to a full <see cref="InitializeAsync"/> reconnect.
+    /// </summary>
+    protected async Task PerformAgentAuthAndOpenSessionAsync(string methodId)
+    {
+        await _initLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (_connection == null)
+            {
+                // Connection was lost while the user was reading the prompt; reconnect from scratch.
+                await ConnectAsync().ConfigureAwait(false);
+                return;
+            }
+
+            await _connection.AuthenticateAsync(
+                new AuthenticateRequest { MethodId = methodId }).ConfigureAwait(false);
+
+            var sessionResponse = await _connection.NewSessionAsync(
+                new NewSessionRequest { Cwd = paths.ProjectsDirectory, McpServers = [] })
+                .ConfigureAwait(false);
+
+            _sessionId = sessionResponse.SessionId.ToString();
+            StatusChanged?.Invoke(this, new StatusEvent(true, $"{Name} ready"));
+            SessionReset?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Agent auth failed for method {MethodId}", methodId);
+            await DisposeConnectionAsync().ConfigureAwait(false);
+            EventReceived?.Invoke(this, new ChatErrorEvent($"Authentication failed: {ex.Message}"));
+        }
+        finally
+        {
+            _initLock.Release();
+        }
+    }
 
     // ── State ─────────────────────────────────────────────────────────────────
 
@@ -192,6 +282,11 @@ public abstract class AcpChatService(IPaths paths, ILogger logger)
             if (extraArgs.Count > 0)
                 psi.Arguments = string.Join(" ", extraArgs);
 
+            // Inject credentials and other env vars supplied by the subclass
+            var envVars = GetEnvironmentVariables();
+            foreach (var (k, v) in envVars)
+                psi.EnvironmentVariables[k] = v;
+
             _agentProcess = new Process { StartInfo = psi, EnableRaisingEvents = true };
             _agentProcess.ErrorDataReceived += (_, e) =>
             {
@@ -233,11 +328,61 @@ public abstract class AcpChatService(IPaths paths, ILogger logger)
 
             if (initResponse.AuthMethods is { Length: > 0 } methods)
             {
-                var method = methods.OfType<AuthMethodAgent>().FirstOrDefault();
-                if (method != null)
+                // Prefer env-var auth (e.g. OPENAI_API_KEY for codex-acp)
+                var envVarMethod  = methods.OfType<AuthMethodEnvVar>().FirstOrDefault();
+                var termMethod    = methods.OfType<AuthMethodTerminal>().FirstOrDefault();
+                var agentMethod   = methods.OfType<AuthMethodAgent>().FirstOrDefault();
+
+                if (envVarMethod != null)
+                {
+                    var missingVars = (envVarMethod.Vars ?? [])
+                        .Where(v => !v.Optional &&
+                                    string.IsNullOrEmpty(Environment.GetEnvironmentVariable(v.Name)) &&
+                                    !envVars.ContainsKey(v.Name))
+                        .ToList();
+
+                    if (missingVars.Count > 0)
+                    {
+                        // Prefer interactive login when env-var credentials are missing.
+                        // Agent auth (e.g. ChatGPT OAuth) keeps the connection alive so that
+                        // PerformAgentAuthAndOpenSessionAsync can call AuthenticateAsync on it.
+                        if (termMethod != null)
+                        {
+                            await DisposeConnectionAsync().ConfigureAwait(false);
+                            OnTerminalAuthRequired(termMethod);
+                        }
+                        else if (agentMethod != null)
+                        {
+                            // Keep connection alive — PerformAgentAuthAndOpenSessionAsync needs it.
+                            OnAgentAuthRequired(agentMethod);
+                        }
+                        else
+                        {
+                            await DisposeConnectionAsync().ConfigureAwait(false);
+                            OnAuthRequired(envVarMethod, missingVars);
+                        }
+                        return false;
+                    }
+
                     await _connection.AuthenticateAsync(
-                        new AuthenticateRequest { MethodId = method.Id })
+                        new AuthenticateRequest { MethodId = envVarMethod.Id })
                         .ConfigureAwait(false);
+                }
+                else if (termMethod != null)
+                {
+                    // No env-var method — only terminal auth available
+                    await DisposeConnectionAsync().ConfigureAwait(false);
+                    OnTerminalAuthRequired(termMethod);
+                    return false;
+                }
+                else if (agentMethod != null)
+                {
+                    // Agent handles auth itself (e.g. browser-based ChatGPT OAuth).
+                    // Keep the connection alive and surface a button so the user can
+                    // consciously start the login flow.
+                    OnAgentAuthRequired(agentMethod);
+                    return false;
+                }
             }
 
             var sessionResponse = await _connection.NewSessionAsync(
@@ -372,6 +517,23 @@ public abstract class AcpChatService(IPaths paths, ILogger logger)
         return tcs.Task;
     }
 
+    // ── IAcpClient — elicitation ──────────────────────────────────────────────
+
+    public Task<CreateElicitationResponse> CreateAsync(
+        CreateElicitationRequest request, CancellationToken cancellationToken)
+    {
+        logger.LogDebug("ACP elicitation/create: {Message}", request.Message);
+        // Decline all elicitations — subclasses can override to show a form UI
+        return Task.FromResult<CreateElicitationResponse>(new CreateElicitationResponseDecline());
+    }
+
+    public Task CompleteAsync(
+        CompleteElicitationNotification notification, CancellationToken cancellationToken)
+    {
+        logger.LogDebug("ACP elicitation/complete: {Id}", notification.ElicitationId);
+        return Task.CompletedTask;
+    }
+
     // ── IAcpClient — file system ──────────────────────────────────────────────
 
     public async Task<ReadTextFileResponse> ReadTextFileAsync(ReadTextFileRequest request, CancellationToken cancellationToken)
@@ -462,7 +624,7 @@ public abstract class AcpChatService(IPaths paths, ILogger logger)
         EventReceived?.Invoke(this, new ChatErrorEvent(
             stderr is { Length: > 0 }
                 ? $"Connection lost — agent output:\n{stderr}"
-                : "Connection lost. If you see 'stdin is not a terminal', try adding --acp to the agent startup arguments."));
+                : "The connection to the agent was lost."));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
