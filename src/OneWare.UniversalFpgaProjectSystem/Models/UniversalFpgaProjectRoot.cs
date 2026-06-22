@@ -34,6 +34,19 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
                 x.Icon?.RemoveOverlay("TestBench");
             }
         });
+
+        RegisterProjectEntryModification(x =>
+        {
+            if (x is IProjectFile file && TopEntityFilePath != null &&
+                file.RelativePath.EqualPaths(TopEntityFilePath))
+            {
+                x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
+            }
+            else
+            {
+                x.Icon?.RemoveOverlay("TopEntity");
+            }
+        });
         
         RegisterProjectEntryModification(x =>
         {
@@ -58,6 +71,22 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     {
         get => Properties.GetString("topEntity");
         set => Properties.SetString("topEntity", value);
+    }
+
+    /// <summary>
+    /// Relative path of the file that contains the current <see cref="TopEntity"/>.
+    /// This is a runtime-only cache (not persisted) and is used to display the top entity
+    /// indicator on the file that contains the top-level entity.
+    /// </summary>
+    public string? TopEntityFilePath
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateAllModifications();
+        }
     }
 
     public string? Toolchain
