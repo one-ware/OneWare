@@ -101,8 +101,8 @@ public class YosysService(
                 });
 
 
-            bool.TryParse(properties.GetValueOrDefault("yosysQuietFlag") ?? "true", out var quiet);
-            builder.AddIf(quiet, "-q");
+            bool.TryParse(properties.GetValueOrDefault("yosysQuietFlag") ?? "false", out var verbose);
+            builder.AddIf(!verbose, "-q");
             
             var customCommandTemplate = properties.GetValueOrDefault("yosysToolchainCommand");
             builder.Add("-p");

@@ -83,7 +83,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         };
 
         _yosysQuietFlagSetting = new CheckBoxSetting("Yosys Verbose", 
-            Boolean.Parse(defaultProperties.GetValueOrDefault("yosysQuietFlag") ?? "true"));
+            Boolean.Parse(defaultProperties.GetValueOrDefault("yosysQuietFlag") ?? "false"));
 
         _nextPnrToolSetting = new ComboBoxSetting("NextPnr Tool",
             defaultProperties.GetValueOrDefault("yosysToolchainNextPnrTool") ?? "", [
