@@ -41,6 +41,7 @@ public sealed class CopilotChatService(
     private IDisposable? _subscription;
     private string? _requestedSessionId;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
+    private readonly HashSet<string> _sessionApprovedTools = new();
 
     // Usage tracking
     public long LastInputTokens
@@ -798,6 +799,8 @@ public sealed class CopilotChatService(
     public async Task NewChatAsync()
     {
         ReleasePendingInputRequests();
+        lock (_sessionApprovedTools)
+            _sessionApprovedTools.Clear();
         _requestedSessionId = null;
         await InitializeSessionAsync();
     }
@@ -1013,6 +1016,13 @@ public sealed class CopilotChatService(
         if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotAutopilotSettingKey))
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
+        // The user approved this tool for the rest of the session.
+        lock (_sessionApprovedTools)
+        {
+            if (_sessionApprovedTools.Contains(input.ToolName))
+                return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
+        }
+
         var check = toolProvider.GetConfirmationCheck(input.ToolName);
         if (check == null)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
@@ -1049,7 +1059,16 @@ public sealed class CopilotChatService(
 
         if (request is PermissionRequestCustomTool)
             return Task.FromResult(PermissionDecision.ApproveOnce());
-        
+
+        var approvalKey = GetSessionApprovalKey(request);
+
+        // Already approved for this session — don't prompt again.
+        lock (_sessionApprovedTools)
+        {
+            if (_sessionApprovedTools.Contains(approvalKey))
+                return Task.FromResult(PermissionDecision.ApproveOnce());
+        }
+
         var message = BuildPermissionMessage(request);
 
         var responseSource = new TaskCompletionSource<PermissionDecision>(
@@ -1061,6 +1080,8 @@ public sealed class CopilotChatService(
             new RelayCommand<Control?>(_ => responseSource.TrySetResult(PermissionDecision.Reject("Denied by User")));
         var allowForSessionCmd = new RelayCommand<Control?>(_ =>
         {
+            lock (_sessionApprovedTools)
+                _sessionApprovedTools.Add(approvalKey);
             responseSource.TrySetResult(new PermissionDecisionApproveForSession());
         });
 
@@ -1069,6 +1090,18 @@ public sealed class CopilotChatService(
 
         return responseSource.Task;
     }
+
+    private static string GetSessionApprovalKey(PermissionRequest request) => request switch
+    {
+        PermissionRequestHook hook => hook.ToolName,
+        PermissionRequestShell => "shell",
+        PermissionRequestWrite => "write",
+        PermissionRequestRead => "read",
+        PermissionRequestUrl => "url",
+        PermissionRequestMcp mcp => $"mcp:{mcp.ServerName}/{mcp.ToolName}",
+        PermissionRequestMemory => "memory",
+        _ => request.Kind ?? "unknown"
+    };
 
     private static string BuildPermissionMessage(PermissionRequest request) => request switch
     {
