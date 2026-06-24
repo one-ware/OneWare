@@ -39,8 +39,11 @@
                     <Button Name="HistoryButton"
                             IsVisible="{Binding !!SessionHistory.Count}">
                         <Button.Flyout>
-                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="BottomEdgeAlignedRight">
-                                <ListBox ItemsSource="{Binding SessionHistory}" SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0" Width="300" MaxHeight="500">
+                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                    Placement="BottomEdgeAlignedRight">
+                                <ListBox ItemsSource="{Binding SessionHistory}"
+                                         SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0"
+                                         Width="300" MaxHeight="500">
                                     <Interaction.Behaviors>
                                         <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
                                             <HideFlyoutAction Flyout="{Binding #HistoryButton.Flyout}" />
@@ -54,7 +57,8 @@
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="6">
-                                                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Grid.Column="2" Text="{Binding UpdatedAtLabel}"
                                                            Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                                            FontSize="11" />
@@ -153,7 +157,8 @@
                 IsVisible="{Binding !!AiFileEditService.ActiveEdits.Count}">
             <StackPanel Orientation="Vertical" Spacing="5">
                 <Grid ColumnDefinitions="Auto, *, Auto">
-                    <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files" Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                    <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     <Button Grid.Column="2" Command="{Binding AiFileEditService.UndoAllAsync}">
                         <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
                     </Button>
@@ -185,7 +190,7 @@
                 <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Type your task here..."
                          AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
                          Padding="6" BorderThickness="0" Background="Transparent"
-                         VerticalContentAlignment="Top" CaretBlinkInterval="00:00:00.5" 
+                         VerticalContentAlignment="Top" CaretBlinkInterval="00:00:00.5"
                          Text="{Binding CurrentMessage, Mode=TwoWay}" />
 
                 <DockPanel Grid.Row="1" Height="22" Margin="4 4" LastChildFill="False" VerticalAlignment="Bottom">
@@ -196,32 +201,25 @@
                         <Button Command="{Binding SendCommand}">
                             <Image Source="{DynamicResource FluentIcons.send_regular}" Height="16" />
                         </Button>
-                        <Button Name="SendModeButton" VerticalAlignment="Center"
+                        <Button Name="SendModeButton" VerticalAlignment="Center" IsEnabled="{Binding IsBusy}"
                                 ToolTip.Tip="Message delivery">
                             <Button.Flyout>
-                                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                                        Placement="Top">
-                                    <StackPanel MinWidth="180">
-                                        <Button HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Left"
-                                                Command="{Binding SendCommand}"
-                                                ToolTip.Tip="Start a new turn (Enter)">
-                                            <TextBlock Text="Send" />
-                                        </Button>
-                                        <Button HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Left"
-                                                Command="{Binding SteerCommand}"
-                                                ToolTip.Tip="Inject into the current turn (Enter)">
-                                            <TextBlock Text="Steer" />
-                                        </Button>
-                                        <Button HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Left"
-                                                Command="{Binding QueueCommand}"
-                                                ToolTip.Tip="Run after the current turn (Alt+Enter)">
-                                            <TextBlock Text="Queue" />
-                                        </Button>
-                                    </StackPanel>
-                                </Flyout>
+                                <MenuFlyout>
+                                    <MenuItem ToolTip.Tip="Stop and Send" Header="Send" InputGesture="Alt+Enter"
+                                              Command="{Binding SendCommand}">
+                                        <MenuItem.Icon>
+                                            <Image Source="{DynamicResource FluentIcons.send_regular}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem ToolTip.Tip="Add to Queue" Header="Add to Queue"
+                                              Command="{Binding QueueCommand}">
+                                        <MenuItem.Icon>
+                                            <Image Source="{DynamicResource BoxIcons.RegularPlus}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem ToolTip.Tip="Steer" Header="Steer with Message" InputGesture="Enter"
+                                              Command="{Binding SteerCommand}" />
+                                </MenuFlyout>
                             </Button.Flyout>
                             <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8" Height="8" />
                         </Button>
