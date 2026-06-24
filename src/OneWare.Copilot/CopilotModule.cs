@@ -13,6 +13,7 @@ public class CopilotModule : OneWareModuleBase
 
     public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
+    public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotAutopilotSettingKey = "AI_Chat_Copilot_Autopilot";
 
     public static readonly Package CopilotPackage = new()
@@ -174,6 +175,8 @@ public class CopilotModule : OneWareModuleBase
         //     });
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
+
+        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedReasoningEffortSettingKey, "");
 
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());

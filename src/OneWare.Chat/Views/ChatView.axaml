@@ -178,8 +178,10 @@
                          VerticalContentAlignment="Top"
                          Text="{Binding CurrentMessage, Mode=TwoWay}">
                     <Interaction.Behaviors>
-                        <behaviors:CommandOnEnterBehavior EventRoutingStrategy="Tunnel"
-                                                          Command="{Binding SendCommand}" />
+                        <ExecuteCommandOnKeyDownBehavior Gesture="Alt + Enter" EventRoutingStrategy="Tunnel"
+                                                         Command="{Binding QueueCommand}" />
+                        <ExecuteCommandOnKeyDownBehavior Key="Enter" EventRoutingStrategy="Tunnel"
+                                                         Command="{Binding SendCommand}" />
                     </Interaction.Behaviors>
                 </TextBox>
 
@@ -190,6 +192,35 @@
                         </Button>
                         <Button Command="{Binding SendCommand}">
                             <Image Source="{DynamicResource FluentIcons.send_regular}" Height="16" />
+                        </Button>
+                        <Button Name="SendModeButton" VerticalAlignment="Center"
+                                ToolTip.Tip="Message delivery">
+                            <Button.Flyout>
+                                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                        Placement="Top">
+                                    <StackPanel MinWidth="180">
+                                        <Button HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Command="{Binding SendCommand}"
+                                                ToolTip.Tip="Start a new turn (Enter)">
+                                            <TextBlock Text="Send" />
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Command="{Binding SteerCommand}"
+                                                ToolTip.Tip="Inject into the current turn (Enter)">
+                                            <TextBlock Text="Steer" />
+                                        </Button>
+                                        <Button HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Command="{Binding QueueCommand}"
+                                                ToolTip.Tip="Run after the current turn (Alt+Enter)">
+                                            <TextBlock Text="Queue" />
+                                        </Button>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8" Height="8" />
                         </Button>
                     </StackPanel>
 

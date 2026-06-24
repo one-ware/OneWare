@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 
 namespace OneWare.Essentials.Services;
@@ -36,6 +37,21 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     /// Sends a prompt to the chat service.
     /// </summary>
     Task SendAsync(string prompt);
+
+    /// <summary>
+    /// Sends a prompt to the chat service using the given delivery mode.
+    /// </summary>
+    /// <param name="prompt">The message text.</param>
+    /// <param name="mode">
+    /// How the message is delivered relative to an in-progress turn. <see cref="ChatSendMode.Steer"/>
+    /// injects into the current turn, <see cref="ChatSendMode.Queue"/> runs it after the current turn.
+    /// </param>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="mode"/> and forwards to <see cref="SendAsync(string)"/>,
+    /// so existing implementers stay binary-compatible. Implementers that support steering/queueing
+    /// should override this.
+    /// </remarks>
+    Task SendAsync(string prompt, ChatSendMode mode) => SendAsync(prompt);
     /// <summary>
     /// Aborts the current request.
     /// </summary>

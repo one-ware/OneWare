@@ -14,9 +14,5 @@
     <ItemGroup>
         <PackageReference Include="GitHub.Copilot.SDK" Version="1.0.3" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="Models\" />
-    </ItemGroup>
 
 </Project>

@@ -60,7 +60,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         AiFileEditService = aiFileEditService;
 
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
-        SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
+        SendCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Send), CanSend);
+        SteerCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Steer), CanSteerOrQueue);
+        QueueCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Queue), CanSteerOrQueue);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
         InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
 
@@ -78,6 +80,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
             {
                 SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
             }
         }
     } = string.Empty;
@@ -90,6 +94,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
             {
                 SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
             }
         }
@@ -109,6 +115,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
             {
                 SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
             }
         }
@@ -171,6 +179,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public AsyncRelayCommand NewChatCommand { get; }
 
     public AsyncRelayCommand SendCommand { get; }
+
+    public AsyncRelayCommand SteerCommand { get; }
+
+    public AsyncRelayCommand QueueCommand { get; }
 
     public AsyncRelayCommand AbortCommand { get; }
 
@@ -235,7 +247,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         _assistantReasoningById.Clear();
     }
 
-    private async Task SendAsync()
+    private async Task SendInternalAsync(ChatSendMode mode)
     {
         var prompt = CurrentMessage.Trim();
         if (string.IsNullOrWhiteSpace(prompt)) return;
@@ -257,14 +269,28 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             return;
         }
 
-        var userMessage = new ChatMessageUserViewModel(prompt);
-        var assistantMessage = new ChatMessageAssistantViewModel("init")
+        if (mode == ChatSendMode.Send && IsBusy)
         {
-            IsStreaming = true
-        };
+            mode = ChatSendMode.Send;
+        }
+        
+        var steering = mode is ChatSendMode.Steer or ChatSendMode.Queue;
 
+        var userMessage = new ChatMessageUserViewModel(prompt);
         AddMessage(userMessage);
-        AddMessage(assistantMessage);
+
+        ChatMessageAssistantViewModel? assistantMessage = null;
+        if (!steering)
+        {
+            // Only the initial (idle) send shows a placeholder; steered/queued messages
+            // join the turn that is already streaming.
+            assistantMessage = new ChatMessageAssistantViewModel("init")
+            {
+                IsStreaming = true
+            };
+            AddMessage(assistantMessage);
+        }
+
         _pendingLocalUserMessages++;
 
         CurrentMessage = string.Empty;
@@ -274,7 +300,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         try
         {
-            await SelectedChatService.SendAsync(prompt);
+            await SelectedChatService.SendAsync(prompt, mode);
         }
         catch (Exception ex)
         {
@@ -282,15 +308,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Messages.Remove(initMessage);
             }
-            else
+            else if (assistantMessage != null)
             {
                 Messages.Remove(assistantMessage);
             }
 
             AddErrorMessage(ex.Message);
-            IsBusy = false;
+            if (!steering) IsBusy = false;
         }
     }
+
+    private bool CanSteerOrQueue() =>
+        IsConnected && IsBusy && !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private async Task AbortAsync()
     {
@@ -306,7 +335,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
     }
 
-    private bool CanSend() => IsConnected && !IsBusy && !string.IsNullOrWhiteSpace(CurrentMessage);
+    private bool CanSend() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private bool CanAbort() => IsConnected && IsBusy;
 

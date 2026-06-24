@@ -138,14 +138,95 @@ public sealed class CopilotChatService(
             if (SetProperty(ref field, value) && value != null)
             {
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
+                RefreshReasoningEfforts(value);
                 if (oldValue != null && oldValue.Id != value.Id)
                 {
-                    // When a model is changed we reset the session and force a new one on next init
-                    SessionReset?.Invoke(this, EventArgs.Empty);
-                    _ = NewChatAsync();
+                    // Switch the model in place for the next message, preserving conversation history.
+                    ApplyModelToSession();
                 }
             }
         }
+    }
+
+    public ObservableCollection<string> ReasoningEfforts { get; } = [];
+
+    public bool ShowReasoningEffort
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public string? SelectedReasoningEffort
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value) && value != null && !_suppressReasoningEffortApply)
+            {
+                settingsService.SetSettingValue(CopilotModule.CopilotSelectedReasoningEffortSettingKey, value);
+                ApplyModelToSession();
+            }
+        }
+    }
+
+    private bool _suppressReasoningEffortApply;
+
+    private void RefreshReasoningEfforts(ModelInfo model)
+    {
+        var supported = model.Capabilities.Supports.ReasoningEffort
+            ? model.SupportedReasoningEfforts ?? []
+            : [];
+
+        _suppressReasoningEffortApply = true;
+        try
+        {
+            ReasoningEfforts.Clear();
+            foreach (var effort in supported) ReasoningEfforts.Add(effort);
+
+            ShowReasoningEffort = ReasoningEfforts.Count > 0;
+
+            if (!ShowReasoningEffort)
+            {
+                SelectedReasoningEffort = null;
+                return;
+            }
+
+            var persisted =
+                settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedReasoningEffortSettingKey);
+
+            SelectedReasoningEffort =
+                !string.IsNullOrEmpty(persisted) && ReasoningEfforts.Contains(persisted)
+                    ? persisted
+                    : model.DefaultReasoningEffort is { } def && ReasoningEfforts.Contains(def)
+                        ? def
+                        : ReasoningEfforts.FirstOrDefault();
+        }
+        finally
+        {
+            _suppressReasoningEffortApply = false;
+        }
+    }
+
+    private void ApplyModelToSession()
+    {
+        var session = _session;
+        var model = SelectedModel;
+        if (session == null || model == null) return;
+
+        var effort = ShowReasoningEffort ? SelectedReasoningEffort : null;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await session.SetModelAsync(model.Id, effort);
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogError(ex, "Failed to switch Copilot model to {Model}.", model.Id);
+            }
+        });
     }
 
     public string Name { get; } = "Copilot";
@@ -370,6 +451,7 @@ public sealed class CopilotChatService(
             var sessionConfig = new SessionConfig
             {
                 Model = SelectedModel.Id,
+                ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null,
                 Streaming = true,
                 // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
                 IncludeSubAgentStreamingEvents = false,
@@ -509,7 +591,9 @@ public sealed class CopilotChatService(
         };
     }
 
-    public async Task SendAsync(string prompt)
+    public Task SendAsync(string prompt) => SendAsync(prompt, ChatSendMode.Send);
+
+    public async Task SendAsync(string prompt, ChatSendMode mode)
     {
         if (SelectedModel == null)
         {
@@ -524,7 +608,17 @@ public sealed class CopilotChatService(
         }
 
         if (_session == null) return;
-        await _session.SendAsync(new MessageOptions { Prompt = prompt }).ConfigureAwait(false);
+
+        var options = new MessageOptions { Prompt = prompt };
+        var sdkMode = mode switch
+        {
+            ChatSendMode.Steer => "immediate",
+            ChatSendMode.Queue => "enqueue",
+            _ => null
+        };
+        if (sdkMode != null) options.Mode = sdkMode;
+
+        await _session.SendAsync(options).ConfigureAwait(false);
     }
 
     public async Task AbortAsync()
