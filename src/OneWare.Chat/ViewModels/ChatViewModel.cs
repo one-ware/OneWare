@@ -32,8 +32,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
     private bool _initialized;
-    // Counts user messages sent locally so ChatUserMessageEvent duplicates are suppressed
-    private int _pendingLocalUserMessages;
+    // FIFO of messages sent locally so the echoed ChatUserMessageEvent can be matched
+    // (suppressed for normal/steered sends, or used to activate a queued message).
+    private readonly Queue<PendingLocalMessage> _pendingLocalMessages = new();
+
+    private const string DefaultWorkingStatus = "Working…";
+
+    private sealed record PendingLocalMessage(
+        string Content,
+        ChatSendMode Mode,
+        ChatMessageUserViewModel? QueuedView);
 
     private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
     {
@@ -129,6 +137,22 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     } = "Starting...";
 
     public ObservableCollection<IChatMessage> Messages { get; set; } = new();
+
+    /// <summary>
+    /// Messages the user has queued while the agent is busy. Rendered (dimmed) below the
+    /// conversation until the agent activates them.
+    /// </summary>
+    public ObservableCollection<IChatMessage> QueuedMessages { get; } = new();
+
+    /// <summary>
+    /// Text shown next to the working spinner. Switches to "Steering…" while a steered message
+    /// is being applied to the current turn.
+    /// </summary>
+    public string WorkingStatusText
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = DefaultWorkingStatus;
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
 
@@ -243,6 +267,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
 
         Messages.Clear();
+        QueuedMessages.Clear();
+        _pendingLocalMessages.Clear();
+        WorkingStatusText = DefaultWorkingStatus;
         _assistantMessagesById.Clear();
         _assistantReasoningById.Clear();
     }
@@ -269,29 +296,32 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             return;
         }
 
-        if (mode == ChatSendMode.Send && IsBusy)
-        {
-            mode = ChatSendMode.Send;
-        }
-        
-        var steering = mode is ChatSendMode.Steer or ChatSendMode.Queue;
-
         var userMessage = new ChatMessageUserViewModel(prompt);
-        AddMessage(userMessage);
-
         ChatMessageAssistantViewModel? assistantMessage = null;
-        if (!steering)
-        {
-            // Only the initial (idle) send shows a placeholder; steered/queued messages
-            // join the turn that is already streaming.
-            assistantMessage = new ChatMessageAssistantViewModel("init")
-            {
-                IsStreaming = true
-            };
-            AddMessage(assistantMessage);
-        }
 
-        _pendingLocalUserMessages++;
+        switch (mode)
+        {
+            case ChatSendMode.Queue:
+                // Park the message (dimmed) below the conversation until the agent activates it.
+                QueuedMessages.Add(userMessage);
+                _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, userMessage));
+                break;
+
+            case ChatSendMode.Steer:
+                AddMessage(userMessage);
+                _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, null));
+                WorkingStatusText = "Steering…";
+                break;
+
+            default:
+                AddMessage(userMessage);
+                _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, null));
+                // Only the initial (idle) send shows a placeholder; steered messages join the
+                // turn that is already streaming.
+                assistantMessage = new ChatMessageAssistantViewModel("init") { IsStreaming = true };
+                AddMessage(assistantMessage);
+                break;
+        }
 
         CurrentMessage = string.Empty;
         IsBusy = true;
@@ -304,7 +334,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
         catch (Exception ex)
         {
-            if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
+            if (mode == ChatSendMode.Queue)
+            {
+                QueuedMessages.Remove(userMessage);
+            }
+            else if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
             {
                 Messages.Remove(initMessage);
             }
@@ -314,7 +348,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
 
             AddErrorMessage(ex.Message);
-            if (!steering) IsBusy = false;
+            if (mode == ChatSendMode.Send) IsBusy = false;
+            if (mode == ChatSendMode.Steer) WorkingStatusText = DefaultWorkingStatus;
         }
     }
 
@@ -338,6 +373,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private bool CanSend() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private bool CanAbort() => IsConnected && IsBusy;
+
+    private bool TryDequeuePendingLocal(string content, out PendingLocalMessage pending)
+    {
+        if (_pendingLocalMessages.Count > 0 && _pendingLocalMessages.Peek().Content == content)
+        {
+            pending = _pendingLocalMessages.Dequeue();
+            return true;
+        }
+
+        pending = default!;
+        return false;
+    }
 
     private void AddMessage(IChatMessage message)
     {
@@ -412,6 +459,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 message.IsStreaming = false;
 
             IsBusy = false;
+            // Safety: never let the steering indicator stick past the end of a turn.
+            WorkingStatusText = DefaultWorkingStatus;
         });
     }
 
@@ -471,15 +520,30 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatUserMessageEvent x:
             {
-                // If we sent this message locally it is already visible — skip.
-                // Otherwise it originates from a remote session user; show it and mark busy.
-                if (_pendingLocalUserMessages > 0)
-                {
-                    _pendingLocalUserMessages--;
-                    break;
-                }
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (TryDequeuePendingLocal(x.Content, out var pending))
+                    {
+                        switch (pending.Mode)
+                        {
+                            case ChatSendMode.Queue when pending.QueuedView != null:
+                                // The agent activated the queued message — promote it into the flow.
+                                QueuedMessages.Remove(pending.QueuedView);
+                                AddMessage(pending.QueuedView);
+                                IsBusy = true;
+                                ContentAdded?.Invoke(this, EventArgs.Empty);
+                                break;
+                            case ChatSendMode.Steer:
+                                // Steering has been applied to the current turn.
+                                WorkingStatusText = DefaultWorkingStatus;
+                                break;
+                            // Normal send: already visible, nothing to do.
+                        }
+
+                        return;
+                    }
+
+                    // Originates from a remote session user; show it and mark busy.
                     AddMessage(new ChatMessageUserViewModel(x.Content));
                     IsBusy = true;
                     ContentAdded?.Invoke(this, EventArgs.Empty);
