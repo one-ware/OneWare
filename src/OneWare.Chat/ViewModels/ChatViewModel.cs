@@ -552,7 +552,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatButtonEvent x:
             {
-                Dispatcher.UIThread.Post(() => { AddMessage(new ChatMessageWithButtonViewModel(x)); });
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageWithButtonViewModel(x));
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
                 break;
             }
             case ChatPermissionRequestEvent x:
@@ -562,17 +566,26 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var msg = new ChatMessagePermissionRequestViewModel(x);
                     msg.CloseAction = () => Messages.Remove(msg);
                     AddMessage(msg);
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
                 });
                 break;
             }
             case ChatUserInputRequestEvent x:
             {
-                Dispatcher.UIThread.Post(() => AddMessage(new ChatMessageUserInputRequestViewModel(x)));
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageUserInputRequestViewModel(x));
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
                 break;
             }
             case ChatErrorEvent x:
             {
-                Dispatcher.UIThread.Post(() => { AddErrorMessage(x.Message); });
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddErrorMessage(x.Message);
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
                 break;
             }
             case ChatIdleEvent:
