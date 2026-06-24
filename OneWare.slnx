@@ -33,6 +33,7 @@
     <File Path="build/props/Base.props" />
     <File Path="build/props/CommunityToolkit.Mvvm.props" />
     <File Path="build/props/Devlooped.CredentialManager.props" />
+    <File Path="build/props/DotAcp.Client.props" />
     <File Path="build/props/Dock.Avalonia.props" />
     <File Path="build/props/DynamicData.props" />
     <File Path="build/props/Jint.props" />
