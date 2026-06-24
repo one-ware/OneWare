@@ -13,7 +13,6 @@ using GitHub.Copilot;
 using GitHub.Copilot.Rpc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using OneWare.Copilot.Models;
 using OneWare.Copilot.ViewModels;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Enums;
@@ -128,9 +127,9 @@ public sealed class CopilotChatService(
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    public ObservableCollection<ModelModel> Models { get; } = [];
+    public ObservableCollection<ModelInfo> Models { get; } = [];
 
-    public ModelModel? SelectedModel
+    public ModelInfo? SelectedModel
     {
         get;
         set
@@ -326,17 +325,11 @@ public sealed class CopilotChatService(
             StatusChanged?.Invoke(this, new StatusEvent(true, $"Copilot started"));
 
             Models.Clear();
-            Models.AddRange(models.Select(x => new ModelModel()
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Billing = $"{x.Billing?.Multiplier}x",
-            }).ToArray());
+            Models.AddRange(models.ToArray());
 
             var selectedModelSetting =
                 settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
-            SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ??
-                            Models.FirstOrDefault(x => x.Billing == "0x") ?? Models.FirstOrDefault();
+            SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ?? Models.FirstOrDefault();
 
             return true;
         }

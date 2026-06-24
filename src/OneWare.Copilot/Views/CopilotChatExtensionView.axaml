@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:OneWare.Copilot.Services"
-             xmlns:models="clr-namespace:OneWare.Copilot.Models"
              xmlns:views="clr-namespace:OneWare.Copilot.Views"
+             xmlns:converters="clr-namespace:OneWare.Copilot.Converters"
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -31,9 +31,21 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
-                                    <TextBlock Text="{Binding Name}" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Billing}" />
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8"
+                                      RowDefinitions="Auto, Auto" MinWidth="190"
+                                      ToolTip.Tip="{Binding Converter={x:Static converters:ModelInfoTooltipConverter.Instance}}">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                                               Text="{Binding Capabilities.Limits.MaxContextWindowTokens, Converter={x:Static converters:TokenCountToCompactStringConverter.Instance}}"
+                                               FontSize="11" VerticalAlignment="Center"
+                                               HorizontalAlignment="Right"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                               Text="{Binding Converter={x:Static converters:ModelPriceConverter.Instance}}"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                               IsVisible="{Binding Billing.TokenPrices, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
