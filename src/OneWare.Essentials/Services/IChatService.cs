@@ -17,6 +17,11 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     public Control? BottomUiExtension { get; }
 
     /// <summary>
+    /// Optional UI extension displayed above the chat input area (e.g. attachments).
+    /// </summary>
+    public Control? TopUiExtension => null;
+
+    /// <summary>
     /// Fired when the chat session is reset.
     /// </summary>
     event EventHandler SessionReset;

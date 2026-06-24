@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,6 +21,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Copilot.Services;
 
@@ -28,6 +31,7 @@ public sealed class CopilotChatService(
     IPackageService packageService,
     IPackageWindowService packageWindowService,
     IWindowService windowService,
+    IMainDockService mainDockService,
     IPaths paths)
     : ObservableObject, IChatServiceWithSessions
 {
@@ -241,6 +245,163 @@ public sealed class CopilotChatService(
     {
         DataContext = this
     };
+
+    public Control TopUiExtension
+    {
+        get
+        {
+            EnsureAttachmentTracking();
+            return new CopilotChatAttachmentsView { DataContext = this };
+        }
+    }
+
+    #region Attachments
+
+    private bool _attachmentTrackingInitialized;
+    private bool _activeFileDismissed;
+    private IEditor? _trackedEditor;
+
+    /// <summary>Files the user explicitly attached for the next message.</summary>
+    public ObservableCollection<CopilotAttachmentViewModel> Attachments { get; } = new();
+
+    /// <summary>The implicit, auto-tracked chip for the currently focused editor file.</summary>
+    public CopilotAttachmentViewModel? ActiveFileAttachment
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    private void EnsureAttachmentTracking()
+    {
+        if (_attachmentTrackingInitialized) return;
+        _attachmentTrackingInitialized = true;
+
+        mainDockService.PropertyChanged += OnDockServicePropertyChanged;
+        RefreshActiveFileAttachment(focusChanged: true);
+    }
+
+    private void OnDockServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IMainDockService.CurrentDocument))
+        {
+            RefreshActiveFileAttachment(focusChanged: true);
+        }
+    }
+
+    private void OnEditorSelectionChanged(object? sender, EventArgs e) =>
+        RefreshActiveFileAttachment(focusChanged: false);
+
+    private void RefreshActiveFileAttachment(bool focusChanged)
+    {
+        var editor = mainDockService.CurrentDocument as IEditor;
+
+        if (!ReferenceEquals(editor, _trackedEditor))
+        {
+            if (_trackedEditor != null)
+                _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
+
+            _trackedEditor = editor;
+
+            if (_trackedEditor != null)
+                _trackedEditor.Editor.TextArea.SelectionChanged += OnEditorSelectionChanged;
+
+            // Moving focus to a different file revives a previously dismissed active-file chip.
+            if (focusChanged) _activeFileDismissed = false;
+        }
+
+        ActiveFileAttachment = _activeFileDismissed ? null : BuildActiveFileAttachment(editor);
+    }
+
+    private CopilotAttachmentViewModel? BuildActiveFileAttachment(IEditor? editor)
+    {
+        if (editor == null || string.IsNullOrEmpty(editor.FullPath)) return null;
+
+        var name = Path.GetFileName(editor.FullPath);
+        var selection = TryGetSelection(editor, out var selectionText);
+
+        return new CopilotAttachmentViewModel(
+            editor.FullPath,
+            name,
+            isActiveFile: true,
+            RemoveAttachment,
+            selection,
+            selectionText);
+    }
+
+    private static CopilotAttachmentViewModel.SelectionRange? TryGetSelection(IEditor editor, out string? selectionText)
+    {
+        selectionText = null;
+
+        var textArea = editor.Editor.TextArea;
+        if (textArea.Selection.IsEmpty) return null;
+
+        var start = textArea.Selection.StartPosition;
+        var end = textArea.Selection.EndPosition;
+
+        // Normalize so Start precedes End regardless of drag direction.
+        if (end.Line < start.Line || (end.Line == start.Line && end.Column < start.Column))
+            (start, end) = (end, start);
+
+        selectionText = editor.Editor.SelectedText;
+
+        return new CopilotAttachmentViewModel.SelectionRange(
+            start.Line, start.Column, end.Line, end.Column);
+    }
+
+    private void RemoveAttachment(CopilotAttachmentViewModel attachment)
+    {
+        if (attachment.IsActiveFile)
+        {
+            _activeFileDismissed = true;
+            ActiveFileAttachment = null;
+        }
+        else
+        {
+            Attachments.Remove(attachment);
+        }
+    }
+
+    public IAsyncRelayCommand<Visual?> AddAttachmentCommand => field ??= new AsyncRelayCommand<Visual?>(AddAttachmentAsync);
+
+    private async Task AddAttachmentAsync(Visual? source)
+    {
+        var owner = source != null ? TopLevel.GetTopLevel(source) : null;
+        if (owner == null) return;
+
+        var files = await StorageProviderHelper.SelectFilesAsync(owner, "Add Attachment", null);
+
+        foreach (var file in files)
+        {
+            if (string.IsNullOrEmpty(file)) continue;
+            if (Attachments.Any(a => string.Equals(a.FilePath, file, StringComparison.OrdinalIgnoreCase))) continue;
+
+            Attachments.Add(new CopilotAttachmentViewModel(
+                file, Path.GetFileName(file), isActiveFile: false, RemoveAttachment));
+        }
+    }
+
+    private IList<Attachment>? CollectAttachments()
+    {
+        // Rebuild the active-file chip from the live editor so the sent payload reflects the
+        // current selection even if the chip display lagged.
+        RefreshActiveFileAttachment(focusChanged: false);
+
+        var result = new List<Attachment>();
+        if (ActiveFileAttachment != null) result.Add(ActiveFileAttachment.ToSdkAttachment());
+        result.AddRange(Attachments.Select(a => a.ToSdkAttachment()));
+
+        return result.Count > 0 ? result : null;
+    }
+
+    private void ClearAttachmentsAfterSend()
+    {
+        Attachments.Clear();
+        _activeFileDismissed = false;
+        RefreshActiveFileAttachment(focusChanged: false);
+    }
+
+    #endregion
+
 
     public event EventHandler? SessionReset;
     public event EventHandler<ChatEvent>? EventReceived;
@@ -610,6 +771,9 @@ public sealed class CopilotChatService(
         if (_session == null) return;
 
         var options = new MessageOptions { Prompt = prompt };
+        var attachments = CollectAttachments();
+        if (attachments != null) options.Attachments = attachments;
+
         var sdkMode = mode switch
         {
             ChatSendMode.Steer => "immediate",
@@ -619,6 +783,8 @@ public sealed class CopilotChatService(
         if (sdkMode != null) options.Mode = sdkMode;
 
         await _session.SendAsync(options).ConfigureAwait(false);
+
+        Dispatcher.UIThread.Post(ClearAttachmentsAfterSend);
     }
 
     public async Task AbortAsync()
@@ -654,6 +820,14 @@ public sealed class CopilotChatService(
 
     public async ValueTask DisposeAsync()
     {
+        if (_attachmentTrackingInitialized)
+        {
+            mainDockService.PropertyChanged -= OnDockServicePropertyChanged;
+            if (_trackedEditor != null)
+                _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
+            _trackedEditor = null;
+        }
+
         try
         {
             await DisposeSessionAsync();

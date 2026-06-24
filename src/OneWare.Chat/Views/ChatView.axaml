@@ -185,15 +185,33 @@
         </Border>
 
         <Border Grid.Row="3" Margin="10 4 10 10" Background="{DynamicResource ThemeControlMidBrush}"
-                Classes="RoundBorder">
-            <Grid RowDefinitions="Auto, Auto">
-                <TextBox Classes="ToolBar" Name="CommandBox" Watermark="Type your task here..."
+                Classes="RoundBorder" BorderThickness="1"
+                Classes.busy="{Binding IsBusy}">
+            <Border.Styles>
+                <Style Selector="Border.busy">
+                    <Style.Animations>
+                        <Animation Duration="0:0:1.6" IterationCount="INFINITE" PlaybackDirection="Alternate">
+                            <KeyFrame Cue="0%">
+                                <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+                            </KeyFrame>
+                            <KeyFrame Cue="100%">
+                                <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+                            </KeyFrame>
+                        </Animation>
+                    </Style.Animations>
+                </Style>
+            </Border.Styles>
+            <Grid RowDefinitions="Auto, Auto, Auto">
+                <ContentControl Grid.Row="0"
+                                Content="{Binding SelectedChatService.TopUiExtension, FallbackValue={x:Null}}" />
+
+                <TextBox Grid.Row="1" Classes="ToolBar" Name="CommandBox" Watermark="Type your task here..."
                          AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
                          Padding="6" BorderThickness="0" Background="Transparent"
                          VerticalContentAlignment="Top" CaretBlinkInterval="00:00:00.5"
                          Text="{Binding CurrentMessage, Mode=TwoWay}" />
 
-                <DockPanel Grid.Row="1" Height="22" Margin="4 4" LastChildFill="False" VerticalAlignment="Bottom">
+                <DockPanel Grid.Row="2" Height="22" Margin="4 4" LastChildFill="False" VerticalAlignment="Bottom">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                         <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
                             <Image Source="{DynamicResource VSImageLib2019.Stop_16x}" Height="16" />

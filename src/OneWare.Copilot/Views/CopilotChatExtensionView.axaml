@@ -184,7 +184,7 @@
                     StrokeThickness="2.5"
                     TrackBrush="{DynamicResource ThemeBorderMidBrush}"
                     ProgressBrush="{DynamicResource ThemeAccentBrush}"
-                    Width="18" Height="18"
+                    Width="14" Height="14"
                     IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{Binding ContextCurrentTokens, StringFormat='Context: {0:N0} tokens'}" />
 
