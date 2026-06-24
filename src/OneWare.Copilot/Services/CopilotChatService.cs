@@ -380,10 +380,7 @@ public sealed class CopilotChatService(
                 Streaming = true,
                 // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
                 IncludeSubAgentStreamingEvents = false,
-                SystemMessage = new SystemMessageConfig
-                {
-                    Content = BuildSystemMessage()
-                },
+                SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
                 AvailableTools = tools.Select(x => x.Name).ToList(),
                 ClientName = "OneWare Studio",
@@ -426,12 +423,97 @@ public sealed class CopilotChatService(
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
     }
 
-    private string BuildSystemMessage()
+    private SystemMessageConfig BuildSystemMessageConfig()
     {
-        var additions = toolProvider.GetPromptAdditions();
-        if (additions.Count == 0) return CopilotModule.SystemMessage;
+        var overrides = new Dictionary<SystemMessageSection, SectionOverride>
+        {
+            // Tell the model it is embedded in OneWare Studio IDE
+            [SystemMessageSection.Identity] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = "You are embedded in an IDE called OneWare Studio. " +
+                          "Operate strictly within the context of the IDE, its projects, and its files. " +
+                          "Do not speculate, hallucinate, or assume project structure, file contents, or state."
+            },
 
-        return $"{CopilotModule.SystemMessage}\n\n{string.Join("\n\n", additions)}";
+            // Add IDE-specific context tools
+            [SystemMessageSection.EnvironmentContext] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = """
+
+                          OneWare Studio IDE context tools — use these instead of assumptions:
+                          - Active file path  → `getFocusedFile`
+                          - Open file paths   → `getOpenFiles`
+                          - Active project    → `getActiveProject`
+                          - LSP diagnostics   → `getErrorsForFile` or `getAllErrors`
+
+                          PATH RULES: always pass ABSOLUTE paths to file tools; take paths verbatim from tool outputs.
+                          """
+            },
+
+            // File and terminal tool instructions
+            [SystemMessageSection.ToolInstructions] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = """
+
+                          OneWare Studio file & terminal tools:
+                          - `readFile`           — reads from the live editor buffer when the file is open; use for all file reads
+                          - `editFile`           — opens a diff view in the IDE for review; always read the file first unless given full replacement content
+                          - `runTerminalCommand` — executes in the IDE terminal panel; output is returned; use for all shell commands
+                          """
+            },
+
+            // IDE-specific code change rules
+            [SystemMessageSection.CodeChangeRules] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = """
+
+                          OneWare Studio rules:
+                          - Always call `readFile` before editing a file.
+                          - Partial edits must use correct 1-based line ranges.
+                          - All paths passed to file tools must be absolute.
+                          """
+            },
+
+            // Output style
+            [SystemMessageSection.Tone] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = "Be concise and action-oriented. Prefer code over prose. No emojis."
+            },
+
+            // Safety / prohibitions
+            [SystemMessageSection.Safety] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = """
+
+                          Additional prohibitions for OneWare Studio:
+                          - Do not invent file contents, paths, errors, or command output.
+                          - Do not describe what a terminal command would produce — always execute it.
+                          """
+            },
+        };
+
+        // Inject dynamic plugin prompt additions into RuntimeInstructions
+        var additions = toolProvider.GetPromptAdditions();
+        if (additions.Count > 0)
+        {
+            overrides[SystemMessageSection.RuntimeInstructions] = new SectionOverride
+            {
+                Action = SectionOverrideAction.Append,
+                Content = string.Join("\n\n", additions)
+            };
+        }
+
+        return new SystemMessageConfig
+        {
+            Mode = SystemMessageMode.Customize,
+            Sections = overrides
+        };
     }
 
     public async Task SendAsync(string prompt)
@@ -661,6 +743,10 @@ public sealed class CopilotChatService(
 
     private Task<PreToolUseHookOutput?> OnPreToolUseAsync(PreToolUseHookInput input, HookInvocation invocation)
     {
+        // Autopilot: skip all confirmation checks and allow immediately
+        if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotAutopilotSettingKey))
+            return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
+
         var check = toolProvider.GetConfirmationCheck(input.ToolName);
         if (check == null)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
@@ -691,6 +777,10 @@ public sealed class CopilotChatService(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
+        // Autopilot: auto-approve all permission requests
+        if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotAutopilotSettingKey))
+            return Task.FromResult(PermissionDecision.ApproveOnce());
+
         if (request is PermissionRequestCustomTool)
             return Task.FromResult(PermissionDecision.ApproveOnce());
         
