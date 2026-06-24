@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:OneWare.Copilot.Services"
+             xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="40"
+             x:Class="OneWare.Copilot.Views.CopilotChatAttachmentsView"
+             x:DataType="services:CopilotChatService">
+    <UserControl.Resources>
+        <DataTemplate x:Key="AttachmentChipTemplate" x:DataType="viewModels:CopilotAttachmentViewModel">
+            <Border Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="3"
+                    Padding="4 1" Margin="0 0 4 0" ToolTip.Tip="{Binding FilePath}">
+                <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                    <Image Source="{DynamicResource VsImageLib.File16X}" Width="12" Height="12"
+                           VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding DisplayName}" FontSize="11" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Detail}" FontSize="11" FontStyle="Italic"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                               IsVisible="{Binding Detail, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <Button Classes="ToolBar" Padding="1" Margin="2 0 0 0" VerticalAlignment="Center"
+                            Command="{Binding RemoveCommand}" ToolTip.Tip="Remove">
+                        <Image Source="{DynamicResource MaterialDesign.Close}" Width="9" Height="9" />
+                    </Button>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <WrapPanel Orientation="Horizontal" Margin="2 2 2 0">
+        <Button Name="AddButton" Classes="ToolBar" Padding="3 1" Margin="0 0 4 0"
+                VerticalAlignment="Center" ToolTip.Tip="Attach files"
+                Command="{Binding AddAttachmentCommand}"
+                CommandParameter="{Binding #AddButton}">
+            <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                <Image Source="{DynamicResource Entypo+.Attachment}" Width="10" Height="10" />
+            </StackPanel>
+        </Button>
+
+        <ContentControl Content="{Binding ActiveFileAttachment}"
+                        ContentTemplate="{StaticResource AttachmentChipTemplate}"
+                        IsVisible="{Binding ActiveFileAttachment, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <ItemsControl ItemsSource="{Binding Attachments}"
+                      ItemTemplate="{StaticResource AttachmentChipTemplate}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </WrapPanel>
+</UserControl>

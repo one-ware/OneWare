@@ -100,6 +100,28 @@ public sealed class ChatIdleEvent()
 }
 
 /// <summary>
+/// Emitted when the agent asks the user a question mid-turn (free-form and/or multiple choice).
+/// The chat UI must show an interactive prompt and invoke <see cref="SubmitCommand"/> with the
+/// user's answer; the service blocks the agent callback until then.
+/// </summary>
+public sealed class ChatUserInputRequestEvent(
+    string question,
+    IReadOnlyList<string> choices,
+    bool allowFreeform,
+    IRelayCommand<string?> submitCommand)
+    : ChatEvent()
+{
+    public string Question { get; } = question;
+
+    public IReadOnlyList<string> Choices { get; } = choices;
+
+    public bool AllowFreeform { get; } = allowFreeform;
+
+    /// <summary>Invoked with the chosen or typed answer string.</summary>
+    public IRelayCommand<string?> SubmitCommand { get; } = submitCommand;
+}
+
+/// <summary>
 /// Signals the chat UI to clear all current messages and start fresh.
 /// Emitted when the service initiates a new session autonomously (e.g. a remote session),
 /// without going through the normal <see cref="IChatService.NewChatAsync"/> path.

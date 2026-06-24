@@ -61,7 +61,42 @@
             </StackPanel>
         </Button>
 
-        <!-- Usage info button (visible only when usage data is available) -->
+        <!-- Reasoning effort selector (only for models that support it) -->
+        <Button Name="ReasoningButton" VerticalAlignment="Center"
+                IsVisible="{Binding ShowReasoningEffort}"
+                ToolTip.Tip="Reasoning effort">
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        Placement="TopEdgeAlignedRight">
+                    <ListBox ItemsSource="{Binding ReasoningEfforts}"
+                             SelectedItem="{Binding SelectedReasoningEffort}" BorderThickness="0"
+                             MinWidth="120">
+                        <Interaction.Behaviors>
+                            <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                <HideFlyoutAction Flyout="{Binding #ReasoningButton.Flyout}" />
+                            </behaviors:PointerPressedHandledEventTrigger>
+                        </Interaction.Behaviors>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </Flyout>
+            </Button.Flyout>
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="{Binding SelectedReasoningEffort, FallbackValue=effort}"
+                           FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                       Height="8" />
+            </StackPanel>
+        </Button>
         <Button Name="UsageButton" VerticalAlignment="Center"
                 IsVisible="{Binding HasUsageData}"
                 ToolTip.Tip="Token usage">
@@ -149,7 +184,7 @@
                     StrokeThickness="2.5"
                     TrackBrush="{DynamicResource ThemeBorderMidBrush}"
                     ProgressBrush="{DynamicResource ThemeAccentBrush}"
-                    Width="18" Height="18"
+                    Width="14" Height="14"
                     IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{Binding ContextCurrentTokens, StringFormat='Context: {0:N0} tokens'}" />
 

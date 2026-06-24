@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,6 +21,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Copilot.Services;
 
@@ -28,6 +31,7 @@ public sealed class CopilotChatService(
     IPackageService packageService,
     IPackageWindowService packageWindowService,
     IWindowService windowService,
+    IMainDockService mainDockService,
     IPaths paths)
     : ObservableObject, IChatServiceWithSessions
 {
@@ -36,6 +40,8 @@ public sealed class CopilotChatService(
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private string? _requestedSessionId;
+    private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
+    private readonly HashSet<string> _sessionApprovedTools = new();
 
     // Usage tracking
     public long LastInputTokens
@@ -138,14 +144,95 @@ public sealed class CopilotChatService(
             if (SetProperty(ref field, value) && value != null)
             {
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
+                RefreshReasoningEfforts(value);
                 if (oldValue != null && oldValue.Id != value.Id)
                 {
-                    // When a model is changed we reset the session and force a new one on next init
-                    SessionReset?.Invoke(this, EventArgs.Empty);
-                    _ = NewChatAsync();
+                    // Switch the model in place for the next message, preserving conversation history.
+                    ApplyModelToSession();
                 }
             }
         }
+    }
+
+    public ObservableCollection<string> ReasoningEfforts { get; } = [];
+
+    public bool ShowReasoningEffort
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public string? SelectedReasoningEffort
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value) && value != null && !_suppressReasoningEffortApply)
+            {
+                settingsService.SetSettingValue(CopilotModule.CopilotSelectedReasoningEffortSettingKey, value);
+                ApplyModelToSession();
+            }
+        }
+    }
+
+    private bool _suppressReasoningEffortApply;
+
+    private void RefreshReasoningEfforts(ModelInfo model)
+    {
+        var supported = model.Capabilities.Supports.ReasoningEffort
+            ? model.SupportedReasoningEfforts ?? []
+            : [];
+
+        _suppressReasoningEffortApply = true;
+        try
+        {
+            ReasoningEfforts.Clear();
+            foreach (var effort in supported) ReasoningEfforts.Add(effort);
+
+            ShowReasoningEffort = ReasoningEfforts.Count > 0;
+
+            if (!ShowReasoningEffort)
+            {
+                SelectedReasoningEffort = null;
+                return;
+            }
+
+            var persisted =
+                settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedReasoningEffortSettingKey);
+
+            SelectedReasoningEffort =
+                !string.IsNullOrEmpty(persisted) && ReasoningEfforts.Contains(persisted)
+                    ? persisted
+                    : model.DefaultReasoningEffort is { } def && ReasoningEfforts.Contains(def)
+                        ? def
+                        : ReasoningEfforts.FirstOrDefault();
+        }
+        finally
+        {
+            _suppressReasoningEffortApply = false;
+        }
+    }
+
+    private void ApplyModelToSession()
+    {
+        var session = _session;
+        var model = SelectedModel;
+        if (session == null || model == null) return;
+
+        var effort = ShowReasoningEffort ? SelectedReasoningEffort : null;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await session.SetModelAsync(model.Id, effort);
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogError(ex, "Failed to switch Copilot model to {Model}.", model.Id);
+            }
+        });
     }
 
     public string Name { get; } = "Copilot";
@@ -160,6 +247,163 @@ public sealed class CopilotChatService(
     {
         DataContext = this
     };
+
+    public Control TopUiExtension
+    {
+        get
+        {
+            EnsureAttachmentTracking();
+            return new CopilotChatAttachmentsView { DataContext = this };
+        }
+    }
+
+    #region Attachments
+
+    private bool _attachmentTrackingInitialized;
+    private bool _activeFileDismissed;
+    private IEditor? _trackedEditor;
+
+    /// <summary>Files the user explicitly attached for the next message.</summary>
+    public ObservableCollection<CopilotAttachmentViewModel> Attachments { get; } = new();
+
+    /// <summary>The implicit, auto-tracked chip for the currently focused editor file.</summary>
+    public CopilotAttachmentViewModel? ActiveFileAttachment
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    private void EnsureAttachmentTracking()
+    {
+        if (_attachmentTrackingInitialized) return;
+        _attachmentTrackingInitialized = true;
+
+        mainDockService.PropertyChanged += OnDockServicePropertyChanged;
+        RefreshActiveFileAttachment(focusChanged: true);
+    }
+
+    private void OnDockServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IMainDockService.CurrentDocument))
+        {
+            RefreshActiveFileAttachment(focusChanged: true);
+        }
+    }
+
+    private void OnEditorSelectionChanged(object? sender, EventArgs e) =>
+        RefreshActiveFileAttachment(focusChanged: false);
+
+    private void RefreshActiveFileAttachment(bool focusChanged)
+    {
+        var editor = mainDockService.CurrentDocument as IEditor;
+
+        if (!ReferenceEquals(editor, _trackedEditor))
+        {
+            if (_trackedEditor != null)
+                _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
+
+            _trackedEditor = editor;
+
+            if (_trackedEditor != null)
+                _trackedEditor.Editor.TextArea.SelectionChanged += OnEditorSelectionChanged;
+
+            // Moving focus to a different file revives a previously dismissed active-file chip.
+            if (focusChanged) _activeFileDismissed = false;
+        }
+
+        ActiveFileAttachment = _activeFileDismissed ? null : BuildActiveFileAttachment(editor);
+    }
+
+    private CopilotAttachmentViewModel? BuildActiveFileAttachment(IEditor? editor)
+    {
+        if (editor == null || string.IsNullOrEmpty(editor.FullPath)) return null;
+
+        var name = Path.GetFileName(editor.FullPath);
+        var selection = TryGetSelection(editor, out var selectionText);
+
+        return new CopilotAttachmentViewModel(
+            editor.FullPath,
+            name,
+            isActiveFile: true,
+            RemoveAttachment,
+            selection,
+            selectionText);
+    }
+
+    private static CopilotAttachmentViewModel.SelectionRange? TryGetSelection(IEditor editor, out string? selectionText)
+    {
+        selectionText = null;
+
+        var textArea = editor.Editor.TextArea;
+        if (textArea.Selection.IsEmpty) return null;
+
+        var start = textArea.Selection.StartPosition;
+        var end = textArea.Selection.EndPosition;
+
+        // Normalize so Start precedes End regardless of drag direction.
+        if (end.Line < start.Line || (end.Line == start.Line && end.Column < start.Column))
+            (start, end) = (end, start);
+
+        selectionText = editor.Editor.SelectedText;
+
+        return new CopilotAttachmentViewModel.SelectionRange(
+            start.Line, start.Column, end.Line, end.Column);
+    }
+
+    private void RemoveAttachment(CopilotAttachmentViewModel attachment)
+    {
+        if (attachment.IsActiveFile)
+        {
+            _activeFileDismissed = true;
+            ActiveFileAttachment = null;
+        }
+        else
+        {
+            Attachments.Remove(attachment);
+        }
+    }
+
+    public IAsyncRelayCommand<Visual?> AddAttachmentCommand => field ??= new AsyncRelayCommand<Visual?>(AddAttachmentAsync);
+
+    private async Task AddAttachmentAsync(Visual? source)
+    {
+        var owner = source != null ? TopLevel.GetTopLevel(source) : null;
+        if (owner == null) return;
+
+        var files = await StorageProviderHelper.SelectFilesAsync(owner, "Add Attachment", null);
+
+        foreach (var file in files)
+        {
+            if (string.IsNullOrEmpty(file)) continue;
+            if (Attachments.Any(a => string.Equals(a.FilePath, file, StringComparison.OrdinalIgnoreCase))) continue;
+
+            Attachments.Add(new CopilotAttachmentViewModel(
+                file, Path.GetFileName(file), isActiveFile: false, RemoveAttachment));
+        }
+    }
+
+    private IList<Attachment>? CollectAttachments()
+    {
+        // Rebuild the active-file chip from the live editor so the sent payload reflects the
+        // current selection even if the chip display lagged.
+        RefreshActiveFileAttachment(focusChanged: false);
+
+        var result = new List<Attachment>();
+        if (ActiveFileAttachment != null) result.Add(ActiveFileAttachment.ToSdkAttachment());
+        result.AddRange(Attachments.Select(a => a.ToSdkAttachment()));
+
+        return result.Count > 0 ? result : null;
+    }
+
+    private void ClearAttachmentsAfterSend()
+    {
+        Attachments.Clear();
+        _activeFileDismissed = false;
+        RefreshActiveFileAttachment(focusChanged: false);
+    }
+
+    #endregion
+
 
     public event EventHandler? SessionReset;
     public event EventHandler<ChatEvent>? EventReceived;
@@ -370,6 +614,7 @@ public sealed class CopilotChatService(
             var sessionConfig = new SessionConfig
             {
                 Model = SelectedModel.Id,
+                ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null,
                 Streaming = true,
                 // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
                 IncludeSubAgentStreamingEvents = false,
@@ -509,7 +754,9 @@ public sealed class CopilotChatService(
         };
     }
 
-    public async Task SendAsync(string prompt)
+    public Task SendAsync(string prompt) => SendAsync(prompt, ChatSendMode.Send);
+
+    public async Task SendAsync(string prompt, ChatSendMode mode)
     {
         if (SelectedModel == null)
         {
@@ -524,17 +771,36 @@ public sealed class CopilotChatService(
         }
 
         if (_session == null) return;
-        await _session.SendAsync(new MessageOptions { Prompt = prompt }).ConfigureAwait(false);
+
+        var options = new MessageOptions { Prompt = prompt };
+        var attachments = CollectAttachments();
+        if (attachments != null) options.Attachments = attachments;
+
+        var sdkMode = mode switch
+        {
+            ChatSendMode.Steer => "immediate",
+            ChatSendMode.Queue => "enqueue",
+            _ => null
+        };
+        if (sdkMode != null) options.Mode = sdkMode;
+
+        await _session.SendAsync(options).ConfigureAwait(false);
+
+        Dispatcher.UIThread.Post(ClearAttachmentsAfterSend);
     }
 
     public async Task AbortAsync()
     {
+        ReleasePendingInputRequests();
         if (_session == null) return;
         await _session.AbortAsync();
     }
 
     public async Task NewChatAsync()
     {
+        ReleasePendingInputRequests();
+        lock (_sessionApprovedTools)
+            _sessionApprovedTools.Clear();
         _requestedSessionId = null;
         await InitializeSessionAsync();
     }
@@ -560,6 +826,16 @@ public sealed class CopilotChatService(
 
     public async ValueTask DisposeAsync()
     {
+        ReleasePendingInputRequests();
+
+        if (_attachmentTrackingInitialized)
+        {
+            mainDockService.PropertyChanged -= OnDockServicePropertyChanged;
+            if (_trackedEditor != null)
+                _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
+            _trackedEditor = null;
+        }
+
         try
         {
             await DisposeSessionAsync();
@@ -740,6 +1016,13 @@ public sealed class CopilotChatService(
         if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotAutopilotSettingKey))
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
+        // The user approved this tool for the rest of the session.
+        lock (_sessionApprovedTools)
+        {
+            if (_sessionApprovedTools.Contains(input.ToolName))
+                return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
+        }
+
         var check = toolProvider.GetConfirmationCheck(input.ToolName);
         if (check == null)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
@@ -776,7 +1059,16 @@ public sealed class CopilotChatService(
 
         if (request is PermissionRequestCustomTool)
             return Task.FromResult(PermissionDecision.ApproveOnce());
-        
+
+        var approvalKey = GetSessionApprovalKey(request);
+
+        // Already approved for this session — don't prompt again.
+        lock (_sessionApprovedTools)
+        {
+            if (_sessionApprovedTools.Contains(approvalKey))
+                return Task.FromResult(PermissionDecision.ApproveOnce());
+        }
+
         var message = BuildPermissionMessage(request);
 
         var responseSource = new TaskCompletionSource<PermissionDecision>(
@@ -788,6 +1080,8 @@ public sealed class CopilotChatService(
             new RelayCommand<Control?>(_ => responseSource.TrySetResult(PermissionDecision.Reject("Denied by User")));
         var allowForSessionCmd = new RelayCommand<Control?>(_ =>
         {
+            lock (_sessionApprovedTools)
+                _sessionApprovedTools.Add(approvalKey);
             responseSource.TrySetResult(new PermissionDecisionApproveForSession());
         });
 
@@ -796,6 +1090,18 @@ public sealed class CopilotChatService(
 
         return responseSource.Task;
     }
+
+    private static string GetSessionApprovalKey(PermissionRequest request) => request switch
+    {
+        PermissionRequestHook hook => hook.ToolName,
+        PermissionRequestShell => "shell",
+        PermissionRequestWrite => "write",
+        PermissionRequestRead => "read",
+        PermissionRequestUrl => "url",
+        PermissionRequestMcp mcp => $"mcp:{mcp.ServerName}/{mcp.ToolName}",
+        PermissionRequestMemory => "memory",
+        _ => request.Kind ?? "unknown"
+    };
 
     private static string BuildPermissionMessage(PermissionRequest request) => request switch
     {
@@ -823,14 +1129,51 @@ public sealed class CopilotChatService(
         UserInputRequest request,
         UserInputInvocation invocation)
     {
-        var message = $"Copilot requested user input: {request.Question}";
-        EventReceived?.Invoke(this, new ChatMessageEvent(message));
+        var choices = request.Choices?.ToList() ?? new List<string>();
+        var allowFreeform = request.AllowFreeform ?? true;
+        if (choices.Count == 0) allowFreeform = true;
 
-        return Task.FromResult(new UserInputResponse
+        var responseSource = new TaskCompletionSource<UserInputResponse>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        lock (_pendingInputRequests)
+            _pendingInputRequests.Add(responseSource);
+
+        var submitCommand = new RelayCommand<string?>(answer =>
         {
-            Answer = string.Empty,
-            WasFreeform = true
+            var text = answer ?? string.Empty;
+            var response = new UserInputResponse
+            {
+                Answer = text,
+                WasFreeform = !choices.Contains(text)
+            };
+
+            if (responseSource.TrySetResult(response))
+                lock (_pendingInputRequests)
+                    _pendingInputRequests.Remove(responseSource);
         });
+
+        EventReceived?.Invoke(this, new ChatUserInputRequestEvent(
+            request.Question, choices, allowFreeform, submitCommand));
+
+        return responseSource.Task;
+    }
+
+    /// <summary>
+    /// Releases any unanswered user-input requests with an empty answer so the agent callback can
+    /// complete instead of hanging (e.g. on abort, new chat, or dispose).
+    /// </summary>
+    private void ReleasePendingInputRequests()
+    {
+        List<TaskCompletionSource<UserInputResponse>> pending;
+        lock (_pendingInputRequests)
+        {
+            pending = new List<TaskCompletionSource<UserInputResponse>>(_pendingInputRequests);
+            _pendingInputRequests.Clear();
+        }
+
+        foreach (var source in pending)
+            source.TrySetResult(new UserInputResponse { Answer = string.Empty, WasFreeform = true });
     }
 
     private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,
