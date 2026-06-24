@@ -40,6 +40,7 @@ public sealed class CopilotChatService(
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private string? _requestedSessionId;
+    private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
 
     // Usage tracking
     public long LastInputTokens
@@ -789,12 +790,14 @@ public sealed class CopilotChatService(
 
     public async Task AbortAsync()
     {
+        ReleasePendingInputRequests();
         if (_session == null) return;
         await _session.AbortAsync();
     }
 
     public async Task NewChatAsync()
     {
+        ReleasePendingInputRequests();
         _requestedSessionId = null;
         await InitializeSessionAsync();
     }
@@ -820,6 +823,8 @@ public sealed class CopilotChatService(
 
     public async ValueTask DisposeAsync()
     {
+        ReleasePendingInputRequests();
+
         if (_attachmentTrackingInitialized)
         {
             mainDockService.PropertyChanged -= OnDockServicePropertyChanged;
@@ -1091,14 +1096,51 @@ public sealed class CopilotChatService(
         UserInputRequest request,
         UserInputInvocation invocation)
     {
-        var message = $"Copilot requested user input: {request.Question}";
-        EventReceived?.Invoke(this, new ChatMessageEvent(message));
+        var choices = request.Choices?.ToList() ?? new List<string>();
+        var allowFreeform = request.AllowFreeform ?? true;
+        if (choices.Count == 0) allowFreeform = true;
 
-        return Task.FromResult(new UserInputResponse
+        var responseSource = new TaskCompletionSource<UserInputResponse>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        lock (_pendingInputRequests)
+            _pendingInputRequests.Add(responseSource);
+
+        var submitCommand = new RelayCommand<string?>(answer =>
         {
-            Answer = string.Empty,
-            WasFreeform = true
+            var text = answer ?? string.Empty;
+            var response = new UserInputResponse
+            {
+                Answer = text,
+                WasFreeform = !choices.Contains(text)
+            };
+
+            if (responseSource.TrySetResult(response))
+                lock (_pendingInputRequests)
+                    _pendingInputRequests.Remove(responseSource);
         });
+
+        EventReceived?.Invoke(this, new ChatUserInputRequestEvent(
+            request.Question, choices, allowFreeform, submitCommand));
+
+        return responseSource.Task;
+    }
+
+    /// <summary>
+    /// Releases any unanswered user-input requests with an empty answer so the agent callback can
+    /// complete instead of hanging (e.g. on abort, new chat, or dispose).
+    /// </summary>
+    private void ReleasePendingInputRequests()
+    {
+        List<TaskCompletionSource<UserInputResponse>> pending;
+        lock (_pendingInputRequests)
+        {
+            pending = new List<TaskCompletionSource<UserInputResponse>>(_pendingInputRequests);
+            _pendingInputRequests.Clear();
+        }
+
+        foreach (var source in pending)
+            source.TrySetResult(new UserInputResponse { Answer = string.Empty, WasFreeform = true });
     }
 
     private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,

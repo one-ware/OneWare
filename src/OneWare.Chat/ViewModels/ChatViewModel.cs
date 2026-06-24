@@ -565,6 +565,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 });
                 break;
             }
+            case ChatUserInputRequestEvent x:
+            {
+                Dispatcher.UIThread.Post(() => AddMessage(new ChatMessageUserInputRequestViewModel(x)));
+                break;
+            }
             case ChatErrorEvent x:
             {
                 Dispatcher.UIThread.Post(() => { AddErrorMessage(x.Message); });

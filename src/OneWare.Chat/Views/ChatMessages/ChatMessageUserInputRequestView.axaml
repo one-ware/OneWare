@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageUserInputRequestView"
+             x:DataType="chatMessages:ChatMessageUserInputRequestViewModel">
+
+    <Border>
+        <StackPanel Spacing="6">
+            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Event.Question}" />
+
+            <!-- Pending: choices + freeform input -->
+            <StackPanel Spacing="6" IsVisible="{Binding !IsAnswered}">
+                <ItemsControl ItemsSource="{Binding Event.Choices}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Button Height="NaN" Margin="0 0 6 6" Padding="5 3"
+                                    Classes="RoundButton"
+                                    Content="{Binding}"
+                                    CommandParameter="{Binding}"
+                                    Command="{Binding $parent[ItemsControl].((chatMessages:ChatMessageUserInputRequestViewModel)DataContext).SelectChoice}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6"
+                      IsVisible="{Binding Event.AllowFreeform}">
+                    <TextBox Grid.Column="0" Watermark="Type your answer…"
+                             Text="{Binding FreeformText, Mode=TwoWay}">
+                        <TextBox.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding SubmitFreeform}" />
+                        </TextBox.KeyBindings>
+                    </TextBox>
+                    <Button Grid.Column="1" Height="NaN" Padding="5 3"
+                            Classes="RoundButton PrimaryButton"
+                            Content="Send"
+                            Command="{Binding SubmitFreeform}" />
+                </Grid>
+            </StackPanel>
+
+            <!-- Answered -->
+            <TextBlock IsVisible="{Binding IsAnswered}"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       FontStyle="Italic"
+                       Text="{Binding AnswerText, StringFormat='→ {0}'}" />
+        </StackPanel>
+    </Border>
+
+</UserControl>
