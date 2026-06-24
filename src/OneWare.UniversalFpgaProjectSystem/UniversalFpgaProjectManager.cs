@@ -199,7 +199,7 @@ public class UniversalFpgaProjectManager : IProjectManager
                         var setTopEntityMenu = new MenuItemModel("SetTopEntity")
                         {
                             Header = "Set Top Entity",
-                            Icon = new IconModel("VsImageLib2019.DownloadOverlay16X"),
+                            Icon = new IconModel("VsImageLib.StartWithoutDebug16X"),
                             Items = new ObservableCollection<MenuItemModel>()
                         };
                         menuItems.Add(setTopEntityMenu);
