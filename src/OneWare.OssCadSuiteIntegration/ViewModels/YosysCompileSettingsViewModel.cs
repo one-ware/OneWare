@@ -83,7 +83,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         };
 
         _yosysQuietFlagSetting = new CheckBoxSetting("Yosys Verbose", 
-            Boolean.Parse(defaultProperties.GetValueOrDefault("yosysQuietFlag") ?? "true"));
+            !Boolean.Parse(defaultProperties.GetValueOrDefault("yosysQuietFlag") ?? "true"));
 
         _nextPnrToolSetting = new ComboBoxSetting("NextPnr Tool",
             defaultProperties.GetValueOrDefault("yosysToolchainNextPnrTool") ?? "", [
@@ -169,8 +169,9 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             _yosysFlagSetting.Value = yFlags;
         if (_settings.TryGetValue("yosysToolchainCommand", out var yCommand))
             _yosysCommandSetting.Value = yCommand;
-        if (_settings.TryGetValue("yosysQuietFlag", out var yQuiet))
-            _yosysQuietFlagSetting.Value = yQuiet;
+        if (_settings.TryGetValue("yosysQuietFlag", out var yQuiet)
+            && Boolean.TryParse(yQuiet, out var quiet))
+            _yosysQuietFlagSetting.Value = !quiet;
 
         if (_settings.TryGetValue("yosysToolchainNextPnrTool", out var nTool))
             _nextPnrToolSetting.Value = nTool;
@@ -207,7 +208,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         _settings["yosysToolchainCommand"] = _yosysCommandSetting.Value.ToString()!;
         _settings["yosysToolchainOutputType"] = _nextPnrToolOutputTypeSetting.Value.ToString()!;
         _settings["packToolOutputFormat"] = _packOutputTypeSetting.Value.ToString()!;
-        _settings["yosysQuietFlag"] = _yosysQuietFlagSetting.Value.ToString()!;
+        _settings["yosysQuietFlag"] = (!(bool)_yosysQuietFlagSetting.Value).ToString();
 
         FpgaSettingsParser.SaveSettings(_fpgaProjectRoot, _selectedFpga.Name, _settings);
 

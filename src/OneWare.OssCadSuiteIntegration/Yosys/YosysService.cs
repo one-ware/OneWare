@@ -98,6 +98,17 @@ public class YosysService(
 
                     outputService.WriteLine(x);
                     return true;
+                })
+                .WithErrorHandler(x =>
+                {
+                    if (x.StartsWith("Error:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        logger.Error(x);
+                        return false;
+                    }
+
+                    outputService.WriteLine(x);
+                    return true;
                 });
 
 
