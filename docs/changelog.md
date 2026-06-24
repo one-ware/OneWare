@@ -1,3 +1,14 @@
+## 1.0.21
+
+- Copilot support for queuing multiple requests and steering the conversation
+- Copilot adds visual support for attachments
+- Fix Copilot "Allow for Session" option
+- Adjust Copilot for Token based billing
+- Fix AI Chat Autoscroll
+- Invert Yosys Verbose option
+- Fix Yosys aborting on warnings
+- Allow selecting TopEntity in Project Explorer (right click on file)
+
 ## 1.0.20
 
 - Yosys will always find ghdl generated verilog files now, even if they are excluded
