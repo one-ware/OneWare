@@ -14,7 +14,7 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
-    public const string CopilotAutopilotSettingKey = "AI_Chat_Copilot_Autopilot";
+    public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
 
     public static readonly Package CopilotPackage = new()
     {
@@ -161,10 +161,21 @@ public class CopilotModule : OneWareModuleBase
             });
 
         serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
-            CopilotAutopilotSettingKey,
-            new CheckBoxSetting("Autopilot Mode", false)
+            CopilotApprovalModeSettingKey,
+            new ComboBoxSetting("Approval Mode",
+                CopilotChatService.ApprovalModeDefault,
+                new object[]
+                {
+                    CopilotChatService.ApprovalModeDefault,
+                    CopilotChatService.ApprovalModeBypass,
+                    CopilotChatService.ApprovalModeAutopilot
+                })
             {
-                HoverDescription = "When enabled, all Copilot permission requests are automatically approved without prompting."
+                HoverDescription =
+                    "Default: ask before running tools that need confirmation. " +
+                    "Bypass Approval: automatically approve all permission requests without prompting. " +
+                    "Autopilot: Bypass Approval plus automatically answer agent questions " +
+                    "(the agent is told you are unavailable and decides what is best)."
             });
 
         // serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",

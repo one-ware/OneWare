@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:OneWare.Copilot.Services"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="30"
+             x:Class="OneWare.Copilot.Views.CopilotChatFooterView" x:DataType="services:CopilotChatService">
+    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+
+        <!-- Approval mode selector -->
+        <Button Name="ModeButton" VerticalAlignment="Center"
+                ToolTip.Tip="Approval mode for tool and command requests">
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        Placement="TopEdgeAlignedLeft">
+                    <ListBox ItemsSource="{Binding ApprovalModes}"
+                             SelectedItem="{Binding SelectedApprovalMode}" BorderThickness="0"
+                             MinWidth="160">
+                        <Interaction.Behaviors>
+                            <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                <HideFlyoutAction Flyout="{Binding #ModeButton.Flyout}" />
+                            </behaviors:PointerPressedHandledEventTrigger>
+                        </Interaction.Behaviors>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </Flyout>
+            </Button.Flyout>
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="{Binding SelectedApprovalMode, FallbackValue=Default}"
+                           FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                       Height="8" />
+            </StackPanel>
+        </Button>
+
+        <!-- Token usage -->
+        <Button Name="UsageButton" VerticalAlignment="Center"
+                IsVisible="{Binding HasUsageData}"
+                ToolTip.Tip="Token usage">
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="TopEdgeAlignedRight">
+                    <StackPanel Spacing="10" Margin="8" MinWidth="220">
+
+                        <!-- Last request -->
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Last Request" FontWeight="SemiBold" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="↑ Input"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding LastInputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="↓ Output"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding LastOutputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="⟳ Reasoning"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                           IsVisible="{Binding LastReasoningTokens, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding LastReasoningTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right"
+                                           IsVisible="{Binding LastReasoningTokens, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Separator />
+
+                        <!-- Session totals -->
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Session Totals" FontWeight="SemiBold" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Requests"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SessionTotalRequests, StringFormat='{}{0:N0}'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="↑ Total input"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SessionTotalInputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="↓ Total output"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SessionTotalOutputTokens, StringFormat='{}{0:N0} tokens'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Context window (visible when limit is known) -->
+                        <StackPanel Spacing="3"
+                                    IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Separator />
+                            <TextBlock Text="Context Window" FontWeight="SemiBold" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Grid.Column="0" Text="Used"
+                                           FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                <TextBlock Grid.Column="2" Text="{Binding ContextCurrentTokens, StringFormat='{}{0:N0}'}"
+                                           FontSize="11" HorizontalAlignment="Right" />
+                            </Grid>
+                            <ProgressBar Minimum="0" Maximum="{Binding ContextTokenLimit}"
+                                         Value="{Binding ContextCurrentTokens}"
+                                         Height="4" />
+                            <TextBlock FontSize="10" HorizontalAlignment="Right"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0:N0} / {1:N0}">
+                                        <Binding Path="ContextCurrentTokens" />
+                                        <Binding Path="ContextTokenLimit" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Flyout>
+            </Button.Flyout>
+
+            <!-- Circular context-window progress, falls back to token counts when limit unknown -->
+            <Panel Width="20" Height="20">
+                <!-- Circular arc: visible when context limit is known -->
+                <controls:CircularProgressBar
+                    Value="{Binding ContextCurrentTokens}"
+                    Maximum="{Binding ContextTokenLimit}"
+                    StrokeThickness="2.5"
+                    TrackBrush="{DynamicResource ThemeBorderMidBrush}"
+                    ProgressBrush="{DynamicResource ThemeAccentBrush}"
+                    Width="14" Height="14"
+                    IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    ToolTip.Tip="{Binding ContextCurrentTokens, StringFormat='Context: {0:N0} tokens'}" />
+
+                <!-- Fallback dot when no context limit available -->
+                <Ellipse Width="6" Height="6"
+                         Fill="{DynamicResource ThemeForegroundLowBrush}"
+                         IsVisible="{Binding ContextTokenLimit, Converter={x:Static ObjectConverters.IsNull}}" />
+            </Panel>
+        </Button>
+
+    </StackPanel>
+</UserControl>

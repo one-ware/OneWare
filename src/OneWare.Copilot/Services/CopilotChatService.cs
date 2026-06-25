@@ -156,6 +156,37 @@ public sealed class CopilotChatService(
 
     public ObservableCollection<string> ReasoningEfforts { get; } = [];
 
+    public const string ApprovalModeDefault = "Default";
+    public const string ApprovalModeBypass = "Bypass Approval";
+    public const string ApprovalModeAutopilot = "Autopilot";
+
+    public ObservableCollection<string> ApprovalModes { get; } =
+        [ApprovalModeDefault, ApprovalModeBypass, ApprovalModeAutopilot];
+
+    /// <summary>
+    /// Quick-access mirror of the <see cref="CopilotModule.CopilotApprovalModeSettingKey"/> setting.
+    /// Controls how tool/command permission requests are handled.
+    /// </summary>
+    public string SelectedApprovalMode
+    {
+        get
+        {
+            var value = settingsService.GetSettingValue<string>(CopilotModule.CopilotApprovalModeSettingKey);
+            return string.IsNullOrWhiteSpace(value) ? ApprovalModeDefault : value;
+        }
+        set
+        {
+            if (value == SelectedApprovalMode) return;
+            settingsService.SetSettingValue(CopilotModule.CopilotApprovalModeSettingKey, value);
+            OnPropertyChanged();
+        }
+    }
+
+    private bool IsApprovalBypassed =>
+        SelectedApprovalMode is ApprovalModeBypass or ApprovalModeAutopilot;
+
+    private bool IsAutopilot => SelectedApprovalMode == ApprovalModeAutopilot;
+
     public bool ShowReasoningEffort
     {
         get;
@@ -247,6 +278,25 @@ public sealed class CopilotChatService(
     {
         DataContext = this
     };
+
+    public Control FooterUiExtension
+    {
+        get
+        {
+            EnsureApprovalModeSync();
+            return new CopilotChatFooterView { DataContext = this };
+        }
+    }
+
+    private bool _approvalModeSyncInitialized;
+
+    private void EnsureApprovalModeSync()
+    {
+        if (_approvalModeSyncInitialized) return;
+        _approvalModeSyncInitialized = true;
+        settingsService.GetSettingObservable<string>(CopilotModule.CopilotApprovalModeSettingKey)
+            .Subscribe(_ => OnPropertyChanged(nameof(SelectedApprovalMode)));
+    }
 
     public Control TopUiExtension
     {
@@ -1012,8 +1062,8 @@ public sealed class CopilotChatService(
 
     private Task<PreToolUseHookOutput?> OnPreToolUseAsync(PreToolUseHookInput input, HookInvocation invocation)
     {
-        // Autopilot: skip all confirmation checks and allow immediately
-        if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotAutopilotSettingKey))
+        // Bypass Approval / Autopilot: auto-approve all permission requests without prompting
+        if (IsApprovalBypassed)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
         // The user approved this tool for the rest of the session.
@@ -1053,8 +1103,8 @@ public sealed class CopilotChatService(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
-        // Autopilot: auto-approve all permission requests
-        if (settingsService.GetSettingValue<bool>(CopilotModule.CopilotAutopilotSettingKey))
+        // Bypass Approval / Autopilot: auto-approve all permission requests
+        if (IsApprovalBypassed)
             return Task.FromResult(PermissionDecision.ApproveOnce());
 
         if (request is PermissionRequestCustomTool)
@@ -1132,6 +1182,14 @@ public sealed class CopilotChatService(
         var choices = request.Choices?.ToList() ?? new List<string>();
         var allowFreeform = request.AllowFreeform ?? true;
         if (choices.Count == 0) allowFreeform = true;
+
+        // Autopilot: the user is not available, let the agent decide what is best.
+        if (IsAutopilot)
+            return Task.FromResult(new UserInputResponse
+            {
+                Answer = "The user is not available. Decide what is best and continue.",
+                WasFreeform = true
+            });
 
         var responseSource = new TaskCompletionSource<UserInputResponse>(
             TaskCreationOptions.RunContinuationsAsynchronously);

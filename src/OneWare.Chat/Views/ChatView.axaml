@@ -9,7 +9,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
-    <Grid RowDefinitions="Auto, *, Auto, Auto" RowSpacing="4">
+    <Grid RowDefinitions="Auto, *, Auto, Auto, Auto" RowSpacing="4">
         <Border Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="0 0 0 1" Padding="4">
             <DockPanel LastChildFill="False">
@@ -184,7 +184,7 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="3" Margin="10 4 10 10" Background="{DynamicResource ThemeControlMidBrush}"
+        <Border Grid.Row="3" Margin="10 0" Background="{DynamicResource ThemeControlMidBrush}"
                 Classes="RoundBorder" BorderThickness="1"
                 Classes.busy="{Binding IsBusy}">
             <Border.Styles>
@@ -201,13 +201,14 @@
                     </Style.Animations>
                 </Style>
             </Border.Styles>
-            <Grid RowDefinitions="Auto, Auto, Auto">
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto">
                 <ContentControl Grid.Row="0"
                                 Content="{Binding SelectedChatService.TopUiExtension, FallbackValue={x:Null}}" />
 
                 <TextBox Grid.Row="1" Classes="ToolBar" Name="CommandBox" Watermark="Type your task here..."
-                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
-                         Padding="6" BorderThickness="0" Background="Transparent"
+                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" MaxHeight="240"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         Padding="6 10 6 6" BorderThickness="0" Background="Transparent"
                          VerticalContentAlignment="Top" CaretBlinkInterval="00:00:00.5"
                          Text="{Binding CurrentMessage, Mode=TwoWay}" />
 
@@ -243,50 +244,58 @@
                         </Button>
                     </StackPanel>
 
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
-                        <Button Name="MenuButton" VerticalAlignment="Center">
-                            <Button.Flyout>
-                                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
-                                        Placement="Top">
-                                    <ListBox ItemsSource="{Binding ChatServices}"
-                                             SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
-                                             MinWidth="200">
-                                        <Interaction.Behaviors>
-                                            <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
-                                                <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
-                                            </behaviors1:PointerPressedHandledEventTrigger>
-                                        </Interaction.Behaviors>
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
-                                                    <TextBlock Text="{Binding Name}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ListBox>
-                                </Flyout>
-                            </Button.Flyout>
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
-                                           FontSize="11" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
-                                       Height="8" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-
-                    <ContentControl DockPanel.Dock="Right"
+                    <ContentControl DockPanel.Dock="Left"
                                     Content="{Binding SelectedChatService.BottomUiExtension, FallbackValue={x:Null}}" />
 
                 </DockPanel>
             </Grid>
 
         </Border>
+
+        <!-- Footer row: chat service selection (left) + service-specific extension (right) -->
+        <Border Grid.Row="4"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}" Margin="10 0 10 4">
+            <DockPanel LastChildFill="False" VerticalAlignment="Center">
+                <Button Name="MenuButton" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <Button.Flyout>
+                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                Placement="Top">
+                            <ListBox ItemsSource="{Binding ChatServices}"
+                                     SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
+                                     MinWidth="200">
+                                <Interaction.Behaviors>
+                                    <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                        <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
+                                    </behaviors1:PointerPressedHandledEventTrigger>
+                                </Interaction.Behaviors>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="5">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ListBox>
+                        </Flyout>
+                    </Button.Flyout>
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
+                                   FontSize="11" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                               Height="8" />
+                    </StackPanel>
+                </Button>
+
+                <ContentControl DockPanel.Dock="Right" VerticalAlignment="Center"
+                                Content="{Binding SelectedChatService.FooterUiExtension, FallbackValue={x:Null}}" />
+            </DockPanel>
+        </Border>
+
     </Grid>
 </UserControl>

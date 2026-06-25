@@ -22,6 +22,12 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     public Control? TopUiExtension => null;
 
     /// <summary>
+    /// Optional UI extension displayed in the footer row beneath the chat input area,
+    /// next to the chat service selector (e.g. token usage, approval mode).
+    /// </summary>
+    public Control? FooterUiExtension => null;
+
+    /// <summary>
     /// Fired when the chat session is reset.
     /// </summary>
     event EventHandler SessionReset;
