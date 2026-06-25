@@ -248,6 +248,18 @@ public class App : Application
         settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket",
             new CheckBoxSetting("Use Auto Bracket", true));
 
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseSpaces",
+            new CheckBoxSetting("Use Spaces Instead of Tabs", true)
+            {
+                HoverDescription = "Insert spaces when pressing Tab"
+            });
+
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_IndentationSize",
+            new ComboBoxSetting("Indentation Size", 4, new object[] { 1, 2, 3, 4, 6, 8 })
+            {
+                HoverDescription = "Number of spaces per indentation level"
+            });
+
         settingsService.RegisterSetting("Editor", "Folding", "Editor_UseFolding",
             new CheckBoxSetting("Use Folding", true)
             {

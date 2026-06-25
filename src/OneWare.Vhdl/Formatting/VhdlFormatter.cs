@@ -11,12 +11,16 @@ public class VhdlFormatter : IFormattingStrategy
 {
     public void Format(TextDocument document)
     {
-        var test = Format(document.Text);
-        if (test != null)
-            document.Text = test;
+        var settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
+        var useSpaces = settingsService.GetSettingValue<bool>("Editor_UseSpaces");
+        var indentationSize = settingsService.GetSettingValue<int>("Editor_IndentationSize");
+        var indentString = useSpaces ? new string(' ', indentationSize) : "\t";
+        var result = Format(document.Text, indentString);
+        if (result != null)
+            document.Text = result;
     }
 
-    private static string? Format(string source)
+    private static string? Format(string source, string indentString)
     {
         try
         {
@@ -34,7 +38,7 @@ public class VhdlFormatter : IFormattingStrategy
                 KeywordCase = "UPPERCASE",
                 TypeNameCase = "UPPERCASE",
                 EndOfLine = "\n",
-                Indentation = "    ",
+                Indentation = indentString,
                 AddNewLine = true
                 // NewLineSettings = new NewLineSettings
                 // {

@@ -13,11 +13,11 @@ public class LspIndentationStrategy : IIndentationStrategy
 {
     private readonly string _filePath;
     private readonly LanguageServiceLsp _languageService;
-    private string _indentationString = "\t";
+    private readonly TextEditorOptions _options;
 
     public LspIndentationStrategy(TextEditorOptions options, LanguageServiceLsp languageS, string filePath)
     {
-        IndentationString = options.IndentationString;
+        _options = options;
         _languageService = languageS;
         _filePath = filePath;
     }
@@ -27,12 +27,11 @@ public class LspIndentationStrategy : IIndentationStrategy
     /// </summary>
     public string IndentationString
     {
-        get => _indentationString;
+        get => _options.IndentationString;
         set
         {
             if (string.IsNullOrEmpty(value))
                 throw new ArgumentException("Indentation string must not be null or empty");
-            _indentationString = value;
         }
     }
 
