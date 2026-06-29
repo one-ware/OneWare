@@ -17,14 +17,15 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="10" />
+            <Setter Property="Padding" Value="0 0 5 0" />
+            <Setter Property="Margin" Value="0 5 5 5" />
         </Style>
     </controls:FlexibleWindow.Styles>
 
     <Border BorderThickness="0 1 0 0">
-        <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="180,*, Auto, *">
+        <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="180, Auto, *, Auto, *">
 
-            <Border Grid.Column="1" Height="30" Grid.ColumnSpan="3" BorderThickness="0 0 0 1">
+            <Border Grid.Column="0" Height="30" Grid.ColumnSpan="5" BorderThickness="0 0 0 1">
                 <DockPanel LastChildFill="False">
                     <StackPanel DockPanel.Dock="Left" Classes="ToolBar" Spacing="5" Margin="5"
                                 HorizontalAlignment="Left">
@@ -32,14 +33,14 @@
                                 Command="{Binding RefreshPackagesAsync}">
                             <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
                         </Button>
-                        <TextBlock Text="Installed" />
-                        <CheckBox IsChecked="{Binding ShowInstalled}" />
-                        <Separator />
-                        <TextBlock Text="Available" />
-                        <CheckBox IsChecked="{Binding ShowAvailable}" />
-                        <Separator />
-                        <TextBlock Text="Update" />
-                        <CheckBox IsChecked="{Binding ShowUpdate}" />
+                        <TextBlock Text="Show" />
+                        <controls:SegmentedControl VerticalAlignment="Center"
+                                                   SelectedIndex="{Binding SelectedFilterIndex, Mode=TwoWay}">
+                            <controls:SegmentedControlItem Content="All" />
+                            <controls:SegmentedControlItem Content="Installed" />
+                            <controls:SegmentedControlItem Content="Available" />
+                        </controls:SegmentedControl>
+
                     </StackPanel>
 
                     <StackPanel DockPanel.Dock="Right" Classes="ToolBar" Spacing="5" Margin="5"
@@ -54,7 +55,7 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" BorderThickness="0, 0, 1, 0"
+            <Border Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" BorderThickness="0, 0, 1, 0"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <TreeView Padding="3" BorderThickness="0" Background="Transparent"
                           ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
@@ -82,22 +83,29 @@
                     </TreeView.DataTemplates>
                 </TreeView>
             </Border>
+            
+            <GridSplitter Grid.Row="1" Grid.Column="1" Width="6" BorderThickness="0 0 1 0"
+                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                          Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center" />
 
-            <DockPanel Grid.Row="1" Grid.Column="1" Background="{DynamicResource ThemeBackgroundBrush}">
-                <Border Padding="3" DockPanel.Dock="Top" BorderThickness="0 0 0 1">
-                    <Border Classes="RoundToolBar">
-                        <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False" />
-                    </Border>
+            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                  Background="{DynamicResource ThemeBackgroundBrush}"
+                  RowDefinitions="Auto,*" ColumnDefinitions="6,*">
+                <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="3" BorderThickness="0 0 0 1">
+                    <Grid ColumnDefinitions="6,*">
+                        <Border Grid.Column="1" Classes="RoundToolBar">
+                            <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False" />
+                        </Border>
+                    </Grid>
                 </Border>
-                <Grid DockPanel.Dock="Top">
+                <Grid Grid.Row="1" Grid.Column="1">
                     <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              Background="Transparent" BorderThickness="0"
                              SelectedItem="{Binding SelectedCategory.SelectedPackage, FallbackValue={x:Null}}"
-                             ItemsSource="{Binding SelectedCategory.VisiblePackages, FallbackValue={x:Null}}">
+                             ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="SelectionChanged">
-                                <InvokeCommandAction
-                                    Command="{Binding #PluginList.((viewModels:PackageViewModel)SelectedItem).ResolveTabsAsync}" />
+                               <InvokeCommandAction Command="{Binding ResolveSelectedPackageTabsAsync}" />
                             </EventTriggerBehavior>
                         </Interaction.Behaviors>
                         <ListBox.ItemsPanel>
@@ -106,6 +114,20 @@
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.DataTemplates>
+                            <DataTemplate DataType="viewModels:PackageSeparatorViewModel">
+                                <Grid IsHitTestVisible="False"
+                                      ColumnDefinitions="Auto,*"
+                                      Margin="5 4 0 2">
+                                    <TextBlock Text="{Binding Text}"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <Border Grid.Column="1"
+                                            IsVisible="{Binding ShowLine}"
+                                            BorderThickness="0 1 0 0"
+                                            BorderBrush="{DynamicResource ThemeBorderMidBrush}"
+                                            Margin="8 0 0 0"
+                                            VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
                             <DataTemplate DataType="viewModels:PackageViewModel">
                                 <DockPanel>
                                     <Grid DockPanel.Dock="Left" Width="60" Height="60">
@@ -158,14 +180,14 @@
                     <controls:Spinner Height="20" VerticalAlignment="Center" HorizontalAlignment="Center"
                                       IsVisible="{Binding IsLoading}" />
                 </Grid>
-            </DockPanel>
+            </Grid>
 
-            <GridSplitter Grid.Row="1" Grid.Column="2" Width="6" BorderThickness="1 0 0 0"
+            <GridSplitter Grid.Row="1" Grid.Column="3" Width="6" BorderThickness="1 0 0 0"
                           BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                           Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center" />
 
-            <Border Grid.Row="1" Grid.Column="3" Padding="5">
-                <ContentPresenter Content="{Binding #PluginList.SelectedItem}" />
+            <Border Grid.Row="1" Grid.Column="4" Padding="5">
+                <ContentPresenter Content="{Binding SelectedCategory.SelectedPackage}" />
             </Border>
         </Grid>
     </Border>

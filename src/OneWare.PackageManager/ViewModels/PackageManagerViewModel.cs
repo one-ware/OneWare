@@ -27,7 +27,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private bool _showAvailable = true;
     private bool _showInstalled = true;
-    private bool _showUpdate = true;
+    private int _selectedFilterIndex;
 
     public PackageManagerViewModel(IPackageService packageService, IHttpService httpService, ILogger logger,
         IWindowService windowService,
@@ -77,22 +77,27 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         }
     }
 
-    public bool ShowUpdate
-    {
-        get => _showUpdate;
-        set
-        {
-            SetProperty(ref _showUpdate, value);
-            FilterPackages();
-        }
-    }
-
     public bool ShowAvailable
     {
         get => _showAvailable;
         set
         {
             SetProperty(ref _showAvailable, value);
+            FilterPackages();
+        }
+    }
+
+    /// <summary>
+    ///     Index of the segmented control filter: 0 = All, 1 = Installed only, 2 = Available only.
+    /// </summary>
+    public int SelectedFilterIndex
+    {
+        get => _selectedFilterIndex;
+        set
+        {
+            SetProperty(ref _selectedFilterIndex, value);
+            _showInstalled = value is 0 or 1;
+            _showAvailable = value is 0 or 2;
             FilterPackages();
         }
     }
@@ -224,6 +229,14 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return await UpdateAllAsync();
     }
 
+    public async Task ResolveSelectedPackageTabsAsync()
+    {
+        if (SelectedCategory?.SelectedPackage == null)
+            return;
+
+        await SelectedCategory.SelectedPackage.ResolveTabsAsync();
+    }
+
     private bool FocusCategory(string category, string? subcategory)
     {
         var categoryVm = PackageCategories
@@ -294,7 +307,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private void FilterPackages()
     {
         foreach (var categoryModel in PackageCategories)
-            categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
+            categoryModel.Filter(Filter, _showInstalled, _showAvailable);
     }
 
     public override bool OnWindowClosing(FlexibleWindow window)

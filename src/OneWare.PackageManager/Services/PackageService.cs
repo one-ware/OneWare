@@ -31,7 +31,7 @@ public class PackageService : ObservableObject, IPackageService
     private readonly Dictionary<string, Type> _installersByType = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
     private readonly Dictionary<string, CancellationTokenSource> _installCancellation = new();
-    private readonly List<string> _repositoryUrls = [];
+    private readonly List<List<string>> _repositoryUrls = [];
 
     private Task<bool>? _currentRefreshTask;
 
@@ -96,7 +96,12 @@ public class PackageService : ObservableObject, IPackageService
 
     public void RegisterPackageRepository(string url)
     {
-        _repositoryUrls.Add(url);
+        _repositoryUrls.Add(new List<string> { url });
+    }
+
+    public void RegisterPackageRepository(List<string> urls)
+    {
+        _repositoryUrls.Add(urls);
     }
 
     public void RegisterInstaller<T>(string packageType) where T : IPackageInstaller
@@ -299,8 +304,10 @@ public class PackageService : ObservableObject, IPackageService
 
         try
         {
-            var customRepositories =
-                _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
+            var customRepositories = _settingsService
+                .GetSettingValue<ObservableCollection<string>>("PackageManager_Sources")
+                .Select(item => new List<string> { item })
+                .ToList();
 
             var allRepos = _repositoryUrls.Concat(customRepositories);
             result = await _catalog.RefreshAsync(allRepos);
