@@ -128,10 +128,11 @@ public sealed class CopilotChatService(
         private set => SetProperty(ref field, value);
     }
 
-    // Built-in Copilot CLI file tools that must be disabled so the model is forced to use the
-    // OneWare IDE tools (`readFile`/`editFile`) — `editFile` surfaces edits in the IDE diff view,
-    // whereas the built-in `create`/`edit` tools bypass it.
-    private static readonly string[] ExcludedBuiltInTools = ["view", "create", "edit"];
+    // Built-in Copilot CLI tools that must be disabled so the model is forced to use the OneWare IDE
+    // tools (`readFile`/`editFile`/`runTerminalCommand`) — these surface reads, edits, and command
+    // output in the IDE (diff view / terminal panel), whereas the built-in `view`/`create`/`edit`/`bash`
+    // tools bypass it.
+    private static readonly string[] ExcludedBuiltInTools = ["view", "create", "edit", "bash"];
 
     private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
 
@@ -758,7 +759,7 @@ public sealed class CopilotChatService(
                           - `editFile`           — opens a diff view in the IDE for review; use for ALL file writes/edits (creates missing files automatically)
                           - `runTerminalCommand` — executes in the IDE terminal panel; output is returned; use for all shell commands
 
-                          The built-in `view`, `create`, and `edit` tools are DISABLED. Never attempt them and never write or edit files through `runTerminalCommand`; always use `readFile` and `editFile`.
+                          The built-in `view`, `create`, `edit`, and `bash` tools are DISABLED. Never attempt them; always use `readFile`, `editFile`, and `runTerminalCommand`.
                           """
             },
 
@@ -770,6 +771,7 @@ public sealed class CopilotChatService(
 
                           OneWare Studio rules:
                           - Always use `editFile` to write or modify files; the built-in `create`/`edit` tools are disabled.
+                          - Always use `runTerminalCommand` to run shell commands; the built-in `bash` tool is disabled.
                           - Always call `readFile` before editing a file.
                           - Partial edits must use correct 1-based line ranges.
                           - All paths passed to file tools must be absolute.
