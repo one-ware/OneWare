@@ -107,6 +107,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     public void Refresh()
     {
         WaveFormViewer.MarkerOffset = long.MaxValue;
+        WaveFormViewer.SecondMarkerOffset = long.MaxValue;
         if (!string.IsNullOrWhiteSpace(FullPath) && !_isLiveExecution)
         {
             if (_waitLiveExecution)
