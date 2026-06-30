@@ -143,8 +143,14 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
+        var cloudHost = Services.Resolve<ISettingsService>()
+            .GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
         Services.Resolve<IPackageService>().RegisterPackageRepository(
-            "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
+            new List<string>{ 
+                $"{cloudHost}api/studio/packages",
+                "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
+            }
+        );
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
