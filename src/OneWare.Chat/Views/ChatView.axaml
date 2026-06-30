@@ -75,65 +75,68 @@
         </Border>
 
         <Panel Grid.Row="1">
-            <ScrollViewer Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled"
-                          VerticalScrollBarVisibility="Auto">
-                <Interaction.Behaviors>
-                    <AutoScrollDuringDragBehavior ScrollDelta="4" />
-                </Interaction.Behaviors>
-                <Border Padding="10 10 10 4">
-                    <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="5">
-                        <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}">
-                            <ItemsControl.Styles>
-                                <Style Selector="Expander /template/ ToggleButton">
-                                    <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
-                                    <Setter Property="CornerRadius" Value="3" />
-                                </Style>
-                                <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border">
-                                    <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
-                                </Style>
-                                <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border Border">
-                                    <Setter Property="Background" Value="Transparent" />
-                                </Style>
-                                <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
-                                    <Setter Property="CornerRadius" Value="3" />
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
-                                <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Grid > Border">
-                                    <Setter Property="Margin" Value="0 2" />
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
-                            </ItemsControl.Styles>
+            <DockPanel>
+                <!-- Loading indicator + queued messages are pinned below the conversation and kept
+                     outside the scrolling region so the virtualizing message list above can virtualize
+                     against the viewport (it must be the direct content of the ScrollViewer). -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="10 0 10 4" Spacing="5">
+                    <!-- Loading Indicator -->
+                    <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5"
+                          IsVisible="{Binding IsBusy}">
+                        <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" />
 
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="5" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-
-                        <!-- Loading Indicator -->
-                        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto" ColumnSpacing="5"
-                              IsVisible="{Binding IsBusy}">
-                            <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" />
-
-                            <TextBlock Grid.Column="1"
-                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
-                                       FontStyle="Italic"
-                                       Text="{Binding WorkingStatusText}" />
-                        </Grid>
-
-                        <!-- Queued messages (dimmed, pinned below the conversation) -->
-                        <ItemsControl Grid.Row="2" Opacity="0.5"
-                                      ItemsSource="{Binding QueuedMessages}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="5" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+                        <TextBlock Grid.Column="1"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                                   FontStyle="Italic"
+                                   Text="{Binding WorkingStatusText}" />
                     </Grid>
-                </Border>
-            </ScrollViewer>
+
+                    <!-- Queued messages (dimmed, pinned below the conversation) -->
+                    <ItemsControl Opacity="0.5" ItemsSource="{Binding QueuedMessages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="5" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+
+                <ScrollViewer Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <Interaction.Behaviors>
+                        <AutoScrollDuringDragBehavior ScrollDelta="4" />
+                    </Interaction.Behaviors>
+                    
+                    <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}" Margin="10 0">
+                        <ItemsControl.Styles>
+                            <Style Selector="Expander /template/ ToggleButton">
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                                <Setter Property="CornerRadius" Value="3" />
+                            </Style>
+                            <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border">
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                            </Style>
+                            <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border Border">
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                            <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
+                                <Setter Property="CornerRadius" Value="3" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                            <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Grid > Border">
+                                <Setter Property="Margin" Value="0 2" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </ItemsControl.Styles>
+
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <controls:EstimatingVirtualizingStackPanel Spacing="5"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
 
             <!--
             <Border VerticalAlignment="Center" HorizontalAlignment="Center"
