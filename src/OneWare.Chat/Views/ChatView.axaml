@@ -102,11 +102,12 @@
                 </StackPanel>
 
                 <ScrollViewer Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto" Padding="10 10 10 10">
+                              VerticalScrollBarVisibility="Auto">
                     <Interaction.Behaviors>
                         <AutoScrollDuringDragBehavior ScrollDelta="4" />
                     </Interaction.Behaviors>
-                    <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}">
+                    
+                    <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}" Margin="10 0">
                         <ItemsControl.Styles>
                             <Style Selector="Expander /template/ ToggleButton">
                                 <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
