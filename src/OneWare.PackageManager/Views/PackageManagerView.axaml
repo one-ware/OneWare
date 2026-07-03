@@ -101,7 +101,7 @@
                 <Grid Grid.Row="1" Grid.Column="1">
                     <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              Background="Transparent" BorderThickness="0"
-                             SelectedItem="{Binding SelectedCategory.SelectedPackage, FallbackValue={x:Null}}"
+                             SelectedItem="{Binding SelectedCategory.SelectedPackage, Mode=TwoWay, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="SelectionChanged">
@@ -187,7 +187,7 @@
                           Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center" />
 
             <Border Grid.Row="1" Grid.Column="4" Padding="5">
-                <ContentPresenter Content="{Binding SelectedCategory.SelectedPackage}" />
+                <ContentPresenter Content="{Binding #PluginList.SelectedItem}" />
             </Border>
         </Grid>
     </Border>

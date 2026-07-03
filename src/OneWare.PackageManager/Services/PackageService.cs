@@ -1,7 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Threading;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Svg.Skia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using Microsoft.Extensions.Logging;
@@ -290,9 +293,72 @@ public class PackageService : ObservableObject, IPackageService
 
     public async Task<IImage?> DownloadPackageIconAsync(Package package)
     {
+        if (!string.IsNullOrWhiteSpace(package.Icon))
+            return CreateImageFromBase64(package.Icon, package.Id);
+
         if (package.IconUrl == null) return null;
 
         return await _httpService.DownloadImageAsync(package.IconUrl);
+    }
+
+    private IImage? CreateImageFromBase64(string icon, string? packageId)
+    {
+        try
+        {
+            var base64 = icon.Trim();
+            var mediaType = string.Empty;
+
+            if (base64.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                var separatorIndex = base64.IndexOf(',');
+                if (separatorIndex < 0)
+                {
+                    _logger.Warning($"Invalid embedded icon data URI for package {packageId}.");
+                    return null;
+                }
+
+                mediaType = base64[..separatorIndex];
+                base64 = base64[(separatorIndex + 1)..];
+            }
+
+            var bytes = Convert.FromBase64String(base64);
+            using var stream = new MemoryStream(bytes);
+
+            if (IsSvgIcon(bytes, mediaType))
+            {
+                var svg = SvgSource.LoadFromStream(stream);
+                return svg is null
+                    ? null
+                    : new SvgImage
+                    {
+                        Source = svg
+                    };
+            }
+
+            return new Bitmap(stream);
+        }
+        catch (FormatException e)
+        {
+            _logger.Warning($"Invalid embedded icon base64 for package {packageId}: {e.Message}");
+        }
+        catch (ArgumentException e)
+        {
+            _logger.Warning($"Invalid embedded icon for package {packageId}: {e.Message}");
+        }
+        catch (NotSupportedException e)
+        {
+            _logger.Warning($"Unsupported embedded icon for package {packageId}: {e.Message}");
+        }
+
+        return null;
+    }
+
+    private static bool IsSvgIcon(byte[] bytes, string mediaType)
+    {
+        if (mediaType.Contains("svg", StringComparison.OrdinalIgnoreCase)) return true;
+
+        var prefix = Encoding.UTF8.GetString(bytes.AsSpan(0, Math.Min(bytes.Length, 512)));
+        return prefix.Contains("<svg", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> RefreshInternalAsync()

@@ -17,6 +17,7 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
+    private const string AllCategoryHeader = "All";
     private static readonly char[] CategorySeparators = ['/', '\\'];
 
     private readonly IApplicationStateService _applicationStateService;
@@ -39,6 +40,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _logger = logger;
         _applicationStateService = applicationStateService;
 
+        RegisterCategory(AllCategoryHeader);
         RegisterCategory("Plugins", new IconModel("BoxIcons.RegularExtension"));
         RegisterCategory("Plugins/Languages", new IconModel("FluentIcons.ProofreadLanguageRegular"));
         RegisterCategory("Plugins/Toolchains", new IconModel("FeatherIcons.Tool"));
@@ -52,7 +54,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         RegisterCategory("Binaries/ONNX Runtimes");
         RegisterCategory("Drivers", new IconModel("BoxIcons.RegularUsb"));
 
-        SelectedCategory = PackageCategories.First();
+        SelectedCategory = GetAllCategory() ?? PackageCategories.FirstOrDefault();
 
         _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
 
@@ -259,8 +261,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     
     private async Task<PackageViewModel?> FocusPluginAsync(string packageId)
     {
-        var categoryVm =
-            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageState.Package.Id == packageId));
+        var categoryVm = PackageCategories
+            .Where(x => !x.Header.Equals(AllCategoryHeader, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault(x => x.VisiblePackages.Any(y => y.PackageState.Package.Id == packageId))
+            ?? GetAllCategory();
 
         if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
@@ -282,6 +286,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private void ConstructPackageViewModels()
     {
+        var allCategory = GetAllCategory();
+
         foreach (var category in PackageCategories)
             ClearCategoryPackages(category);
 
@@ -293,6 +299,9 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
                 var targetCategory = ResolveCategoryForPackage(packageModel.Package);
                 if (targetCategory == null) continue;
+
+                if (allCategory != null && !ReferenceEquals(allCategory, targetCategory))
+                    allCategory.Add(viewModel);
 
                 targetCategory.Add(viewModel);
             }
@@ -514,6 +523,11 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         if (rootCategoryName == null) return null;
         return FindCategory(PackageCategories, rootCategoryName);
+    }
+
+    private PackageCategoryViewModel? GetAllCategory()
+    {
+        return FindCategory(PackageCategories, AllCategoryHeader);
     }
 
     private static void ClearCategoryPackages(PackageCategoryViewModel category)
