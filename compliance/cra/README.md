@@ -2,7 +2,7 @@
 
 This folder holds ONE WARE GmbH's compliance documentation for **Regulation (EU)
 2024/2847 — the Cyber Resilience Act (CRA)** as it applies to **OneWare Studio**,
-a free and open-source (GPL-3.0) IDE for electronics development.
+a free and open-source (Apache-2.0) IDE for electronics development.
 
 > **Status:** Working documents. The single most important open question is the
 > **open-source classification** (§1 of [classification.md](classification.md)):

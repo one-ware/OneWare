@@ -5,7 +5,7 @@ our **Coordinated Vulnerability Disclosure (CVD) policy** and public point of
 contact for reporting security vulnerabilities, aligned with the EU Cyber
 Resilience Act (Regulation (EU) 2024/2847), Annex I Part II.
 
-OneWare Studio is free and open-source software (GPL-3.0). See
+OneWare Studio is free and open-source software (Apache-2.0). See
 [compliance/cra/](compliance/cra/README.md) for the full CRA compliance
 documentation, including the open-source classification analysis.
 

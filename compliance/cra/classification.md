@@ -8,7 +8,7 @@ Phone +49 1522 6837464 — `info@one-ware.com`.
 
 **Product:** OneWare Studio — a .NET 10 / Avalonia desktop IDE for electronics
 development (VHDL, Verilog, C++, FPGA), distributed **free of charge** under
-**GPL-3.0** via direct download, Snap, Flathub and WinGet, plus a web build.
+**Apache-2.0** via direct download, Snap, Flathub and WinGet, plus a web build.
 
 ## 1. Scope & the Open-Source Question
 

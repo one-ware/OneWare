@@ -7,7 +7,7 @@
 ## 1. General Product Description
 
 - **Manufacturer:** ONE WARE GmbH, Annengasse 3, 33034 Brakel, Germany — `info@one-ware.com`.
-- **Product:** OneWare Studio (desktop IDE for electronics development), GPL-3.0.
+- **Product:** OneWare Studio (desktop IDE for electronics development), Apache-2.0.
 - **Versions / identifiers:** release version + build; channels (download, Snap,
   Flathub, WinGet, web) — _TODO_.
 - **Intended use / foreseeable misuse:** _TODO_.
