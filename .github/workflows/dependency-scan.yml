@@ -1,0 +1,47 @@
+# Fails CI when OneWare Studio depends on a NuGet package with a known
+# vulnerability. Supports the EU Cyber Resilience Act (Regulation (EU) 2024/2847),
+# Annex I Part I(1) and Part II. See compliance/cra/ for details.
+
+name: Dependency Vulnerability Scan
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore workloads
+        run: dotnet workload restore studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj
+
+      - name: Restore
+        run: dotnet restore studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj
+
+      - name: Scan for vulnerable packages
+        run: |
+          set -euo pipefail
+          dotnet list studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
+            package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          if grep -E -i '(Critical|High|Moderate|Low)[[:space:]]' vuln.txt; then
+            echo "::error::Known-vulnerable NuGet packages detected"
+            exit 1
+          fi
+          echo "No known-vulnerable packages found."

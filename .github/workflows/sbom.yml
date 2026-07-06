@@ -1,0 +1,49 @@
+# Generates a CycloneDX Software Bill of Materials (SBOM) for OneWare Studio.
+# Supports the EU Cyber Resilience Act (Regulation (EU) 2024/2847), Annex I
+# Part II. See compliance/cra/ for the surrounding documentation.
+
+name: SBOM
+
+on:
+  push:
+    branches: [ "main" ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore workloads
+        run: dotnet workload restore studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj
+
+      - name: Install CycloneDX tool
+        run: dotnet tool install --global CycloneDX
+
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet CycloneDX studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
+            --output sbom \
+            --filename sbom-oneware-studio.json \
+            --json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-oneware-studio
+          path: sbom/sbom-oneware-studio.json
+          retention-days: 90

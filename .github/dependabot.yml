@@ -1,0 +1,22 @@
+# Dependabot keeps dependencies patched, supporting CRA Annex I Part II
+# (identify & address vulnerabilities without undue delay).
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      avalonia:
+        patterns:
+          - "Avalonia*"
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
