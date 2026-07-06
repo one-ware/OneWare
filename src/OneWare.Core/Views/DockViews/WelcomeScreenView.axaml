@@ -154,8 +154,8 @@
                     <DockPanel VerticalAlignment="Center" LastChildFill="True">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="OneWare Studio is licensed under the " />
-                            <controls:HyperLink Label="GPL 3.0 license"
-                                                Url="https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#" />
+                            <controls:HyperLink Label="Apache 2.0 license"
+                                                Url="https://github.com/one-ware/OneWare?tab=Apache-2.0-1-ov-file#" />
                         </StackPanel>
                         <controls:HyperLink DockPanel.Dock="Left" Label="https://one-ware.com" Url="https://one-ware.com" 
                                             HorizontalAlignment="Left" VerticalAlignment="Center" />

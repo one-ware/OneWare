@@ -80,7 +80,7 @@ More information about One AI [here](https://one-ware.com/docs/one-ai/getting-st
 
 ## License
 
-OneWare is licensed under the [GPL 3.0 license](https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#)
+OneWare is licensed under the [Apache License 2.0](LICENSE)
 
 ## Community
 
