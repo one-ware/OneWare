@@ -31,7 +31,7 @@
     <PropertyGroup>
         <Description>Essentials Needed for One Ware Plugin Development</Description>
         <Version>$(EssentialsVersion)</Version>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
     </PropertyGroup>
 

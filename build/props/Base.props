@@ -8,7 +8,7 @@
         <Version>$(StudioVersion)</Version>
         <Authors>Hendrik Mennen</Authors>
         <Description>Next Generation IDE for Electronics Development</Description>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageIcon>package-icon.png</PackageIcon>
         <PackageTags>oneware;oneware-studio</PackageTags>
     </PropertyGroup>
