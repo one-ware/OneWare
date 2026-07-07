@@ -5,9 +5,10 @@ our **Coordinated Vulnerability Disclosure (CVD) policy** and public point of
 contact for reporting security vulnerabilities, aligned with the EU Cyber
 Resilience Act (Regulation (EU) 2024/2847), Annex I Part II.
 
-OneWare Studio is free and open-source software (Apache-2.0). See
-[compliance/cra/](compliance/cra/README.md) for the full CRA compliance
-documentation, including the open-source classification analysis.
+OneWare Studio is free and open-source software (Apache-2.0). The full CRA
+compliance documentation (classification, gap analysis, technical file) is
+maintained internally by ONE WARE GmbH and provided to market-surveillance
+authorities on request.
 
 ## Reporting a Vulnerability
 
@@ -58,12 +59,13 @@ Out of scope:
 ## Supported Versions & Security Updates
 
 Security updates are provided free of charge for supported versions throughout
-the product support period. See
-[compliance/cra/support-period.md](compliance/cra/support-period.md).
+the product support period. ONE WARE GmbH commits to a minimum **5-year**
+security-update support period for OneWare Studio from each release.
 
 ## Regulatory Reporting
 
 For **actively exploited vulnerabilities** and **severe incidents**, ONE WARE
 GmbH notifies ENISA and the German national CSIRT (BSI/CERT-Bund) within the
 CRA timelines (early warning within 24 hours, full notification within 72 hours).
-See [compliance/cra/vulnerability-handling-policy.md](compliance/cra/vulnerability-handling-policy.md).
+The internal vulnerability-handling procedure that governs this process is
+maintained by ONE WARE GmbH.
