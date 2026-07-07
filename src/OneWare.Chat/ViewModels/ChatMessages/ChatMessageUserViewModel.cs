@@ -1,9 +1,10 @@
 ﻿using System.Runtime.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.Chat.ViewModels.ChatMessages;
 
-public class ChatMessageUserViewModel : ObservableObject, IChatMessage
+public class ChatMessageUserViewModel : ObservableObject, IChatMessage, IEstimatedHeightItem
 {
     public ChatMessageUserViewModel(string message)
     {
@@ -15,4 +16,6 @@ public class ChatMessageUserViewModel : ObservableObject, IChatMessage
     public string Message { get; }
     
     public DateTimeOffset Timestamp { get; }
+
+    public double EstimateHeight(double width) => ChatHeightEstimation.EstimateMarkdown(Message, width);
 }
