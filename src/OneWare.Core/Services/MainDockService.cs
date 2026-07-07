@@ -130,6 +130,62 @@ public class MainDockService : Factory, IMainDockService
         base.FloatDockable(dockable);
     }
 
+    public override void CloseDockable(IDockable dockable)
+    {
+        try
+        {
+            base.CloseDockable(dockable);
+        }
+        catch (Exception e)
+        {
+            // Dock's collapse logic throws a NullReferenceException when the last
+            // dockable of a floating window is closed (issue #257). Recover instead of
+            // letting the exception bubble up and crash the whole application.
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Warning("Error while closing dockable, recovering floating window state", e);
+
+            SafeRemoveDockable(dockable);
+            CloseEmptyFloatingWindows();
+        }
+    }
+
+    private void SafeRemoveDockable(IDockable dockable)
+    {
+        if (dockable.Owner is IDock { VisibleDockables: { } dockables } &&
+            dockables.Contains(dockable))
+        {
+            dockables.Remove(dockable);
+            OnDockableClosed(dockable);
+        }
+    }
+
+    private void CloseEmptyFloatingWindows()
+    {
+        if (Layout?.Windows == null) return;
+
+        foreach (var window in Layout.Windows.ToList())
+        {
+            if (window.Layout is { } layout && HasContentDockable(layout)) continue;
+
+            try
+            {
+                window.Exit();
+            }
+            catch
+            {
+                RemoveWindow(window);
+            }
+        }
+    }
+
+    private static bool HasContentDockable(IDockable dockable)
+    {
+        if (dockable is ITool or IDocument) return true;
+        if (dockable is IDock { VisibleDockables: { } visibleDockables })
+            return visibleDockables.Any(HasContentDockable);
+        return false;
+    }
+
     public void RegisterDocumentView<T>(params string[] extensions) where T : IExtendedDocument
     {
         foreach (var extension in extensions) _documentViewRegistrations.TryAdd(extension, typeof(T));
@@ -523,6 +579,11 @@ public class MainDockService : Factory, IMainDockService
         var mainLayout = SearchView<ProportionalDock>().FirstOrDefault(p => p.Id == "MainLayout");
         if (mainLayout != null)
         {
+            // Track the dock the new proportional dock is actually parented under so
+            // its Owner is initialized correctly. Passing the wrong owner here leaves
+            // the docking tree inconsistent and breaks subsequent open/close cycles.
+            ProportionalDock? actualParent = null;
+
             if (location == DockShowLocation.Left)
             {
                 // Insert at the beginning
@@ -531,25 +592,32 @@ public class MainDockService : Factory, IMainDockService
                 {
                     mainLayout.VisibleDockables.Insert(1, new ProportionalDockSplitter());
                 }
+
+                actualParent = mainLayout;
             }
-            else if (location == DockShowLocation.Bottom || location == DockShowLocation.Right)
+            else if (location == DockShowLocation.Bottom)
             {
                 // Find RightPane and add bottom dock to it
                 var rightPane = SearchView<ProportionalDock>().FirstOrDefault(p => p.Id == "RightPane");
-                if (rightPane != null && location == DockShowLocation.Bottom)
+                if (rightPane != null)
                 {
                     rightPane.VisibleDockables?.Add(new ProportionalDockSplitter());
                     rightPane.VisibleDockables?.Add(proportionalDock);
-                }
-                else if (location == DockShowLocation.Right)
-                {
-                    mainLayout.VisibleDockables?.Add(new ProportionalDockSplitter());
-                    mainLayout.VisibleDockables?.Add(proportionalDock);
+                    actualParent = rightPane;
                 }
             }
+            else if (location == DockShowLocation.Right)
+            {
+                mainLayout.VisibleDockables?.Add(new ProportionalDockSplitter());
+                mainLayout.VisibleDockables?.Add(proportionalDock);
+                actualParent = mainLayout;
+            }
 
-            InitActiveDockable(proportionalDock, mainLayout);
-            return proportionalDock;
+            if (actualParent != null)
+            {
+                InitActiveDockable(proportionalDock, actualParent);
+                return proportionalDock;
+            }
         }
 
         return null;
@@ -622,7 +690,31 @@ public class MainDockService : Factory, IMainDockService
 
         layout.Id = name;
 
-        InitLayout(layout);
+        // Drop dockables that failed to deserialize (e.g. types from an
+        // uninstalled or renamed plugin). Their JSON $type cannot be resolved and
+        // the serializer leaves null entries in the layout. Passing those to
+        // InitLayout throws a NullReferenceException and prevents the app from
+        // starting. Removing them lets the rest of the saved layout load.
+        RemoveInvalidDockables(layout);
+
+        try
+        {
+            InitLayout(layout);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Warning("Could not initialize saved layout! Loading default layout...", e);
+
+            // The saved layout is corrupted beyond repair, fall back to default.
+            layout = DefaultLayout.GetDefaultLayout(this);
+            layout.Id = name;
+            OpenFiles.Clear();
+            Show(_welcomeScreenViewModel, DockShowLocation.Document);
+            InitLayout(layout);
+            Layout = layout;
+            return;
+        }
 
         Layout = layout;
         
@@ -632,6 +724,42 @@ public class MainDockService : Factory, IMainDockService
         {
             MergeLayoutRegistrations();
         }
+    }
+
+    /// <summary>
+    /// Recursively removes null dockables from a layout tree. Null entries occur
+    /// when a saved dockable references a type that can no longer be resolved
+    /// (for example a plugin that was uninstalled or renamed).
+    /// </summary>
+    private static void RemoveInvalidDockables(IDockable? dockable)
+    {
+        if (dockable is IRootDock rootDock)
+        {
+            RemoveNullEntries(rootDock.LeftPinnedDockables);
+            RemoveNullEntries(rootDock.RightPinnedDockables);
+            RemoveNullEntries(rootDock.TopPinnedDockables);
+            RemoveNullEntries(rootDock.BottomPinnedDockables);
+            RemoveNullEntries(rootDock.HiddenDockables);
+
+            if (rootDock.Windows != null)
+                foreach (var window in rootDock.Windows)
+                    RemoveInvalidDockables(window.Layout);
+        }
+
+        if (dockable is IDock { VisibleDockables: { } visibleDockables } dock)
+        {
+            RemoveNullEntries(visibleDockables);
+            foreach (var child in dock.VisibleDockables!.ToList())
+                RemoveInvalidDockables(child);
+        }
+    }
+
+    private static void RemoveNullEntries(IList<IDockable>? list)
+    {
+        if (list == null) return;
+        for (var i = list.Count - 1; i >= 0; i--)
+            if (list[i] is null)
+                list.RemoveAt(i);
     }
     
     private void MergeLayoutRegistrations()
