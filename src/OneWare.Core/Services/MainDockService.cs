@@ -622,6 +622,12 @@ public class MainDockService : Factory, IMainDockService
 
         layout.Id = name;
 
+        // Remove any dockables that failed to deserialize (e.g. types from removed/renamed
+        // modules that could not be resolved). These end up as null entries in the dockable
+        // collections and would otherwise cause a NullReferenceException in InitLayout.
+        if (wasLoadedFromFile)
+            SanitizeLayout(layout);
+
         InitLayout(layout);
 
         Layout = layout;
@@ -712,6 +718,44 @@ public class MainDockService : Factory, IMainDockService
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Removes dockables that failed to deserialize (null entries left behind when a type could
+    /// not be resolved, e.g. from a removed or renamed module) from all dockable collections in
+    /// the layout. This prevents a NullReferenceException in <see cref="Factory.InitLayout"/>.
+    /// </summary>
+    private void SanitizeLayout(IDockable? layout)
+    {
+        if (layout is IDock dock)
+        {
+            RemoveNullDockables(dock.VisibleDockables);
+
+            if (dock.VisibleDockables != null)
+                foreach (var child in dock.VisibleDockables)
+                    SanitizeLayout(child);
+        }
+
+        if (layout is IRootDock rootDock)
+        {
+            RemoveNullDockables(rootDock.LeftPinnedDockables);
+            RemoveNullDockables(rootDock.TopPinnedDockables);
+            RemoveNullDockables(rootDock.RightPinnedDockables);
+            RemoveNullDockables(rootDock.BottomPinnedDockables);
+
+            if (rootDock.Windows != null)
+                foreach (var win in rootDock.Windows)
+                    SanitizeLayout(win.Layout);
+        }
+    }
+
+    private static void RemoveNullDockables(IList<IDockable>? dockables)
+    {
+        if (dockables == null) return;
+
+        for (var i = dockables.Count - 1; i >= 0; i--)
+            if (dockables[i] == null!)
+                dockables.RemoveAt(i);
     }
 
     private IEnumerable<IDockable> SearchAllDockables(IDockable? layout)
