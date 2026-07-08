@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\build\props\XUnit.props"/>
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <IsPackable>False</IsPackable>
+        <IsTestProject>True</IsTestProject>
+        <Nullable>enable</Nullable>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.17"/>
+        <PackageReference Include="Avalonia.Headless.XUnit" Version="11.3.17"/>
+        <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.17"/>
+        <PackageReference Include="Dock.Avalonia" Version="11.3.12.1"/>
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.12.1"/>
+        <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.12.1"/>
+    </ItemGroup>
+
+</Project>
