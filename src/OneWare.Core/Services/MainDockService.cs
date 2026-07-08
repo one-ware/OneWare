@@ -745,9 +745,12 @@ public class MainDockService : Factory, IMainDockService
     }
 
     /// <summary>
-    /// Recursively removes null dockables from a layout tree. Null entries occur
-    /// when a saved dockable references a type that can no longer be resolved
-    /// (for example a plugin that was uninstalled or renamed).
+    /// Recursively removes invalid dockables from a layout tree. These are null
+    /// entries and <see cref="MissingDockable"/> placeholders left when a saved
+    /// dockable references a type that can no longer be resolved (for example a
+    /// plugin that was uninstalled or renamed). The placeholder is kept during
+    /// deserialization so the shared structural tree nested inside it survives, then
+    /// stripped here once the layout has been reconstructed.
     /// </summary>
     private static void RemoveInvalidDockables(IDockable? dockable)
     {
@@ -776,7 +779,7 @@ public class MainDockService : Factory, IMainDockService
     {
         if (list == null) return;
         for (var i = list.Count - 1; i >= 0; i--)
-            if (list[i] is null)
+            if (list[i] is null or MissingDockable)
                 list.RemoveAt(i);
     }
     
