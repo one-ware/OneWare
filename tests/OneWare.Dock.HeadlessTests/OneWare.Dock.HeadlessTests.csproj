@@ -12,10 +12,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.17"/>
+        <PackageReference Include="Avalonia" Version="12.0.0"/>
         <PackageReference Include="Avalonia.Headless.XUnit" Version="11.3.17"/>
         <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.17"/>
-        <PackageReference Include="Dock.Avalonia" Version="11.3.12.1"/>
+        <PackageReference Include="Dock.Avalonia" Version="12.0.0.2"/>
         <PackageReference Include="Dock.Model.Mvvm" Version="11.3.12.1"/>
         <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.12.1"/>
     </ItemGroup>
