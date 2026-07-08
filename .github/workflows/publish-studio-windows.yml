@@ -53,7 +53,7 @@ jobs:
       - name: Rename Installer win-arm64
         run: mv ./publishInstaller/win-arm64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-artifacts
           path: |
