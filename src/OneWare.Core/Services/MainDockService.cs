@@ -715,6 +715,13 @@ public class MainDockService : Factory, IMainDockService
         // starting. Removing them lets the rest of the saved layout load.
         RemoveInvalidDockables(layout);
 
+        // Detach any stray host window from the main root. The main layout is always
+        // hosted in the MainWindow, never inside a DockWindow; real floating windows
+        // live in the Windows collection. A saved layout can end up with a
+        // root.Window whose inner root shares (duplicates) the entire MainLayout,
+        // which prevents the layout from initializing correctly.
+        RemoveStrayRootWindow(layout);
+
         try
         {
             InitLayout(layout);
@@ -778,6 +785,27 @@ public class MainDockService : Factory, IMainDockService
         for (var i = list.Count - 1; i >= 0; i--)
             if (list[i] is null)
                 list.RemoveAt(i);
+    }
+
+    /// <summary>
+    /// Detaches a stray host window from the main root. The main layout is hosted
+    /// in the MainWindow, so <see cref="IRootDock.Window"/> on the persisted root
+    /// should always be null (real floating windows live in
+    /// <see cref="IRootDock.Windows"/>). A corrupt layout can carry a root
+    /// <c>Window</c> whose inner root shares the same MainLayout instance, which
+    /// leaves the tree inconsistent and prevents correct initialization.
+    /// </summary>
+    private static void RemoveStrayRootWindow(RootDock root)
+    {
+        if (root.Window == null) return;
+
+        // Break the shared reference so the duplicated inner layout becomes
+        // unreachable garbage instead of pointing back at the live layout.
+        if (root.Window.Layout is { } strayLayout)
+            strayLayout.Window = null;
+
+        root.Window.Layout = null;
+        root.Window = null;
     }
     
     private void MergeLayoutRegistrations()
