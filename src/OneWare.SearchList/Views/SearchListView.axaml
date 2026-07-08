@@ -61,7 +61,7 @@
                                             HorizontalAlignment="Stretch">
                             <Interaction.Behaviors>
                                 <FocusOnAttachedToVisualTreeBehavior />
-                                <behaviors:DataGridNavigationBehavior AssociatedDataGrid="{Binding #SearchList}" />
+                                <behaviors:ListBoxNavigationBehavior AssociatedListBox="{Binding #SearchList}" />
                                 <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" HandledEventsToo="False"
                                                                        Command="{Binding OpenSelectedResult}" />
                             </Interaction.Behaviors>
@@ -98,69 +98,55 @@
             </DockPanel>
         </Border>
 
-        <DataGrid Padding="2, 0, 2, 2" BorderThickness="0" VerticalGridLinesBrush="Transparent"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                  Grid.Row="2" Background="Transparent"
-                  RowBackground="Transparent" IsReadOnly="True"
-                  x:Name="SearchList" ItemsSource="{Binding Items}"
-                  SelectedItem="{Binding SelectedItem}"
-                  CanUserResizeColumns="True" CanUserSortColumns="True">
+        <ListBox Grid.Row="2" Padding="2" Background="Transparent" BorderThickness="0"
+                 x:Name="SearchList" ItemsSource="{Binding Items}"
+                 SelectedItem="{Binding SelectedItem}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Interaction.Behaviors>
-                <behaviors:CommandOnDoubleTapBehavior
-                    Command="{Binding OpenSelectedResult}" />
+                <behaviors:CommandOnDoubleTapBehavior Command="{Binding OpenSelectedResult}" />
             </Interaction.Behaviors>
-            <DataGrid.Columns>
-                <DataGridTemplateColumn CanUserResize="True" Width="4*" SortMemberPath="Description">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="models:SearchResultModel">
-                            <TextBlock Padding="5 0" ToolTip.Tip="{Binding Description}">
-                                <Run Text="{Binding DescriptionLeft}" /><!--
-                                --><Run Text="{Binding DescriptionMid}" FontWeight="Bold" Background="{DynamicResource ThemeAccentBrush2}" /><!--
-                                --><Run Text="{Binding DescriptionRight}" />
-                            </TextBlock>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                        <TextBlock Text="Code" />
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
+            <ListBox.Styles>
+                <Style Selector="ListBoxItem">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0 1" />
+                    <Setter Property="CornerRadius" Value="3" />
+                    <Setter Property="MinHeight" Value="0" />
+                </Style>
+            </ListBox.Styles>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="models:SearchResultModel">
+                    <Grid ColumnDefinitions="*,Auto" Margin="6 3" ToolTip.Tip="{Binding Description}">
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   FontFamily="{DynamicResource EditorFont}">
+                            <Run Text="{Binding DescriptionLeft}" /><!--
+                            --><Run Text="{Binding DescriptionMid}" FontWeight="Bold"
+                                    Background="{DynamicResource ThemeAccentBrush2}" /><!--
+                            --><Run Text="{Binding DescriptionRight}"
+                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        </TextBlock>
 
-                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="Project.Header">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="models:SearchResultModel">
-                            <TextBlock Padding="5 0" VerticalAlignment="Center"
-                                       Text="{Binding Project.Header, FallbackValue={x:Null}}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                        <TextBlock Text="Project" />
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
-
-                <DataGridTemplateColumn CanUserResize="True" Width="*" SortMemberPath="FileName">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="models:SearchResultModel">
-                            <TextBlock Padding="5 0" VerticalAlignment="Center"
-                                       Text="{Binding FileName, FallbackValue={x:Null}}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                        <TextBlock Text="File" />
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
-
-                <DataGridTemplateColumn CanUserResize="True" Width="40" SortMemberPath="Line">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="models:SearchResultModel">
-                            <TextBlock Padding="5 0" VerticalAlignment="Center" Text="{Binding LineString}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                        <TextBlock Text="Line" />
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
-
-            </DataGrid.Columns>
-        </DataGrid>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
+                                    VerticalAlignment="Center" Margin="12 0 0 0">
+                            <TextBlock Text="{Binding FileName, FallbackValue={x:Null}}"
+                                       Foreground="{DynamicResource ThemeForegroundBrush}"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="180"
+                                       IsVisible="{Binding FileName, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            <TextBlock Text="{Binding Line, StringFormat=':{0}'}"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                       IsVisible="{Binding LineString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <Border Background="{DynamicResource ThemeControlMidBrush}" CornerRadius="3"
+                                    Padding="5 1" VerticalAlignment="Center"
+                                    IsVisible="{Binding Project.Header, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <TextBlock Text="{Binding Project.Header, FallbackValue={x:Null}}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>
