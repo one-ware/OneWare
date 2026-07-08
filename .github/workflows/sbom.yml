@@ -9,9 +9,16 @@ name: SBOM
 on:
   push:
     branches: [ "main" ]
-  release:
-    types: [ published ]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to attach/update the SBOM on (defaults to the current StudioVersion from Base.props)"
+        required: false
+        type: string
+  workflow_run:
+    workflows: [ Publish Studio Desktop ]
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -19,12 +26,39 @@ permissions:
 jobs:
   sbom:
     runs-on: ubuntu-latest
+    # Run for push/manual always; for the release pipeline only if it succeeded (matches the other publish pipelines).
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write   # attach SBOM assets to the release
+    outputs:
+      tag: ${{ steps.tag.outputs.value }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Get Version from Base.props
+        id: get-oneware-version
+        uses: mavrosxristoforos/get-xml-info@2.0
+        with:
+          xml-file: "./build/props/Base.props"
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
+
+      - name: Resolve release tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.release_tag }}
+          PROPS_VERSION: ${{ steps.get-oneware-version.outputs.info }}
+        run: |
+          # push to main only builds the artifact; release pipeline / manual dispatch target a release tag.
+          if [ "${{ github.event_name }}" = "push" ]; then
+            tag=""
+          elif [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            tag="$PROPS_VERSION"
+          fi
+          echo "value=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -53,9 +87,10 @@ jobs:
           retention-days: 90
 
       - name: Attach SBOM to the GitHub Release
-        if: github.event_name == 'release'
+        if: steps.tag.outputs.value != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.value }}
           files: sbom/sbom-oneware-studio.json
 
   # On release, archive the SBOM into the private one-ware/Compliance repo for
@@ -64,12 +99,12 @@ jobs:
   # No-ops if the secret is not configured.
   archive:
     needs: sbom
-    if: github.event_name == 'release'
+    if: ${{ needs.sbom.outputs.tag != '' }}
     runs-on: ubuntu-latest
     env:
       TOKEN: ${{ secrets.COMPLIANCE_SBOM_TOKEN }}
       PRODUCT: oneware-studio
-      VERSION: ${{ github.event.release.tag_name }}
+      VERSION: ${{ needs.sbom.outputs.tag }}
     steps:
       - name: Download SBOMs from this run
         if: env.TOKEN != ''
