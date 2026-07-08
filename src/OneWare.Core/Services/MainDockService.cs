@@ -419,8 +419,10 @@ public class MainDockService : Factory, IMainDockService
             var toolDock = FindOrCreateToolDock(location);
             if (toolDock != null)
             {
-                toolDock.VisibleDockables?.Add(dockable);
-                InitActiveDockable(dockable, toolDock);
+                // Use AddDockable (not a raw VisibleDockables.Add) so the dock's
+                // IsEmpty flag and owner chain are updated. A raw add leaves the
+                // tool dock flagged empty and it renders with zero size (issue #258).
+                AddDockable(toolDock, dockable);
                 SetActiveDockable(dockable);
             }
             else
@@ -511,6 +513,7 @@ public class MainDockService : Factory, IMainDockService
         {
             Id = dockId,
             Title = dockId,
+            Proportion = double.NaN,
             VisibleDockables = CreateList<IDockable>(),
             Alignment = alignment
         };
@@ -535,8 +538,9 @@ public class MainDockService : Factory, IMainDockService
 
             if (parentDock != null)
             {
-                parentDock.VisibleDockables?.Add(toolDock);
-                InitActiveDockable(toolDock, parentDock);
+                // AddDockable updates IsEmpty and the owner chain; a raw add leaves
+                // the parent flagged empty so it renders with zero size (issue #258).
+                AddDockable(parentDock, toolDock);
                 return toolDock;
             }
         }
@@ -586,12 +590,13 @@ public class MainDockService : Factory, IMainDockService
 
             if (location == DockShowLocation.Left)
             {
-                // Insert at the beginning
-                mainLayout.VisibleDockables?.Insert(0, proportionalDock);
+                // Existing siblings should auto-distribute the remaining space; leaving
+                // a stale proportion on them (or 0 on the new dock) makes the pane
+                // render with zero width (issue #258).
+                ResetChildProportions(mainLayout);
+                InsertDockable(mainLayout, proportionalDock, 0);
                 if (mainLayout.VisibleDockables?.Count > 1)
-                {
-                    mainLayout.VisibleDockables.Insert(1, new ProportionalDockSplitter());
-                }
+                    InsertDockable(mainLayout, new ProportionalDockSplitter(), 1);
 
                 actualParent = mainLayout;
             }
@@ -601,26 +606,39 @@ public class MainDockService : Factory, IMainDockService
                 var rightPane = SearchView<ProportionalDock>().FirstOrDefault(p => p.Id == "RightPane");
                 if (rightPane != null)
                 {
-                    rightPane.VisibleDockables?.Add(new ProportionalDockSplitter());
-                    rightPane.VisibleDockables?.Add(proportionalDock);
+                    ResetChildProportions(rightPane);
+                    AddDockable(rightPane, new ProportionalDockSplitter());
+                    AddDockable(rightPane, proportionalDock);
                     actualParent = rightPane;
                 }
             }
             else if (location == DockShowLocation.Right)
             {
-                mainLayout.VisibleDockables?.Add(new ProportionalDockSplitter());
-                mainLayout.VisibleDockables?.Add(proportionalDock);
+                ResetChildProportions(mainLayout);
+                AddDockable(mainLayout, new ProportionalDockSplitter());
+                AddDockable(mainLayout, proportionalDock);
                 actualParent = mainLayout;
             }
 
             if (actualParent != null)
-            {
-                InitActiveDockable(proportionalDock, actualParent);
                 return proportionalDock;
-            }
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Resets the proportion of a dock's non-splitter children to NaN so the
+    /// proportional layout redistributes space evenly. Without this, a stale or
+    /// zero proportion left over from a collapsed dock causes a newly inserted
+    /// sibling to render with zero size.
+    /// </summary>
+    private static void ResetChildProportions(ProportionalDock dock)
+    {
+        if (dock.VisibleDockables == null) return;
+        foreach (var child in dock.VisibleDockables)
+            if (child is not IProportionalDockSplitter)
+                child.Proportion = double.NaN;
     }
 
     private void AddPinnedDockable(IDockable dockable, DockShowLocation location)
