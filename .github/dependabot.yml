@@ -13,6 +13,7 @@ updates:
           - "Avalonia*"
           - "Dock.Avalonia*"
           - "Dock.Model.Mvvm*"
+          - "OneWare.Markdown.Avalonia*"
       microsoft:
         patterns:
           - "Microsoft.*"
