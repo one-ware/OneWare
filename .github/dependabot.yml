@@ -19,15 +19,11 @@ updates:
           - "System.*"
     ignore:
       - dependency-name: "Avalonia*"
-        versions:
-          - "12.*"
+        update-types:
+          - "version-update:semver-major"
       - dependency-name: "Dock.Avalonia*"
-        versions:
-          - "12.*"
+        update-types:
+          - "version-update:semver-major"
       - dependency-name: "Dock.Model.Mvvm*"
-        versions:
-          - "12.*"
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: weekly
+        update-types:
+          - "version-update:semver-major"
