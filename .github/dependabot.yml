@@ -12,6 +12,7 @@ updates:
         patterns:
           - "Avalonia*"
           - "Dock.Avalonia*"
+          - "Dock.Model.Mvvm*"
       microsoft:
         patterns:
           - "Microsoft.*"
@@ -21,6 +22,9 @@ updates:
         versions:
           - "12.x"
       - dependency-name: "Dock.Avalonia*"
+        versions:
+          - "12.x"
+      - dependency-name: "Dock.Model.Mvvm*"
         versions:
           - "12.x"
   - package-ecosystem: github-actions
