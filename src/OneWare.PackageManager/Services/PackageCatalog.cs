@@ -26,16 +26,15 @@ public class PackageCatalog : IPackageCatalog
             _manifests[package.Id] = package;
     }
 
-    public async Task<bool> RefreshAsync(IEnumerable<IEnumerable<string>> sources, CancellationToken cancellationToken = default)
+    public async Task<bool> RefreshAsync(IEnumerable<string[]> repositories, CancellationToken cancellationToken = default)
     {
         var result = true;
         var newPackages = new Dictionary<string, Package>();
 
-        foreach (var I in sources)
+        foreach (var repository in repositories)
         {
-
             IReadOnlyList<Package> loaded = new List<Package>();
-            foreach (var source in I)
+            foreach (var source in repository)
             {
                 try
                 {
