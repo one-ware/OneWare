@@ -35,7 +35,7 @@ jobs:
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r ${{ matrix.arch }} -o ./out
       - name: Compress
-        uses: a7ul/tar-action@v1.1.0
+        uses: a7ul/tar-action@v1.2.0
         id: compress
         with:
           command: c
