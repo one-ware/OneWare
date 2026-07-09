@@ -8,6 +8,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.18" />
         <AvaloniaResource Include="Assets\TOML.tmLanguage.json"/>
     </ItemGroup>
 </Project>

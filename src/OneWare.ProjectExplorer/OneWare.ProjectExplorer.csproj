@@ -4,6 +4,7 @@
     <Import Project="..\..\build\props\Avalonia.Controls.TreeDataGrid.props"/>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.18" />
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 </Project>
