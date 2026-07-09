@@ -36,6 +36,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.5" />
         <None Include="readme.md" Pack="true" PackagePath=""/>
     </ItemGroup>
 
