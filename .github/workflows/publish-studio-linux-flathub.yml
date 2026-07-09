@@ -60,7 +60,7 @@ jobs:
           git add oneware-nuget-sources.json
           git commit -m "Update OneWare Version"     
       - name: Push changes and create pull request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.HENDRIK_PERSONAL_TOKEN }}
           branch: release-${{ steps.get-oneware-version.outputs.info }}
