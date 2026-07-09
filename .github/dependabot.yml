@@ -16,7 +16,7 @@ updates:
           - "OneWare.Markdown.Avalonia*"
           - "OneWare.Avalonia*"
           - "PanAndZoom"
-          - "Svg.Controls.Skia.Avalonia",
+          - "Svg.Controls.Skia.Avalonia"
           - "Xaml.Behaviors.Avalonia"
       microsoft:
         patterns:
