@@ -103,9 +103,18 @@
                              Background="Transparent" BorderThickness="0"
                              SelectedItem="{Binding SelectedCategory.SelectedPackage, Mode=TwoWay, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">
-                        <Interaction.Behaviors>
-                            <EventTriggerBehavior EventName="SelectionChanged">
-                               <InvokeCommandAction Command="{Binding ResolveSelectedPackageTabsAsync}" />
+                       <ListBox.ItemContainerTheme>
+                           <ControlTheme TargetType="ListBoxItem"
+                                         x:DataType="viewModels:PackageListEntryViewModel"
+                                         BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                               <Setter Property="Focusable" Value="{Binding IsSelectable}" />
+                               <Setter Property="IsHitTestVisible" Value="{Binding IsSelectable}" />
+                               <Setter Property="IsTabStop" Value="{Binding IsSelectable}" />
+                           </ControlTheme>
+                       </ListBox.ItemContainerTheme>
+                       <Interaction.Behaviors>
+                           <EventTriggerBehavior EventName="SelectionChanged">
+                              <InvokeCommandAction Command="{Binding ResolveSelectedPackageTabsAsync}" />
                             </EventTriggerBehavior>
                         </Interaction.Behaviors>
                         <ListBox.ItemsPanel>
