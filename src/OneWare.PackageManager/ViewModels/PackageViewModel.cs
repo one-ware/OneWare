@@ -18,7 +18,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageViewModel : ObservableObject
+public class PackageViewModel : PackageListEntryViewModel
 {
     private readonly IHttpService _httpService;
     private readonly IPackageService _packageService;

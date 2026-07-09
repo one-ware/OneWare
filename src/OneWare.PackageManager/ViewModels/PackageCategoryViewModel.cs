@@ -27,7 +27,7 @@ public class PackageCategoryViewModel(string header, IconModel? iconModel = null
 
     public ObservableCollection<PackageViewModel> VisiblePackages { get; } = [];
 
-    public ObservableCollection<object> VisibleEntries { get; } = [];
+    public ObservableCollection<PackageListEntryViewModel> VisibleEntries { get; } = [];
 
     public ObservableCollection<PackageCategoryViewModel> SubCategories { get; } = [];
 
@@ -99,7 +99,7 @@ public class PackageCategoryViewModel(string header, IconModel? iconModel = null
             or PackageStatus.Installing;
     }
 
-    private static IReadOnlyList<object> CreateVisibleEntries(IReadOnlyList<PackageViewModel> packages)
+    private static IReadOnlyList<PackageListEntryViewModel> CreateVisibleEntries(IReadOnlyList<PackageViewModel> packages)
     {
         var groups = packages
             .GroupBy(GetPackageGroupPriority)
@@ -107,9 +107,9 @@ public class PackageCategoryViewModel(string header, IconModel? iconModel = null
             .ToList();
 
         if (groups.Count <= 1)
-            return packages.Cast<object>().ToList();
+            return packages.Cast<PackageListEntryViewModel>().ToList();
 
-        var entries = new List<object>(packages.Count + groups.Count);
+        var entries = new List<PackageListEntryViewModel>(packages.Count + groups.Count);
 
         for (var groupIndex = 0; groupIndex < groups.Count; groupIndex++)
         {
