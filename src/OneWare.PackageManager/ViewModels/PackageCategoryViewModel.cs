@@ -29,6 +29,8 @@ public class PackageCategoryViewModel(string header, IconModel? iconModel = null
 
     public ObservableCollection<PackageListEntryViewModel> VisibleEntries { get; } = [];
 
+    public ObservableCollection<PackageSeparatorViewModel> VisibleSeparators { get; } = [];
+
     public ObservableCollection<PackageCategoryViewModel> SubCategories { get; } = [];
 
     public IconModel? IconModel { get; } = iconModel;
@@ -75,6 +77,9 @@ public class PackageCategoryViewModel(string header, IconModel? iconModel = null
 
         VisibleEntries.Clear();
         VisibleEntries.AddRange(CreateVisibleEntries(orderedPackages));
+
+        VisibleSeparators.Clear();
+        VisibleSeparators.AddRange(VisibleEntries.OfType<PackageSeparatorViewModel>());
     }
 
     private static int GetPackageGroupPriority(PackageViewModel package)

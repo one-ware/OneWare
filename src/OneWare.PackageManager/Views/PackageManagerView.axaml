@@ -20,6 +20,13 @@
             <Setter Property="Padding" Value="0 0 5 0" />
             <Setter Property="Margin" Value="0 5 5 5" />
         </Style>
+        <Style Selector="Button.PackageSeparatorButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
     </controls:FlexibleWindow.Styles>
 
     <Border BorderThickness="0 1 0 0">
@@ -108,7 +115,6 @@
                                          x:DataType="viewModels:PackageListEntryViewModel"
                                          BasedOn="{StaticResource {x:Type ListBoxItem}}">
                                <Setter Property="Focusable" Value="{Binding IsSelectable}" />
-                               <Setter Property="IsHitTestVisible" Value="{Binding IsSelectable}" />
                                <Setter Property="IsTabStop" Value="{Binding IsSelectable}" />
                            </ControlTheme>
                        </ListBox.ItemContainerTheme>
@@ -124,18 +130,20 @@
                         </ListBox.ItemsPanel>
                         <ListBox.DataTemplates>
                             <DataTemplate DataType="viewModels:PackageSeparatorViewModel">
-                                <Grid IsHitTestVisible="False"
-                                      ColumnDefinitions="Auto,*"
-                                      Margin="5 4 0 2">
-                                    <TextBlock Text="{Binding Text}"
-                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                    <Border Grid.Column="1"
-                                            IsVisible="{Binding ShowLine}"
-                                            BorderThickness="0 1 0 0"
-                                            BorderBrush="{DynamicResource ThemeBorderMidBrush}"
-                                            Margin="8 0 0 0"
-                                            VerticalAlignment="Center" />
-                                </Grid>
+                                <Button Classes="PackageSeparatorButton"
+                                        Click="PackageSeparatorButton_OnClick">
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          Margin="5 4 0 2">
+                                        <TextBlock Text="{Binding Text}"
+                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                        <Border Grid.Column="1"
+                                                IsVisible="{Binding ShowLine}"
+                                                BorderThickness="0 1 0 0"
+                                                BorderBrush="{DynamicResource ThemeBorderMidBrush}"
+                                                Margin="8 0 0 0"
+                                                VerticalAlignment="Center" />
+                                    </Grid>
+                                </Button>
                             </DataTemplate>
                             <DataTemplate DataType="viewModels:PackageViewModel">
                                 <DockPanel>
