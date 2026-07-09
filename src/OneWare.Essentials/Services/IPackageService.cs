@@ -43,10 +43,10 @@ public interface IPackageService : INotifyPropertyChanged
 
     /// <summary>
     /// Registers a package repository URL with fallback URLs.
-    /// Uses the first URL of the List that works.
+    /// Uses the first URL of the array that works.
     /// </summary>
     /// <param name="urls"></param>
-    void RegisterPackageRepository(List<string> urls);
+    void RegisterPackageRepositoryWithFallback(string[] urls);
 
     /// <summary>
     /// Registers a package installer for a package type.

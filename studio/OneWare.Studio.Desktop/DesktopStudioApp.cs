@@ -145,11 +145,11 @@ public class DesktopStudioApp : StudioApp
     {
         var cloudHost = Services.Resolve<ISettingsService>()
             .GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
-        Services.Resolve<IPackageService>().RegisterPackageRepository(
-            new List<string>{ 
-                $"{cloudHost}api/studio/packages",
+        Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(
+            [
+                new Uri(new Uri(cloudHost), "api/studio/packages").AbsoluteUri,
                 "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
-            }
+            ]
         );
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
@@ -234,7 +234,7 @@ public class DesktopStudioApp : StudioApp
                             .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
                     });
                 }
-                
+
                 var packageCount = updatePackages.Count;
                 var packageLabel = packageCount == 1 ? "package update" : "package updates";
 
@@ -242,10 +242,10 @@ public class DesktopStudioApp : StudioApp
                     $"{packageCount} {packageLabel} available.",
                     "Update all", () => _ = Services.Resolve<IPackageWindowService>().ShowAndUpdateAllAsync());
             }
-            
+
             //Ask to install the OneWare.AI extension
             if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
-                     Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
+                Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {
                 var aiReleaseWindowVm = Services.Resolve<AiReleaseWindowViewModel>();
                 //check if the specified extension is already installed

@@ -35,7 +35,7 @@ public static class StringExtensions
                    StringComparison.OrdinalIgnoreCase)
                && string.Equals(uri1.Query, uri2.Query, StringComparison.Ordinal);
     }
-
+    
     public static bool ContainsSubPath(this string pathToFile, string subPath)
     {
         pathToFile = Path.GetDirectoryName(pathToFile) + "\\";
