@@ -15,6 +15,9 @@ updates:
           - "Dock.Model.Mvvm*"
           - "OneWare.Markdown.Avalonia*"
           - "OneWare.Avalonia*"
+          - "PanAndZoom"
+          - "Svg.Controls.Skia.Avalonia",
+          - "Xaml.Behaviors.Avalonia"
       microsoft:
         patterns:
           - "Microsoft.*"
