@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/build/">
+    <File Path=".github\dependabot.yml" />
     <File Path="Directory.Build.props" />
     <File Path="docs\changelog.md" />
   </Folder>

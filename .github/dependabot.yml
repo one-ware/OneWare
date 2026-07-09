@@ -19,6 +19,7 @@ updates:
           - "PanAndZoom"
           - "Svg.Controls.Skia.Avalonia"
           - "Xaml.Behaviors.Avalonia"
+          - "TreeDataGrid"
         update-types:
           - "minor"
           - "patch"
@@ -51,5 +52,8 @@ updates:
         update-types:
           - "version-update:semver-major"
       - dependency-name: "Svg.Controls.Skia.Avalonia"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "TreeDataGrid"
         update-types:
           - "version-update:semver-major"
