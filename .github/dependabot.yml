@@ -11,11 +11,18 @@ updates:
       avalonia:
         patterns:
           - "Avalonia*"
+          - "Dock.Avalonia*"
       microsoft:
         patterns:
           - "Microsoft.*"
           - "System.*"
-
+    ignore:
+      - dependency-name: "Avalonia*"
+        versions:
+          - "12.x"
+      - dependency-name: "Dock.Avalonia*"
+        versions:
+          - "12.x"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
