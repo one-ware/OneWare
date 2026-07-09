@@ -80,7 +80,7 @@ jobs:
             --json
 
       - name: Upload SBOM artifact (CI convenience, short-lived)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-oneware-studio
           path: sbom/sbom-oneware-studio.json
