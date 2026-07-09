@@ -90,7 +90,7 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
         catch (Exception e)
         {
             _logger.Error($"Failed to load package source '{url}'.", e);
-            return Array.Empty<Package>();
+            return [];
         }
     }
 

@@ -6,7 +6,7 @@ public interface IPackageCatalog
 {
     IReadOnlyDictionary<string, Package> Manifests { get; }
 
-    Task<bool> RefreshAsync(IEnumerable<IEnumerable<string>> sources, CancellationToken cancellationToken = default);
+    Task<bool> RefreshAsync(IEnumerable<string[]> repositories, CancellationToken cancellationToken = default);
 
     void RegisterStandalone(Package package);
 }
