@@ -1,6 +1,7 @@
 # Fails CI when OneWare Studio depends on a NuGet package with a known
 # vulnerability. Supports the EU Cyber Resilience Act (Regulation (EU) 2024/2847),
-# Annex I Part I(1) and Part II. See compliance/cra/ for details.
+# Annex I Part I(1) and Part II. Also exposed as a reusable workflow
+# (workflow_call) so the release pipeline can use it as a required gate.
 
 name: Dependency Vulnerability Scan
 
@@ -12,6 +13,7 @@ on:
   schedule:
     - cron: "17 6 * * 1"
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
