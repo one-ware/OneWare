@@ -3,6 +3,9 @@ name: Publish Studio Web
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   # Build job
   deploy:

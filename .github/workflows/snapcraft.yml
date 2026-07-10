@@ -3,6 +3,9 @@ name: Test Snap
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
 
   # Build Snap

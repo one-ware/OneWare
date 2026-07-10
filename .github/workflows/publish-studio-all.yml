@@ -4,6 +4,8 @@ name: Publish Studio Desktop
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   # CRA Annex I Part I(1) release gate: block the release — and the platform
   # publish pipelines that cascade from it — if any dependency has a known
