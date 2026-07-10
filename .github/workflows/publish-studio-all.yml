@@ -4,6 +4,8 @@ name: Publish Studio Desktop
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   release:
     name: Release
