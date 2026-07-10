@@ -1,5 +1,6 @@
 [![](https://dcbadge.limes.pink/api/server/NCN9VAh?style=flat)](https://discord.gg/NCN9VAh)
 [![Test](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml)
+[![Dependency Vulnerability Scan](https://github.com/one-ware/OneWare/actions/workflows/dependency-scan.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/dependency-scan.yml)
 
 ## OneWare Studio - The Next Generation IDE for Electronics Development
 
