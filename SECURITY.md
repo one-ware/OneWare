@@ -17,7 +17,7 @@ discussions, or pull requests.**
 
 Report them privately by email:
 
-- **Email:** `info@one-ware.com` (please put *"Security"* in the subject line)
+- **Email:** `security@one-ware.com` (please put *"Security"* in the subject line)
 
 Please include, where possible:
 
@@ -52,7 +52,7 @@ Out of scope:
 - Third-party extensions and integrated tools (GHDL, IVerilog, etc.) — report to
   the respective project.
 - The closed-source OneWare.AI extension and OneWare Cloud — see their own
-  security policies / `info@one-ware.com`.
+  security policies / `security@one-ware.com`.
 - Social engineering, physical attacks, or automated-scanner output without a
   demonstrated, exploitable impact.
 
