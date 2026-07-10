@@ -5,8 +5,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  # CRA Annex I Part I(1) release gate: block the release — and the platform
+  # publish pipelines that cascade from it — if any dependency has a known
+  # vulnerability.
+  scan:
+    name: Dependency vulnerability gate
+    uses: ./.github/workflows/dependency-scan.yml
+
   release:
     name: Release
+    needs: scan
     runs-on: ubuntu-latest
     permissions:
       contents: write
