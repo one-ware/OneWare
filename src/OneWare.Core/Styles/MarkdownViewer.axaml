@@ -16,7 +16,7 @@
             <ControlTemplate>
                 <mdxaml:MarkdownScrollViewer x:Name="PART_MarkdownScrollViewer" MarkdownStyleName="SimpleTheme"
                                              SelectionEnabled="{TemplateBinding SelectionEnabled}"
-                                             Markdown="{TemplateBinding Markdown}">
+                                             Markdown="{TemplateBinding Markdown}" EnableVirtualization="{TemplateBinding VirtualizationEnabled}">
                     <mdxaml:MarkdownScrollViewer.Plugins>
                         <mdxaml:MdAvPlugins>
                             <mdxaml:ChatAISetup />

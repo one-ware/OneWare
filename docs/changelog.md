@@ -1,3 +1,9 @@
+## 1.0.23
+
+- Fix Verilog Node Extractor Issue
+- Improve Package Manager speed and handling
+- Fix broken scroll in VCD Viewer
+
 ## 1.0.22
 
 - Relicensed ONE WARE Studio from GPL-3.0 to Apache-2.0 (added THIRD-PARTY-NOTICES)
