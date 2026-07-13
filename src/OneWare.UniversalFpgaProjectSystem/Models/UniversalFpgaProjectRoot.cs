@@ -19,6 +19,10 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     
     public UniversalFpgaProjectRoot(string projectFilePath) : base(projectFilePath)
     {
+        // "fpga" was the legacy key for the board; alias it so old plugins that call
+        // Properties.GetString("fpga") continue to receive the migrated "board" value.
+        Properties.RegisterAlias("fpga", "board");
+
         RegisterProjectEntryModification(x =>
         {
             if (x is IProjectFile file && IsTestBench(file.RelativePath))
@@ -30,10 +34,11 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
                 x.Icon?.RemoveOverlay("TestBench");
             }
         });
-        
+
         RegisterProjectEntryModification(x =>
         {
-            if (x is IProjectFile file && file.RelativePath.EqualPaths(TopEntity))
+            if (x is IProjectFile file && TopEntityFilePath != null &&
+                file.RelativePath.EqualPaths(TopEntityFilePath))
             {
                 x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
             }
@@ -58,10 +63,30 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
     public override string ProjectTypeId => ProjectType;
 
+    /// <summary>
+    /// The name of the top-level entity or module.
+    /// Stored as <c>topEntity</c>.
+    /// </summary>
     public string? TopEntity
     {
         get => Properties.GetString("topEntity");
-        set => Properties.SetString("topEntity", value?.ToUnixPath());
+        set => Properties.SetString("topEntity", value);
+    }
+
+    /// <summary>
+    /// Relative path of the file that contains the current <see cref="TopEntity"/>.
+    /// This is a runtime-only cache (not persisted) and is used to display the top entity
+    /// indicator on the file that contains the top-level entity.
+    /// </summary>
+    public string? TopEntityFilePath
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateAllModifications();
+        }
     }
 
     public string? Toolchain
@@ -74,6 +99,16 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     {
         get => Properties.GetString("loader");
         set => Properties.SetString("loader", value);
+    }
+
+    /// <summary>
+    /// The selected hardware board (evaluation board) for this project.
+    /// Stored as <c>board</c> in the project file; old files using <c>fpga</c> are migrated automatically.
+    /// </summary>
+    public string? Board
+    {
+        get => Properties.GetString("board");
+        set => Properties.SetString("board", value);
     }
 
     public bool IsTestBench(string relativePath)

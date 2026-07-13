@@ -13,6 +13,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using AvaloniaEdit.Rendering;
 using CommunityToolkit.Mvvm.Input;
+using Dock.Controls.DeferredContentControl;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.ApplicationCommands.Services;
@@ -246,6 +247,18 @@ public class App : Application
 
         settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseAutoBracket",
             new CheckBoxSetting("Use Auto Bracket", true));
+
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_UseSpaces",
+            new CheckBoxSetting("Use Spaces Instead of Tabs", true)
+            {
+                HoverDescription = "Insert spaces when pressing Tab"
+            });
+
+        settingsService.RegisterSetting("Editor", "Formatting", "Editor_IndentationSize",
+            new ComboBoxSetting("Indentation Size", 4, new object[] { 1, 2, 3, 4, 6, 8 })
+            {
+                HoverDescription = "Number of spaces per indentation level"
+            });
 
         settingsService.RegisterSetting("Editor", "Folding", "Editor_UseFolding",
             new CheckBoxSetting("Use Folding", true)
@@ -591,6 +604,12 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        DeferredContentPresentationSettings.BudgetMode = DeferredContentPresentationBudgetMode.ItemCount;
+        DeferredContentPresentationSettings.MaxPresentationsPerPass = 1000;
+        DeferredContentPresentationSettings.InitialDelay = TimeSpan.Zero;
+        DeferredContentPresentationSettings.FollowUpDelay = TimeSpan.Zero;
+        DeferredContentPresentationSettings.RevealDuration = TimeSpan.Zero;
+        
         var services = new ServiceCollection();
 
         services.AddSingleton(ModuleCatalog);

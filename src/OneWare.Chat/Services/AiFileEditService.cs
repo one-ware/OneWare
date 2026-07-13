@@ -17,6 +17,23 @@ public class AiFileEditService(IMainDockService mainDockService)
     
     public async Task<string?> ReadFileAsync(string filePath, int? startLine = null, int? lineCount = null)
     {
+        // While an AI edit is in progress, read from the same working buffer that EditFileAsync mutates.
+        // Otherwise reads come from the (stale) live editor document or disk, so line numbers no longer
+        // match the edit buffer and subsequent incremental edits get misaligned.
+        if (_currentEdits.TryGetValue(filePath, out var pending))
+        {
+            if (startLine is null && lineCount is null)
+                return pending;
+
+            if (startLine is null || startLine < 1)
+                return null;
+
+            if (lineCount is not null && lineCount < 0)
+                return null;
+
+            return ReadFromText(pending, startLine.Value, lineCount);
+        }
+
         var openEditTab = mainDockService.OpenFiles.FirstOrDefault(x => x.Value.FullPath == filePath).Value as IEditor;
 
         if (startLine is null && lineCount is null)
@@ -130,6 +147,22 @@ public class AiFileEditService(IMainDockService mainDockService)
         {
             await UndoAsync(edit);
         }
+    }
+
+    private static string ReadFromText(string content, int startLine, int? lineCount)
+    {
+        var lines = SplitLines(content);
+        if (startLine > lines.Length)
+            return string.Empty;
+
+        var startIndex = startLine - 1;
+        var available = lines.Length - startIndex;
+        var take = lineCount is null ? available : Math.Min(lineCount.Value, available);
+        if (take <= 0)
+            return string.Empty;
+
+        var newline = DetectNewLineFromText(content) ?? Environment.NewLine;
+        return string.Join(newline, lines.Skip(startIndex).Take(take));
     }
 
     private static string ReadFromDocument(AvaloniaEdit.Document.TextDocument document, int startLine, int? lineCount)

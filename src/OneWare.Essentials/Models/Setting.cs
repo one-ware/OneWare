@@ -158,7 +158,7 @@ public class ComboBoxSetting : TitledSetting
     }
 }
 
-public class AdvancedComboBoxSearchSetting(string title, object defaultValue, AdvancedComboBoxOption[] options)
+public class AdvancedComboBoxSearchSetting(string title, object? defaultValue, AdvancedComboBoxOption[] options)
     : AdvancedComboBoxSetting(title, defaultValue, options)
 {
 }
@@ -232,6 +232,29 @@ public class ListBoxSetting : TitledSetting
     {
     }
 
+    public ObservableCollection<string> Items
+    {
+        get => (Value as ObservableCollection<string>)!;
+        set => Value = value;
+    }
+}
+
+/// <summary>
+/// A setting that holds an ordered list of items chosen from a fixed set of predefined options.
+/// The user picks an option from the dropdown and adds it to the list; duplicate entries are allowed.
+/// </summary>
+public class ComboListBoxSetting : TitledSetting
+{
+    public ComboListBoxSetting(string title, string[] options, params string[] defaultItems)
+        : base(title, new ObservableCollection<string>(defaultItems))
+    {
+        Options = options;
+    }
+
+    /// <summary>The fixed set of values the user can pick from.</summary>
+    public string[] Options { get; }
+
+    /// <summary>The ordered list of currently selected items.</summary>
     public ObservableCollection<string> Items
     {
         get => (Value as ObservableCollection<string>)!;
@@ -347,18 +370,67 @@ public class ColorSetting : TitledSetting
     }
 }
 
-public class ProjectSetting(
-    string key,
-    TitledSetting setting,
-    Func<IProjectRootWithFile, bool> activationFunction,
-    string? category = null,
-    int displayOrder = 0)
+public class ProjectSetting
 {
-    public string Category { get; } = category ?? "General";
+    private readonly Func<IProjectRootWithFile, Task<TitledSetting>>? _factory;
 
-    public string Key { get; } = key;
-    public TitledSetting Setting { get; } = setting;
-    public Func<IProjectRootWithFile, bool> ActivationFunction { get; } = activationFunction;
+    /// <summary>Construct a project setting backed by a static <see cref="TitledSetting"/> instance.</summary>
+    public ProjectSetting(
+        string key,
+        TitledSetting setting,
+        Func<IProjectRootWithFile, bool> activationFunction,
+        string? category = null,
+        int displayOrder = 0)
+    {
+        Key = key;
+        Setting = setting;
+        ActivationFunction = activationFunction;
+        Category = category ?? "Other";
+        DisplayOrder = displayOrder;
+    }
+
+    /// <summary>
+    /// Construct a project setting backed by a factory that creates a fresh
+    /// <see cref="TitledSetting"/> (with the correct options and value) for each project.
+    /// </summary>
+    public ProjectSetting(
+        string key,
+        Func<IProjectRootWithFile, Task<TitledSetting>> factory,
+        Func<IProjectRootWithFile, bool> activationFunction,
+        string? category = null,
+        int displayOrder = 0)
+    {
+        Key = key;
+        _factory = factory;
+        ActivationFunction = activationFunction;
+        Category = category ?? "Other";
+        DisplayOrder = displayOrder;
+    }
+
+    public string Category { get; }
+    public string Key { get; }
+    public int DisplayOrder { get; }
+
+    /// <summary>
+    /// The static setting instance. <c>null</c> when the setting was registered with a factory.
+    /// Use <see cref="CreateSettingAsync"/> to obtain the effective instance.
+    /// </summary>
+    public TitledSetting? Setting { get; }
+
+    public Func<IProjectRootWithFile, bool> ActivationFunction { get; }
+
+    public bool HasFactory => _factory != null;
+
+    /// <summary>
+    /// Returns a <see cref="TitledSetting"/> for the given project root.
+    /// When a factory is registered it creates a fresh instance; otherwise the static
+    /// <see cref="Setting"/> is returned.
+    /// </summary>
+    public async Task<TitledSetting?> CreateSettingAsync(IProjectRootWithFile root)
+    {
+        if (_factory != null) return await _factory(root);
+        return Setting;
+    }
 }
 
 public class CategorySetting(string key, string name)

@@ -143,8 +143,14 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
-        Services.Resolve<IPackageService>().RegisterPackageRepository(
-            "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json");
+        var cloudHost = Services.Resolve<ISettingsService>()
+            .GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
+        Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(
+            [
+                new Uri(new Uri(cloudHost), "api/studio/packages").AbsoluteUri,
+                "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
+            ]
+        );
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
@@ -218,17 +224,28 @@ public class DesktopStudioApp : StudioApp
             //Add a single notification for all updatable packages
             if (updatePackages?.Count > 0)
             {
-                var packageCount = updatePackages.Count;
-                var packageLabel = packageCount == 1 ? "plugin update" : "plugin updates";
+                foreach (var updatePackage in updatePackages)
+                {
+                    Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
+                    {
+                        Message =
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
+                        Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
+                            .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
+                    });
+                }
 
-                Services.Resolve<IWindowService>().ShowNotificationWithButton("Plugin updates available",
+                var packageCount = updatePackages.Count;
+                var packageLabel = packageCount == 1 ? "package update" : "package updates";
+
+                Services.Resolve<IWindowService>().ShowNotificationWithButton("Package updates available",
                     $"{packageCount} {packageLabel} available.",
                     "Update all", () => _ = Services.Resolve<IPackageWindowService>().ShowAndUpdateAllAsync());
             }
-            
+
             //Ask to install the OneWare.AI extension
             if (showOneWareAiNotification && Environment.GetEnvironmentVariable("ONEWARE_OPEN_URL") == null &&
-                     Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
+                Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH") == null)
             {
                 var aiReleaseWindowVm = Services.Resolve<AiReleaseWindowViewModel>();
                 //check if the specified extension is already installed

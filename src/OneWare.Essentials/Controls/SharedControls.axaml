@@ -6,5 +6,6 @@
 
     <StyleInclude Source="avares://OneWare.Essentials/Controls/ComparisonControl.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Controls/SearchComboBox.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Controls/SegmentedControl.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Controls/UiExtensionCollection.axaml" />
 </Styles>

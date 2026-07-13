@@ -59,8 +59,7 @@ public class YosysService(
         return await SynthAsync(project, fpgaModel, null);
     }
 
-    public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel,
-        IEnumerable<string>? mandatoryFiles = null)
+    public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel, IEnumerable<string>? mandatoryFiles = null)
     {
         try
         {
@@ -70,16 +69,20 @@ public class YosysService(
             var includedFiles = project.GetFiles("*.v").Concat(project.GetFiles("*.sv"))
                 .Where(x => !project.IsCompileExcluded(x))
                 .Where(x => !project.IsTestBench(x))
-                .ToList();
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var genVerilogPath = Path.Combine(project.RootFolderPath, "build", "gen_verilog");
             if (Directory.Exists(genVerilogPath))
             {
-                includedFiles.AddRange(Directory.EnumerateFiles(genVerilogPath, "*.v", SearchOption.AllDirectories));
+                foreach (var absFile in Directory.EnumerateFiles(genVerilogPath, "*.v", SearchOption.AllDirectories))
+                {
+                    var rel = Path.GetRelativePath(project.RootFolderPath, absFile);
+                    includedFiles.Add(rel);
+                }
             }
-
+            
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
-                                 throw new Exception("Yosys Tool not set!");
+                                 throw new Exception("Yosys Tool not set. This hardware might not be configured to be used with Yosys Toolchain");
             
             var builder = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
                 .WithWorkingDirectory(project.FullPath)
@@ -88,6 +91,17 @@ public class YosysService(
                 .WithOutputHandler(x =>
                 {
                     if (x.StartsWith("Error:"))
+                    {
+                        logger.Error(x);
+                        return false;
+                    }
+
+                    outputService.WriteLine(x);
+                    return true;
+                })
+                .WithErrorHandler(x =>
+                {
+                    if (x.StartsWith("Error:", StringComparison.OrdinalIgnoreCase))
                     {
                         logger.Error(x);
                         return false;
@@ -114,7 +128,7 @@ public class YosysService(
             else
             {
                 builder.AddScript(customCommandTemplate,
-                    ("$TOP", Path.GetFileNameWithoutExtension(top), false), 
+                    ("$TOP", top, false), 
                     ("$SYNTH_TOOL", yosysSynthTool, false), 
                     ("$OUTPUT", "build/synth.json", true)   
                 );

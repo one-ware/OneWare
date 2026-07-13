@@ -24,7 +24,6 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     private readonly IWindowService _windowService;
 
     private CompositeDisposable? _compositeDisposable;
-
     private FpgaNode[]? _nodes;
 
     public UniversalFpgaProjectPinPlannerViewModel(IWindowService windowService,
@@ -42,11 +41,103 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
         });
 
-        Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
         _ = InitializeAsync();
     }
 
-    public IFpgaToolchain? Toolchain { get; }
+    // ── Setup overlay ──────────────────────────────────────────────────────────
+
+    public bool IsSetupRequired
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool IsSetupLoading
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public ObservableCollection<string> SetupAvailableToolchains { get; } = new();
+    public ObservableCollection<FpgaTopEntityResult> SetupAvailableTopEntities { get; } = new();
+
+    public string? SetupSelectedToolchain
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    public FpgaTopEntityResult? SetupSelectedTopEntity
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    private async Task LoadSetupOptionsAsync(IEnumerable<FpgaTopEntityResult> topEntities)
+    {
+        IsSetupLoading = true;
+        try
+        {
+            foreach (var tc in _fpgaService.Toolchains)
+                SetupAvailableToolchains.Add(tc.Id);
+            SetupSelectedToolchain = Toolchain?.Id ?? SetupAvailableToolchains.FirstOrDefault();
+            
+            foreach (var e in topEntities)
+                SetupAvailableTopEntities.Add(e);
+            
+            SetupSelectedTopEntity = SetupAvailableTopEntities.FirstOrDefault(x => x.TopEntity == Project.TopEntity) 
+                                     ?? SetupAvailableTopEntities.FirstOrDefault();
+        }
+        finally
+        {
+            IsSetupLoading = false;
+        }
+    }
+
+    public async Task ApplySetupAsync()
+    {
+        if (SetupSelectedToolchain != null)
+            Project.Toolchain = SetupSelectedToolchain;
+        if (SetupSelectedTopEntity != null)
+            Project.TopEntity = SetupSelectedTopEntity.TopEntity;
+
+        await _projectExplorerService.SaveProjectAsync(Project);
+
+        // Re-resolve the toolchain object from the updated project setting
+        Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
+
+        IsSetupRequired = false;
+        await InitializeAsync();
+    }
+
+    // ── Main planner ───────────────────────────────────────────────────────────
+
+    public IFpgaToolchain? Toolchain
+    {
+        get;
+        private set
+        {
+            SetProperty(ref field, value);
+            UpdateActivePinProperties();
+        }
+    }
+
+    /// <summary>
+    /// Per-pin property definitions for the current hardware+toolchain combination.
+    /// Prefers properties declared in the hardware JSON (<c>allowedPinProperties</c>);
+    /// falls back to the toolchain's own <see cref="IFpgaToolchain.PinProperties"/> list.
+    /// </summary>
+    public IReadOnlyList<PinPropertyDefinition> ActivePinProperties
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = [];
+
+    public FpgaTopEntityResult? TopEntity
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
 
     public bool IsLoading
     {
@@ -94,6 +185,8 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
             _compositeDisposable?.Dispose();
             _compositeDisposable = new CompositeDisposable();
 
+            UpdateActivePinProperties();
+
             if (value is not null)
             {
                 if (_nodes != null)
@@ -106,8 +199,22 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     .DisposeWith(_compositeDisposable);
                 Observable.FromEventPattern(value, nameof(value.NodeDisconnected)).Subscribe(_ => { IsDirty = true; })
                     .DisposeWith(_compositeDisposable);
+                Observable.FromEventPattern(value, nameof(value.PinPropertyChanged)).Subscribe(_ => { IsDirty = true; })
+                    .DisposeWith(_compositeDisposable);
             }
         }
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="ActivePinProperties"/>: hardware-defined properties take precedence,
+    /// falling back to the toolchain's own list.
+    /// </summary>
+    private void UpdateActivePinProperties()
+    {
+        var hardwareProps = SelectedFpgaModel?.AllowedPinProperties;
+        ActivePinProperties = hardwareProps is { Count: > 0 }
+            ? hardwareProps
+            : (IReadOnlyList<PinPropertyDefinition>)(Toolchain?.PinProperties ?? []).ToArray();
     }
 
     public FpgaViewModelBase? SelectedFpgaViewModel
@@ -128,24 +235,26 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         {
             IsLoading = true;
 
-            var file = Project.GetFile(Project.TopEntity);
-            if (file == null) return;
+            var topEntities = await _fpgaService.GetAllTopEntitiesAsync(Project);
+            
+            if(topEntities.FirstOrDefault(x => x.TopEntity == Project.TopEntity) is {} topEntity)
+                TopEntity = topEntity;
 
-            var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
-
-            if (nodeProvider == null)
+            Toolchain = _fpgaService.Toolchains.FirstOrDefault(x => x.Id == Project.Toolchain);
+            
+            if (TopEntity == null || Toolchain == null)
             {
-                ContainerLocator.Container.Resolve<ILogger>()
-                    .Error($"No node provider found for extension {file.Extension}");
+                IsSetupRequired = true;
+                await LoadSetupOptionsAsync(topEntities);
                 return;
             }
 
-            var nodesEnumerable = await nodeProvider.ExtractNodesAsync(file);
-
+            var nodesEnumerable = await TopEntity.NodeProvider.ExtractNodesAsync(TopEntity.File, TopEntity.TopEntity);
             _nodes = nodesEnumerable.ToArray();
+
             RefreshHardware();
 
-            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Properties.GetString("fpga")) ??
+            SelectedFpgaPackage = FpgaPackages.FirstOrDefault(x => x.Name == Project.Board) ??
                                   FpgaPackages.FirstOrDefault();
 
             IsDirty = false;
@@ -179,7 +288,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
                     return;
             }
         }
-        
+
         RefreshHardware();
     }
 
@@ -237,7 +346,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         if (SelectedFpgaModel != null)
         {
             FpgaSettingsParser.WriteDefaultSettingsIfEmpty(Project, SelectedFpgaModel.Fpga);
-            Project.Properties.SetString("fpga", SelectedFpgaModel.Fpga.Name);
+            Project.Board = SelectedFpgaModel.Fpga.Name;
             Toolchain?.SaveConnections(Project, SelectedFpgaModel);
             _ = _projectExplorerService.SaveProjectAsync(Project);
 
@@ -254,7 +363,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
     public void SaveAndCompile(FlexibleWindow window)
     {
         if (SelectedFpgaModel == null) return;
-        
+
         SaveAndClose(window);
         _ = _fpgaService.RunToolchainAsync(Project, SelectedFpgaModel);
     }

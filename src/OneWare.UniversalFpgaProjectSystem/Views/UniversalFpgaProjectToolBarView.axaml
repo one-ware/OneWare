@@ -11,8 +11,7 @@
     <StackPanel Orientation="Horizontal">
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
         <Button ToolTip.Tip="Select signals and compile"
-                Command="{Binding OpenPinPlannerAsync}"
-                IsEnabled="{Binding Project.Toolchain, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
+                Command="{Binding OpenPinPlannerAsync}">
             <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
                 <Image Source="{DynamicResource CreateIcon}" Width="14" Height="14" VerticalAlignment="Center" />
                 <TextBlock Text="Pin Planner" VerticalAlignment="Center" />

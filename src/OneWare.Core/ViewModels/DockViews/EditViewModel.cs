@@ -104,6 +104,16 @@ public class EditViewModel : ExtendedDocument, IEditor
             if (o is string path && path.EqualPaths(FullPath))
                 Diagnostics = _errorService.GetErrorsForFile(FullPath);
         };
+
+        _settingsService.GetSettingObservable<bool>("Editor_UseSpaces").Subscribe(x =>
+        {
+            Editor.Options.ConvertTabsToSpaces = x;
+        });
+
+        _settingsService.GetSettingObservable<int>("Editor_IndentationSize").Subscribe(x =>
+        {
+            Editor.Options.IndentationSize = x;
+        });
     }
 
     public bool DisableEditViewEvents { get; private set; }

@@ -7,6 +7,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+
 jobs:
   deploy-flathub:
     name: Deploy in Flathub
@@ -14,7 +17,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     steps:
       - name: Install Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - name: Install Flatpak and Flathub
@@ -60,7 +63,7 @@ jobs:
           git add oneware-nuget-sources.json
           git commit -m "Update OneWare Version"     
       - name: Push changes and create pull request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.HENDRIK_PERSONAL_TOKEN }}
           branch: release-${{ steps.get-oneware-version.outputs.info }}

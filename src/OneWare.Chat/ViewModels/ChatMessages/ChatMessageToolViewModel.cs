@@ -1,9 +1,10 @@
 ﻿using System.Runtime.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Essentials.Controls;
 
 namespace OneWare.Chat.ViewModels.ChatMessages;
 
-public class ChatMessageToolViewModel : ObservableObject, IChatMessage
+public class ChatMessageToolViewModel : ObservableObject, IChatMessage, IEstimatedHeightItem
 {
     public ChatMessageToolViewModel(string id, string toolName)
     {
@@ -33,5 +34,13 @@ public class ChatMessageToolViewModel : ObservableObject, IChatMessage
     {
         get;
         set => SetProperty(ref field, value);
+    }
+
+    public double EstimateHeight(double width)
+    {
+        const double header = 36;
+        if (!IsToolRunning)
+            return header;
+        return header + System.Math.Min(200, ChatHeightEstimation.EstimateMarkdown(ToolOutput, width)) + 8;
     }
 }

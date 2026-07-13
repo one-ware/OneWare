@@ -21,6 +21,7 @@
         <ProjectReference Include="..\..\src\OneWare.Core\OneWare.Core.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Cpp\OneWare.Cpp.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.CruviAdapterExtensions\OneWare.CruviAdapterExtensions.csproj"/>
+        <ProjectReference Include="..\..\src\OneWare.MarkdownViewer\OneWare.MarkdownViewer.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
         <ProjectReference Include="..\..\src\OneWare.Vcd.Viewer\OneWare.Vcd.Viewer.csproj"/>
     </ItemGroup>

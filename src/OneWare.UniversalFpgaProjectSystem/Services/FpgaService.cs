@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Nodes;
 using OneWare.Essentials.Extensions;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Fpga;
@@ -14,12 +15,15 @@ public class FpgaService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
+    private readonly IProjectSettingsService _projectSettingsService;
 
-    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService, IWindowService windowService)
+    public FpgaService(IPaths paths, ILogger logger, ISettingsService settingsService,
+        IWindowService windowService, IProjectSettingsService projectSettingsService)
     {
         _logger = logger;
         _settingsService = settingsService;
         _windowService = windowService;
+        _projectSettingsService = projectSettingsService;
 
         HardwareDirectory = Path.Combine(paths.PackagesDirectory, "Hardware");
         Directory.CreateDirectory(HardwareDirectory);
@@ -158,12 +162,31 @@ public class FpgaService
 
     public void RegisterPreCompileStep<T>() where T : IFpgaPreCompileStep
     {
-        PreCompileSteps.Add(ContainerLocator.Container.Resolve<T>());
+        var step = ContainerLocator.Container.Resolve<T>();
+        PreCompileSteps.Add(step);
+
+        var key = $"preCompileStep_{step.Id}";
+        var displayOrder = 120 + PreCompileSteps.Count;
+        var stepSetting = new CheckBoxSetting($"Pre-Compile: {step.Name}", false)
+        {
+            HoverDescription = $"Run '{step.Name}' as a pre-compile step before the toolchain.",
+            MarkdownDocumentation =
+                $"When enabled, **{step.Name}** runs before the toolchain on every compile.\n\n" +
+                $"Enabled steps are stored in the `preCompileSteps` array in the project file."
+        };
+        _projectSettingsService.AddProjectSettingIfNotExists(
+            new ProjectSettingBuilder()
+                .WithKey(key)
+                .WithSetting(stepSetting)
+                .WithCategory("Project")
+                .WithDisplayOrder(displayOrder)
+                .Build()
+        );
     }
 
-    public IFpgaPreCompileStep? GetPreCompileStep(string name)
+    public IFpgaPreCompileStep? GetPreCompileStep(string id)
     {
-        return PreCompileSteps.FirstOrDefault(x => x.Name == name);
+        return PreCompileSteps.FirstOrDefault(x => x.Id == id);
     }
 
     public string? GetLanguage(string extension)
@@ -179,6 +202,45 @@ public class FpgaService
             return GetNodeProvider(language);
 
         return null;
+    }
+
+    /// <summary>
+    /// Scans all HDL files in the project and returns the names of all discovered top entities/modules.
+    /// </summary>
+    public async Task<IReadOnlyList<FpgaTopEntityResult>> GetAllTopEntitiesAsync(UniversalFpgaProjectRoot project)
+    {
+        var result = new List<FpgaTopEntityResult>();
+        var extensions = new[] { "*.vhd", "*.vhdl", "*.v", "*.sv" };
+        foreach (var pattern in extensions)
+        {
+            foreach (var relPath in project.GetFiles(pattern)
+                         .Where(x => !project.IsCompileExcluded(x))
+                         .Where(x => !project.IsTestBench(x)))
+            {
+                var file = project.GetFile(relPath);
+                if (file == null) continue;
+
+                var provider = GetNodeProviderByExtension(file.Extension);
+                if (provider == null) continue;
+
+                try
+                {
+                    var entities = await provider.ExtractTopEntitiesAsync(file);
+                    result.AddRange(entities.Select(e => new FpgaTopEntityResult
+                    {
+                        TopEntity = e,
+                        File = file,
+                        NodeProvider = provider,
+                    }));
+                }
+                catch
+                {
+                    // ignore parse errors for individual files
+                }
+            }
+        }
+
+        return result.Distinct().ToList();
     }
 
     public INodeProvider? GetNodeProvider(string language)
@@ -252,20 +314,28 @@ public class FpgaService
 
             if (fpgaModel == null)
             {
-                var name = project.Properties.GetString("fpga");
+                var name = project.Board;
                 var fpgaPackage = FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                 if (fpgaPackage == null)
                 {
-                    ContainerLocator.Container.Resolve<ILogger>().Warning($"No FPGA Selected (or {name} not found). Open Pin Planner first");
+                    ContainerLocator.Container.Resolve<ILogger>()
+                        .Warning($"No FPGA Selected (or {name} not found). Open Pin Planner first");
                     return false;
                 }
+
                 fpgaModel = new FpgaModel(fpgaPackage.LoadFpga());
             }
 
+            var enabledSteps = project.Properties.GetStringArray("preCompileSteps")
+                ?.ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
+
             foreach (var step in PreCompileSteps)
-                if (!await step.PerformPreCompileStepAsync(project, fpgaModel))
+            {
+                if (enabledSteps.Contains(step.Id) &&
+                    !await step.PerformPreCompileStepAsync(project, fpgaModel))
                     return false;
-            
+            }
+
             await toolchain.CompileAsync(project, fpgaModel);
             return true;
         }

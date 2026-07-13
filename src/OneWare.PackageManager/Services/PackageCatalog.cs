@@ -26,27 +26,35 @@ public class PackageCatalog : IPackageCatalog
             _manifests[package.Id] = package;
     }
 
-    public async Task<bool> RefreshAsync(IEnumerable<string> sources, CancellationToken cancellationToken = default)
+    public async Task<bool> RefreshAsync(IEnumerable<string[]> repositories, CancellationToken cancellationToken = default)
     {
         var result = true;
         var newPackages = new Dictionary<string, Package>();
 
-        foreach (var source in sources)
+        foreach (var repository in repositories)
         {
-            IReadOnlyList<Package> loaded;
-            try
+            IReadOnlyList<Package> loaded = new List<Package>();
+            foreach (var source in repository)
             {
-                loaded = await _repositoryClient.LoadRepositoryAsync(source, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                _logger.Error($"Failed to refresh package source '{source}'.", e);
-                result = false;
-                continue;
+                try
+                {
+                    loaded = await _repositoryClient.LoadRepositoryAsync(source, cancellationToken);
+                    if(loaded.Count == 0)
+                    {
+                        continue;
+                    }
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    _logger.Error($"Failed to refresh package source '{source}'.", e);
+                    result = false;
+                    continue;
+                }
             }
 
             if (loaded.Count == 0)

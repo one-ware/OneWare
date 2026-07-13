@@ -1,0 +1,59 @@
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+
+    open-pull-requests-limit: 5
+
+    groups:
+      avalonia:
+        patterns:
+          - "Avalonia*"
+          - "Dock.Avalonia*"
+          - "Dock.Model.Mvvm*"
+          - "OneWare.Markdown.Avalonia*"
+          - "OneWare.Avalonia*"
+          - "PanAndZoom"
+          - "Svg.Controls.Skia.Avalonia"
+          - "Xaml.Behaviors.Avalonia"
+          - "TreeDataGrid"
+        update-types:
+          - "minor"
+          - "patch"
+
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    ignore:
+      - dependency-name: "Avalonia*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "Dock.Avalonia*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "Dock.Model.Mvvm*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "OneWare.Markdown.Avalonia*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "OneWare.Avalonia*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "Xaml.Behaviors.Avalonia"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "Svg.Controls.Skia.Avalonia"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "TreeDataGrid"
+        update-types:
+          - "version-update:semver-major"

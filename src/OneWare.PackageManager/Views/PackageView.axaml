@@ -116,7 +116,7 @@
                         <StackPanel Spacing="5" Orientation="Vertical"
                                     IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
                             <StackPanel Orientation="Vertical" Spacing="5">
-                                <controls:MarkdownViewer
+                                <controls:MarkdownViewer VirtualizationEnabled="True"
                                     Markdown="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}" />
                             </StackPanel>
                         </StackPanel>
@@ -143,7 +143,7 @@
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="models:TabModel">
                         <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}">
-                            <controls:MarkdownViewer Markdown="{Binding Content}" Margin="10 5 0 0" />
+                            <controls:MarkdownViewer VirtualizationEnabled="False" Markdown="{Binding Content}" Margin="10 5 0 0" />
                         </Border>
                     </DataTemplate>
                 </TabControl.ContentTemplate>

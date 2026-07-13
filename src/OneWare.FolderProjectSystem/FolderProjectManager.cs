@@ -21,7 +21,9 @@ public class FolderProjectManager : IProjectManager
     {
         if (!Directory.Exists(path)) return null;
 
-        var root = new FolderProjectRoot(path);
+        var normalizedPath = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        var root = new FolderProjectRoot(normalizedPath);
 
         await root.InitializeAsync();
         

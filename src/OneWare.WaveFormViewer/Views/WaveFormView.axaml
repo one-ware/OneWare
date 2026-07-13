@@ -211,7 +211,6 @@
                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="2" />
 
         <ListBox Name="SimPartScroll" Grid.Row="2" Grid.Column="2" ClipToBounds="True"
-                 ScrollViewer.Offset="{Binding #TextPartScroll.Scroll.Offset, Mode=TwoWay, FallbackValue=0}"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ScrollViewer.VerticalScrollBarVisibility="Visible"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"

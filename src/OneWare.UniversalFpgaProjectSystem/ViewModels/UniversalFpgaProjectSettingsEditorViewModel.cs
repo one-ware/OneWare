@@ -5,7 +5,6 @@ using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Extensions;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -22,9 +21,6 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
     private readonly IProjectSettingsService _projectSettingsService;
     private readonly UniversalFpgaProjectRoot _root;
 
-    /// <summary>
-    ///     All categories loaded upfront: category name → (collection to display, key map for saving).
-    /// </summary>
     private readonly Dictionary<string, (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)>
         _categoryData = new();
 
@@ -41,22 +37,12 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         _projectSettingsService = projectSettingsService;
         Title = $"{_root.Name} Settings";
 
-        SetupMenu();
-
-        SettingCategories = new ObservableCollection<string>(projectSettingsService.GetProjectCategories());
-
-        // Load every category upfront so settings are always in memory.
-        foreach (var category in SettingCategories)
-            _categoryData[category] = BuildCategoryCollection(category);
-
-        SelectedCategory = projectSettingsService.GetDefaultProjectCategory();
+        SettingCategories = new ObservableCollection<string>();
+        _ = InitializeAsync();
     }
 
     public ObservableCollection<string> SettingCategories { get; }
 
-    /// <summary>
-    ///     The collection currently shown in the view. Changes when <see cref="SelectedCategory"/> changes.
-    /// </summary>
     public SettingsCollectionViewModel? SettingsCollection
     {
         get => _settingsCollection;
@@ -74,67 +60,130 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         }
     }
 
-    private (SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)
-        BuildCategoryCollection(string category)
+    private async Task InitializeAsync()
+    {
+        foreach (var category in _projectSettingsService.GetProjectCategories())
+            SettingCategories.Add(category);
+
+        foreach (var category in SettingCategories)
+            _categoryData[category] = await BuildCategoryCollectionAsync(category);
+
+        AddMissingPreCompileStepDummies();
+
+        SelectedCategory = SettingCategories.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// For every step name stored in the project's <c>preCompileSteps</c> array that has no
+    /// corresponding registered <c>preCompileStep_*</c> setting (because the plugin is disabled),
+    /// inject a checked dummy <see cref="CheckBoxSetting"/> into the Project category so the
+    /// entry is preserved and visible.
+    /// </summary>
+    private void AddMissingPreCompileStepDummies()
+    {
+        var enabledSteps = _root.Properties.GetStringArray("preCompileSteps")?.ToHashSet() ?? [];
+        if (enabledSteps.Count == 0) return;
+
+        // Collect step names already covered by registered settings
+        var coveredSteps = _categoryData.Values
+            .SelectMany(v => v.Keys.Values)
+            .Where(k => k.StartsWith("preCompileStep_"))
+            .Select(k => k["preCompileStep_".Length..])
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var missingSteps = enabledSteps.Where(s => !coveredSteps.Contains(s)).ToList();
+        if (missingSteps.Count == 0) return;
+
+        if (!_categoryData.TryGetValue("Project", out var projectData)) return;
+        var (collection, keys) = projectData;
+
+        foreach (var stepName in missingSteps)
+        {
+            var dummy = new CheckBoxSetting($"Pre-Compile: {stepName} (plugin unavailable)", true)
+            {
+                HoverDescription =
+                    $"The plugin providing the '{stepName}' pre-compile step is not currently loaded. " +
+                    "The step remains configured in your project and will run when the plugin is re-enabled.",
+                Priority = 250
+            };
+            keys.Add(dummy, $"preCompileStep_{stepName}");
+            collection.SettingModels.Add(dummy);
+        }
+    }
+
+    private async Task<(SettingsCollectionViewModel Collection, Dictionary<TitledSetting, string> Keys)>
+        BuildCategoryCollectionAsync(string category)
     {
         var collection = new SettingsCollectionViewModel("") { ShowTitle = false };
         var keys = new Dictionary<TitledSetting, string>();
 
         foreach (var setting in _projectSettingsService.GetProjectSettingsList(category))
         {
-            var local = setting.Setting;
-
             if (!setting.ActivationFunction(_root)) continue;
 
-            if (_root.Properties.ContainsKey(setting.Key))
+            TitledSetting? local;
+
+            if (setting.HasFactory)
             {
-                var node = _root.Properties[setting.Key];
-                if (node == null) continue;
-
-                switch (local)
-                {
-                    case CheckBoxSetting:
-                        local.Value = _root.Properties[setting.Key]!.ToString() == "True";
-                        break;
-
-                    case FolderPathSetting:
-                    case FilePathSetting:
-                    case TextBoxSetting:
-                        local.Value = _root.Properties[setting.Key]!.ToString();
-                        break;
-
-                    case ListBoxSetting:
-                        local.Value = new ObservableCollection<string>(
-                            _root.Properties[setting.Key]!.AsArray().Select(n => n!.ToString()));
-                        break;
-
-                    case ComboBoxSearchSetting:
-                    case ComboBoxSetting:
-                        local.Value = _root.Properties[setting.Key]!.ToString();
-                        break;
-
-                    case SliderSetting:
-                        local.Value = double.Parse(_root.Properties[setting.Key]!.ToString(),
-                            CultureInfo.InvariantCulture);
-                        break;
-
-                    case ColorSetting:
-                        Color.TryParse(_root.Properties[setting.Key]!.ToString(), out var color);
-                        local.Value = color;
-                        break;
-
-                    default:
-                        _logger.Error($"Unknown setting of type: {local.GetType().Name}");
-                        continue;
-                }
-
-                local.Priority = setting.Setting.Priority;
+                // Factory creates a fresh instance with the current project value already applied
+                local = await setting.CreateSettingAsync(_root);
+                if (local == null) continue;
             }
             else
             {
-                local.Value = local.DefaultValue;
+                local = setting.Setting!;
+
+                // Pre-compile step checkboxes are backed by the shared preCompileSteps array
+                if (local is CheckBoxSetting && setting.Key.StartsWith("preCompileStep_"))
+                {
+                    var stepName = setting.Key["preCompileStep_".Length..];
+                    var enabledSteps = _root.Properties.GetStringArray("preCompileSteps")?.ToHashSet() ?? [];
+                    local.Value = enabledSteps.Contains(stepName);
+                }
+                else if (_root.Properties.ContainsKey(setting.Key))
+                {
+                    var node = _root.Properties[setting.Key];
+                    if (node == null) continue;
+
+                    switch (local)
+                    {
+                        case CheckBoxSetting:
+                            local.Value = node.ToString() == "True";
+                            break;
+                        case FolderPathSetting:
+                        case FilePathSetting:
+                        case TextBoxSetting:
+                            local.Value = node.ToString();
+                            break;
+                        case ListBoxSetting:
+                            local.Value = new ObservableCollection<string>(
+                                node.AsArray().Select(n => n!.ToString()));
+                            break;
+                        case AdvancedComboBoxSearchSetting:
+                        case AdvancedComboBoxSetting:
+                        case ComboBoxSearchSetting:
+                        case ComboBoxSetting:
+                            local.Value = node.ToString();
+                            break;
+                        case SliderSetting:
+                            local.Value = double.Parse(node.ToString(), CultureInfo.InvariantCulture);
+                            break;
+                        case ColorSetting:
+                            Color.TryParse(node.ToString(), out var color);
+                            local.Value = color;
+                            break;
+                        default:
+                            _logger.Error($"Unknown setting of type: {local.GetType().Name}");
+                            continue;
+                    }
+                }
+                else
+                {
+                    local.Value = local.DefaultValue;
+                }
             }
 
+            local.Priority = setting.DisplayOrder;
             keys.Add(local, setting.Key);
             collection.SettingModels.Add(local);
         }
@@ -142,87 +191,25 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         return (collection, keys);
     }
 
-    private void SetupMenu()
-    {
-        var value = _root.Properties.GetString("vhdlStandard") ?? "";
-        var vhdlStandard = new ComboBoxSetting("VHDL Standard", value, ["87", "93", "93c", "00", "02", "08", "19"]);
-
-        var includes = _root.Properties.GetStringArray("include")?.ToArray() ?? [];
-        var exclude = _root.Properties.GetStringArray("exclude")?.ToArray() ?? [];
-
-        var toolchains = ContainerLocator.Container.Resolve<FpgaService>().Toolchains
-            .Select(toolchain => toolchain.Id)
-            .ToArray();
-        var currentToolchain = _root.Properties.GetString("toolchain") ?? "";
-        var toolchain = new ComboBoxSetting("Toolchain", currentToolchain, toolchains);
-
-        var loaders = ContainerLocator.Container.Resolve<FpgaService>().Loaders
-            .Select(loader => loader.Id)
-            .ToArray();
-        var currentLoader = _root.Properties.GetString("loader") ?? "";
-        var loader = new ComboBoxSetting("Loader", currentLoader, loaders);
-
-        var includesSettings = new ListBoxSetting("Files to Include", includes);
-        var excludesSettings = new ListBoxSetting("Files to Exclude", exclude);
-
-        _projectSettingsService.AddProjectSettingIfNotExists(
-            new ProjectSettingBuilder()
-                .WithKey("toolchain")
-                .WithSetting(toolchain)
-                .WithDisplayOrder(100)
-                .Build()
-        );
-
-        _projectSettingsService.AddProjectSettingIfNotExists(
-            new ProjectSettingBuilder()
-                .WithKey("loader")
-                .WithDisplayOrder(90)
-                .WithSetting(loader)
-                .Build()
-        );
-
-        _projectSettingsService.AddProjectSettingIfNotExists(
-            new ProjectSettingBuilder()
-                .WithKey("vhdlStandard")
-                .WithDisplayOrder(80)
-                .WithSetting(vhdlStandard)
-                .WithActivation(file =>
-                {
-                    if (file is UniversalFpgaProjectRoot root)
-                    {
-                        if (root.TopEntity is not null) return Path.GetExtension(root.TopEntity) is ".vhd" or ".vhdl";
-                        return root.GetFiles().Any(projectFile => Path.GetExtension(projectFile) is ".vhd" or ".vhdl");
-                    }
-
-                    return false;
-                })
-                .Build()
-        );
-
-        _projectSettingsService.AddProjectSettingIfNotExists(
-            new ProjectSettingBuilder()
-                .WithKey("include")
-                .WithSetting(includesSettings)
-                .WithDisplayOrder(200)
-                .WithCategory("Project")
-                .Build()
-        );
-
-        _projectSettingsService.AddProjectSettingIfNotExists(
-            new ProjectSettingBuilder()
-                .WithKey("exclude")
-                .WithSetting(excludesSettings)
-                .WithDisplayOrder(100)
-                .WithCategory("Project")
-                .Build()
-        );
-    }
-
     public async Task SaveAsync()
     {
+        var enabledPreCompileSteps = new List<string>();
+
         foreach (var (_, (_, keys)) in _categoryData)
         foreach (var (setting, key) in keys)
+        {
+            if (key.StartsWith("preCompileStep_"))
+            {
+                if (setting is CheckBoxSetting { Value: true })
+                    enabledPreCompileSteps.Add(key["preCompileStep_".Length..]);
+                continue;
+            }
+
             _root.Properties.SetNode(key, CreateSettingNode(setting, key));
+        }
+
+        _root.Properties.SetNode("preCompileSteps",
+            new JsonArray(enabledPreCompileSteps.Select(x => JsonValue.Create(x)).ToArray<JsonNode?>()));
 
         await _projectExplorerService.SaveProjectAsync(_root);
         await _projectExplorerService.ReloadProjectAsync(_root);
@@ -233,10 +220,9 @@ public class UniversalFpgaProjectSettingsEditorViewModel : FlexibleWindowViewMod
         return setting switch
         {
             FolderPathSetting or FilePathSetting => JsonValue.Create((setting.Value as string)?.ToUnixPath()),
-            ListBoxSetting when key is "include" or "exclude" => new JsonArray(
-                ((ObservableCollection<string>)setting.Value)
-                .Select(item => JsonValue.Create(item.ToUnixPath()))
-                .ToArray()),
+            ListBoxSetting lbs => new JsonArray(
+                lbs.Items.Select(item => JsonValue.Create(
+                    key is "include" or "exclude" ? item.ToUnixPath() : item)).ToArray()),
             _ => JsonValue.Create(setting.Value)
         };
     }

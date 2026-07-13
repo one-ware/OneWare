@@ -12,6 +12,7 @@ namespace OneWare.Verilog.Indentation;
 /// </summary>
 public class VerilogIndentationStrategy : DefaultIndentationStrategy
 {
+    private readonly TextEditorOptions? _options;
     private string _indentationString = "    ";
 
     public VerilogIndentationStrategy()
@@ -24,13 +25,13 @@ public class VerilogIndentationStrategy : DefaultIndentationStrategy
     /// </summary>
     public VerilogIndentationStrategy(TextEditorOptions options)
     {
-        IndentationString = options.IndentationString;
+        _options = options;
     }
 
     /// <summary>Gets/Sets the string used for one level of indentation.</summary>
     public string IndentationString
     {
-        get => _indentationString;
+        get => _options?.IndentationString ?? _indentationString;
         set
         {
             if (string.IsNullOrEmpty(value))

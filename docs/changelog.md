@@ -1,10 +1,55 @@
----
-sidebar_position: 2
-id: changelog
-title: ONE WARE Studio Changelog
-sidebar_label:  Changelog
----
+## 1.0.23
 
+- Fix Verilog Node Extractor Issue
+- Improve Package Manager speed and handling
+- Fix broken scroll in VCD Viewer
+
+## 1.0.22
+
+- Relicensed ONE WARE Studio from GPL-3.0 to Apache-2.0 (added THIRD-PARTY-NOTICES)
+- Reworked Search List with a virtualized list for better performance
+- Improved AI Chat performance through message virtualization
+- Copilot now uses the built-in terminal
+- Prevent Copilot from breaking incremental edits and from using its own file edit tool
+- Fix Copilot markdown rendering bug
+- Fix corrupt dock layouts (stray root host window, unresolved dockable types)
+- Fix tool windows not rendering on reopen after closing all (#258)
+- Update SharpCompress
+
+## 1.0.21
+
+- Copilot support for queuing multiple requests and steering the conversation
+- Copilot adds visual support for attachments
+- Fix Copilot "Allow for Session" option
+- Adjust Copilot for Token based billing
+- Fix AI Chat Autoscroll
+- Invert Yosys Verbose option
+- Fix Yosys aborting on warnings
+- Allow selecting TopEntity in Project Explorer (right click on file)
+
+## 1.0.20
+
+- Yosys will always find ghdl generated verilog files now, even if they are excluded
+
+## 1.0.19
+
+- Reworked Project Settings
+- TopEntity is no longer a file but a real entity
+- Update Copilot Integration
+- Improved Update Notifictions
+- Auto reloading packages after installing them
+- Fix PreCompileSteps
+- Fix bug where yosys toolchain would add one file twice
+- Rename "fpga" Property to "board"
+- Improved Verilog Support
+- Drastically improved rendering performance for large files
+
+## 1.0.16
+
+- Add "oneware" command to windows installer
+- Enhanced Verilog Simulator
+- Added baud rate 74880
+  
 ## 1.0.15
 
 - Fix VCD Parsing cases

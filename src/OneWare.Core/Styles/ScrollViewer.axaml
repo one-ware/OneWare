@@ -48,10 +48,11 @@
 
     <Style Selector="ScrollBar /template/ Thumb#thumb">
         <Setter Property="Opacity" Value="0.6" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderMidBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}" />
+                    <Border Background="{TemplateBinding Background}" CornerRadius="5" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/build/">
+    <File Path=".github\dependabot.yml" />
     <File Path="Directory.Build.props" />
+    <File Path="docs\changelog.md" />
   </Folder>
   <Folder Name="/build/actions/">
     <File Path=".github/workflows/publish-nuget.yml" />
@@ -14,6 +16,8 @@
     <File Path=".github/workflows/publish-studio-winget.yml" />
     <File Path=".github/workflows/snapcraft.yml" />
     <File Path=".github/workflows/test.yml" />
+    <File Path=".github\workflows\dependency-scan.yml" />
+    <File Path=".github\workflows\sbom.yml" />
   </Folder>
   <Folder Name="/build/props/">
     <File Path="build/props/Asmichi.ChildProcess.props" />
@@ -90,6 +94,7 @@
     <Project Path="src/OneWare.CloudIntegration/OneWare.CloudIntegration.csproj" />
     <Project Path="src/OneWare.Copilot/OneWare.Copilot.csproj" />
     <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj" />
+    <Project Path="src/OneWare.MarkdownViewer/OneWare.MarkdownViewer.csproj" />
     <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj" />
     <Project Path="src\OneWare.Chat\OneWare.Chat.csproj" />
   </Folder>
@@ -126,6 +131,7 @@
     <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/OneWare.Dock.HeadlessTests/OneWare.Dock.HeadlessTests.csproj" />
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
     <Project Path="tests/OneWare.PackageManager.UnitTests/OneWare.PackageManager.UnitTests.csproj" />
     <Project Path="tests/OneWare.Fst.Parser.UnitTests/OneWare.Fst.Parser.UnitTests.csproj" />
@@ -135,6 +141,7 @@
     <Project Path="tests/OneWare.ToolEngine.UnitTests/OneWare.ToolEngine.UnitTests.csproj" />
     <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj" />
     <Project Path="tests/OneWare.Vcd.Parser.UnitTests/OneWare.Vcd.Parser.UnitTests.csproj" />
+    <Project Path="tests/OneWare.Verilog.UnitTests/OneWare.Verilog.UnitTests.csproj" />
     <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj" />
     <Project Path="tests/OneWare.WaveFormViewer.Tests/OneWare.WaveFormViewer.Tests.csproj" />
   </Folder>

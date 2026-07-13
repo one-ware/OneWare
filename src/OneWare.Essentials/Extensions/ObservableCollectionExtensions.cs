@@ -1,8 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Binding;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Essentials.Extensions;
@@ -50,15 +50,26 @@ public static class ObservableCollectionExtensions
                         {
                             onAdded.Invoke(typeItem, path);
 
-                            typeItem.WhenValueChanged(x => x.Items).Subscribe(x =>
-                            {
-                                if (x != null)
+                            // Observe the Items property directly via INotifyPropertyChanged.
+                            // Using DynamicData's expression based WhenValueChanged here fails because
+                            // the accessor is built against the open generic type parameter T, which
+                            // makes DynamicData fall back to Convert.ChangeType and throw for non
+                            // IConvertible values (e.g. ObservableCollection).
+                            Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                                    h => typeItem.PropertyChanged += h,
+                                    h => typeItem.PropertyChanged -= h)
+                                .Where(e => e.EventArgs.PropertyName == nameof(ICanHaveObservableItems<T>.Items))
+                                .Select(_ => typeItem.Items)
+                                .StartWith(typeItem.Items)
+                                .Subscribe(x =>
                                 {
-                                    var s = WatchTreeChangesChildren(x, onAdded, onRemoved, compositeDisposable,
-                                        disposableDictionary, $"{path}{typeItem.Name} {PathSeparator} ");
-                                    disposableDictionary[typeItem] = s;
-                                }
-                            }).DisposeWith(subDisposable);
+                                    if (x != null)
+                                    {
+                                        var s = WatchTreeChangesChildren(x, onAdded, onRemoved, compositeDisposable,
+                                            disposableDictionary, $"{path}{typeItem.Name} {PathSeparator} ");
+                                        disposableDictionary[typeItem] = s;
+                                    }
+                                }).DisposeWith(subDisposable);
                         }
 
                 if (args.EventArgs.OldItems != null)

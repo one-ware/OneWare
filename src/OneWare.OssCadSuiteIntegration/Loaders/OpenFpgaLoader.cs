@@ -26,9 +26,9 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
 
     public async Task DownloadAsync(UniversalFpgaProjectRoot project)
     {
-        var fpga = project.Properties.GetString("Fpga") ?? "unknown";
+        var boardName = project.Board ?? "unknown";
         var longTerm = settingsService.GetSettingValue<bool>("UniversalFpgaProjectSystem_LongTermProgramming");
-        var properties = FpgaSettingsParser.LoadSettings(project, fpga);
+        var properties = FpgaSettingsParser.LoadSettings(project, boardName);
 
         var board = properties.GetValueOrDefault("openFpgaLoaderBoard");
         var cable = properties.GetValueOrDefault("OpenFpgaLoader_Cable");

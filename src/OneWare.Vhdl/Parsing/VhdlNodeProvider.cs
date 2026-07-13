@@ -22,6 +22,26 @@ public partial class VhdlNodeProvider : INodeProvider
         return Task.FromResult<IEnumerable<FpgaNode>>(ExtractNodes(code));
     }
 
+    public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file, string topEntityName)
+    {
+        var code = File.ReadAllText(file.FullPath);
+        var cleaned = StripComments(code);
+        return Task.FromResult<IEnumerable<FpgaNode>>(ExtractNodesForEntity(cleaned, topEntityName));
+    }
+
+    public Task<IEnumerable<string>> ExtractTopEntitiesAsync(IProjectFile file)
+    {
+        var code = StripComments(File.ReadAllText(file.FullPath));
+        var entities = EntityNameRegex().Matches(code)
+            .Select(m => m.Groups[1].Value)
+            .ToList();
+
+        if (entities.Count == 0)
+            entities.Add(Path.GetFileNameWithoutExtension(file.FullPath));
+
+        return Task.FromResult<IEnumerable<string>>(entities);
+    }
+
     private static List<FpgaNode> ExtractNodes(string vhdlCode)
     {
         var nodes = new List<FpgaNode>();
@@ -38,6 +58,31 @@ public partial class VhdlNodeProvider : INodeProvider
             ExtractPorts(portContent, nodes, generics);
 
         return nodes;
+    }
+
+    private static List<FpgaNode> ExtractNodesForEntity(string cleanCode, string entityName)
+    {
+        // Find "entity <name> is"
+        var entityMatch = Regex.Match(cleanCode,
+            $@"\bentity\s+{Regex.Escape(entityName)}\s+is\b",
+            RegexOptions.IgnoreCase);
+
+        if (!entityMatch.Success)
+            return ExtractNodes(cleanCode); // fall back to whole file
+
+        var entityStart = entityMatch.Index;
+
+        // Find matching "end [entity] [<name>];"
+        var endMatch = Regex.Match(
+            cleanCode.Substring(entityStart + entityMatch.Length),
+            $@"\bend\s+(?:entity\s+)?(?:{Regex.Escape(entityName)}\s*)?;",
+            RegexOptions.IgnoreCase);
+
+        var entityBlock = endMatch.Success
+            ? cleanCode.Substring(entityStart, entityMatch.Length + endMatch.Index + endMatch.Length)
+            : cleanCode.Substring(entityStart);
+
+        return ExtractNodes(entityBlock);
     }
 
     // ----------------- COMMENT STRIPPING -----------------
@@ -203,4 +248,7 @@ public partial class VhdlNodeProvider : INodeProvider
         @"(\w+)\s*:\s*\w+\s*:=\s*(\d+)",
         RegexOptions.IgnoreCase)]
     private static partial Regex GenericDeclarationMatch();
+
+    [GeneratedRegex(@"\bentity\s+(\w+)\s+is\b", RegexOptions.IgnoreCase)]
+    private static partial Regex EntityNameRegex();
 }

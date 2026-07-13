@@ -8,6 +8,7 @@ using OneWare.Core.Services;
 using OneWare.CruviAdapterExtensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.MarkdownViewer;
 using OneWare.Settings;
 using OneWare.Studio.Styles;
 using OneWare.UniversalFpgaProjectSystem;
@@ -98,5 +99,6 @@ public class StudioApp : App
         moduleCatalog.AddModule<UniversalFpgaProjectSystemModule>();
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
+        moduleCatalog.AddModule<MarkdownViewerModule>();
     }
 }

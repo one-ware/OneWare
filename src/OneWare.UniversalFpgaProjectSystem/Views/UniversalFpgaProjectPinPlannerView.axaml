@@ -33,13 +33,56 @@
     </Interaction.Behaviors>
 
     <Panel>
-        <ProgressBar IsVisible="{Binding IsLoading}"
-                     IsIndeterminate="True"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center"
-                     Width="100" Height="100" />
-        <Grid RowDefinitions="*, Auto" IsVisible="{Binding !IsLoading}" IsEnabled="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
-              Opacity="{Binding $self.IsEnabled, Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}, ConverterParameter=0.5}">
+        <!-- ── Setup overlay: shown when toolchain or top entity is not configured ── -->
+        <Border IsVisible="{Binding IsSetupRequired}"
+                Background="{DynamicResource ThemeControlLowBrush}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Padding="32" CornerRadius="8" MinWidth="360"
+                BoxShadow="0 4 24 0 #44000000">
+            <StackPanel Spacing="16">
+                <TextBlock Text="Configure Project" FontSize="18" FontWeight="Bold"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Please configure the required settings before opening the Pin Planner."
+                           TextWrapping="Wrap" Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" />
+
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSetupLoading}"
+                             HorizontalAlignment="Stretch" Height="4" />
+
+                <!-- Toolchain selector (only when not set) -->
+                <StackPanel Spacing="4"
+                            IsVisible="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNull}}">
+                    <TextBlock Text="Toolchain:" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding SetupAvailableToolchains}"
+                              SelectedItem="{Binding SetupSelectedToolchain, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <!-- Top Entity selector (only when not set) -->
+                <StackPanel Spacing="4"
+                            IsVisible="{Binding TopEntity, Converter={x:Static ObjectConverters.IsNull}}">
+                    <TextBlock Text="Top Entity:" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding SetupAvailableTopEntities}"
+                              SelectedItem="{Binding SetupSelectedTopEntity, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch"
+                              IsEnabled="{Binding !IsSetupLoading}" />
+                </StackPanel>
+
+                <Button Classes="RoundButton PrimaryButton" Content="Load Pin Planner"
+                        HorizontalAlignment="Center"
+                        Command="{Binding ApplySetupAsync}"
+                        IsEnabled="{Binding !IsSetupLoading}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ── Main planner content ── -->
+        <Panel IsVisible="{Binding !IsSetupRequired}">
+            <ProgressBar IsVisible="{Binding IsLoading}"
+                         IsIndeterminate="True"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Width="100" Height="100" />
+            <Grid RowDefinitions="*, Auto" IsVisible="{Binding !IsLoading}" IsEnabled="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  Opacity="{Binding $self.IsEnabled, Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}, ConverterParameter=0.5}">
             <Border Padding="4">
                 <Grid RowDefinitions="Auto, *">
                     <DockPanel DockPanel.Dock="Top">
@@ -265,8 +308,8 @@
             </StackPanel>
 
         </Grid>
-        
-        <TextBlock Background="Black" Padding="10" Text="Toolchain not found. Please check project settings" FontSize="18" FontWeight="Bold" Foreground="Orange" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   IsVisible="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNull}}" />
+        </Panel>
+        <!-- end main planner content -->
+
     </Panel>
 </controls:FlexibleWindow>

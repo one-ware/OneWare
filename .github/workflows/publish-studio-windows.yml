@@ -7,6 +7,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
@@ -53,7 +56,7 @@ jobs:
       - name: Rename Installer win-arm64
         run: mv ./publishInstaller/win-arm64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-artifacts
           path: |
@@ -71,7 +74,7 @@ jobs:
       contents: write
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: windows-artifacts
       - name: Create Release

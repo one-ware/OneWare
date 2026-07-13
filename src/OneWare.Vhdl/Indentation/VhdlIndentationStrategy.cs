@@ -7,6 +7,7 @@ namespace OneWare.Vhdl.Indentation;
 
 public class VhdlIndentationStrategy : DefaultIndentationStrategy
 {
+    private readonly TextEditorOptions? _options;
     private string _indentationString = "\t";
 
     public VhdlIndentationStrategy()
@@ -18,7 +19,7 @@ public class VhdlIndentationStrategy : DefaultIndentationStrategy
     /// </summary>
     public VhdlIndentationStrategy(TextEditorOptions options)
     {
-        IndentationString = options.IndentationString;
+        _options = options;
     }
 
     /// <summary>
@@ -26,7 +27,7 @@ public class VhdlIndentationStrategy : DefaultIndentationStrategy
     /// </summary>
     public string IndentationString
     {
-        get => _indentationString;
+        get => _options?.IndentationString ?? _indentationString;
         set
         {
             if (string.IsNullOrEmpty(value))

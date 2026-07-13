@@ -15,4 +15,10 @@ public class YosysNodeProvider(YosysService service) : INodeProvider
     {
         return await service.ExtractNodesAsync(file);
     }
+
+    public async Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file, string topEntityName)
+    {
+        // Yosys doesn't filter by entity name; fall back to full extraction
+        return await service.ExtractNodesAsync(file);
+    }
 }

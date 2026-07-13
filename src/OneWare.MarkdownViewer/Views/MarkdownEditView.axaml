@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.MarkdownViewer.ViewModels"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:dockViews="clr-namespace:OneWare.Core.Views.DockViews;assembly=OneWare.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.MarkdownViewer.Views.MarkdownEditView"
+             x:DataType="viewModels:MarkdownEditViewModel"
+             Background="{DynamicResource ThemeControlLowBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding EditorColumnWidth}" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="{Binding PreviewColumnWidth}" />
+        </Grid.ColumnDefinitions>
+        <!-- Reuse the standard editor for full editing support -->
+        <dockViews:EditView Grid.Column="0" IsVisible="{Binding ShowEditor}" />
+
+        <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"
+                      Background="{DynamicResource ThemeBorderLowBrush}"
+                      IsVisible="{Binding IsSplitterVisible}" />
+
+        <controls:MarkdownViewer Grid.Column="2"
+                                 IsVisible="{Binding ShowPreview}"
+                                 SelectionEnabled="True"
+                                 Margin="8,4"
+                                 Markdown="{Binding MarkdownText}" />
+
+        <!-- Floating toggle buttons in the top-right corner, overlaying all columns -->
+        <Border Grid.Column="0" Grid.ColumnSpan="3"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,8,30,0"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                BorderThickness="1" CornerRadius="3"
+                Padding="2" BoxShadow="0 1 4 0 #20000000">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+                <ToggleButton IsChecked="{Binding ShowEditor, Mode=TwoWay}"
+                              ToolTip.Tip="Toggle editor"
+                              Padding="4" Width="20" Height="20">
+                    <Image Width="12" Height="12"
+                           Source="{DynamicResource Cool.Edit}" />
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding ShowPreview, Mode=TwoWay}"
+                              ToolTip.Tip="Toggle preview"
+                              Padding="4" Width="20" Height="20">
+                    <Image Width="12" Height="12"
+                           Source="{DynamicResource FontAwesome.EyeSolid}" />
+                </ToggleButton>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
+
+
+

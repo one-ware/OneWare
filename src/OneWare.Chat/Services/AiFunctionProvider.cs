@@ -129,7 +129,7 @@ public class AiFunctionProvider(
             {
                 Id = id,
                 Result = exception == null,
-                ToolOutput = exception?.ToString() ?? $"Tool {id} succeeded."
+                ToolOutput = exception?.ToString()
             }));
     }
 
@@ -145,7 +145,8 @@ public class AiFunctionProvider(
                 ? definition.Name
                 : definition.FriendlyName;
 
-            var id = await provider.NotifyFunctionStartedAsync(friendlyName!);
+            var detail = definition.DetailExtractor?.Invoke(arguments);
+            var id = await provider.NotifyFunctionStartedAsync(friendlyName!, detail);
             Exception? exception = null;
             try
             {

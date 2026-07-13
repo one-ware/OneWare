@@ -32,8 +32,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
     private bool _initialized;
-    // Counts user messages sent locally so ChatUserMessageEvent duplicates are suppressed
-    private int _pendingLocalUserMessages;
+    // FIFO of messages sent locally so the echoed ChatUserMessageEvent can be matched
+    // (suppressed for normal/steered sends, or used to activate a queued message).
+    private readonly Queue<PendingLocalMessage> _pendingLocalMessages = new();
+
+    private const string DefaultWorkingStatus = "Working…";
+
+    private sealed record PendingLocalMessage(
+        string Content,
+        ChatSendMode Mode,
+        ChatMessageUserViewModel? QueuedView);
 
     private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
     {
@@ -60,7 +68,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         AiFileEditService = aiFileEditService;
 
         NewChatCommand = new AsyncRelayCommand(NewChatAsync);
-        SendCommand = new AsyncRelayCommand(SendAsync, CanSend);
+        SendCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Send), CanSend);
+        SteerCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Steer), CanSteerOrQueue);
+        QueueCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Queue), CanSteerOrQueue);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
         InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
 
@@ -78,6 +88,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
             {
                 SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
             }
         }
     } = string.Empty;
@@ -90,6 +102,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
             {
                 SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
             }
         }
@@ -109,6 +123,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (SetProperty(ref field, value))
             {
                 SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
             }
         }
@@ -121,6 +137,22 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     } = "Starting...";
 
     public ObservableCollection<IChatMessage> Messages { get; set; } = new();
+
+    /// <summary>
+    /// Messages the user has queued while the agent is busy. Rendered (dimmed) below the
+    /// conversation until the agent activates them.
+    /// </summary>
+    public ObservableCollection<IChatMessage> QueuedMessages { get; } = new();
+
+    /// <summary>
+    /// Text shown next to the working spinner. Switches to "Steering…" while a steered message
+    /// is being applied to the current turn.
+    /// </summary>
+    public string WorkingStatusText
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = DefaultWorkingStatus;
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
 
@@ -171,6 +203,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public AsyncRelayCommand NewChatCommand { get; }
 
     public AsyncRelayCommand SendCommand { get; }
+
+    public AsyncRelayCommand SteerCommand { get; }
+
+    public AsyncRelayCommand QueueCommand { get; }
 
     public AsyncRelayCommand AbortCommand { get; }
 
@@ -231,11 +267,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
 
         Messages.Clear();
+        QueuedMessages.Clear();
+        _pendingLocalMessages.Clear();
+        WorkingStatusText = DefaultWorkingStatus;
         _assistantMessagesById.Clear();
         _assistantReasoningById.Clear();
     }
 
-    private async Task SendAsync()
+    private async Task SendInternalAsync(ChatSendMode mode)
     {
         var prompt = CurrentMessage.Trim();
         if (string.IsNullOrWhiteSpace(prompt)) return;
@@ -258,14 +297,31 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
 
         var userMessage = new ChatMessageUserViewModel(prompt);
-        var assistantMessage = new ChatMessageAssistantViewModel("init")
-        {
-            IsStreaming = true
-        };
+        ChatMessageAssistantViewModel? assistantMessage = null;
 
-        AddMessage(userMessage);
-        AddMessage(assistantMessage);
-        _pendingLocalUserMessages++;
+        switch (mode)
+        {
+            case ChatSendMode.Queue:
+                // Park the message (dimmed) below the conversation until the agent activates it.
+                QueuedMessages.Add(userMessage);
+                _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, userMessage));
+                break;
+
+            case ChatSendMode.Steer:
+                AddMessage(userMessage);
+                _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, null));
+                WorkingStatusText = "Steering…";
+                break;
+
+            default:
+                AddMessage(userMessage);
+                _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, null));
+                // Only the initial (idle) send shows a placeholder; steered messages join the
+                // turn that is already streaming.
+                assistantMessage = new ChatMessageAssistantViewModel("init") { IsStreaming = true };
+                AddMessage(assistantMessage);
+                break;
+        }
 
         CurrentMessage = string.Empty;
         IsBusy = true;
@@ -274,23 +330,31 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         try
         {
-            await SelectedChatService.SendAsync(prompt);
+            await SelectedChatService.SendAsync(prompt, mode);
         }
         catch (Exception ex)
         {
-            if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
+            if (mode == ChatSendMode.Queue)
+            {
+                QueuedMessages.Remove(userMessage);
+            }
+            else if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
             {
                 Messages.Remove(initMessage);
             }
-            else
+            else if (assistantMessage != null)
             {
                 Messages.Remove(assistantMessage);
             }
 
             AddErrorMessage(ex.Message);
-            IsBusy = false;
+            if (mode == ChatSendMode.Send) IsBusy = false;
+            if (mode == ChatSendMode.Steer) WorkingStatusText = DefaultWorkingStatus;
         }
     }
+
+    private bool CanSteerOrQueue() =>
+        IsConnected && IsBusy && !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private async Task AbortAsync()
     {
@@ -306,9 +370,21 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         }
     }
 
-    private bool CanSend() => IsConnected && !IsBusy && !string.IsNullOrWhiteSpace(CurrentMessage);
+    private bool CanSend() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private bool CanAbort() => IsConnected && IsBusy;
+
+    private bool TryDequeuePendingLocal(string content, out PendingLocalMessage pending)
+    {
+        if (_pendingLocalMessages.Count > 0 && _pendingLocalMessages.Peek().Content == content)
+        {
+            pending = _pendingLocalMessages.Dequeue();
+            return true;
+        }
+
+        pending = default!;
+        return false;
+    }
 
     private void AddMessage(IChatMessage message)
     {
@@ -383,6 +459,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 message.IsStreaming = false;
 
             IsBusy = false;
+            // Safety: never let the steering indicator stick past the end of a turn.
+            WorkingStatusText = DefaultWorkingStatus;
         });
     }
 
@@ -442,15 +520,30 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatUserMessageEvent x:
             {
-                // If we sent this message locally it is already visible — skip.
-                // Otherwise it originates from a remote session user; show it and mark busy.
-                if (_pendingLocalUserMessages > 0)
-                {
-                    _pendingLocalUserMessages--;
-                    break;
-                }
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (TryDequeuePendingLocal(x.Content, out var pending))
+                    {
+                        switch (pending.Mode)
+                        {
+                            case ChatSendMode.Queue when pending.QueuedView != null:
+                                // The agent activated the queued message — promote it into the flow.
+                                QueuedMessages.Remove(pending.QueuedView);
+                                AddMessage(pending.QueuedView);
+                                IsBusy = true;
+                                ContentAdded?.Invoke(this, EventArgs.Empty);
+                                break;
+                            case ChatSendMode.Steer:
+                                // Steering has been applied to the current turn.
+                                WorkingStatusText = DefaultWorkingStatus;
+                                break;
+                            // Normal send: already visible, nothing to do.
+                        }
+
+                        return;
+                    }
+
+                    // Originates from a remote session user; show it and mark busy.
                     AddMessage(new ChatMessageUserViewModel(x.Content));
                     IsBusy = true;
                     ContentAdded?.Invoke(this, EventArgs.Empty);
@@ -459,7 +552,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatButtonEvent x:
             {
-                Dispatcher.UIThread.Post(() => { AddMessage(new ChatMessageWithButtonViewModel(x)); });
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageWithButtonViewModel(x));
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
                 break;
             }
             case ChatPermissionRequestEvent x:
@@ -469,12 +566,26 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var msg = new ChatMessagePermissionRequestViewModel(x);
                     msg.CloseAction = () => Messages.Remove(msg);
                     AddMessage(msg);
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
+                break;
+            }
+            case ChatUserInputRequestEvent x:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageUserInputRequestViewModel(x));
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
                 });
                 break;
             }
             case ChatErrorEvent x:
             {
-                Dispatcher.UIThread.Post(() => { AddErrorMessage(x.Message); });
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddErrorMessage(x.Message);
+                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                });
                 break;
             }
             case ChatIdleEvent:

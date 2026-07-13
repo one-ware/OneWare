@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -35,6 +37,7 @@ public class UniversalFpgaProjectManager : IProjectManager
         var root = new UniversalFpgaProjectRoot(path);
         
         await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
+        await MigrateLegacyTopEntityAsync(root);
 
         foreach (var entryModification in _fpgaService.ProjectEntryModificationHandlers)
         {
@@ -42,7 +45,15 @@ public class UniversalFpgaProjectManager : IProjectManager
         }
 
         await root.InitializeAsync();
-        
+
+        await UpdateTopEntityFilePathAsync(root);
+
+        root.Properties.ProjectPropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName.Equals("topEntity", StringComparison.OrdinalIgnoreCase))
+                _ = UpdateTopEntityFilePathAsync(root);
+        };
+
         return root;
     }
 
@@ -51,7 +62,10 @@ public class UniversalFpgaProjectManager : IProjectManager
         if (project is not UniversalFpgaProjectRoot root) return;
         
         await root.LoadAsync(_fpgaService.ProjectPropertyMigrations);
+        await MigrateLegacyTopEntityAsync(root);
         await root.InitializeAsync();
+
+        await UpdateTopEntityFilePathAsync(root);
         
         //TODO reload open files
         var filesOpenInProject = _mainDockService.OpenFiles
@@ -62,6 +76,56 @@ public class UniversalFpgaProjectManager : IProjectManager
         // foreach (var refreshed in filesOpenInProject)
         //     if (_mainDockService.OpenFiles.TryGetValue(refreshed.Key, out var vm))
         //         vm.InitializeContent();
+    }
+
+    /// <summary>
+    /// Detects a legacy <c>topEntity</c> value that is a file path rather than an entity name,
+    /// opens the referenced file, and replaces the value with the real entity/module name found inside.
+    /// Falls back to the file name without extension when the file cannot be parsed.
+    /// </summary>
+    private async Task MigrateLegacyTopEntityAsync(UniversalFpgaProjectRoot root)
+    {
+        var legacyValue = root.Properties.GetString("topEntity");
+        if (legacyValue == null) return;
+
+        // Detect path-like values: contains a directory separator, OR has a known HDL extension
+        var looksLikePath = legacyValue.Contains('/') || legacyValue.Contains('\\') ||
+                            Path.GetExtension(legacyValue) is ".vhd" or ".vhdl" or ".v" or ".sv";
+        if (!looksLikePath) return;
+
+        // Best-effort entity name derived from the file name
+        var candidateName = Path.GetFileNameWithoutExtension(legacyValue);
+
+        // Try to read the actual entity/module name from the file
+        var file = root.GetFile(legacyValue);
+        if (file != null)
+        {
+            var provider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+            if (provider != null)
+            {
+                try
+                {
+                    var entities = (await provider.ExtractTopEntitiesAsync(file)).ToList();
+                    if (entities.Count == 1)
+                    {
+                        candidateName = entities[0];
+                    }
+                    else if (entities.Count > 1)
+                    {
+                        // Prefer one whose name matches the file name; otherwise take the first
+                        candidateName = entities.FirstOrDefault(e =>
+                                            string.Equals(e, candidateName, StringComparison.OrdinalIgnoreCase))
+                                        ?? entities[0];
+                    }
+                }
+                catch
+                {
+                    // Ignore parse errors — candidateName stays as the file name without extension
+                }
+            }
+        }
+
+        root.Properties.SetString("topEntity", candidateName);
     }
     
     private static bool IsUnderRoot(string rootPath, string filePath)
@@ -131,27 +195,15 @@ public class UniversalFpgaProjectManager : IProjectManager
                 case FpgaProjectFile { Root: UniversalFpgaProjectRoot universalFpgaProjectRoot } file:
                     if (file.Extension is ".vhd" or ".vhdl" or ".v" or ".sv")
                     {
-                        //Set Top
-                        if (universalFpgaProjectRoot.TopEntity == file.RelativePath)
-                            menuItems.Add(new MenuItemModel("Unset Top Entity")
-                            {
-                                Header = "Unset Top Entity",
-                                Command = new RelayCommand(() =>
-                                {
-                                    universalFpgaProjectRoot.TopEntity = null;
-                                    _ = SaveProjectAsync(universalFpgaProjectRoot);
-                                })
-                            });
-                        else
-                            menuItems.Add(new MenuItemModel("Set Top Entity")
-                            {
-                                Header = "Set Top Entity",
-                                Command = new RelayCommand(() =>
-                                {
-                                    universalFpgaProjectRoot.TopEntity = file.RelativePath;
-                                    _ = SaveProjectAsync(universalFpgaProjectRoot);
-                                })
-                            });
+                        //Set Top Entity
+                        var setTopEntityMenu = new MenuItemModel("SetTopEntity")
+                        {
+                            Header = "Set Top Entity",
+                            Icon = new IconModel("VsImageLib.StartWithoutDebug16X"),
+                            Items = new ObservableCollection<MenuItemModel>()
+                        };
+                        menuItems.Add(setTopEntityMenu);
+                        _ = PopulateTopEntityMenuItemsAsync(setTopEntityMenu, file, universalFpgaProjectRoot);
 
                         //Exclude from compile
                         if (!universalFpgaProjectRoot.IsCompileExcluded(file.RelativePath))
@@ -202,6 +254,62 @@ public class UniversalFpgaProjectManager : IProjectManager
 
                     break;
             }
+    }
+
+    private async Task PopulateTopEntityMenuItemsAsync(MenuItemModel menu, IProjectFile file,
+        UniversalFpgaProjectRoot root)
+    {
+        var nodeProvider = _fpgaService.GetNodeProviderByExtension(file.Extension);
+        if (nodeProvider == null) return;
+
+        List<string> entities;
+        try
+        {
+            entities = (await nodeProvider.ExtractTopEntitiesAsync(file)).ToList();
+        }
+        catch
+        {
+            return;
+        }
+
+        if (menu.Items == null) return;
+
+        foreach (var entity in entities)
+        {
+            var entityName = entity;
+            var isCurrent = root.TopEntity == entityName &&
+                            root.TopEntityFilePath != null &&
+                            file.RelativePath.EqualPaths(root.TopEntityFilePath);
+
+            menu.Items.Add(new MenuItemModel(entityName)
+            {
+                Header = entityName,
+                Icon = isCurrent ? new IconModel("BoxIcons.RegularCheck") : null,
+                Command = new RelayCommand(() =>
+                {
+                    root.TopEntity = entityName;
+                    root.TopEntityFilePath = file.RelativePath;
+                    _ = SaveProjectAsync(root);
+                })
+            });
+        }
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="UniversalFpgaProjectRoot.TopEntityFilePath"/> by locating the file
+    /// that contains the current <see cref="UniversalFpgaProjectRoot.TopEntity"/>.
+    /// </summary>
+    private async Task UpdateTopEntityFilePathAsync(UniversalFpgaProjectRoot root)
+    {
+        if (string.IsNullOrEmpty(root.TopEntity))
+        {
+            root.TopEntityFilePath = null;
+            return;
+        }
+
+        var allEntities = await _fpgaService.GetAllTopEntitiesAsync(root);
+        var match = allEntities.FirstOrDefault(x => x.TopEntity == root.TopEntity);
+        root.TopEntityFilePath = match?.File.RelativePath;
     }
 
     private async Task OpenProjectSettingsDialogAsync(UniversalFpgaProjectRoot root)
