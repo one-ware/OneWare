@@ -19,6 +19,9 @@ public class MarkdownViewer : TemplatedControl
     public static readonly StyledProperty<bool> VirtualizationEnabledProperty =
         AvaloniaProperty.Register<MarkdownViewer, bool>(nameof(VirtualizationEnabled));
     
+    public static readonly StyledProperty<double> VirtualizationCacheLengthProperty =
+        AvaloniaProperty.Register<MarkdownViewer, double>(nameof(VirtualizationCacheLength));
+    
     public static readonly StyledProperty<bool> AutoScrollToBottomProperty =
         AvaloniaProperty.Register<MarkdownViewer, bool>(nameof(AutoScrollToBottom));
 
@@ -47,6 +50,12 @@ public class MarkdownViewer : TemplatedControl
     {
         get => GetValue(VirtualizationEnabledProperty);
         set => SetValue(VirtualizationEnabledProperty, value);
+    }
+
+    public double VirtualizationCacheLength
+    {
+        get => GetValue(VirtualizationCacheLengthProperty);
+        set => SetValue(VirtualizationCacheLengthProperty, value);
     }
 
     public MarkdownViewer()

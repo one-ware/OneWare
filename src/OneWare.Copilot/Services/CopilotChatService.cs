@@ -25,6 +25,15 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Copilot.Services;
 
+/// <summary>
+/// A selectable context-window size for a model. <see cref="Tier"/> maps to the SDK
+/// <see cref="ContextTier"/> ("Default" or "Long Context"); <see cref="Label"/> is the compact size.
+/// </summary>
+public sealed record ContextSizeOption(string Label, string Tier, long Tokens)
+{
+    public override string ToString() => Label;
+}
+
 public sealed class CopilotChatService(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
@@ -141,6 +150,33 @@ public sealed class CopilotChatService(
 
     public ObservableCollection<ModelInfo> Models { get; } = [];
 
+    public ObservableCollection<ModelInfo> FilteredModels { get; } = [];
+
+    public string? ModelSearchText
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                RefreshFilteredModels();
+        }
+    }
+
+    private void RefreshFilteredModels()
+    {
+        var query = ModelSearchText?.Trim();
+
+        FilteredModels.Clear();
+
+        var source = string.IsNullOrEmpty(query)
+            ? Models
+            : Models.Where(m =>
+                m.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                m.Id.Contains(query, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var model in source) FilteredModels.Add(model);
+    }
+
     public ModelInfo? SelectedModel
     {
         get;
@@ -151,6 +187,7 @@ public sealed class CopilotChatService(
             {
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
                 RefreshReasoningEfforts(value);
+                RefreshContextSizes(value);
                 if (oldValue != null && oldValue.Id != value.Id)
                 {
                     // Switch the model in place for the next message, preserving conversation history.
@@ -192,6 +229,110 @@ public sealed class CopilotChatService(
         SelectedApprovalMode is ApprovalModeBypass or ApprovalModeAutopilot;
 
     private bool IsAutopilot => SelectedApprovalMode == ApprovalModeAutopilot;
+
+    public const string ContextTierDefault = "Default";
+    public const string ContextTierLong = "Long Context";
+
+    public ObservableCollection<ContextSizeOption> ContextSizes { get; } = [];
+
+    public bool ShowContextSize
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    private bool _suppressContextSizeApply;
+
+    /// <summary>
+    /// The context window size selected for the current model. Persisted as a <see cref="ContextTier"/>
+    /// so the choice survives model switches. The tier is fixed at session creation, so changing it
+    /// re-initializes the current session (conversation history is preserved).
+    /// </summary>
+    public ContextSizeOption? SelectedContextSize
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value) && value != null && !_suppressContextSizeApply)
+            {
+                settingsService.SetSettingValue(CopilotModule.CopilotContextTierSettingKey, value.Tier);
+                ApplyContextTierToSession();
+            }
+        }
+    }
+
+    private void RefreshContextSizes(ModelInfo model)
+    {
+        _suppressContextSizeApply = true;
+        try
+        {
+            ContextSizes.Clear();
+
+            var prices = model.Billing?.TokenPrices;
+            var longContext = prices?.LongContext;
+            var maxWindow = model.Capabilities.Limits.MaxContextWindowTokens;
+
+            // Standard tier: bounded by MaxPromptTokens when a long tier exists, otherwise the full window.
+            var defaultTokens = longContext != null
+                ? prices?.MaxPromptTokens ?? maxWindow
+                : prices?.MaxPromptTokens is > 0
+                    ? prices.MaxPromptTokens!.Value
+                    : maxWindow;
+            if (defaultTokens <= 0) defaultTokens = maxWindow;
+
+            if (defaultTokens > 0)
+                ContextSizes.Add(new ContextSizeOption(
+                    Converters.ModelContextTierConverter.FormatTokens(defaultTokens),
+                    ContextTierDefault, defaultTokens));
+
+            if (longContext != null)
+            {
+                var longTokens = longContext.MaxPromptTokens ?? maxWindow;
+                if (longTokens > 0)
+                    ContextSizes.Add(new ContextSizeOption(
+                        Converters.ModelContextTierConverter.FormatTokens(longTokens),
+                        ContextTierLong, longTokens));
+            }
+
+            ShowContextSize = ContextSizes.Count > 1;
+
+            var persistedTier =
+                settingsService.GetSettingValue<string>(CopilotModule.CopilotContextTierSettingKey);
+            if (string.IsNullOrWhiteSpace(persistedTier)) persistedTier = ContextTierDefault;
+
+            SelectedContextSize =
+                ContextSizes.FirstOrDefault(x => x.Tier == persistedTier)
+                ?? ContextSizes.FirstOrDefault();
+        }
+        finally
+        {
+            _suppressContextSizeApply = false;
+        }
+    }
+
+    private ContextTier? ResolveContextTier() =>
+        SelectedContextSize?.Tier == ContextTierLong ? ContextTier.LongContext : null;
+
+    private void ApplyContextTierToSession()
+    {
+        if (_session == null) return;
+
+        // The context tier can only be set when a session is created, so resume the current session
+        // (preserving history) with the new tier applied.
+        _requestedSessionId = CurrentSessionId;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await InitializeSessionAsync();
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogError(ex, "Failed to apply Copilot context tier.");
+            }
+        });
+    }
 
     public bool ShowReasoningEffort
     {
@@ -626,6 +767,7 @@ public sealed class CopilotChatService(
 
             Models.Clear();
             Models.AddRange(models.ToArray());
+            RefreshFilteredModels();
 
             var selectedModelSetting =
                 settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
@@ -671,6 +813,7 @@ public sealed class CopilotChatService(
             {
                 Model = SelectedModel.Id,
                 ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null,
+                ContextTier = ResolveContextTier(),
                 Streaming = true,
                 // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
                 IncludeSubAgentStreamingEvents = false,
@@ -694,6 +837,7 @@ public sealed class CopilotChatService(
             _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
             {
                 Streaming = true,
+                ContextTier = ResolveContextTier(),
                 IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),

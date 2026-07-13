@@ -15,6 +15,7 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
+    public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
 
     public static readonly Package CopilotPackage = new()
     {
@@ -57,13 +58,13 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "1.0.60",
+                Version = "1.0.70",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-win32-x64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-win32-x64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -76,7 +77,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-win32-arm64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-win32-arm64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -89,7 +90,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-linux-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-linux-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -102,7 +103,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-linux-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-linux-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -115,7 +116,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-darwin-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-darwin-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -128,7 +129,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.60/copilot-darwin-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-darwin-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -176,6 +177,22 @@ public class CopilotModule : OneWareModuleBase
                     "Bypass Approval: automatically approve all permission requests without prompting. " +
                     "Autopilot: Bypass Approval plus automatically answer agent questions " +
                     "(the agent is told you are unavailable and decides what is best)."
+            });
+
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+            CopilotContextTierSettingKey,
+            new ComboBoxSetting("Context Length",
+                CopilotChatService.ContextTierDefault,
+                new object[]
+                {
+                    CopilotChatService.ContextTierDefault,
+                    CopilotChatService.ContextTierLong
+                })
+            {
+                HoverDescription =
+                    "Default: use the model's standard context window. " +
+                    "Long Context: request an extended context window for models that support it " +
+                    "(may increase cost and latency)."
             });
 
         // serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
