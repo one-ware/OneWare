@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/build/">
+    <File Path=".github\dependabot.yml" />
     <File Path="Directory.Build.props" />
     <File Path="docs\changelog.md" />
   </Folder>
@@ -15,6 +16,8 @@
     <File Path=".github/workflows/publish-studio-winget.yml" />
     <File Path=".github/workflows/snapcraft.yml" />
     <File Path=".github/workflows/test.yml" />
+    <File Path=".github\workflows\dependency-scan.yml" />
+    <File Path=".github\workflows\sbom.yml" />
   </Folder>
   <Folder Name="/build/props/">
     <File Path="build/props/Asmichi.ChildProcess.props" />
@@ -126,6 +129,7 @@
     <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/OneWare.Dock.HeadlessTests/OneWare.Dock.HeadlessTests.csproj" />
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
     <Project Path="tests/OneWare.PackageManager.UnitTests/OneWare.PackageManager.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />

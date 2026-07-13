@@ -384,7 +384,7 @@ public sealed class OneWareCloudLoginService
                 
                 if (!string.IsNullOrWhiteSpace(error1))
                 {
-                    _logger.Error($"Authentication error (step 1): {error1}");
+                    _logger.Error($"Authentication error (step 1): {SanitizeForLog(error1)}");
                     step1Response.StatusCode = 400;
                     step1Response.Close();
                     return false;
@@ -432,7 +432,7 @@ public sealed class OneWareCloudLoginService
 
                 if (!string.IsNullOrWhiteSpace(error2))
                 {
-                    _logger.Error($"Authentication error (step 2 offline upgrade): {error2}");
+                    _logger.Error($"Authentication error (step 2 offline upgrade): {SanitizeForLog(error2)}");
                     step2Response.StatusCode = 400;
                     step2Response.Close();
                     return false;
@@ -534,7 +534,7 @@ public sealed class OneWareCloudLoginService
             }
             else
             {
-                _logger.Error($"Failed to exchange code for tokens: {response.StatusCode} - {response.Content}");
+                _logger.Error($"Failed to exchange code for tokens: {response.StatusCode} - {SanitizeForLog(response.Content)}");
             }
         }
         catch (Exception e)
@@ -569,6 +569,11 @@ public sealed class OneWareCloudLoginService
     private static bool ShouldLogoutAfterTokenRefreshFailure(HttpStatusCode status)
     {
         return status is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden;
+    }
+
+    private static string SanitizeForLog(string? value)
+    {
+        return value?.Replace("\r", string.Empty).Replace("\n", string.Empty) ?? string.Empty;
     }
 
 

@@ -67,4 +67,27 @@ public class OneWareContractResolver : DefaultContractResolver
             )
             .ToList();
     }
+
+    /// <inheritdoc/>
+    protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+    {
+        var property = base.CreateProperty(member, memberSerialization);
+
+        // Never serialize the Owner back-reference. Owner is fully rebuilt by
+        // Factory.InitLayout/InitDockable on load, so it is redundant on disk.
+        // Worse, with PreserveReferencesHandling the first occurrence of an object
+        // is written in full and later ones as $ref. Because a pinned dockable's
+        // Owner chain points up into the shared structural tree (ToolDock ->
+        // RightPane -> MainLayout -> root), the entire layout gets serialized nested
+        // *inside* that pinned dockable. If the pinned dockable's type can no longer
+        // be resolved (e.g. an uninstalled plugin), the whole token is skipped on
+        // read and every $ref into the structure resolves to null, wiping the layout.
+        //
+        // Suppress Owner on WRITE only (do not set Ignored) so existing saved layouts
+        // that still contain Owner are read correctly and can be salvaged.
+        if (property.PropertyName == "Owner")
+            property.ShouldSerialize = _ => false;
+
+        return property;
+    }
 }

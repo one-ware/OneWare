@@ -1,3 +1,15 @@
+## 1.0.22
+
+- Relicensed ONE WARE Studio from GPL-3.0 to Apache-2.0 (added THIRD-PARTY-NOTICES)
+- Reworked Search List with a virtualized list for better performance
+- Improved AI Chat performance through message virtualization
+- Copilot now uses the built-in terminal
+- Prevent Copilot from breaking incremental edits and from using its own file edit tool
+- Fix Copilot markdown rendering bug
+- Fix corrupt dock layouts (stray root host window, unresolved dockable types)
+- Fix tool windows not rendering on reopen after closing all (#258)
+- Update SharpCompress
+
 ## 1.0.21
 
 - Copilot support for queuing multiple requests and steering the conversation

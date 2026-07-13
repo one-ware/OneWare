@@ -4,9 +4,19 @@ name: Publish Studio Desktop
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
+  # CRA Annex I Part I(1) release gate: block the release — and the platform
+  # publish pipelines that cascade from it — if any dependency has a known
+  # vulnerability.
+  scan:
+    name: Dependency vulnerability gate
+    uses: ./.github/workflows/dependency-scan.yml
+
   release:
     name: Release
+    needs: scan
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -14,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - uses: mavrosxristoforos/get-xml-info@2.0

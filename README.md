@@ -1,5 +1,6 @@
 [![](https://dcbadge.limes.pink/api/server/NCN9VAh?style=flat)](https://discord.gg/NCN9VAh)
 [![Test](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml/badge.svg)](https://github.com/ProtopSolutions/OneWare/actions/workflows/test.yml)
+[![Dependency Vulnerability Scan](https://github.com/one-ware/OneWare/actions/workflows/dependency-scan.yml/badge.svg)](https://github.com/one-ware/OneWare/actions/workflows/dependency-scan.yml)
 
 ## OneWare Studio - The Next Generation IDE for Electronics Development
 
@@ -80,7 +81,7 @@ More information about One AI [here](https://one-ware.com/docs/one-ai/getting-st
 
 ## License
 
-OneWare is licensed under the [GPL 3.0 license](https://github.com/one-ware/OneWare?tab=GPL-3.0-1-ov-file#)
+OneWare is licensed under the [Apache License 2.0](LICENSE)
 
 ## Community
 

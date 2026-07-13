@@ -16,6 +16,9 @@ defaults:
   run:
     shell: pwsh
 
+permissions:
+  contents: read
+
 jobs:
   create_nuget:
     runs-on: ubuntu-latest

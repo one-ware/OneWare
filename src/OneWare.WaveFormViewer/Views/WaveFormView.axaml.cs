@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -14,6 +15,10 @@ public partial class WaveFormView : UserControl
     private WaveFormViewModel? _viewModel;
     private double _zoomDelta;
 
+    private ScrollViewer? _textScrollViewer;
+    private ScrollViewer? _simScrollViewer;
+    private bool _syncingScrollOffset;
+
     public WaveFormView()
     {
         InitializeComponent();
@@ -26,12 +31,7 @@ public partial class WaveFormView : UserControl
                 if (DataContext is WaveFormViewModel vm) Initialize(vm);
             };
 
-
-        // SimPartScroll.WhenAnyValue(x => x.Offset)
-        //     .Subscribe(x => TextPartScroll.Offset = TextPartScroll.Offset.WithY(x.Y));
-        //
-        // TextPartScroll.WhenAnyValue(x => x.Offset)
-        //     .Subscribe(x => SimPartScroll.Offset = SimPartScroll.Offset.WithY(x.Y));
+        Loaded += OnLoaded;
 
         AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Bubble);
         AddHandler(PointerMovedEvent, OnPointerMoved, RoutingStrategies.Bubble);
@@ -103,6 +103,36 @@ public partial class WaveFormView : UserControl
     private void Initialize(WaveFormViewModel vm)
     {
         _viewModel = vm;
+    }
+
+    private void OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (_textScrollViewer != null && _simScrollViewer != null)
+            return;
+
+        _textScrollViewer = TextPartScroll.FindDescendantOfType<ScrollViewer>();
+        _simScrollViewer = SimPartScroll.FindDescendantOfType<ScrollViewer>();
+
+        if (_textScrollViewer == null || _simScrollViewer == null)
+            return;
+
+        _textScrollViewer.ScrollChanged += (_, _) =>
+            SyncScrollOffset(_simScrollViewer, _textScrollViewer.Offset);
+        _simScrollViewer.ScrollChanged += (_, _) =>
+            SyncScrollOffset(_textScrollViewer, _simScrollViewer.Offset);
+    }
+
+    private void SyncScrollOffset(ScrollViewer target, Vector source)
+    {
+        if (_syncingScrollOffset)
+            return;
+
+        if (Math.Abs(target.Offset.Y - source.Y) < 0.5)
+            return;
+
+        _syncingScrollOffset = true;
+        target.Offset = target.Offset.WithY(source.Y);
+        _syncingScrollOffset = false;
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)

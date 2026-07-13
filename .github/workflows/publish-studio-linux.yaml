@@ -7,6 +7,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
@@ -35,7 +38,7 @@ jobs:
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r ${{ matrix.arch }} -o ./out
       - name: Compress
-        uses: a7ul/tar-action@v1.1.0
+        uses: a7ul/tar-action@v1.2.0
         id: compress
         with:
           command: c
@@ -45,7 +48,7 @@ jobs:
       - name: Create VersionInfo
         run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz" > ./out/${{ matrix.arch }}.txt
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-artifacts-${{ matrix.arch }}
           path: |
@@ -60,11 +63,11 @@ jobs:
       contents: write
     steps:
       - name: Download Artifacts (x64)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-artifacts-linux-x64
       - name: Download Artifacts (arm64)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-artifacts-linux-arm64
       - name: Create Release

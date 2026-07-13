@@ -1,0 +1,134 @@
+# Generates a CycloneDX Software Bill of Materials (SBOM) for OneWare Studio.
+# Supports the EU Cyber Resilience Act (Regulation (EU) 2024/2847), Annex I
+# Part II. On a published release the SBOM is attached to the GitHub Release and
+# archived for long-term (10-year) retention in the private one-ware/Compliance
+# repository, where the internal CRA documentation is maintained.
+
+name: SBOM
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to attach/update the SBOM on (defaults to the current StudioVersion from Base.props)"
+        required: false
+        type: string
+  workflow_run:
+    workflows: [ Publish Studio Desktop ]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    # Run for push/manual always; for the release pipeline only if it succeeded (matches the other publish pipelines).
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write   # attach SBOM assets to the release
+    outputs:
+      tag: ${{ steps.tag.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Get Version from Base.props
+        id: get-oneware-version
+        uses: mavrosxristoforos/get-xml-info@2.0
+        with:
+          xml-file: "./build/props/Base.props"
+          xpath: "//*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='StudioVersion']"
+
+      - name: Resolve release tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.release_tag }}
+          PROPS_VERSION: ${{ steps.get-oneware-version.outputs.info }}
+        run: |
+          # push to main only builds the artifact; release pipeline / manual dispatch target a release tag.
+          if [ "${{ github.event_name }}" = "push" ]; then
+            tag=""
+          elif [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            tag="$PROPS_VERSION"
+          fi
+          echo "value=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore workloads
+        run: dotnet workload restore studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj
+
+      - name: Install CycloneDX tool
+        run: dotnet tool install --global CycloneDX
+
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet CycloneDX studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
+            --output sbom \
+            --filename sbom-oneware-studio.json \
+            --json
+
+      - name: Upload SBOM artifact (CI convenience, short-lived)
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-oneware-studio
+          path: sbom/sbom-oneware-studio.json
+          retention-days: 90
+
+      - name: Attach SBOM to the GitHub Release
+        if: steps.tag.outputs.value != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.value }}
+          files: sbom/sbom-oneware-studio.json
+
+  # On release, archive the SBOM into the private one-ware/Compliance repo for
+  # long-term (10-year) retention and per-version indexing. Requires a PAT with
+  # write access to one-ware/Compliance in the secret COMPLIANCE_SBOM_TOKEN.
+  # No-ops if the secret is not configured.
+  archive:
+    needs: sbom
+    if: ${{ needs.sbom.outputs.tag != '' }}
+    runs-on: ubuntu-latest
+    env:
+      TOKEN: ${{ secrets.COMPLIANCE_SBOM_TOKEN }}
+      PRODUCT: oneware-studio
+      VERSION: ${{ needs.sbom.outputs.tag }}
+    steps:
+      - name: Download SBOMs from this run
+        if: env.TOKEN != ''
+        uses: actions/download-artifact@v8
+        with:
+          path: sboms
+
+      - name: Checkout Compliance repo
+        if: env.TOKEN != ''
+        uses: actions/checkout@v4
+        with:
+          repository: one-ware/Compliance
+          token: ${{ env.TOKEN }}
+          path: compliance
+
+      - name: Archive SBOM and commit
+        if: env.TOKEN != ''
+        run: |
+          dest="compliance/products/${PRODUCT}/sbom/${VERSION}"
+          mkdir -p "$dest"
+          find sboms -name '*.json' -exec cp {} "$dest/" \;
+          cd compliance
+          git config user.name "oneware-sbom-bot"
+          git config user.email "info@one-ware.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "sbom(${PRODUCT}): ${VERSION}"
+          git push
