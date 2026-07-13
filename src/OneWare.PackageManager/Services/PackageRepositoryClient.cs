@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -29,13 +28,12 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
     {
         try
         {
-            var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10));
+            var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
             if (repositoryString == null) return Array.Empty<Package>();
 
-            var trimmed = WhitespaceRegex().Replace(repositoryString, "");
             var packages = new List<Package>();
 
-            if (trimmed.StartsWith("{\"packages\":", StringComparison.OrdinalIgnoreCase))
+            if (IsRepositoryJson(repositoryString))
             {
                 try
                 {
@@ -45,12 +43,7 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
                         foreach (var manifest in repository.Packages)
                             try
                             {
-                                if (manifest.ManifestUrl == null) continue;
-
-                                var downloadManifest =
-                                    await _httpService.DownloadTextAsync(manifest.ManifestUrl);
-
-                                var package = JsonSerializer.Deserialize<Package>(downloadManifest!, SerializerOptions);
+                                var package = await LoadPackageManifestAsync(manifest, cancellationToken);
 
                                 if (package != null) packages.Add(package);
                             }
@@ -97,10 +90,57 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
         catch (Exception e)
         {
             _logger.Error($"Failed to load package source '{url}'.", e);
-            return Array.Empty<Package>();
+            return [];
         }
     }
 
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex WhitespaceRegex();
+    private async Task<Package?> LoadPackageManifestAsync(PackageManifest manifest,
+        CancellationToken cancellationToken)
+    {
+        var manifestContent = GetManifestContent(manifest.Content);
+
+        if (manifestContent == null)
+        {
+            if (string.IsNullOrWhiteSpace(manifest.ManifestUrl))
+                return null;
+
+            manifestContent = await _httpService.DownloadTextAsync(manifest.ManifestUrl, cancellationToken: cancellationToken);
+        }
+
+        if (string.IsNullOrWhiteSpace(manifestContent))
+            return null;
+
+        var package = JsonSerializer.Deserialize<Package>(manifestContent, SerializerOptions);
+
+        if (package != null && string.IsNullOrWhiteSpace(package.Icon) && !string.IsNullOrWhiteSpace(manifest.Icon))
+            package.Icon = manifest.Icon;
+
+        return package;
+    }
+
+    private static bool IsRepositoryJson(string json)
+    {
+        using var document = JsonDocument.Parse(json, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true
+        });
+
+        return document.RootElement.ValueKind == JsonValueKind.Object
+               && document.RootElement.TryGetProperty("packages", out var packages)
+               && packages.ValueKind == JsonValueKind.Array;
+    }
+
+    private static string? GetManifestContent(JsonElement? content)
+    {
+        if (content is not { } contentElement) return null;
+
+        return contentElement.ValueKind switch
+        {
+            JsonValueKind.String => string.IsNullOrWhiteSpace(contentElement.GetString())
+                ? null
+                : contentElement.GetString(),
+            JsonValueKind.Object => contentElement.GetRawText(),
+            _ => null
+        };
+    }
 }

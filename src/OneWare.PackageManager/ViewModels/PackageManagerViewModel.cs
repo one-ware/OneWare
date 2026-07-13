@@ -17,6 +17,7 @@ namespace OneWare.PackageManager.ViewModels;
 
 public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
+    private const string AllCategoryHeader = "All";
     private static readonly char[] CategorySeparators = ['/', '\\'];
 
     private readonly IApplicationStateService _applicationStateService;
@@ -27,7 +28,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private bool _showAvailable = true;
     private bool _showInstalled = true;
-    private bool _showUpdate = true;
+    private int _selectedFilterIndex;
 
     public PackageManagerViewModel(IPackageService packageService, IHttpService httpService, ILogger logger,
         IWindowService windowService,
@@ -39,6 +40,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _logger = logger;
         _applicationStateService = applicationStateService;
 
+        RegisterCategory(AllCategoryHeader);
         RegisterCategory("Plugins", new IconModel("BoxIcons.RegularExtension"));
         RegisterCategory("Plugins/Languages", new IconModel("FluentIcons.ProofreadLanguageRegular"));
         RegisterCategory("Plugins/Toolchains", new IconModel("FeatherIcons.Tool"));
@@ -52,7 +54,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         RegisterCategory("Binaries/ONNX Runtimes");
         RegisterCategory("Drivers", new IconModel("BoxIcons.RegularUsb"));
 
-        SelectedCategory = PackageCategories.First();
+        SelectedCategory = GetAllCategory() ?? PackageCategories.FirstOrDefault();
 
         _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
 
@@ -77,22 +79,27 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         }
     }
 
-    public bool ShowUpdate
-    {
-        get => _showUpdate;
-        set
-        {
-            SetProperty(ref _showUpdate, value);
-            FilterPackages();
-        }
-    }
-
     public bool ShowAvailable
     {
         get => _showAvailable;
         set
         {
             SetProperty(ref _showAvailable, value);
+            FilterPackages();
+        }
+    }
+
+    /// <summary>
+    ///     Index of the segmented control filter: 0 = All, 1 = Installed only, 2 = Available only.
+    /// </summary>
+    public int SelectedFilterIndex
+    {
+        get => _selectedFilterIndex;
+        set
+        {
+            SetProperty(ref _selectedFilterIndex, value);
+            _showInstalled = value is 0 or 1;
+            _showAvailable = value is 0 or 2;
             FilterPackages();
         }
     }
@@ -224,6 +231,14 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return await UpdateAllAsync();
     }
 
+    public async Task ResolveSelectedPackageTabsAsync()
+    {
+        if (SelectedCategory?.SelectedPackage == null)
+            return;
+
+        await SelectedCategory.SelectedPackage.ResolveTabsAsync();
+    }
+
     private bool FocusCategory(string category, string? subcategory)
     {
         var categoryVm = PackageCategories
@@ -246,8 +261,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     
     private async Task<PackageViewModel?> FocusPluginAsync(string packageId)
     {
-        var categoryVm =
-            PackageCategories.FirstOrDefault(x => x.VisiblePackages.Any(x => x.PackageState.Package.Id == packageId));
+        var categoryVm = PackageCategories
+            .Where(x => !x.Header.Equals(AllCategoryHeader, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault(x => x.VisiblePackages.Any(y => y.PackageState.Package.Id == packageId))
+            ?? GetAllCategory();
 
         if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
@@ -269,6 +286,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private void ConstructPackageViewModels()
     {
+        var allCategory = GetAllCategory();
+
         foreach (var category in PackageCategories)
             ClearCategoryPackages(category);
 
@@ -280,6 +299,9 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
                 var targetCategory = ResolveCategoryForPackage(packageModel.Package);
                 if (targetCategory == null) continue;
+
+                if (allCategory != null && !ReferenceEquals(allCategory, targetCategory))
+                    allCategory.Add(viewModel);
 
                 targetCategory.Add(viewModel);
             }
@@ -294,7 +316,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private void FilterPackages()
     {
         foreach (var categoryModel in PackageCategories)
-            categoryModel.Filter(Filter, _showInstalled, _showAvailable, _showUpdate);
+            categoryModel.Filter(Filter, _showInstalled, _showAvailable);
     }
 
     public override bool OnWindowClosing(FlexibleWindow window)
@@ -501,6 +523,11 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         if (rootCategoryName == null) return null;
         return FindCategory(PackageCategories, rootCategoryName);
+    }
+
+    private PackageCategoryViewModel? GetAllCategory()
+    {
+        return FindCategory(PackageCategories, AllCategoryHeader);
     }
 
     private static void ClearCategoryPackages(PackageCategoryViewModel category)

@@ -19,6 +19,8 @@ public class Package
     public string? UrlLaunchIds { get; init; }
 
     public string? IconUrl { get; init; }
+    
+    public string? Icon { get; set; }
 
     public string? SourceUrl { get; init; }
 
