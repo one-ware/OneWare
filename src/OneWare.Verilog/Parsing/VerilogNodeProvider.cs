@@ -37,7 +37,11 @@ public class VerilogNodeProvider : INodeProvider
         if (file == null || string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
             return Task.FromResult<IEnumerable<FpgaNode>>(Array.Empty<FpgaNode>());
 
-        var fileContent = File.ReadAllText(file.FullPath);
+        return Task.FromResult(ExtractNodes(File.ReadAllText(file.FullPath)));
+    }
+
+    internal static IEnumerable<FpgaNode> ExtractNodes(string fileContent)
+    {
         var cleaned = RemoveComments(fileContent);
 
         var result = new List<FpgaNode>();
@@ -64,7 +68,7 @@ public class VerilogNodeProvider : INodeProvider
             }
         }
 
-        return Task.FromResult<IEnumerable<FpgaNode>>(result);
+        return result;
     }
 
     public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file, string topEntityName)
@@ -79,16 +83,19 @@ public class VerilogNodeProvider : INodeProvider
         if (target == default)
             return ExtractNodesAsync(file); // fall back to all modules
 
+        return Task.FromResult(ExtractNodes(target));
+    }
+
+    internal static IEnumerable<FpgaNode> ExtractNodes((string name, string ports, string body) target)
+    {
         var ports = new Dictionary<string, (string direction, string? range)>(StringComparer.Ordinal);
         ExtractPortsFromText(target.ports, ports);
         ExtractPortsFromText(target.body, ports);
 
-        var result = ports
+        return ports
             .SelectMany(kvp => ExpandPort(kvp.Key, kvp.Value.range)
                 .Select(expanded => new FpgaNode(expanded, kvp.Value.direction)))
             .ToList();
-
-        return Task.FromResult<IEnumerable<FpgaNode>>(result);
     }
 
     public Task<IEnumerable<string>> ExtractTopEntitiesAsync(IProjectFile file)
@@ -96,13 +103,18 @@ public class VerilogNodeProvider : INodeProvider
         if (file == null || string.IsNullOrWhiteSpace(file.FullPath) || !File.Exists(file.FullPath))
             return Task.FromResult<IEnumerable<string>>(new[] { Path.GetFileNameWithoutExtension(file.FullPath) });
 
-        var cleaned = RemoveComments(File.ReadAllText(file.FullPath));
-        var names = ParseModules(cleaned).Select(m => m.name).ToList();
+        var names = ExtractTopEntities(File.ReadAllText(file.FullPath)).ToList();
 
         if (names.Count == 0)
             names.Add(Path.GetFileNameWithoutExtension(file.FullPath));
 
         return Task.FromResult<IEnumerable<string>>(names);
+    }
+
+    internal static IEnumerable<string> ExtractTopEntities(string fileContent)
+    {
+        var cleaned = RemoveComments(fileContent);
+        return ParseModules(cleaned).Select(m => m.name).ToList();
     }
 
     private static string RemoveComments(string text)
@@ -156,6 +168,10 @@ public class VerilogNodeProvider : INodeProvider
                 if (depth != 0) break;
 
                 pos = i;
+
+                // Skip whitespace between the parameter list and the port list
+                while (pos < text.Length && char.IsWhiteSpace(text[pos]))
+                    pos++;
             }
 
             // Now expect port list '('

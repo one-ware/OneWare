@@ -137,6 +137,7 @@
     <Project Path="tests/OneWare.ToolEngine.UnitTests/OneWare.ToolEngine.UnitTests.csproj" />
     <Project Path="tests/OneWare.UniversalFpgaProjectSystem.Tests/OneWare.UniversalFpgaProjectSystem.Tests.csproj" />
     <Project Path="tests/OneWare.Vcd.Parser.UnitTests/OneWare.Vcd.Parser.UnitTests.csproj" />
+    <Project Path="tests/OneWare.Verilog.UnitTests/OneWare.Verilog.UnitTests.csproj" />
     <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj" />
     <Project Path="tests/OneWare.WaveFormViewer.Tests/OneWare.WaveFormViewer.Tests.csproj" />
   </Folder>

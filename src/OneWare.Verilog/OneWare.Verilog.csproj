@@ -10,6 +10,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="OneWare.Verilog.UnitTests"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <AvaloniaResource Include="Assets\verilog.tmLanguage.json"/>
         <AvaloniaResource Include="Assets\verilog.json"/>
     </ItemGroup>
