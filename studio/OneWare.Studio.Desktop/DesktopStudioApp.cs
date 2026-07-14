@@ -145,12 +145,18 @@ public class DesktopStudioApp : StudioApp
     {
         var cloudHost = Services.Resolve<ISettingsService>()
             .GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
-        Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(
-            [
-                new Uri(new Uri(cloudHost), "api/studio/packages").AbsoluteUri,
-                "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
-            ]
-        );
+
+        var repositories =
+            Environment.GetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY") is { } repositoryOverride &&
+            !string.IsNullOrWhiteSpace(repositoryOverride)
+                ? repositoryOverride
+                    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                : [
+                    new Uri(new Uri(cloudHost), "api/studio/packages").AbsoluteUri,
+                    "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
+                ];
+
+        Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {

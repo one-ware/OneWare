@@ -273,6 +273,11 @@ internal abstract class Program
                 Description =
                     "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)"
             };
+            Option<string> packageRepositoryOption = new("--package-repository")
+            {
+                Description =
+                    "Overrides the package repository URL(s) used by OneWare Studio. Separate multiple URLs with ';'. (optional)"
+            };
             Argument<string?> openArgument = new("open")
             {
                 Description = "File/Folder path or oneware:// URI to open",
@@ -287,7 +292,8 @@ internal abstract class Program
                     appdataDirOption,
                     projectsDirOption,
                     moduleOption,
-                    autoLaunchOption
+                    autoLaunchOption,
+                    packageRepositoryOption
                 },
                 Arguments =
                 {
@@ -316,6 +322,10 @@ internal abstract class Program
                 var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
                 if (!string.IsNullOrEmpty(autoLaunchValue))
                     Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
+
+                var packageRepositoryValue = parseResult.GetValue(packageRepositoryOption);
+                if (!string.IsNullOrEmpty(packageRepositoryValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY", packageRepositoryValue);
 
                 var openValue = parseResult.GetValue(openArgument);
                 if (!string.IsNullOrEmpty(openValue))
