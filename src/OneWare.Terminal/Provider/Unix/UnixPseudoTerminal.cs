@@ -41,10 +41,36 @@ public class UnixPseudoTerminal : IPseudoTerminal
         await Task.Run(() =>
         {
             var buf = Marshal.AllocHGlobal(count);
-            Marshal.Copy(buffer, offset, buf, count);
-            Native.write(_cfg, buf, count);
+            try
+            {
+                Marshal.Copy(buffer, offset, buf, count);
 
-            Marshal.FreeHGlobal(buf);
+                // POSIX write() may perform a partial write or return -1 on EINTR/EAGAIN
+                // when the pty input buffer is momentarily full. Ignoring that dropped
+                // part of the command (often the trailing carriage return), leaving the
+                // shell waiting for input and the command hanging forever. Loop until
+                // every byte is written so command submission is reliable.
+                var written = 0;
+                var retries = 0;
+                while (written < count && !_isDisposed)
+                {
+                    var result = Native.write(_cfg, IntPtr.Add(buf, written), count - written);
+
+                    if (result > 0)
+                    {
+                        written += result;
+                        retries = 0;
+                        continue;
+                    }
+
+                    if (++retries > 1000) break;
+                    Thread.Sleep(1);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buf);
+            }
         });
     }
 
