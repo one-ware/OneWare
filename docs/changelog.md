@@ -3,6 +3,7 @@
 - Fix Verilog Node Extractor Issue
 - Improve Package Manager speed and handling
 - Fix broken scroll in VCD Viewer
+- Add option to override the default package source for the Package Manager
 
 ## 1.0.22
 
