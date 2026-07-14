@@ -4,7 +4,8 @@ name: Publish Studio Desktop
 on:
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   # CRA Annex I Part I(1) release gate: block the release — and the platform
