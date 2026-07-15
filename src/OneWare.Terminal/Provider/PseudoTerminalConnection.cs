@@ -61,6 +61,19 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
         _ = terminal.WriteAsync(data, 0, data.Length);
     }
 
+    public void KillProcess()
+    {
+        try
+        {
+            if (!terminal.Process.HasExited)
+                terminal.Process.Kill(true);
+        }
+        catch
+        {
+            // Best effort: the process may already have exited or be unkillable.
+        }
+    }
+
     public void SuppressOutput(byte[] sequence)
     {
         if (sequence.Length == 0) return;

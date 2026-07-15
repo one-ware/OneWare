@@ -170,10 +170,18 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         {
             var partialOutput = output.ToString();
             // The command exceeded its timeout or was cancelled but is still running
-            // in the shell. Interrupt it so the shell returns to a usable prompt;
-            // otherwise the foreground command keeps running and every subsequent
-            // command sent to this (reused) terminal hangs too.
-            await TryRecoverPromptAsync(terminal, resultTcs.Task);
+            // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
+            // to a usable prompt and the terminal stays reusable.
+            var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
+            if (!recovered)
+            {
+                // The interrupt did not free the shell (the process ignores SIGINT or is
+                // itself hung). Forcibly kill the process tree and discard this terminal
+                // so it is never reused in a stuck state by a subsequent command.
+                terminal.KillProcess();
+                DiscardAutomationTerminal(terminal);
+            }
+
             result = new TerminalExecutionResult(partialOutput, -1, true);
         }
         finally
@@ -185,7 +193,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         return result;
     }
 
-    private static async Task TryRecoverPromptAsync(TerminalViewModel terminal,
+    private static async Task<bool> TryRecoverPromptAsync(TerminalViewModel terminal,
         Task<TerminalExecutionResult> resultTask)
     {
         terminal.SendInterrupt();
@@ -194,11 +202,21 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             // Give the shell a moment to process the interrupt and emit a fresh
             // prompt marker so the terminal can be reused by the next command.
             await resultTask.WaitAsync(TimeSpan.FromSeconds(3));
+            return true;
         }
         catch (TimeoutException)
         {
-            // Best-effort recovery: fall through even if the shell did not respond.
+            return false;
         }
+    }
+
+    private void DiscardAutomationTerminal(TerminalViewModel terminal)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var tab = Terminals.FirstOrDefault(t => ReferenceEquals(t.Terminal, terminal));
+            tab?.Close();
+        });
     }
 
     public void ExecScriptInTerminal(string scriptPath, bool elevated, string title)
