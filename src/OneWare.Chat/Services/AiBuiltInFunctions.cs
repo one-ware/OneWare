@@ -80,7 +80,8 @@ internal static class AiBuiltInFunctions
             Handler = () => new
             {
                 activeProject = ResolvePath(projectExplorerService, null)
-            }
+            },
+            DetailExtractor = _ => "active project"
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -99,7 +100,8 @@ internal static class AiBuiltInFunctions
                     .Select(x => ResolvePath(projectExplorerService, x.Key))
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .ToArray()
-            }
+            },
+            DetailExtractor = _ => "open files"
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -114,7 +116,9 @@ internal static class AiBuiltInFunctions
             Handler = () => new
             {
                 currentFile = ResolvePath(projectExplorerService, dockService.CurrentDocument?.FullPath)
-            }
+            },
+            DetailExtractor = _ => GetRelativePath(projectExplorerService, dockService.CurrentDocument?.FullPath)
+                                   ?? "focused file"
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -124,7 +128,8 @@ internal static class AiBuiltInFunctions
             RunOnUiThread = true,
             Description = "Returns the LSP Errors for the specified path (if any)",
             Handler = ([Description("absolute path of the file to get errors")] string path) =>
-                GetErrorsForFile(projectExplorerService, errorService, path)
+                GetErrorsForFile(projectExplorerService, errorService, path),
+            DetailExtractor = args => GetRelativePath(projectExplorerService, TryGetStringArgument(args, "path"))
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -136,7 +141,8 @@ internal static class AiBuiltInFunctions
             Handler = () => new
             {
                 errors = errorService.GetErrors().Select(x => x.ToString()).ToArray()
-            }
+            },
+            DetailExtractor = _ => "all errors"
         });
 
         functionProvider.RegisterFunction(new OneWareAiFunction
@@ -155,6 +161,7 @@ internal static class AiBuiltInFunctions
                     CancellationToken cancellationToken = default) =>
                 RunTerminalCommandAsync(projectExplorerService, terminalManagerService, command, workDir,
                     cancellationToken),
+            DetailExtractor = args => TryGetStringArgument(args, "command"),
             ConfirmationCheck = args =>
             {
                 var cmd = TryGetStringArgument(args, "command") ?? "?";
@@ -175,7 +182,8 @@ internal static class AiBuiltInFunctions
                     DataContext = ContainerLocator.Container.Resolve<ApplicationSettingsViewModel>()
                 });
                 return true;
-            }
+            },
+            DetailExtractor = _ => "IDE settings"
         });
     }
 
