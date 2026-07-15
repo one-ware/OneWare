@@ -168,7 +168,13 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
         catch (OperationCanceledException)
         {
-            result = new TerminalExecutionResult(output.ToString(), -1, true);
+            var partialOutput = output.ToString();
+            // The command exceeded its timeout or was cancelled but is still running
+            // in the shell. Interrupt it so the shell returns to a usable prompt;
+            // otherwise the foreground command keeps running and every subsequent
+            // command sent to this (reused) terminal hangs too.
+            await TryRecoverPromptAsync(terminal, resultTcs.Task);
+            result = new TerminalExecutionResult(partialOutput, -1, true);
         }
         finally
         {
@@ -177,6 +183,22 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
 
         return result;
+    }
+
+    private static async Task TryRecoverPromptAsync(TerminalViewModel terminal,
+        Task<TerminalExecutionResult> resultTask)
+    {
+        terminal.SendInterrupt();
+        try
+        {
+            // Give the shell a moment to process the interrupt and emit a fresh
+            // prompt marker so the terminal can be reused by the next command.
+            await resultTask.WaitAsync(TimeSpan.FromSeconds(3));
+        }
+        catch (TimeoutException)
+        {
+            // Best-effort recovery: fall through even if the shell did not respond.
+        }
     }
 
     public void ExecScriptInTerminal(string scriptPath, bool elevated, string title)

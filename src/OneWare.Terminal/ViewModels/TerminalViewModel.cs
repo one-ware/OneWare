@@ -137,6 +137,13 @@ public class TerminalViewModel : ObservableObject
         if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
     }
 
+    public void SendInterrupt()
+    {
+        // Send Ctrl+C (ETX) to abort the currently running foreground command
+        // so the shell returns to a usable prompt.
+        if (Connection?.IsConnected ?? false) Connection.SendData([0x03]);
+    }
+
     public void SuppressEcho(byte[] data)
     {
         if (Connection is IOutputSuppressor suppressor)

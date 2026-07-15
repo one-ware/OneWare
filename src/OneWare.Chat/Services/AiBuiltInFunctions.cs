@@ -13,6 +13,8 @@ internal static class AiBuiltInFunctions
     private const int MaxTerminalOutputLines = 220;
     private const int MaxTerminalOutputChars = 12000;
 
+    private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromHours(12);
+
     public static void Register(
         IAiFunctionProvider functionProvider,
         IProjectExplorerService projectExplorerService,
@@ -149,8 +151,10 @@ internal static class AiBuiltInFunctions
                           """,
             Handler = ([Description("Shell command to execute")] string command,
                     [Description("Absolute working directory for execution (optional, defaults to active project).")]
-                    string? workDir = null) =>
-                RunTerminalCommandAsync(projectExplorerService, terminalManagerService, command, workDir),
+                    string? workDir = null,
+                    CancellationToken cancellationToken = default) =>
+                RunTerminalCommandAsync(projectExplorerService, terminalManagerService, command, workDir,
+                    cancellationToken),
             ConfirmationCheck = args =>
             {
                 var cmd = TryGetStringArgument(args, "command") ?? "?";
@@ -239,7 +243,8 @@ internal static class AiBuiltInFunctions
         IProjectExplorerService projectExplorerService,
         ITerminalManagerService terminalManagerService,
         string command,
-        string? workDir)
+        string? workDir,
+        CancellationToken cancellationToken)
     {
         var resolvedWorkDir = ResolvePath(projectExplorerService, workDir);
 
@@ -248,7 +253,8 @@ internal static class AiBuiltInFunctions
             "AI Chat",
             resolvedWorkDir,
             true,
-            TimeSpan.FromMinutes(1));
+            TerminalCommandTimeout,
+            cancellationToken);
 
         var truncatedOutput = TruncateTerminalOutput(terminalResult.Output, out var outputTruncated);
         var result = outputTruncated
