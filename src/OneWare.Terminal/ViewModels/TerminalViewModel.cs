@@ -144,6 +144,13 @@ public class TerminalViewModel : ObservableObject
         if (Connection?.IsConnected ?? false) Connection.SendData([0x03]);
     }
 
+    public void KillProcess()
+    {
+        // Forcibly terminate the shell and any child processes. Used as a last
+        // resort when an interrupt (Ctrl+C) fails to free a stuck command.
+        if (Connection is PseudoTerminalConnection ptc) ptc.KillProcess();
+    }
+
     public void SuppressEcho(byte[] data)
     {
         if (Connection is IOutputSuppressor suppressor)
