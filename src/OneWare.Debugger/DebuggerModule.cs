@@ -31,16 +31,11 @@ public class DebuggerModule : OneWareModuleBase
                 gdbPath,
                 "Auto-detected",
                 paths.NativeToolsDirectory,
-                GdbDebugAdapter.IsValidGdbInstallation(gdbPath),
+                PlatformHelper.ExistsOnPath,
                 PlatformHelper.ExeFile)
             {
-                HoverDescription = "Path to the GDB executable. Leave empty to use auto-detection."
+                HoverDescription = "Path to the GDB executable. Defaults to the auto-detected installation."
             });
-
-        // If the stored value is empty or invalid, overwrite with the detected path.
-        var stored = settingsService.GetSettingValue<string>(GdbPathSetting);
-        if (string.IsNullOrWhiteSpace(stored))
-            settingsService.SetSettingValue(GdbPathSetting, gdbPath);
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemModel("Debugger")

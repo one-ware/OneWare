@@ -35,7 +35,7 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger;
 
-public abstract class GdbSession(
+public class GdbSession(
     string gdbExecutable,
     string elfFile,
     bool asyncMode,
@@ -77,7 +77,7 @@ public abstract class GdbSession(
         return true;
     }
 
-    public async Task<bool> RunAsync(bool download)
+    public async Task<bool> RunAsync()
     {
         try
         {

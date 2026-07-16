@@ -31,14 +31,23 @@ public class GdbDebugAdapter(ILogger logger, ISettingsService settingsService) :
     }
 
 
-    private string ResolveGdbPath()
+    public bool CanLaunch(DebugLaunchRequest launchRequest)
     {
-        if (!settingsService.HasSetting(DebuggerModule.GdbPathSetting)) return SuggestGdbPath();
+        return ResolveGdbPath() != null &&
+               !string.IsNullOrWhiteSpace(launchRequest.ExecutablePath) &&
+               File.Exists(launchRequest.ExecutablePath);
+    }
+
+    // Liest den GDB-Pfad aus der Einstellung (deren Default beim Start über
+    // SuggestGdbPath() vorbelegt wird). null bedeutet: kein nutzbares GDB gefunden.
+    private string? ResolveGdbPath()
+    {
+        if (!settingsService.HasSetting(DebuggerModule.GdbPathSetting)) return null;
+
         var configured = settingsService.GetSettingValue<string>(DebuggerModule.GdbPathSetting);
-        if (!string.IsNullOrWhiteSpace(configured) &&
-            (File.Exists(configured) || PlatformHelper.ExistsOnPath(configured)))
+        if (!string.IsNullOrWhiteSpace(configured) && PlatformHelper.Exists(configured))
             return configured;
 
-        return SuggestGdbPath();
+        return null;
     }
 }

@@ -6,6 +6,6 @@ public interface IDebugAdapter
     string DisplayName { get; }
     string Description { get; }
     
-    //bool CanLaunch(DebugLaunchRequest launchRequest);
+    bool CanLaunch(DebugLaunchRequest launchRequest);
     //IDebugSession CreateSession(DebugLaunchRequest launchRequest);
 }
