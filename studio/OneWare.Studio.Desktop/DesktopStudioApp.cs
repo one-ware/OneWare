@@ -158,6 +158,9 @@ public class DesktopStudioApp : StudioApp
 
         Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
 
+        Services.Resolve<IPackageService>().RegisterPackageRepository(
+            "https://raw.githubusercontent.com/FEntwumS/FEntwumS.SVNRExtension/main/oneware-extension.json");
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             var key = Services.Resolve<IApplicationStateService>()
