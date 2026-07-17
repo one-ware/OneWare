@@ -70,15 +70,14 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         {
             if (SetProperty(ref field, value))
             {
-                if (value)
-                {
-                    IsExpanded = false;
-                    Icon?.AddOverlay("LoadingFailed", "VsImageLib.StatusCriticalErrorOverlayExp16X");
-                }
-                else
-                {
-                    Icon?.RemoveOverlay("LoadingFailed");
-                }
+                if (value) IsExpanded = false;
+
+                // The overlay is applied through the project entry modification pipeline
+                // instead of mutating the icon directly. Folders reuse shared icon model
+                // instances and the virtualized project explorer recycles/swaps icons, so
+                // an imperatively added overlay would leak across entries or get lost.
+                var root = this as IProjectRoot ?? (TopFolder != null ? Root : null);
+                root?.InvalidateModifications(this);
             }
         }
     }

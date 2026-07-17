@@ -13,13 +13,16 @@ public class ProjectExplorerProjectEntryModificationBehavior : AttachedToVisualT
     {
         var compositeDisposable = new CompositeDisposable();
 
-        if (DataContext is IProjectEntry { Root: IProjectRootWithFile root } entry)
+        if (DataContext is IProjectEntry { Root: { } root } entry)
         {
-            Observable.FromEventPattern(root.Properties, nameof(UniversalProjectProperties.ProjectPropertyChanged)).Subscribe(x =>
+            if (root is IProjectRootWithFile fileRoot)
             {
-                root.InvalidateModifications(entry);
-            }).DisposeWith(compositeDisposable);
-                
+                Observable.FromEventPattern(fileRoot.Properties, nameof(UniversalProjectProperties.ProjectPropertyChanged)).Subscribe(x =>
+                {
+                    root.InvalidateModifications(entry);
+                }).DisposeWith(compositeDisposable);
+            }
+
             root.InvalidateModifications(entry);
         }
         
