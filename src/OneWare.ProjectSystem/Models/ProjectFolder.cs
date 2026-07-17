@@ -13,9 +13,9 @@ namespace OneWare.ProjectSystem.Models;
 
 public class ProjectFolder : ProjectEntry, IProjectFolder
 {
-    private static readonly IconModel DefaultFolderClosedIconModel = new("VsImageLib.Folder16X");
+    private IconModel DefaultFolderClosedIconModel => field ??= new IconModel("VsImageLib.Folder16X");
 
-    private static readonly IconModel DefaultFolderOpenIconModel = new("VsImageLib.FolderOpen16X");
+    private IconModel DefaultFolderOpenIconModel => field ??= new IconModel("VsImageLib.FolderOpen16X");
 
     private static readonly ExplorerNameComparer ExplorerNameComparer = ExplorerNameComparer.Instance;
 
