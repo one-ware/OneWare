@@ -118,5 +118,14 @@
     <Style Selector="StackPanel.ToolBar TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+    
+    <Style Selector="ToggleSwitch:pointerover /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderHighColor}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+    </Style>
+    
+    <Style Selector="ToggleSwitch:checked /template/ Border#OuterBorder">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
 
 </Styles>
