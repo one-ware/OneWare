@@ -159,7 +159,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             // caller waits forever. Appending a per-command marker also prevents startup or
             // unrelated prompt markers from completing the wrong invocation.
             markerCommand =
-                $"__ow_exit=$?; printf '\\r\\033[2K\\033]9;OW_DONE:{executionId}:%s\\007' \"$__ow_exit\"";
+                $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K\\033]9;OW_DONE:{executionId}:%s\\007' \"$__ow_exit\"";
             commandToSend = $"{command}\n{markerCommand}";
         }
 
@@ -215,9 +215,9 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         if (markerCommand != null)
         {
             // The shell echoes queued input before executing it. Hide the internal marker
-            // command (including its newline) from the terminal view; its leading CR + EL
-            // then clears the intermediate prompt before the final prompt is rendered.
-            terminal.SuppressEcho(Encoding.UTF8.GetBytes($"{markerCommand}\r\n"));
+            // command independently of the PTY's line-ending mode. The marker then moves back
+            // and clears the intermediate prompt before the final prompt is rendered.
+            terminal.SuppressEcho(Encoding.UTF8.GetBytes(markerCommand));
         }
 
         commandSent = true;
