@@ -98,8 +98,33 @@ public class TerminalViewModel : ObservableObject
             {
                 var environment = BuildTerminalEnvironment(shellExecutable);
                 var startArguments = StartArguments;
+                var shellName = Path.GetFileName(shellExecutable);
+
                 if (string.IsNullOrWhiteSpace(startArguments) &&
-                    Path.GetFileName(shellExecutable).Equals("zsh", StringComparison.OrdinalIgnoreCase))
+                    shellName.Equals("bash", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Force an interactive shell and inject the completion marker through a
+                    // custom rcfile that sources the user's ~/.bashrc first. Relying only on
+                    // the PROMPT_COMMAND environment variable is unreliable because many
+                    // ~/.bashrc configurations and prompt frameworks (starship, powerline,
+                    // oh-my-bash, ...) overwrite PROMPT_COMMAND. That drops our marker, so
+                    // command-completion detection never fires and the terminal hangs until
+                    // the timeout expires.
+                    var bashRcFile = EnsureBashRcFile();
+                    if (!string.IsNullOrWhiteSpace(bashRcFile))
+                    {
+                        startArguments = $"--rcfile \"{bashRcFile}\" -i";
+                    }
+                    else
+                    {
+                        // Fallback when the rcfile cannot be written: still emit the marker via
+                        // PROMPT_COMMAND (may be overridden by user config, but better than nothing).
+                        environment = BuildBashPromptCommandEnvironment();
+                        startArguments = "-i";
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(startArguments) &&
+                         shellName.Equals("zsh", StringComparison.OrdinalIgnoreCase))
                 {
                     // Ensure zsh runs interactively so precmd hooks fire.
                     startArguments = "-i";
@@ -204,18 +229,10 @@ public class TerminalViewModel : ObservableObject
         
         if (shellName.Equals("bash", StringComparison.OrdinalIgnoreCase))
         {
-            var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
-            var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
-            var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
-                ? markerCommand
-                : markerCommand + ";" + existingPromptCommand;
-
-            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["PROMPT_COMMAND"] = combined
-            };
-
-            return BuildEnvironmentBlock(overrides);
+            // bash uses a custom rcfile (see EnsureBashRcFile) for marker injection, so no
+            // environment override is needed here. The PROMPT_COMMAND fallback lives in
+            // BuildBashPromptCommandEnvironment and is only used when the rcfile is unavailable.
+            return null;
         }
 
         if (shellName.Equals("zsh", StringComparison.OrdinalIgnoreCase))
@@ -233,7 +250,56 @@ public class TerminalViewModel : ObservableObject
 
         return null;
     }
-    
+
+    private static string? BuildBashPromptCommandEnvironment()
+    {
+        var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
+        var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
+        var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
+            ? markerCommand
+            : markerCommand + ";" + existingPromptCommand;
+
+        var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["PROMPT_COMMAND"] = combined
+        };
+
+        return BuildEnvironmentBlock(overrides);
+    }
+
+    private static string? EnsureBashRcFile()
+    {
+        try
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "oneware", "bash");
+            Directory.CreateDirectory(tempDir);
+
+            var rcPath = Path.Combine(tempDir, ".ow_bashrc");
+
+            var builder = new StringBuilder();
+            builder.AppendLine("# oneware bashrc");
+            // Preserve the user's interactive configuration first so their prompt,
+            // aliases and functions still apply.
+            builder.AppendLine("if [ -f \"$HOME/.bashrc\" ]; then source \"$HOME/.bashrc\"; fi");
+            // Append the completion marker AFTER sourcing the user's config so it cannot
+            // be clobbered. Prepending our hook keeps $? accurate (it runs before any
+            // pre-existing PROMPT_COMMAND can mutate the exit status). Handle both the
+            // scalar and array (bash 5.1+) forms of PROMPT_COMMAND.
+            builder.AppendLine("__ow_precmd() { printf '\\033]9;OW_DONE:%s\\007' \"$?\"; }");
+            builder.AppendLine("case \"$(declare -p PROMPT_COMMAND 2>/dev/null)\" in");
+            builder.AppendLine("  \"declare -a\"*) PROMPT_COMMAND=(__ow_precmd \"${PROMPT_COMMAND[@]}\") ;;");
+            builder.AppendLine("  *) PROMPT_COMMAND=\"__ow_precmd${PROMPT_COMMAND:+;$PROMPT_COMMAND}\" ;;");
+            builder.AppendLine("esac");
+
+            File.WriteAllText(rcPath, builder.ToString(), Encoding.ASCII);
+            return rcPath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static string? EnsureZshDotDir()
     {
         try
