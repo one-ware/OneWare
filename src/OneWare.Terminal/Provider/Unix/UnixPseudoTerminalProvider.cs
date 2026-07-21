@@ -47,7 +47,7 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         envVars.Add("TERM=xterm-256color");
         envVars.Add(null!);
 
-        // Build all managed data (argv/env arrays, tokenization) in the PARENT before forking.
+        // Build all managed data (argv/env arrays) in the PARENT before forking.
         // After forkpty the child shares the address space of a multithreaded runtime whose GC
         // and JIT locks may be held by other (now-frozen) threads. Running not-yet-JIT-compiled
         // managed code or allocating there can deadlock or segfault (exit 139), so the child must
@@ -55,7 +55,7 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         var envArray = envVars.ToArray();
 
         var argvList = new List<string> { command };
-        if (arguments != null) argvList.AddRange(TokenizeArguments(arguments));
+        if (arguments != null) argvList.AddRange(arguments.Split(' '));
         argvList.Add(null!);
         var argvArray = argvList.ToArray();
 
@@ -74,75 +74,5 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
 
         return new UnixPseudoTerminal(process, masterFd, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
             FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read));
-    }
-
-    private static IEnumerable<string> TokenizeArguments(string arguments)
-    {
-        var tokens = new List<string>();
-        var current = new System.Text.StringBuilder();
-        char? quote = null;
-        var escaped = false;
-        var hasToken = false;
-
-        foreach (var c in arguments)
-        {
-            if (escaped)
-            {
-                current.Append(c);
-                escaped = false;
-                hasToken = true;
-                continue;
-            }
-
-            if (c == '\\' && quote != '\'')
-            {
-                escaped = true;
-                hasToken = true;
-                continue;
-            }
-
-            if (quote != null)
-            {
-                if (c == quote)
-                {
-                    quote = null;
-                }
-                else
-                {
-                    current.Append(c);
-                }
-
-                hasToken = true;
-                continue;
-            }
-
-            switch (c)
-            {
-                case '"':
-                case '\'':
-                    quote = c;
-                    hasToken = true;
-                    break;
-                case var _ when char.IsWhiteSpace(c):
-                    if (hasToken)
-                    {
-                        tokens.Add(current.ToString());
-                        current.Clear();
-                        hasToken = false;
-                    }
-                    break;
-                default:
-                    current.Append(c);
-                    hasToken = true;
-                    break;
-            }
-        }
-
-        if (escaped || quote != null)
-            throw new FormatException("Terminal start arguments contain an incomplete escape or quoted value.");
-
-        if (hasToken) tokens.Add(current.ToString());
-
-        return tokens;
     }
 }
