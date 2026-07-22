@@ -156,6 +156,7 @@ internal static class Native
     public static NativeDelegates.kill kill = NativeDelegates.GetProc<NativeDelegates.kill>();
     public static NativeDelegates.execve execve = NativeDelegates.GetProc<NativeDelegates.execve>();
     public static NativeDelegates.fork fork = NativeDelegates.GetProc<NativeDelegates.fork>();
+    public static NativeDelegates._exit _exit = NativeDelegates.GetProc<NativeDelegates._exit>();
 
     public static IntPtr StructToPtr<T>(T structure)
     {

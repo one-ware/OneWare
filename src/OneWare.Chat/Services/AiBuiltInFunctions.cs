@@ -159,7 +159,16 @@ internal static class AiBuiltInFunctions
                     [Description("Absolute working directory for execution (optional, defaults to active project).")]
                     string? workDir = null,
                     CancellationToken cancellationToken = default) =>
-                RunTerminalCommandAsync(projectExplorerService, terminalManagerService, command, workDir,
+                RunTerminalCommandAsync(projectExplorerService, terminalManagerService, null, command,
+                    workDir, cancellationToken),
+            InvocationHandler = async (context, args, cancellationToken) =>
+                await RunTerminalCommandAsync(
+                    projectExplorerService,
+                    terminalManagerService,
+                    context,
+                    TryGetStringArgument(args, "command")
+                    ?? throw new ArgumentException("A terminal command is required.", "command"),
+                    TryGetStringArgument(args, "workDir"),
                     cancellationToken),
             DetailExtractor = args => TryGetStringArgument(args, "command"),
             ConfirmationCheck = args =>
@@ -250,11 +259,16 @@ internal static class AiBuiltInFunctions
     private static async Task<object> RunTerminalCommandAsync(
         IProjectExplorerService projectExplorerService,
         ITerminalManagerService terminalManagerService,
+        AiFunctionInvocationContext? context,
         string command,
         string? workDir,
         CancellationToken cancellationToken)
     {
         var resolvedWorkDir = ResolvePath(projectExplorerService, workDir);
+
+        var progress = context == null
+            ? null
+            : new DelegateProgress(raw => context.ReportProgress(FormatTerminalProgress(command, raw)));
 
         var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
             command,
@@ -262,6 +276,7 @@ internal static class AiBuiltInFunctions
             resolvedWorkDir,
             true,
             TerminalCommandTimeout,
+            progress,
             cancellationToken);
 
         var truncatedOutput = TruncateTerminalOutput(terminalResult.Output, out var outputTruncated);
@@ -269,12 +284,43 @@ internal static class AiBuiltInFunctions
             ? terminalResult with { Output = truncatedOutput }
             : terminalResult;
 
+        // Show the final, cleaned output in the chat tool box.
+        context?.ReportProgress(FormatTerminalProgress(command, terminalResult.Output));
+
         return new
         {
             result,
             outputTruncated,
             originalOutputLength = terminalResult.Output.Length
         };
+    }
+
+    private static string FormatTerminalProgress(string command, string rawOutput)
+    {
+        var cleaned = StripAnsiEscapes(rawOutput);
+        var truncated = TruncateTerminalOutput(cleaned, out _);
+        return string.IsNullOrEmpty(truncated)
+            ? $"$ {command}"
+            : $"$ {command}\n{truncated}";
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex AnsiEscapeRegex =
+        new(@"\x1B\][^\x07\x1B]*(?:\x07|\x1B\\)|\x1B[@-Z\\-_]|\x1B\[[0-9;?]*[ -/]*[@-~]",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static string StripAnsiEscapes(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+
+        var stripped = AnsiEscapeRegex.Replace(input, string.Empty);
+        // Normalise carriage returns: terminals use them for in-place redraws (e.g. progress
+        // bars); collapsing them keeps the plain-text readout readable.
+        return stripped.Replace("\r\n", "\n").Replace("\r", string.Empty);
+    }
+
+    private sealed class DelegateProgress(Action<string> onReport) : IProgress<string>
+    {
+        public void Report(string value) => onReport(value);
     }
 
     private static string TruncateTerminalOutput(string output, out bool wasTruncated)

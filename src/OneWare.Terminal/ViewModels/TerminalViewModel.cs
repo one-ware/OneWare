@@ -233,7 +233,7 @@ public class TerminalViewModel : ObservableObject
 
         return null;
     }
-    
+
     private static string? EnsureZshDotDir()
     {
         try

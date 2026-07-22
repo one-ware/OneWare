@@ -24,6 +24,20 @@ public interface IOneWareAiFunction
     /// while the tool is running.
     /// </summary>
     Func<AIFunctionArguments, string?>? DetailExtractor { get; }
+
+    /// <summary>
+    /// Optional invocation handler for tools that need access to invocation-scoped services such
+    /// as progress reporting. <see cref="Handler"/> is still used to generate the AI tool schema.
+    /// </summary>
+    Func<AiFunctionInvocationContext, AIFunctionArguments, CancellationToken, ValueTask<object?>>?
+        InvocationHandler => null;
+}
+
+public sealed class AiFunctionInvocationContext(string id, Action<string> reportProgress)
+{
+    public string Id { get; } = id;
+
+    public void ReportProgress(string output) => reportProgress(output);
 }
 
 public sealed class OneWareAiFunction : IOneWareAiFunction
@@ -37,4 +51,7 @@ public sealed class OneWareAiFunction : IOneWareAiFunction
     public Func<AIFunctionArguments, string?>? ConfirmationCheck { get; init; }
     /// <inheritdoc />
     public Func<AIFunctionArguments, string?>? DetailExtractor { get; init; }
+    /// <inheritdoc />
+    public Func<AiFunctionInvocationContext, AIFunctionArguments, CancellationToken, ValueTask<object?>>?
+        InvocationHandler { get; init; }
 }

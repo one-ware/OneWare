@@ -18,7 +18,14 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 {
     public const string IconKey = "Material.Console";
     private const string PromptMarkerPrefix = "\u001b]9;OW_DONE:";
-    private readonly Dictionary<string, TerminalTabModel> _automationTerminals = new(StringComparer.Ordinal);
+
+    // Automation terminals are pooled per id so that concurrent commands (e.g. an AI agent
+    // running several shell commands at once) each get their own terminal tab instead of
+    // interleaving on a single shell. Idle terminals in a pool are reused for sequential
+    // commands so shell state (working directory, environment, ...) is preserved.
+    private readonly object _automationLock = new();
+    private readonly Dictionary<string, List<TerminalTabModel>> _automationPools = new(StringComparer.Ordinal);
+    private readonly HashSet<TerminalViewModel> _busyAutomationTerminals = new();
     private readonly IMainDockService _mainDockService;
     private readonly IPaths _paths;
 
@@ -67,7 +74,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     public void CloseTab(TerminalTabModel tab)
     {
         Terminals.Remove(tab);
-        RemoveAutomationMapping(tab);
+        RemoveAutomationTerminal(tab);
 
         if (!Terminals.Any())
         {
@@ -98,7 +105,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     }
 
     public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(TerminalViewModel terminal, string command,
-        TimeSpan? timeout = null, bool closeWhenDone = true, CancellationToken cancellationToken = default)
+        TimeSpan? timeout = null, bool closeWhenDone = true, IProgress<string>? outputProgress = null,
+        CancellationToken cancellationToken = default)
     {
         var readyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -134,31 +142,86 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
 
         var output = new StringBuilder();
+        var outputLock = new object();
         var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var commandSent = false;
+        var markerPrefix = PromptMarkerPrefix;
+        var commandToSend = command;
+        string? markerCommand = null;
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var executionId = Guid.NewGuid().ToString("N");
+            markerPrefix = $"{PromptMarkerPrefix}{executionId}:";
+
+            // Do not depend on PROMPT_COMMAND/precmd for automation completion. User shell
+            // configuration can replace those hooks, leaving the shell visibly idle while the
+            // caller waits forever. Appending a per-command marker also prevents startup or
+            // unrelated prompt markers from completing the wrong invocation.
+            markerCommand =
+                $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K\\033]9;OW_DONE:{executionId}:%s\\007' \"$__ow_exit\"";
+            commandToSend = $"{command}\n{markerCommand}";
+        }
+
+        void OnConnectionClosed(object? sender, EventArgs args)
+        {
+            string partialOutput;
+            lock (outputLock)
+                partialOutput = output.ToString();
+
+            resultTcs.TrySetResult(new TerminalExecutionResult(partialOutput, -1, true));
+        }
 
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
             var text = Encoding.UTF8.GetString(args.Data);
-            output.Append(text);
+            string current;
+            int? completedExitCode = null;
 
-            var current = output.ToString();
-            while (TryExtractOscMarker(current, PromptMarkerPrefix, out var exitCode, out var cleaned))
+            lock (outputLock)
             {
-                current = cleaned;
-                output.Clear();
-                output.Append(cleaned);
+                output.Append(text);
+                current = output.ToString();
 
-                if (!commandSent) continue;
+                while (TryExtractOscMarker(current, markerPrefix, out var exitCode, out var cleaned))
+                {
+                    while (TryExtractOscMarker(cleaned, PromptMarkerPrefix, out _, out var promptCleaned))
+                        cleaned = promptCleaned;
 
-                resultTcs.TrySetResult(new TerminalExecutionResult(cleaned, exitCode, false));
-                break;
+                    current = cleaned;
+                    output.Clear();
+                    output.Append(cleaned);
+
+                    if (!commandSent) continue;
+
+                    completedExitCode = exitCode;
+                    break;
+                }
             }
+
+            if (completedExitCode is { } exitCodeResult)
+            {
+                outputProgress?.Report(current);
+                resultTcs.TrySetResult(new TerminalExecutionResult(current, exitCodeResult, false));
+                return;
+            }
+
+            if (commandSent && !resultTcs.Task.IsCompleted)
+                outputProgress?.Report(current);
         }
 
         terminal.Connection.DataReceived += OnDataReceived;
+        terminal.Connection.Closed += OnConnectionClosed;
+        if (markerCommand != null)
+        {
+            // The shell echoes queued input before executing it. Hide the internal marker
+            // command independently of the PTY's line-ending mode. The marker then moves back
+            // and clears the intermediate prompt before the final prompt is rendered.
+            terminal.SuppressEcho(Encoding.UTF8.GetBytes(markerCommand));
+        }
+
         commandSent = true;
-        terminal.Send(command);
+        terminal.Send(commandToSend);
 
         TerminalExecutionResult result;
 
@@ -168,7 +231,10 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
         catch (OperationCanceledException)
         {
-            var partialOutput = output.ToString();
+            string partialOutput;
+            lock (outputLock)
+                partialOutput = output.ToString();
+
             // The command exceeded its timeout or was cancelled but is still running
             // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
             // to a usable prompt and the terminal stays reusable.
@@ -187,6 +253,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         finally
         {
             terminal.Connection.DataReceived -= OnDataReceived;
+            terminal.Connection.Closed -= OnConnectionClosed;
             if (closeWhenDone) terminal.Close();
         }
 
@@ -299,36 +366,76 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         return true;
     }
 
-    public Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,
+    public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,
         string? workingDirectory = null, bool showInUi = false, TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+        IProgress<string>? outputProgress = null, CancellationToken cancellationToken = default)
     {
         _mainDockService.Show<ITerminalManagerService>();
-        
-        var tab = GetOrCreateAutomationTab(id, workingDirectory, showInUi, id);
-        return ExecuteInTerminalAsync(tab.Terminal, command, timeout, closeWhenDone: false, cancellationToken);
-    }
 
-    private TerminalTabModel GetOrCreateAutomationTab(string terminalId, string? workingDirectory, bool select,
-        string? name)
-    {
-        if (_automationTerminals.TryGetValue(terminalId, out var existing))
+        var tab = AcquireAutomationTab(id, workingDirectory, showInUi);
+        try
         {
-            if (select) SelectedTerminalTab = existing;
-            return existing;
+            return await ExecuteInTerminalAsync(tab.Terminal, command, timeout, closeWhenDone: false, outputProgress,
+                cancellationToken);
         }
-
-        var tab = NewTerminal(string.IsNullOrWhiteSpace(name) ? terminalId : name, workingDirectory, select);
-        _automationTerminals[terminalId] = tab;
-        return tab;
+        finally
+        {
+            ReleaseAutomationTab(tab);
+        }
     }
 
-    private void RemoveAutomationMapping(TerminalTabModel tab)
+    [Obsolete("Use the overload that accepts an IProgress<string> outputProgress parameter. " +
+              "This overload is kept for plugin binary compatibility and will be removed in a future release.")]
+    public Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,
+        string? workingDirectory, bool showInUi, TimeSpan? timeout, CancellationToken cancellationToken)
     {
-        var mapping = _automationTerminals.FirstOrDefault(entry => ReferenceEquals(entry.Value, tab));
-        if (!string.IsNullOrEmpty(mapping.Key))
+        return ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, null, cancellationToken);
+    }
+
+    private TerminalTabModel AcquireAutomationTab(string id, string? workingDirectory, bool select)
+    {
+        lock (_automationLock)
         {
-            _automationTerminals.Remove(mapping.Key);
+            if (!_automationPools.TryGetValue(id, out var pool))
+            {
+                pool = new List<TerminalTabModel>();
+                _automationPools[id] = pool;
+            }
+
+            // Reuse an idle terminal from the pool so sequential commands keep their shell state.
+            var idle = pool.FirstOrDefault(t => !_busyAutomationTerminals.Contains(t.Terminal));
+            if (idle != null)
+            {
+                _busyAutomationTerminals.Add(idle.Terminal);
+                if (select) SelectedTerminalTab = idle;
+                return idle;
+            }
+
+            // Every pooled terminal is currently busy (or none exist yet): open another tab so
+            // concurrent commands run side by side instead of colliding on one shell.
+            var tab = NewTerminal(id, workingDirectory, select);
+            pool.Add(tab);
+            _busyAutomationTerminals.Add(tab.Terminal);
+            return tab;
+        }
+    }
+
+    private void ReleaseAutomationTab(TerminalTabModel tab)
+    {
+        lock (_automationLock)
+        {
+            _busyAutomationTerminals.Remove(tab.Terminal);
+        }
+    }
+
+    private void RemoveAutomationTerminal(TerminalTabModel tab)
+    {
+        lock (_automationLock)
+        {
+            _busyAutomationTerminals.Remove(tab.Terminal);
+
+            foreach (var pool in _automationPools.Values)
+                pool.Remove(tab);
         }
     }
 

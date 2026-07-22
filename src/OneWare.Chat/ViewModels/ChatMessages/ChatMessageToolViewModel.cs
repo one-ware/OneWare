@@ -19,7 +19,11 @@ public class ChatMessageToolViewModel : ObservableObject, IChatMessage, IEstimat
     public string ToolName { get; }
     
     [DataMember]
-    public string? ToolOutput { get; set; }
+    public string? ToolOutput
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
     
     public DateTimeOffset Timestamp { get; }
 

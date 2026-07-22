@@ -26,7 +26,11 @@
         </Expander.Header>
         <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
                 MaxHeight="200" Padding="5">
-            <SelectableTextBlock TextWrapping="Wrap" Text="{Binding ToolOutput}" />
+            <ScrollViewer x:Name="OutputScrollViewer" HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <SelectableTextBlock TextWrapping="Wrap" FontFamily="{DynamicResource EditorFont}"
+                                     Text="{Binding ToolOutput}" />
+            </ScrollViewer>
         </Border>
     </Expander>
 

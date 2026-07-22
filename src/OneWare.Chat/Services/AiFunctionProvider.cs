@@ -20,6 +20,7 @@ public class AiFunctionProvider(
 
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
     public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
+    public event EventHandler<AiFunctionProgressEvent>? FunctionProgress;
 
     public void RegisterFunction(IOneWareAiFunction function)
     {
@@ -133,6 +134,16 @@ public class AiFunctionProvider(
             }));
     }
 
+    private void RaiseFunctionProgress(string id, string output)
+    {
+        Dispatcher.UIThread.Post(() =>
+            FunctionProgress?.Invoke(this, new AiFunctionProgressEvent
+            {
+                Id = id,
+                Output = output
+            }));
+    }
+
     private sealed class RegisteredOneWareAiFunction(
         AiFunctionProvider provider,
         AIFunction innerFunction,
@@ -147,16 +158,18 @@ public class AiFunctionProvider(
 
             var detail = definition.DetailExtractor?.Invoke(arguments);
             var id = await provider.NotifyFunctionStartedAsync(friendlyName!, detail);
+            var context = new AiFunctionInvocationContext(id,
+                output => provider.RaiseFunctionProgress(id, output));
             Exception? exception = null;
             try
             {
                 if (definition.RunOnUiThread)
                 {
                     return await Dispatcher.UIThread.InvokeAsync(async () =>
-                        await base.InvokeCoreAsync(arguments, cancellationToken));
+                        await InvokeDefinitionAsync(context, arguments, cancellationToken));
                 }
 
-                return await base.InvokeCoreAsync(arguments, cancellationToken);
+                return await InvokeDefinitionAsync(context, arguments, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -167,6 +180,14 @@ public class AiFunctionProvider(
             {
                 await provider.NotifyFunctionCompletedAsync(id, exception);
             }
+        }
+
+        private ValueTask<object?> InvokeDefinitionAsync(AiFunctionInvocationContext context,
+            AIFunctionArguments arguments, CancellationToken cancellationToken)
+        {
+            return definition.InvocationHandler != null
+                ? definition.InvocationHandler(context, arguments, cancellationToken)
+                : base.InvokeCoreAsync(arguments, cancellationToken);
         }
     }
 }

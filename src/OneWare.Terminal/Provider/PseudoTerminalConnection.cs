@@ -158,6 +158,7 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
     private void Process_Exited(object? sender, EventArgs e)
     {
         terminal.Process.Exited -= Process_Exited;
+        _cancellationSource?.Cancel();
 
         Closed?.Invoke(this, EventArgs.Empty);
     }
