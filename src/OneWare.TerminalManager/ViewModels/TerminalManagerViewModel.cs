@@ -370,7 +370,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         string? workingDirectory = null, bool showInUi = false, TimeSpan? timeout = null,
         IProgress<string>? outputProgress = null, CancellationToken cancellationToken = default)
     {
-        _mainDockService.Show<ITerminalManagerService>();
+        if (showInUi)
+            _mainDockService.Show<ITerminalManagerService>();
 
         var tab = AcquireAutomationTab(id, workingDirectory, showInUi);
         try

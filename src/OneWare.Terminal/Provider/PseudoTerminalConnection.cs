@@ -5,11 +5,13 @@ namespace OneWare.Terminal.Provider;
 
 public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, IOutputFilter, IOutputSuppressor, IDisposable
 {
+    private const int TolerantSuppressionPrefixLength = 4;
     private CancellationTokenSource? _cancellationSource;
     private readonly object _suppressLock = new();
     private readonly Queue<byte[]> _suppressQueue = new();
     private readonly List<byte> _pendingSuppression = new();
     private byte[]? _activeSuppression;
+    private int _matchedSuppressionLength;
 
     public bool IsConnected { get; private set; }
 
@@ -100,6 +102,7 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
                 {
                     _activeSuppression = _suppressQueue.Dequeue();
                     _pendingSuppression.Clear();
+                    _matchedSuppressionLength = 0;
                 }
 
                 if (_activeSuppression == null)
@@ -109,15 +112,29 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
                 }
 
                 var b = data[index++];
-                var pendingIndex = _pendingSuppression.Count;
-
-                if (b == _activeSuppression[pendingIndex])
+                if (b == _activeSuppression[_matchedSuppressionLength])
                 {
                     _pendingSuppression.Add(b);
-                    if (_pendingSuppression.Count == _activeSuppression.Length)
+                    _matchedSuppressionLength++;
+                    if (_matchedSuppressionLength == _activeSuppression.Length)
                     {
-                        _activeSuppression = null;
-                        _pendingSuppression.Clear();
+                        ResetActiveSuppression();
+                    }
+
+                    continue;
+                }
+
+                if (_matchedSuppressionLength >=
+                    Math.Min(TolerantSuppressionPrefixLength, _activeSuppression.Length))
+                {
+                    // Interactive shells may insert cursor movement and redraw bytes while
+                    // echoing a command that wraps. Keep matching the requested sequence as a
+                    // subsequence so those terminal-control bytes do not expose the command.
+                    _pendingSuppression.Add(b);
+                    if (b == (byte)'\n')
+                    {
+                        output.AddRange(_pendingSuppression);
+                        ResetActiveSuppression();
                     }
 
                     continue;
@@ -127,11 +144,17 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
                 {
                     output.AddRange(_pendingSuppression);
                     _pendingSuppression.Clear();
+                    _matchedSuppressionLength = 0;
                 }
 
-                if (_activeSuppression != null && b == _activeSuppression[0])
+                if (b == _activeSuppression[0])
                 {
                     _pendingSuppression.Add(b);
+                    _matchedSuppressionLength = 1;
+                    if (_activeSuppression.Length == 1)
+                    {
+                        ResetActiveSuppression();
+                    }
                 }
                 else
                 {
@@ -141,6 +164,13 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
 
             return output.Count == data.Length ? data : output.ToArray();
         }
+    }
+
+    private void ResetActiveSuppression()
+    {
+        _activeSuppression = null;
+        _pendingSuppression.Clear();
+        _matchedSuppressionLength = 0;
     }
 
     public void SetTerminalWindowSize(int columns, int rows)
