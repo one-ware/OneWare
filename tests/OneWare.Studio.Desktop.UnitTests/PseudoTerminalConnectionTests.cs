@@ -1,5 +1,9 @@
+using System;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using OneWare.Terminal.Provider;
+using OneWare.Terminal.Provider.Unix;
 using Xunit;
 
 namespace OneWare.Studio.Desktop.UnitTests;
@@ -7,7 +11,8 @@ namespace OneWare.Studio.Desktop.UnitTests;
 public class PseudoTerminalConnectionTests
 {
     private const string MarkerCommand =
-        "__ow_exit=$?; printf '\\033[1A\\r\\033[2K\\033]9;OW_DONE:0123456789abcdef:%s\\007' \"$__ow_exit\"";
+        "__ow_exit=$?; printf '\\033[1A\\r\\033[2K'; printf '0123456789abcdef:%s\\n' \"$__ow_exit\" >&198; " +
+        "IFS= read -r __ow_ack <&199";
 
     [Fact]
     public void FilterOutput_SuppressesSequenceAcrossChunks()
@@ -65,5 +70,57 @@ public class PseudoTerminalConnectionTests
 
         Assert.Equal("beforeafter", Encoding.ASCII.GetString(terminalOutput));
         Assert.Equal("beforeafter", Encoding.ASCII.GetString(chatOutput));
+    }
+
+    [Fact]
+    public async Task ControlChannel_CompletesUnixCommandOutOfBand()
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        var provider = new UnixPseudoTerminalProvider();
+        using var terminal = provider.Create(80, 24, Path.GetTempPath(), "/bin/bash", null,
+            "--noprofile --norc");
+        Assert.NotNull(terminal);
+
+        using var connection = new PseudoTerminalConnection(terminal);
+        var output = new StringBuilder();
+        var completion = new TaskCompletionSource<TerminalCommandCompletedEventArgs>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        connection.DataReceived += (_, args) => output.Append(Encoding.UTF8.GetString(args.Data));
+        connection.CommandCompleted += (_, args) => completion.TrySetResult(args);
+        connection.Connect();
+
+        const string executionId = "integration";
+        var command = "printf 'control-channel-output\\n'\n" +
+                      "__ow_exit=$?; printf '\\033[1A\\r\\033[2K'; " +
+                      $"printf '{executionId}:%s\\n' \"$__ow_exit\" >&198; IFS= read -r __ow_ack <&199\r";
+        connection.SendData(Encoding.ASCII.GetBytes(command));
+
+        var result = await completion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(executionId, result.ExecutionId);
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("control-channel-output", output.ToString());
+        Assert.DoesNotContain("OW_DONE", output.ToString());
+    }
+
+    [Fact]
+    public async Task SendData_ReportsUserInterrupt()
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        var provider = new UnixPseudoTerminalProvider();
+        using var terminal = provider.Create(80, 24, Path.GetTempPath(), "/bin/bash", null,
+            "--noprofile --norc");
+        Assert.NotNull(terminal);
+
+        using var connection = new PseudoTerminalConnection(terminal);
+        var interrupted = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        connection.UserInterrupted += (_, _) => interrupted.TrySetResult();
+        connection.Connect();
+        connection.SendData([0x03]);
+
+        await interrupted.Task.WaitAsync(TimeSpan.FromSeconds(2));
     }
 }

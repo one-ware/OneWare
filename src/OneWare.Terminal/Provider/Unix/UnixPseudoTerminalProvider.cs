@@ -6,6 +6,9 @@ namespace OneWare.Terminal.Provider.Unix;
 
 public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
 {
+    private const int CompletionFileDescriptor = 198;
+    private const int AcknowledgementFileDescriptor = 199;
+
     public IPseudoTerminal? Create(int columns, int rows, string initialDirectory, string command, string? environment,
         string? arguments)
     {
@@ -16,6 +19,17 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
             ws_xpixel = 0,
             ws_ypixel = 0
         };
+
+        var completionPipe = new int[2];
+        var acknowledgementPipe = new int[2];
+        if (Native.pipe(completionPipe) != 0)
+            return null;
+        if (Native.pipe(acknowledgementPipe) != 0)
+        {
+            Native.close(completionPipe[0]);
+            Native.close(completionPipe[1]);
+            return null;
+        }
 
         //Collect ENV Vars before fork to avoid EntryPointNotFoundException
         var envMap = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -38,7 +52,11 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
                 var value = entry.Substring(separatorIndex + 1);
                 envMap[key] = value;
             }
+
         }
+
+        envMap["OW_COMPLETION_FD"] = CompletionFileDescriptor.ToString();
+        envMap["OW_ACK_FD"] = AcknowledgementFileDescriptor.ToString();
 
         var envVars = new List<string>(envMap.Count + 2);
         foreach (var pair in envMap)
@@ -64,15 +82,33 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         //pid will be 0 on the forked process
         if (pid == 0)
         {
+            Native.close(completionPipe[0]);
+            Native.close(acknowledgementPipe[1]);
+            Native.dup2(completionPipe[1], CompletionFileDescriptor);
+            Native.dup2(acknowledgementPipe[0], AcknowledgementFileDescriptor);
+            Native.close(completionPipe[1]);
+            Native.close(acknowledgementPipe[0]);
             Native.chdir(initialDirectory);
             Native.execve(argvArray[0], argvArray, envArray);
             Native._exit(1);
+        }
+
+        Native.close(completionPipe[1]);
+        Native.close(acknowledgementPipe[0]);
+
+        if (pid < 0)
+        {
+            Native.close(completionPipe[0]);
+            Native.close(acknowledgementPipe[1]);
+            return null;
         }
 
         var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);
 
         return new UnixPseudoTerminal(process, masterFd, new FileStream(new SafeFileHandle(new IntPtr(stdin), true),
-            FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read));
+                FileAccess.Write), new FileStream(new SafeFileHandle(new IntPtr(masterFd), true), FileAccess.Read),
+            new FileStream(new SafeFileHandle(new IntPtr(completionPipe[0]), true), FileAccess.Read),
+            new FileStream(new SafeFileHandle(new IntPtr(acknowledgementPipe[1]), true), FileAccess.Write));
     }
 }

@@ -7,6 +7,7 @@ namespace OneWare.Terminal.Provider.Win32;
 internal static class ConPtyNative
 {
     public const int PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE = 0x00020016;
+    public const int PROC_THREAD_ATTRIBUTE_HANDLE_LIST = 0x00020002;
     public const int EXTENDED_STARTUPINFO_PRESENT = 0x00080000;
     public const int CREATE_UNICODE_ENVIRONMENT = 0x00000400;
 
@@ -90,6 +91,14 @@ internal static class ConPtyNative
     {
         public StartupInfo StartupInfo;
         public IntPtr lpAttributeList;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SecurityAttributes
+    {
+        public int nLength;
+        public IntPtr lpSecurityDescriptor;
+        public bool bInheritHandle;
     }
 
     [StructLayout(LayoutKind.Sequential)]

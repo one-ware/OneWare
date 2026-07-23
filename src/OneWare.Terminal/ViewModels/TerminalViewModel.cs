@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
@@ -96,7 +93,6 @@ public class TerminalViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(shellExecutable))
             {
-                var environment = BuildTerminalEnvironment(shellExecutable);
                 var startArguments = StartArguments;
                 if (string.IsNullOrWhiteSpace(startArguments) &&
                     Path.GetFileName(shellExecutable).Equals("zsh", StringComparison.OrdinalIgnoreCase))
@@ -105,7 +101,7 @@ public class TerminalViewModel : ObservableObject
                     startArguments = "-i";
                 }
 
-                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, environment, startArguments);
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, startArguments);
 
                 if (terminal == null)
                 {
@@ -159,6 +155,23 @@ public class TerminalViewModel : ObservableObject
         }
     }
 
+    public string BuildCompletionCommand(string executionId)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return "$__ow_success=$?; " +
+                   "$__ow_exit=if ($__ow_success) { 0 } elseif ($global:LASTEXITCODE -ne 0) " +
+                   "{ [int]$global:LASTEXITCODE } else { 1 }; " +
+                   "$__ow_esc=[char]27; Write-Host ($__ow_esc + '[1A' + \"`r\" + $__ow_esc + '[2K') -NoNewline; " +
+                   $"$global:__ow_completion.WriteLine('{executionId}:' + $__ow_exit); " +
+                   "[void]$global:__ow_ack.ReadLine()";
+        }
+
+        return
+            $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K'; printf '{executionId}:%s\\n' \"$__ow_exit\" >&198; " +
+            "IFS= read -r __ow_ack <&199";
+    }
+
     public void CloseConnection()
     {
         if (Connection != null)
@@ -179,145 +192,20 @@ public class TerminalViewModel : ObservableObject
         // Win32ConPtyPseudoTerminalProvider.BuildCommandLine returns just the arguments when provided
         var escapedDir = workingDir.Replace("'", "''");
 
-        // Keep bootstrap inline so we do not execute external .ps1 files.
-        // This avoids requiring users to change PowerShell execution policy.
         var bootstrapCmd =
-            "if (Test-Path function:prompt) { $function:__ow_original_prompt = $function:prompt }; " +
-            "function global:prompt { " +
-            "$esc = [char]27; $bel = [char]7; " +
-            "$code = if ($global:LASTEXITCODE -ne $null) { [int]$global:LASTEXITCODE } elseif ($?) { 0 } else { 1 }; " +
-            "Write-Host ($esc + ']9;OW_DONE:' + $code + $bel) -NoNewline; " +
-            "if (Test-Path function:__ow_original_prompt) { & __ow_original_prompt } else { " +
-            "'PS ' + $executionContext.SessionState.Path.CurrentLocation + ('>' * ($nestedPromptLevel + 1)) + ' ' " +
-            "} " +
-            "}; " +
+            "$__ow_completion_handle=[Microsoft.Win32.SafeHandles.SafeFileHandle]::new(" +
+            "[IntPtr][long]$env:OW_COMPLETION_HANDLE,$false); " +
+            "$__ow_completion_stream=[System.IO.FileStream]::new(" +
+            "$__ow_completion_handle,[System.IO.FileAccess]::Write,4096,$false); " +
+            "$global:__ow_completion=[System.IO.StreamWriter]::new($__ow_completion_stream); " +
+            "$global:__ow_completion.AutoFlush=$true; " +
+            "$__ow_ack_handle=[Microsoft.Win32.SafeHandles.SafeFileHandle]::new(" +
+            "[IntPtr][long]$env:OW_ACK_HANDLE,$false); " +
+            "$__ow_ack_stream=[System.IO.FileStream]::new(" +
+            "$__ow_ack_handle,[System.IO.FileAccess]::Read,4096,$false); " +
+            "$global:__ow_ack=[System.IO.StreamReader]::new($__ow_ack_stream); " +
             $"Set-Location '{escapedDir}'";
 
         return $"powershell.exe -NoProfile -NoExit -Command \"{bootstrapCmd}\"";
-    }
-
-    private static string? BuildTerminalEnvironment(string? shellExecutable)
-    {
-        if (string.IsNullOrWhiteSpace(shellExecutable)) return null;
-
-        var shellName = Path.GetFileName(shellExecutable);
-        
-        if (shellName.Equals("bash", StringComparison.OrdinalIgnoreCase))
-        {
-            var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
-            var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
-            var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
-                ? markerCommand
-                : markerCommand + ";" + existingPromptCommand;
-
-            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["PROMPT_COMMAND"] = combined
-            };
-
-            return BuildEnvironmentBlock(overrides);
-        }
-
-        if (shellName.Equals("zsh", StringComparison.OrdinalIgnoreCase))
-        {
-            var zshDotDir = EnsureZshDotDir();
-            if (string.IsNullOrWhiteSpace(zshDotDir)) return null;
-
-            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["ZDOTDIR"] = zshDotDir
-            };
-
-            return BuildEnvironmentBlock(overrides);
-        }
-
-        return null;
-    }
-
-    private static string? EnsureZshDotDir()
-    {
-        try
-        {
-            var tempDir = Path.Combine(Path.GetTempPath(), "oneware", "zsh");
-            Directory.CreateDirectory(tempDir);
-
-            var userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var baseZdotdir = Environment.GetEnvironmentVariable("ZDOTDIR");
-            if (string.IsNullOrWhiteSpace(baseZdotdir)) baseZdotdir = userHome;
-
-            if (!string.IsNullOrWhiteSpace(baseZdotdir))
-            {
-                WriteZshFile(Path.Combine(tempDir, ".zshenv"), Path.Combine(baseZdotdir, ".zshenv"),
-                    "# oneware zshenv");
-                WriteZshFile(Path.Combine(tempDir, ".zprofile"), Path.Combine(baseZdotdir, ".zprofile"),
-                    "# oneware zprofile");
-                WriteZshFile(Path.Combine(tempDir, ".zlogin"), Path.Combine(baseZdotdir, ".zlogin"),
-                    "# oneware zlogin");
-            }
-
-            var zshrcPath = Path.Combine(tempDir, ".zshrc");
-            var zshrcBuilder = new StringBuilder();
-            zshrcBuilder.AppendLine("# oneware zshrc");
-
-            var originalZshrc = !string.IsNullOrWhiteSpace(baseZdotdir)
-                ? Path.Combine(baseZdotdir, ".zshrc")
-                : null;
-
-            if (!string.IsNullOrWhiteSpace(originalZshrc) && File.Exists(originalZshrc))
-            {
-                zshrcBuilder.Append("source ").Append('"').Append(originalZshrc).Append('"').AppendLine();
-            }
-
-            zshrcBuilder.AppendLine("autoload -Uz add-zsh-hook");
-            zshrcBuilder.AppendLine("_ow_precmd() { printf '\\033]9;OW_DONE:%s\\007' $?; }");
-            zshrcBuilder.AppendLine("add-zsh-hook precmd _ow_precmd");
-
-            File.WriteAllText(zshrcPath, zshrcBuilder.ToString(), Encoding.ASCII);
-            return tempDir;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static void WriteZshFile(string destinationPath, string sourcePath, string header)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine(header);
-        if (File.Exists(sourcePath))
-        {
-            builder.Append("source ").Append('"').Append(sourcePath).Append('"').AppendLine();
-        }
-
-        File.WriteAllText(destinationPath, builder.ToString(), Encoding.ASCII);
-    }
-
-    private static string BuildEnvironmentBlock(Dictionary<string, string> overrides)
-    {
-        var comparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
-
-        var env = new SortedDictionary<string, string>(comparer);
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-        {
-            if (entry.Key is not string key || entry.Value is not string value) continue;
-            env[key] = value;
-        }
-
-        foreach (var pair in overrides)
-        {
-            env[pair.Key] = pair.Value;
-        }
-
-        var builder = new StringBuilder();
-        foreach (var pair in env)
-        {
-            builder.Append(pair.Key).Append('=').Append(pair.Value).Append('\0');
-        }
-
-        builder.Append('\0');
-        return builder.ToString();
     }
 }

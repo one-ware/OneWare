@@ -18,7 +18,6 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 {
     public const string IconKey = "Material.Console";
-    private const string PromptMarkerPrefix = "\u001b]9;OW_DONE:";
     private const string CompletionMarkerControlPrefix = "\u001b[1A\r\u001b[2K";
 
     // Automation terminals are pooled per id so that concurrent commands (e.g. an AI agent
@@ -137,7 +136,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         terminal.TerminalReady -= OnReady;
 
-        if (terminal.Connection == null)
+        if (terminal.Connection is not PseudoTerminalConnection connection)
         {
             if (closeWhenDone) terminal.Close();
             return new TerminalExecutionResult(string.Empty, -1, true);
@@ -146,27 +145,12 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var output = new StringBuilder();
         var outputLock = new object();
         var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var commandSent = false;
-        var markerPrefix = PromptMarkerPrefix;
-        var commandToSend = command;
-        string? markerCommand = null;
-        OutputSequenceSuppressor? chatOutputSuppressor = null;
-
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var executionId = Guid.NewGuid().ToString("N");
-            markerPrefix = $"{PromptMarkerPrefix}{executionId}:";
-
-            // Do not depend on PROMPT_COMMAND/precmd for automation completion. User shell
-            // configuration can replace those hooks, leaving the shell visibly idle while the
-            // caller waits forever. Appending a per-command marker also prevents startup or
-            // unrelated prompt markers from completing the wrong invocation.
-            markerCommand =
-                $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K\\033]9;OW_DONE:{executionId}:%s\\007' \"$__ow_exit\"";
-            commandToSend = $"{command}\n{markerCommand}";
-            chatOutputSuppressor = new OutputSequenceSuppressor();
-            chatOutputSuppressor.SuppressOutput(Encoding.UTF8.GetBytes(markerCommand));
-        }
+        var executionId = Guid.NewGuid().ToString("N");
+        var completionCommand = terminal.BuildCompletionCommand(executionId);
+        var commandToSend = $"{command}\n{completionCommand}";
+        var chatOutputSuppressor = new OutputSequenceSuppressor();
+        chatOutputSuppressor.SuppressOutput(Encoding.UTF8.GetBytes(completionCommand));
+        var interruptRecoveryScheduled = 0;
 
         void OnConnectionClosed(object? sender, EventArgs args)
         {
@@ -179,58 +163,63 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
-            var data = chatOutputSuppressor?.FilterOutput(args.Data) ?? args.Data;
+            var data = chatOutputSuppressor.FilterOutput(args.Data);
             if (data.Length == 0) return;
 
             var text = Encoding.UTF8.GetString(data);
             string current;
-            int? completedExitCode = null;
 
             lock (outputLock)
             {
                 output.Append(text);
                 current = output.ToString();
-
-                while ((chatOutputSuppressor != null
-                           ? TryExtractCompletionMarker(current, markerPrefix, out var exitCode, out var cleaned)
-                           : TryExtractOscMarker(current, markerPrefix, out exitCode, out cleaned)))
-                {
-                    while (TryExtractOscMarker(cleaned, PromptMarkerPrefix, out _, out var promptCleaned))
-                        cleaned = promptCleaned;
-
-                    current = cleaned;
-                    output.Clear();
-                    output.Append(cleaned);
-
-                    if (!commandSent) continue;
-
-                    completedExitCode = exitCode;
-                    break;
-                }
             }
 
-            if (completedExitCode is { } exitCodeResult)
-            {
-                outputProgress?.Report(current);
-                resultTcs.TrySetResult(new TerminalExecutionResult(current, exitCodeResult, false));
-                return;
-            }
-
-            if (commandSent && !resultTcs.Task.IsCompleted)
+            if (!resultTcs.Task.IsCompleted)
                 outputProgress?.Report(current);
         }
 
-        terminal.Connection.DataReceived += OnDataReceived;
-        terminal.Connection.Closed += OnConnectionClosed;
-        if (markerCommand != null)
+        void OnCommandCompleted(object? sender, TerminalCommandCompletedEventArgs args)
         {
-            // The shell echoes queued input before executing it. Hide the internal marker
-            // command independently of the PTY's line-ending mode. The marker then moves back
-            // and clears the intermediate prompt before the final prompt is rendered.
-            terminal.SuppressEcho(Encoding.UTF8.GetBytes(markerCommand));
+            if (!string.Equals(args.ExecutionId, executionId, StringComparison.Ordinal)) return;
+
+            string cleaned;
+            lock (outputLock)
+            {
+                cleaned = TrimCompletedOutput(output.ToString());
+                output.Clear();
+                output.Append(cleaned);
+            }
+
+            outputProgress?.Report(cleaned);
+            resultTcs.TrySetResult(new TerminalExecutionResult(cleaned, args.ExitCode, false));
         }
 
-        commandSent = true;
+        void OnUserInterrupted(object? sender, EventArgs args)
+        {
+            if (Interlocked.Exchange(ref interruptRecoveryScheduled, 1) != 0) return;
+            _ = RecoverCompletionAfterUserInterruptAsync();
+        }
+
+        async Task RecoverCompletionAfterUserInterruptAsync()
+        {
+            await Task.Yield();
+            if (resultTcs.Task.IsCompleted) return;
+
+            var completionBytes = Encoding.UTF8.GetBytes(completionCommand);
+            connection.ResetOutputSuppression();
+            chatOutputSuppressor.Reset();
+            connection.SuppressOutput(completionBytes);
+            chatOutputSuppressor.SuppressOutput(completionBytes);
+            terminal.Send(completionCommand);
+            Interlocked.Exchange(ref interruptRecoveryScheduled, 0);
+        }
+
+        connection.DataReceived += OnDataReceived;
+        connection.Closed += OnConnectionClosed;
+        connection.CommandCompleted += OnCommandCompleted;
+        connection.UserInterrupted += OnUserInterrupted;
+        terminal.SuppressEcho(Encoding.UTF8.GetBytes(completionCommand));
         terminal.Send(commandToSend);
 
         TerminalExecutionResult result;
@@ -262,8 +251,10 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
         finally
         {
-            terminal.Connection.DataReceived -= OnDataReceived;
-            terminal.Connection.Closed -= OnConnectionClosed;
+            connection.DataReceived -= OnDataReceived;
+            connection.Closed -= OnConnectionClosed;
+            connection.CommandCompleted -= OnCommandCompleted;
+            connection.UserInterrupted -= OnUserInterrupted;
             if (closeWhenDone) terminal.Close();
         }
 
@@ -343,87 +334,19 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         return await resultTask.WaitAsync(linkedCts.Token);
     }
 
-    // prompt marker is injected via terminal environment during shell startup
-
-    private static bool TryExtractOscMarker(string current, string markerPrefix, out int exitCode,
-        out string cleanedOutput)
+    internal static string TrimCompletedOutput(string current)
     {
-        exitCode = 0;
-        cleanedOutput = current;
+        var clearSequenceIndex = current.LastIndexOf(CompletionMarkerControlPrefix, StringComparison.Ordinal);
+        if (clearSequenceIndex < 0) return current;
 
-        var markerIndex = current.IndexOf(markerPrefix, StringComparison.Ordinal);
-        if (markerIndex < 0) return false;
-
-        var belIndex = current.IndexOf('\u0007', markerIndex);
-        var stIndex = current.IndexOf("\u001b\\", markerIndex, StringComparison.Ordinal);
-
-        var endIndex = belIndex;
-        var endLength = 1;
-
-        if (endIndex < 0 || (stIndex >= 0 && stIndex < endIndex))
-        {
-            endIndex = stIndex;
-            endLength = 2;
-        }
-
-        if (endIndex < 0) return false;
-
-        var markerContent = current.Substring(markerIndex + markerPrefix.Length,
-            endIndex - (markerIndex + markerPrefix.Length));
-        int.TryParse(markerContent, out exitCode);
-
-        cleanedOutput = current.Remove(markerIndex, endIndex - markerIndex + endLength);
-        return true;
-    }
-
-    internal static bool TryExtractCompletionMarker(string current, string markerPrefix, out int exitCode,
-        out string cleanedOutput)
-    {
-        exitCode = 0;
-        cleanedOutput = current;
-
-        var markerIndex = current.IndexOf(markerPrefix, StringComparison.Ordinal);
-        if (markerIndex < 0) return false;
-
-        var belIndex = current.IndexOf('\u0007', markerIndex);
-        var stIndex = current.IndexOf("\u001b\\", markerIndex, StringComparison.Ordinal);
-        var endIndex = belIndex;
-
-        if (endIndex < 0 || (stIndex >= 0 && stIndex < endIndex))
-            endIndex = stIndex;
-
-        if (endIndex < 0) return false;
-
-        var markerContent = current.Substring(markerIndex + markerPrefix.Length,
-            endIndex - (markerIndex + markerPrefix.Length));
-        int.TryParse(markerContent, out exitCode);
-
-        var promptMarkerIndex = markerIndex > 0
-            ? current.LastIndexOf(PromptMarkerPrefix, markerIndex - 1, StringComparison.Ordinal)
+        var promptLineEnd = clearSequenceIndex > 0
+            ? current.LastIndexOf('\n', clearSequenceIndex - 1)
             : -1;
-        if (promptMarkerIndex >= 0)
-        {
-            cleanedOutput = current[..promptMarkerIndex];
-            return true;
-        }
+        var previousLineEnd = promptLineEnd > 0
+            ? current.LastIndexOf('\n', promptLineEnd - 1)
+            : -1;
 
-        var clearSequenceIndex = markerIndex - CompletionMarkerControlPrefix.Length;
-        if (clearSequenceIndex >= 0 &&
-            current.AsSpan(clearSequenceIndex, CompletionMarkerControlPrefix.Length)
-                .SequenceEqual(CompletionMarkerControlPrefix))
-        {
-            var promptLineEnd = clearSequenceIndex > 0
-                ? current.LastIndexOf('\n', clearSequenceIndex - 1)
-                : -1;
-            var previousLineEnd = promptLineEnd > 0
-                ? current.LastIndexOf('\n', promptLineEnd - 1)
-                : -1;
-            cleanedOutput = previousLineEnd >= 0 ? current[..(previousLineEnd + 1)] : string.Empty;
-            return true;
-        }
-
-        cleanedOutput = current[..markerIndex];
-        return true;
+        return previousLineEnd >= 0 ? current[..(previousLineEnd + 1)] : string.Empty;
     }
 
     public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,

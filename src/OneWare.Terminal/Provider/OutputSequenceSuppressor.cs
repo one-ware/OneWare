@@ -22,6 +22,15 @@ public sealed class OutputSequenceSuppressor : IOutputFilter, IOutputSuppressor
         }
     }
 
+    public void Reset()
+    {
+        lock (_lock)
+        {
+            _queue.Clear();
+            ResetActiveSuppression();
+        }
+    }
+
     public byte[] FilterOutput(byte[] data)
     {
         if (data.Length == 0) return data;
