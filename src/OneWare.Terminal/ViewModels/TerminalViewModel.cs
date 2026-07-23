@@ -169,12 +169,7 @@ public class TerminalViewModel : ObservableObject
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return "$__ow_success=$?; " +
-                   "$__ow_exit=if ($__ow_success) { 0 } elseif ($global:LASTEXITCODE -ne 0) " +
-                   "{ [int]$global:LASTEXITCODE } else { 1 }; " +
-                   "$__ow_esc=[char]27; Write-Host ($__ow_esc + '[1A' + \"`r\" + $__ow_esc + '[2K') -NoNewline; " +
-                   $"$global:__ow_completion.WriteLine('{executionId}:' + $__ow_exit); " +
-                   "[void]$global:__ow_ack.ReadLine()";
+            return $"$__ow_success=$?; __owc '{executionId}' $__ow_success $global:LASTEXITCODE";
         }
 
         return $"__owc {executionId}";
@@ -206,17 +201,16 @@ public class TerminalViewModel : ObservableObject
         var escapedDir = workingDir.Replace("'", "''");
 
         var bootstrapCmd =
-            "$__ow_completion_handle=[Microsoft.Win32.SafeHandles.SafeFileHandle]::new(" +
-            "[IntPtr][long]$env:OW_COMPLETION_HANDLE,$false); " +
-            "$__ow_completion_stream=[System.IO.FileStream]::new(" +
-            "$__ow_completion_handle,[System.IO.FileAccess]::Write,4096,$false); " +
-            "$global:__ow_completion=[System.IO.StreamWriter]::new($__ow_completion_stream); " +
-            "$global:__ow_completion.AutoFlush=$true; " +
-            "$__ow_ack_handle=[Microsoft.Win32.SafeHandles.SafeFileHandle]::new(" +
-            "[IntPtr][long]$env:OW_ACK_HANDLE,$false); " +
-            "$__ow_ack_stream=[System.IO.FileStream]::new(" +
-            "$__ow_ack_handle,[System.IO.FileAccess]::Read,4096,$false); " +
-            "$global:__ow_ack=[System.IO.StreamReader]::new($__ow_ack_stream); " +
+            "function global:__owc { param([string]$id,[bool]$success,$lastExitCode); " +
+            "$exitCode=if ($success) { 0 } elseif ($lastExitCode -ne 0) { [int]$lastExitCode } else { 1 }; " +
+            "$esc=[char]27; Write-Host ($esc + '[1A' + [char]13 + $esc + '[2K') -NoNewline; " +
+            "$pipe=[System.IO.Pipes.NamedPipeClientStream]::new(" +
+            "'.',$env:OW_CONTROL_PIPE,[System.IO.Pipes.PipeDirection]::InOut); " +
+            "try { $pipe.Connect(); $encoding=[System.Text.UTF8Encoding]::new($false); " +
+            "$writer=[System.IO.StreamWriter]::new($pipe,$encoding,1024,$true); " +
+            "$reader=[System.IO.StreamReader]::new($pipe,$encoding,$false,1024,$true); " +
+            "$writer.AutoFlush=$true; $writer.WriteLine($id + ':' + $exitCode); " +
+            "[void]$reader.ReadLine(); $writer.Dispose(); $reader.Dispose() } finally { $pipe.Dispose() } }; " +
             $"Set-Location '{escapedDir}'";
 
         return $"powershell.exe -NoProfile -NoExit -Command \"{bootstrapCmd}\"";

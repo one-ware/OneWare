@@ -148,6 +148,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var executionId = terminal.NextExecutionId();
         var completionCommand = terminal.BuildCompletionCommand(executionId);
         var commandToSend = $"{command}\n{completionCommand}";
+        var commandSent = false;
         var chatOutputSuppressor = new OutputSequenceSuppressor();
         chatOutputSuppressor.SuppressOutput(Encoding.UTF8.GetBytes(completionCommand));
         var interruptRecoveryScheduled = 0;
@@ -220,7 +221,11 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         connection.CommandCompleted += OnCommandCompleted;
         connection.UserInterrupted += OnUserInterrupted;
         terminal.SuppressEcho(Encoding.UTF8.GetBytes(completionCommand));
-        terminal.Send(commandToSend);
+        if (!resultTcs.Task.IsCompleted && !cancellationToken.IsCancellationRequested)
+        {
+            commandSent = true;
+            terminal.Send(commandToSend);
+        }
 
         TerminalExecutionResult result;
 
@@ -234,17 +239,20 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             lock (outputLock)
                 partialOutput = output.ToString();
 
-            // The command exceeded its timeout or was cancelled but is still running
-            // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
-            // to a usable prompt and the terminal stays reusable.
-            var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
-            if (!recovered)
+            if (commandSent)
             {
-                // The interrupt did not free the shell (the process ignores SIGINT or is
-                // itself hung). Forcibly kill the process tree and discard this terminal
-                // so it is never reused in a stuck state by a subsequent command.
-                terminal.KillProcess();
-                DiscardAutomationTerminal(terminal);
+                // The command exceeded its timeout or was cancelled but is still running
+                // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
+                // to a usable prompt and the terminal stays reusable.
+                var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
+                if (!recovered)
+                {
+                    // The interrupt did not free the shell (the process ignores SIGINT or is
+                    // itself hung). Forcibly kill the process tree and discard this terminal
+                    // so it is never reused in a stuck state by a subsequent command.
+                    terminal.KillProcess();
+                    DiscardAutomationTerminal(terminal);
+                }
             }
 
             result = new TerminalExecutionResult(partialOutput, -1, true);

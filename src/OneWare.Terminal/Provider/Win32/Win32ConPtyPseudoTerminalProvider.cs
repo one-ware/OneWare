@@ -1,7 +1,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
+using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -24,13 +24,9 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         SafeFileHandle? inputWrite = null;
         SafeFileHandle? outputRead = null;
         SafeFileHandle? outputWrite = null;
-        SafeFileHandle? completionRead = null;
-        SafeFileHandle? completionWrite = null;
-        SafeFileHandle? acknowledgementRead = null;
-        SafeFileHandle? acknowledgementWrite = null;
+        NamedPipeServerStream? controlPipe = null;
         var pseudoConsole = IntPtr.Zero;
         var attributeList = IntPtr.Zero;
-        var inheritedHandleList = IntPtr.Zero;
         var environmentBlock = IntPtr.Zero;
         var terminalCreated = false;
 
@@ -38,8 +34,11 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         {
             CreatePipePair(out inputRead, out inputWrite);
             CreatePipePair(out outputRead, out outputWrite);
-            CreatePipePair(out completionRead, out completionWrite, inheritWrite: true);
-            CreatePipePair(out acknowledgementRead, out acknowledgementWrite, inheritRead: true);
+
+            var controlPipeName = $"OneWare-{Environment.ProcessId}-{Guid.NewGuid():N}-control";
+            controlPipe = new NamedPipeServerStream(controlPipeName, PipeDirection.InOut, 1,
+                PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            var controlConnected = controlPipe.WaitForConnectionAsync();
 
             var result = ConPtyNative.CreatePseudoConsole(
                 new ConPtyNative.Coord((short)columns, (short)rows),
@@ -54,8 +53,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
             inputRead.Dispose();
             outputWrite.Dispose();
 
-            InitializeAttributeList(pseudoConsole, completionWrite, acknowledgementRead, out attributeList,
-                out inheritedHandleList);
+            InitializeAttributeList(pseudoConsole, out attributeList);
 
             var startupInfo = new ConPtyNative.StartupInfoEx
             {
@@ -66,8 +64,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 lpAttributeList = attributeList
             };
 
-            environment = AddControlEnvironment(environment, completionWrite.DangerousGetHandle(),
-                acknowledgementRead.DangerousGetHandle());
+            environment = AddControlEnvironment(environment, controlPipeName);
             environmentBlock = Marshal.StringToHGlobalUni(environment);
 
             var creationFlags = ConPtyNative.EXTENDED_STARTUPINFO_PRESENT |
@@ -75,10 +72,9 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
 
             var commandLineBuilder = new StringBuilder(commandLine);
 
-            if (!ConPtyNative.CreateProcessW(null, commandLineBuilder, IntPtr.Zero, IntPtr.Zero, true, creationFlags,
+            if (!ConPtyNative.CreateProcessW(null, commandLineBuilder, IntPtr.Zero, IntPtr.Zero, false, creationFlags,
                     environmentBlock, initialDirectory, ref startupInfo, out var processInformation))
             {
-                ConPtyNative.ClosePseudoConsole(pseudoConsole);
                 return null;
             }
 
@@ -87,11 +83,8 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
 
             var process = Process.GetProcessById(processInformation.dwProcessId);
 
-            completionWrite.Dispose();
-            acknowledgementRead.Dispose();
-
             var terminal = new Win32ConPtyPseudoTerminal(process, pseudoConsole, inputWrite, outputRead,
-                completionRead, acknowledgementWrite);
+                controlPipe, controlConnected);
             terminalCreated = true;
             return terminal;
         }
@@ -107,9 +100,6 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 Marshal.FreeHGlobal(attributeList);
             }
 
-            if (inheritedHandleList != IntPtr.Zero)
-                Marshal.FreeHGlobal(inheritedHandleList);
-
             if (environmentBlock != IntPtr.Zero)
                 Marshal.FreeHGlobal(environmentBlock);
 
@@ -118,14 +108,11 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
 
             if (inputRead is { IsInvalid: false }) inputRead.Dispose();
             if (outputWrite is { IsInvalid: false }) outputWrite.Dispose();
-            if (completionWrite is { IsInvalid: false }) completionWrite.Dispose();
-            if (acknowledgementRead is { IsInvalid: false }) acknowledgementRead.Dispose();
             if (!terminalCreated)
             {
                 if (inputWrite is { IsInvalid: false }) inputWrite.Dispose();
                 if (outputRead is { IsInvalid: false }) outputRead.Dispose();
-                if (completionRead is { IsInvalid: false }) completionRead.Dispose();
-                if (acknowledgementWrite is { IsInvalid: false }) acknowledgementWrite.Dispose();
+                controlPipe?.Dispose();
             }
         }
     }
@@ -167,8 +154,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
             throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 
-    private static string AddControlEnvironment(string? environment, IntPtr completionHandle,
-        IntPtr acknowledgementHandle)
+    private static string AddControlEnvironment(string? environment, string controlPipeName)
     {
         var values = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (string.IsNullOrWhiteSpace(environment))
@@ -190,8 +176,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
             }
         }
 
-        values["OW_COMPLETION_HANDLE"] = completionHandle.ToInt64().ToString(CultureInfo.InvariantCulture);
-        values["OW_ACK_HANDLE"] = acknowledgementHandle.ToInt64().ToString(CultureInfo.InvariantCulture);
+        values["OW_CONTROL_PIPE"] = controlPipeName;
 
         var builder = new StringBuilder();
         foreach (var pair in values)
@@ -200,14 +185,12 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         return builder.ToString();
     }
 
-    private static void InitializeAttributeList(IntPtr pseudoConsole, SafeFileHandle completionWrite,
-        SafeFileHandle acknowledgementRead, out IntPtr attributeList, out IntPtr inheritedHandleList)
+    private static void InitializeAttributeList(IntPtr pseudoConsole, out IntPtr attributeList)
     {
         attributeList = IntPtr.Zero;
-        inheritedHandleList = IntPtr.Zero;
         var size = IntPtr.Zero;
 
-        if (!ConPtyNative.InitializeProcThreadAttributeList(IntPtr.Zero, 2, 0, ref size))
+        if (!ConPtyNative.InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref size))
         {
             var error = Marshal.GetLastWin32Error();
             if (error != 122)
@@ -216,7 +199,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
 
         attributeList = Marshal.AllocHGlobal(size);
 
-        if (!ConPtyNative.InitializeProcThreadAttributeList(attributeList, 2, 0, ref size))
+        if (!ConPtyNative.InitializeProcThreadAttributeList(attributeList, 1, 0, ref size))
             throw new Win32Exception(Marshal.GetLastWin32Error());
 
         if (!ConPtyNative.UpdateProcThreadAttribute(attributeList, 0,
@@ -224,13 +207,5 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 IntPtr.Zero, IntPtr.Zero))
             throw new Win32Exception(Marshal.GetLastWin32Error());
 
-        inheritedHandleList = Marshal.AllocHGlobal(IntPtr.Size * 2);
-        Marshal.WriteIntPtr(inheritedHandleList, 0, completionWrite.DangerousGetHandle());
-        Marshal.WriteIntPtr(inheritedHandleList, IntPtr.Size, acknowledgementRead.DangerousGetHandle());
-
-        if (!ConPtyNative.UpdateProcThreadAttribute(attributeList, 0,
-                ConPtyNative.PROC_THREAD_ATTRIBUTE_HANDLE_LIST, inheritedHandleList, IntPtr.Size * 2,
-                IntPtr.Zero, IntPtr.Zero))
-            throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 }

@@ -19,6 +19,11 @@ public interface IAiFunctionProvider
     /// <summary>Returns available AI tools for this provider.</summary>
     ICollection<AIFunction> GetTools();
 
+    /// <summary>Cancels all AI functions that are currently running.</summary>
+    void CancelActiveFunctions()
+    {
+    }
+
     /// <summary>Registers an additional AI function (e.g. from plugins).</summary>
     void RegisterFunction(IOneWareAiFunction function);
 

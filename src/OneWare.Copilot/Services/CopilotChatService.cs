@@ -998,8 +998,23 @@ public sealed class CopilotChatService(
     public async Task AbortAsync()
     {
         ReleasePendingInputRequests();
+        toolProvider.CancelActiveFunctions();
         if (_session == null) return;
         await _session.AbortAsync();
+    }
+
+    public async Task<bool> RemoveMostRecentQueuedMessageAsync()
+    {
+        if (_session == null) return false;
+        var result = await _session.Rpc.Queue.RemoveMostRecentAsync();
+        return result.Removed;
+    }
+
+    public async Task<bool> ClearQueuedMessagesAsync()
+    {
+        if (_session == null) return false;
+        await _session.Rpc.Queue.ClearAsync();
+        return true;
     }
 
     public async Task NewChatAsync()

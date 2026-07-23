@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using OneWare.Terminal.Provider;
 using OneWare.Terminal.Provider.Unix;
+using OneWare.Terminal.Provider.Win32;
+using OneWare.Terminal.ViewModels;
 using Xunit;
 
 namespace OneWare.Studio.Desktop.UnitTests;
@@ -105,6 +107,52 @@ public class PseudoTerminalConnectionTests
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("control-channel-output", output.ToString());
         Assert.DoesNotContain("OW_DONE", output.ToString());
+    }
+
+    [Fact]
+    public async Task ControlChannel_CompletesWindowsCommandOutOfBand()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        var terminalViewModel = new TerminalViewModel(Path.GetTempPath());
+        var startArguments = terminalViewModel.StartArguments!;
+        startArguments = startArguments.Insert(startArguments.Length - 1,
+            "; $abandoned=[System.IO.Pipes.NamedPipeClientStream]::new(" +
+            "'.',$env:OW_CONTROL_PIPE,[System.IO.Pipes.PipeDirection]::InOut); " +
+            "$abandoned.Connect(); $abandoned.Dispose(); " +
+            "__owc 'integration-1' $true 0; __owc 'integration-2' $false 7");
+        var provider = new Win32ConPtyPseudoTerminalProvider();
+        using var terminal = provider.Create(80, 24, Path.GetTempPath(), "powershell.exe", null,
+            startArguments);
+        Assert.NotNull(terminal);
+
+        try
+        {
+            using var connection = new PseudoTerminalConnection(terminal);
+            var firstCompletion = new TaskCompletionSource<TerminalCommandCompletedEventArgs>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            var secondCompletion = new TaskCompletionSource<TerminalCommandCompletedEventArgs>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            connection.CommandCompleted += (_, args) =>
+            {
+                if (args.ExecutionId == "integration-1")
+                    firstCompletion.TrySetResult(args);
+                else if (args.ExecutionId == "integration-2")
+                    secondCompletion.TrySetResult(args);
+            };
+            connection.Connect();
+
+            var firstResult = await firstCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var secondResult = await secondCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+            Assert.Equal(0, firstResult.ExitCode);
+            Assert.Equal(7, secondResult.ExitCode);
+        }
+        finally
+        {
+            if (!terminal.Process.HasExited)
+                terminal.Process.Kill(true);
+        }
     }
 
     [Fact]

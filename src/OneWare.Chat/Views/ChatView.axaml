@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Chat.Behaviors"
              xmlns:behaviors1="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
@@ -93,6 +94,24 @@
 
                     <!-- Queued messages (dimmed, pinned below the conversation) -->
                     <ItemsControl Opacity="0.5" ItemsSource="{Binding QueuedMessages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="chatMessages:ChatMessageUserViewModel">
+                                <Border Margin="0 2" HorizontalAlignment="Right" CornerRadius="6"
+                                        Padding="8 4 4 4" Background="{DynamicResource ThemeControlMidBrush}">
+                                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
+                                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).RemoveQueuedMessageCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="Remove queued message">
+                                            <Image Source="{DynamicResource MaterialDesign.Close}" Width="12"
+                                                   Height="12" />
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Spacing="5" />
