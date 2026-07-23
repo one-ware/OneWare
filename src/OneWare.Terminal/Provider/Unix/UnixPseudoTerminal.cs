@@ -21,6 +21,16 @@ public class UnixPseudoTerminal : IPseudoTerminal
 
     public Process Process { get; }
 
+    public bool? IsShellForeground
+    {
+        get
+        {
+            if (_isDisposed || Process.HasExited) return null;
+            var foregroundProcessGroup = Native.tcgetpgrp(_cfg);
+            return foregroundProcessGroup >= 0 ? foregroundProcessGroup == Process.Id : null;
+        }
+    }
+
     public void Dispose()
     {
         if (_isDisposed) return;

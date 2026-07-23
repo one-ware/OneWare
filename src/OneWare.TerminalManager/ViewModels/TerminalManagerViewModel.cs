@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Reactive.Linq;
@@ -145,6 +146,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var outputLock = new object();
         var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var commandSent = false;
+        var lastOutputTimestamp = Stopwatch.GetTimestamp();
         var markerPrefix = PromptMarkerPrefix;
         var commandToSend = command;
         var commandEchoPrefix = GetCommandEchoPrefix(command);
@@ -175,6 +177,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
+            Interlocked.Exchange(ref lastOutputTimestamp, Stopwatch.GetTimestamp());
             var text = Encoding.UTF8.GetString(args.Data);
             string current;
             int? completedExitCode = null;
@@ -241,6 +244,16 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
 
         TerminalExecutionResult result;
+        using var completionProbeCancellation =
+            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var completionProbeTask = markerCommand == null
+            ? Task.CompletedTask
+            : ProbeForMissedCompletionAsync(
+                terminal,
+                markerCommand,
+                resultTcs.Task,
+                () => Volatile.Read(ref lastOutputTimestamp),
+                completionProbeCancellation.Token);
 
         try
         {
@@ -272,12 +285,43 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
         finally
         {
+            await completionProbeCancellation.CancelAsync();
+            await completionProbeTask;
             terminal.Connection.DataReceived -= OnDataReceived;
             terminal.Connection.Closed -= OnConnectionClosed;
             if (closeWhenDone) terminal.Close();
         }
 
         return result;
+    }
+
+    private static async Task ProbeForMissedCompletionAsync(
+        TerminalViewModel terminal,
+        string markerCommand,
+        Task<TerminalExecutionResult> resultTask,
+        Func<long> getLastOutputTimestamp,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!resultTask.IsCompleted)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+                if (resultTask.IsCompleted) return;
+                if (Stopwatch.GetElapsedTime(getLastOutputTimestamp()) < TimeSpan.FromSeconds(1)) continue;
+                if (terminal.IsShellForeground != true) continue;
+
+                // The command has returned control to the shell but its queued completion marker
+                // was not observed. Re-send the same marker once; if a shell builtin is still
+                // executing, the terminal queues it until that builtin returns.
+                terminal.SuppressEcho(Encoding.UTF8.GetBytes(markerCommand));
+                terminal.Send(markerCommand);
+                return;
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
     }
 
     private static async Task<bool> TryRecoverPromptAsync(TerminalViewModel terminal,

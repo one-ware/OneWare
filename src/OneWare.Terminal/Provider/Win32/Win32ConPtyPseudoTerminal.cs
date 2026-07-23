@@ -21,6 +21,8 @@ public class Win32ConPtyPseudoTerminal : IPseudoTerminal
 
     public Process Process { get; }
 
+    public bool? IsShellForeground => null;
+
     public void SetSize(int columns, int rows)
     {
         if (_pseudoConsole != IntPtr.Zero && columns >= 1 && rows >= 1)

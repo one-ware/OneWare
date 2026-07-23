@@ -19,6 +19,8 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
 
     public event EventHandler<EventArgs>? Closed;
 
+    public bool? IsShellForeground => terminal.IsShellForeground;
+
     public bool Connect()
     {
         _cancellationSource = new CancellationTokenSource();

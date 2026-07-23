@@ -151,6 +151,9 @@ public class TerminalViewModel : ObservableObject
         if (Connection is PseudoTerminalConnection ptc) ptc.KillProcess();
     }
 
+    public bool? IsShellForeground =>
+        Connection is PseudoTerminalConnection ptc ? ptc.IsShellForeground : null;
+
     public void SuppressEcho(byte[] data)
     {
         if (Connection is IOutputSuppressor suppressor)

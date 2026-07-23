@@ -5,6 +5,7 @@ namespace OneWare.Terminal.Provider;
 public interface IPseudoTerminal : IDisposable
 {
     Process Process { get; }
+    bool? IsShellForeground { get; }
     void SetSize(int columns, int rows);
 
     Task WriteAsync(byte[] buffer, int offset, int count);

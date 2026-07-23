@@ -63,6 +63,8 @@ internal static class NativeDelegates
 
     public delegate void setsid();
 
+    public delegate int tcgetpgrp(int fd);
+
     public delegate int unlockpt(int fd);
 
     public delegate int write(int fd, IntPtr buffer, int length);
@@ -152,6 +154,7 @@ internal static class Native
     public static NativeDelegates.dup dup = NativeDelegates.GetProc<NativeDelegates.dup>();
     public static NativeDelegates.dup2 dup2 = NativeDelegates.GetProc<NativeDelegates.dup2>();
     public static NativeDelegates.setsid setsid = NativeDelegates.GetProc<NativeDelegates.setsid>();
+    public static NativeDelegates.tcgetpgrp tcgetpgrp = NativeDelegates.GetProc<NativeDelegates.tcgetpgrp>();
     public static NativeDelegates.ioctl ioctl = NativeDelegates.GetProc<NativeDelegates.ioctl>();
     public static NativeDelegates.kill kill = NativeDelegates.GetProc<NativeDelegates.kill>();
     public static NativeDelegates.execve execve = NativeDelegates.GetProc<NativeDelegates.execve>();

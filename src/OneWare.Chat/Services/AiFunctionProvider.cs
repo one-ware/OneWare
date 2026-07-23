@@ -143,7 +143,7 @@ public class AiFunctionProvider(
             {
                 Id = id,
                 Result = exception == null,
-                ToolOutput = exception?.ToString()
+                ToolOutput = exception is OperationCanceledException ? "Cancelled." : exception?.ToString()
             }));
     }
 
