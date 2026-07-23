@@ -311,9 +311,11 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                             {
                                 var absoluteCcfPath = Path.Combine(universalFpgaProjectRoot.RootFolderPath, ccf.FullPath);
                                 var absolutePcfPath = Path.ChangeExtension(absoluteCcfPath, ".pcf");
-                                outputService.WriteLine($"Converting {absoluteCcfPath} to CCF File");
-                                if (Path.Exists(absolutePcfPath))
-                                    ConstraintFileHelper.Convert(absoluteCcfPath, absolutePcfPath);
+                                outputService.WriteLine($"Converting {absolutePcfPath} to PCF File");
+                                if (File.Exists(absoluteCcfPath))
+                                {
+                                    ConstraintFileHelper.ConvertCcfToPcf(absoluteCcfPath, absolutePcfPath);
+                                }
                                 return Task.CompletedTask;
                             }),
                         });
