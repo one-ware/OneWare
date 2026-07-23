@@ -145,7 +145,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var output = new StringBuilder();
         var outputLock = new object();
         var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var executionId = Guid.NewGuid().ToString("N");
+        var executionId = terminal.NextExecutionId();
         var completionCommand = terminal.BuildCompletionCommand(executionId);
         var commandToSend = $"{command}\n{completionCommand}";
         var chatOutputSuppressor = new OutputSequenceSuppressor();

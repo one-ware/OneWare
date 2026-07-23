@@ -91,9 +91,12 @@ public class PseudoTerminalConnectionTests
         connection.Connect();
 
         const string executionId = "integration";
-        var command = "printf 'control-channel-output\\n'\n" +
-                      "__ow_exit=$?; printf '\\033[1A\\r\\033[2K'; " +
-                      $"printf '{executionId}:%s\\n' \"$__ow_exit\" >&198; IFS= read -r __ow_ack <&199\r";
+        var setup = "__owc(){ __ow_exit=$?; printf '\\033[1A\\r\\033[2K'; " +
+                    "printf '%s:%s\\n' \"$1\" \"$__ow_exit\" >&198; IFS= read -r __ow_ack <&199; }\r";
+        connection.SendData(Encoding.ASCII.GetBytes(setup));
+        await Task.Delay(100);
+
+        var command = $"printf 'control-channel-output\\n'\n__owc {executionId}\r";
         connection.SendData(Encoding.ASCII.GetBytes(command));
 
         var result = await completion.Task.WaitAsync(TimeSpan.FromSeconds(5));

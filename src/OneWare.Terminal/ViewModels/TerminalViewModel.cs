@@ -20,6 +20,7 @@ public class TerminalViewModel : ObservableObject
         : new UnixPseudoTerminalProvider();
 
     private readonly Lock _createLock = new();
+    private long _executionSequence;
 
     public TerminalViewModel(string workingDir, string? startArguments = null)
     {
@@ -115,10 +116,19 @@ public class TerminalViewModel : ObservableObject
 
                 _ = Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    TerminalVisible = true;
                     Connection.Connect();
 
-                    await Task.Delay(500);
+                    await Task.Delay(300);
+
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        var setupCommand = BuildUnixControlFunction();
+                        SuppressEcho(Encoding.UTF8.GetBytes(setupCommand));
+                        Send(setupCommand);
+                        await Task.Delay(200);
+                    }
+
+                    TerminalVisible = true;
 
                     TerminalLoading = false;
 
@@ -167,9 +177,12 @@ public class TerminalViewModel : ObservableObject
                    "[void]$global:__ow_ack.ReadLine()";
         }
 
-        return
-            $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K'; printf '{executionId}:%s\\n' \"$__ow_exit\" >&198; " +
-            "IFS= read -r __ow_ack <&199";
+        return $"__owc {executionId}";
+    }
+
+    public string NextExecutionId()
+    {
+        return Interlocked.Increment(ref _executionSequence).ToString("x");
     }
 
     public void CloseConnection()
@@ -207,5 +220,12 @@ public class TerminalViewModel : ObservableObject
             $"Set-Location '{escapedDir}'";
 
         return $"powershell.exe -NoProfile -NoExit -Command \"{bootstrapCmd}\"";
+    }
+
+    private static string BuildUnixControlFunction()
+    {
+        return "__owc(){ __ow_exit=$?; printf '\\033[1A\\r\\033[2K'; " +
+               "printf '%s:%s\\n' \"$1\" \"$__ow_exit\" >&198; IFS= read -r __ow_ack <&199; }; " +
+               "printf '\\033[2J\\033[3J\\033[H'";
     }
 }

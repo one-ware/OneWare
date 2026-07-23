@@ -1,4 +1,7 @@
+using System;
+using System.IO;
 using OneWare.TerminalManager.ViewModels;
+using OneWare.Terminal.ViewModels;
 using Xunit;
 
 namespace OneWare.Studio.Desktop.UnitTests;
@@ -24,5 +27,15 @@ public class TerminalManagerViewModelTests
         const string output = "Finished without framing";
 
         Assert.Equal(output, TerminalManagerViewModel.TrimCompletedOutput(output));
+    }
+
+    [Fact]
+    public void BuildCompletionCommand_UsesShortUnixFunctionCall()
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        var terminal = new TerminalViewModel(Path.GetTempPath());
+
+        Assert.Equal("__owc 1", terminal.BuildCompletionCommand(terminal.NextExecutionId()));
     }
 }
