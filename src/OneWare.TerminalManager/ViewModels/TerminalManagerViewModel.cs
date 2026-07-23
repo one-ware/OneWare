@@ -147,6 +147,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var commandSent = false;
         var markerPrefix = PromptMarkerPrefix;
         var commandToSend = command;
+        var commandEchoPrefix = GetCommandEchoPrefix(command);
         string? markerCommand = null;
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -183,7 +184,21 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
                 output.Append(text);
                 current = output.ToString();
 
-                while (TryExtractOscMarker(current, markerPrefix, out var exitCode, out var cleaned))
+                var markerFound = TryExtractOscMarker(current, markerPrefix, out var exitCode, out var cleaned);
+                var commandEchoIndex = commandEchoPrefix.Length == 0
+                    ? -1
+                    : current.IndexOf(commandEchoPrefix, StringComparison.Ordinal);
+                if (!markerFound && markerPrefix != PromptMarkerPrefix && commandEchoIndex >= 0)
+                {
+                    // The shell's prompt hook is an independent completion signal. Prefer the
+                    // invocation-specific marker. Only consider prompt markers that occur after
+                    // this command's echo so a late marker from a pooled terminal cannot complete
+                    // the wrong invocation.
+                    markerFound = TryExtractOscMarker(current, PromptMarkerPrefix, out exitCode, out cleaned,
+                        commandEchoIndex + commandEchoPrefix.Length);
+                }
+
+                if (markerFound)
                 {
                     while (TryExtractOscMarker(cleaned, PromptMarkerPrefix, out _, out var promptCleaned))
                         cleaned = promptCleaned;
@@ -192,10 +207,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
                     output.Clear();
                     output.Append(cleaned);
 
-                    if (!commandSent) continue;
-
-                    completedExitCode = exitCode;
-                    break;
+                    if (commandSent)
+                        completedExitCode = exitCode;
                 }
             }
 
@@ -212,6 +225,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         terminal.Connection.DataReceived += OnDataReceived;
         terminal.Connection.Closed += OnConnectionClosed;
+
         if (markerCommand != null)
         {
             // The shell echoes queued input before executing it. Hide the internal marker
@@ -220,8 +234,11 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             terminal.SuppressEcho(Encoding.UTF8.GetBytes(markerCommand));
         }
 
-        commandSent = true;
-        terminal.Send(commandToSend);
+        if (!resultTcs.Task.IsCompleted && !cancellationToken.IsCancellationRequested)
+        {
+            commandSent = true;
+            terminal.Send(commandToSend);
+        }
 
         TerminalExecutionResult result;
 
@@ -235,17 +252,20 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             lock (outputLock)
                 partialOutput = output.ToString();
 
-            // The command exceeded its timeout or was cancelled but is still running
-            // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
-            // to a usable prompt and the terminal stays reusable.
-            var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
-            if (!recovered)
+            if (commandSent)
             {
-                // The interrupt did not free the shell (the process ignores SIGINT or is
-                // itself hung). Forcibly kill the process tree and discard this terminal
-                // so it is never reused in a stuck state by a subsequent command.
-                terminal.KillProcess();
-                DiscardAutomationTerminal(terminal);
+                // The command exceeded its timeout or was cancelled but is still running
+                // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
+                // to a usable prompt and the terminal stays reusable.
+                var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
+                if (!recovered)
+                {
+                    // The interrupt did not free the shell (the process ignores SIGINT or is
+                    // itself hung). Forcibly kill the process tree and discard this terminal
+                    // so it is never reused in a stuck state by a subsequent command.
+                    terminal.KillProcess();
+                    DiscardAutomationTerminal(terminal);
+                }
             }
 
             result = new TerminalExecutionResult(partialOutput, -1, true);
@@ -336,34 +356,55 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     // prompt marker is injected via terminal environment during shell startup
 
     private static bool TryExtractOscMarker(string current, string markerPrefix, out int exitCode,
-        out string cleanedOutput)
+        out string cleanedOutput, int searchIndex = 0)
     {
         exitCode = 0;
         cleanedOutput = current;
 
-        var markerIndex = current.IndexOf(markerPrefix, StringComparison.Ordinal);
-        if (markerIndex < 0) return false;
-
-        var belIndex = current.IndexOf('\u0007', markerIndex);
-        var stIndex = current.IndexOf("\u001b\\", markerIndex, StringComparison.Ordinal);
-
-        var endIndex = belIndex;
-        var endLength = 1;
-
-        if (endIndex < 0 || (stIndex >= 0 && stIndex < endIndex))
+        while (true)
         {
-            endIndex = stIndex;
-            endLength = 2;
+            var markerIndex = current.IndexOf(markerPrefix, searchIndex, StringComparison.Ordinal);
+            if (markerIndex < 0) return false;
+
+            var belIndex = current.IndexOf('\u0007', markerIndex);
+            var stIndex = current.IndexOf("\u001b\\", markerIndex, StringComparison.Ordinal);
+
+            var endIndex = belIndex;
+            var endLength = 1;
+
+            if (endIndex < 0 || (stIndex >= 0 && stIndex < endIndex))
+            {
+                endIndex = stIndex;
+                endLength = 2;
+            }
+
+            if (endIndex < 0) return false;
+
+            var markerContent = current.Substring(markerIndex + markerPrefix.Length,
+                endIndex - (markerIndex + markerPrefix.Length));
+            if (!int.TryParse(markerContent, out exitCode))
+            {
+                searchIndex = endIndex + endLength;
+                continue;
+            }
+
+            cleanedOutput = current.Remove(markerIndex, endIndex - markerIndex + endLength);
+            return true;
         }
+    }
 
-        if (endIndex < 0) return false;
+    private static string GetCommandEchoPrefix(string command)
+    {
+        var firstLine = command.TrimStart();
+        var lineEnd = firstLine.IndexOfAny(['\r', '\n']);
+        if (lineEnd >= 0)
+            firstLine = firstLine[..lineEnd];
 
-        var markerContent = current.Substring(markerIndex + markerPrefix.Length,
-            endIndex - (markerIndex + markerPrefix.Length));
-        int.TryParse(markerContent, out exitCode);
+        const int minimumDistinctiveLength = 16;
+        const int maximumPrefixLength = 48;
+        if (firstLine.Length < minimumDistinctiveLength) return string.Empty;
 
-        cleanedOutput = current.Remove(markerIndex, endIndex - markerIndex + endLength);
-        return true;
+        return firstLine[..Math.Min(firstLine.Length, maximumPrefixLength)];
     }
 
     public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,

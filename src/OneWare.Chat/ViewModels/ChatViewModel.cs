@@ -35,6 +35,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     // FIFO of messages sent locally so the echoed ChatUserMessageEvent can be matched
     // (suppressed for normal/steered sends, or used to activate a queued message).
     private readonly Queue<PendingLocalMessage> _pendingLocalMessages = new();
+    private readonly List<CancelledQueuedMessage> _cancelledQueuedMessages = [];
 
     private const string DefaultWorkingStatus = "Working…";
 
@@ -42,6 +43,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         string Content,
         ChatSendMode Mode,
         ChatMessageUserViewModel? QueuedView);
+
+    private sealed record CancelledQueuedMessage(string Content, DateTimeOffset ExpiresAt);
 
     private static readonly JsonSerializerOptions ChatStateSerializerOptions = new()
     {
@@ -73,8 +76,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         SteerCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Steer), CanSteerOrQueue);
         QueueCommand = new AsyncRelayCommand(() => SendInternalAsync(ChatSendMode.Queue), CanSteerOrQueue);
         AbortCommand = new AsyncRelayCommand(AbortAsync, CanAbort);
+        RemoveQueuedMessageCommand =
+            new AsyncRelayCommand<ChatMessageUserViewModel>(RemoveQueuedMessageAsync, CanRemoveQueuedMessage);
         InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
 
+        QueuedMessages.CollectionChanged += (_, _) => RemoveQueuedMessageCommand.NotifyCanExecuteChanged();
         applicationStateService.RegisterShutdownAction(SaveState);
     }
 
@@ -211,6 +217,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     public AsyncRelayCommand AbortCommand { get; }
 
+    public AsyncRelayCommand<ChatMessageUserViewModel> RemoveQueuedMessageCommand { get; }
+
     public AsyncRelayCommand InitializeCurrentCommand { get; }
 
     public override void InitializeContent()
@@ -270,6 +278,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Messages.Clear();
         QueuedMessages.Clear();
         _pendingLocalMessages.Clear();
+        _cancelledQueuedMessages.Clear();
         WorkingStatusText = DefaultWorkingStatus;
         _assistantMessagesById.Clear();
         _assistantReasoningById.Clear();
@@ -338,6 +347,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (mode == ChatSendMode.Queue)
             {
                 QueuedMessages.Remove(userMessage);
+                RemovePendingLocalMessage(userMessage);
             }
             else if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
             {
@@ -361,15 +371,55 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         if (SelectedChatService == null) return;
 
+        var queueCleared = QueuedMessages.Count == 0;
+        if (!queueCleared)
+        {
+            try
+            {
+                queueCleared = await SelectedChatService.ClearQueuedMessagesAsync();
+            }
+            catch (Exception ex)
+            {
+                AddErrorMessage($"Failed to clear queued messages: {ex.Message}");
+            }
+        }
+
         try
         {
             await SelectedChatService.AbortAsync();
         }
         finally
         {
-            IsBusy = false;
+            if (queueCleared)
+                CancelQueuedMessagesLocally();
+
+            IsBusy = !queueCleared && QueuedMessages.Count > 0;
         }
     }
+
+    private async Task RemoveQueuedMessageAsync(ChatMessageUserViewModel? message)
+    {
+        if (message == null || SelectedChatService == null || !CanRemoveQueuedMessage(message)) return;
+
+        bool removed;
+        try
+        {
+            removed = await SelectedChatService.RemoveMostRecentQueuedMessageAsync();
+        }
+        catch (Exception ex)
+        {
+            AddErrorMessage($"Failed to remove queued message: {ex.Message}");
+            return;
+        }
+
+        if (!removed || !QueuedMessages.Contains(message)) return;
+
+        QueuedMessages.Remove(message);
+        RemovePendingLocalMessage(message);
+    }
+
+    private bool CanRemoveQueuedMessage(ChatMessageUserViewModel? message) =>
+        message != null && ReferenceEquals(QueuedMessages.LastOrDefault(), message);
 
     private bool CanSend() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
 
@@ -385,6 +435,43 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         pending = default!;
         return false;
+    }
+
+    private bool TryDiscardCancelledQueuedMessage(string content)
+    {
+        var now = DateTimeOffset.Now;
+        _cancelledQueuedMessages.RemoveAll(x => x.ExpiresAt <= now);
+
+        var index = _cancelledQueuedMessages.FindIndex(x =>
+            string.Equals(x.Content, content, StringComparison.Ordinal));
+        if (index < 0) return false;
+
+        _cancelledQueuedMessages.RemoveAt(index);
+        return true;
+    }
+
+    private void CancelQueuedMessagesLocally()
+    {
+        var expiresAt = DateTimeOffset.Now.AddSeconds(30);
+        foreach (var pending in _pendingLocalMessages.Where(x => x.Mode == ChatSendMode.Queue))
+            _cancelledQueuedMessages.Add(new CancelledQueuedMessage(pending.Content, expiresAt));
+
+        var remaining = _pendingLocalMessages.Where(x => x.Mode != ChatSendMode.Queue).ToArray();
+        _pendingLocalMessages.Clear();
+        foreach (var pending in remaining)
+            _pendingLocalMessages.Enqueue(pending);
+
+        QueuedMessages.Clear();
+    }
+
+    private void RemovePendingLocalMessage(ChatMessageUserViewModel message)
+    {
+        var remaining = _pendingLocalMessages
+            .Where(x => !ReferenceEquals(x.QueuedView, message))
+            .ToArray();
+        _pendingLocalMessages.Clear();
+        foreach (var pending in remaining)
+            _pendingLocalMessages.Enqueue(pending);
     }
 
     private void AddMessage(IChatMessage message)
@@ -544,6 +631,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                         return;
                     }
 
+                    if (TryDiscardCancelledQueuedMessage(x.Content)) return;
+
                     // Originates from a remote session user; show it and mark busy.
                     AddMessage(new ChatMessageUserViewModel(x.Content));
                     IsBusy = true;
@@ -599,6 +688,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     Messages.Clear();
+                    QueuedMessages.Clear();
+                    _pendingLocalMessages.Clear();
+                    _cancelledQueuedMessages.Clear();
                     _assistantMessagesById.Clear();
                     _assistantReasoningById.Clear();
                     if (SelectedChatService != null)
@@ -623,6 +715,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Dispatcher.UIThread.Post(() =>
         {
             Messages.Clear();
+            QueuedMessages.Clear();
+            _pendingLocalMessages.Clear();
+            _cancelledQueuedMessages.Clear();
             _assistantMessagesById.Clear();
             _assistantReasoningById.Clear();
 
