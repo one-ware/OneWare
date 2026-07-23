@@ -9,6 +9,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.Terminal.Provider;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
 
@@ -18,6 +19,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 {
     public const string IconKey = "Material.Console";
     private const string PromptMarkerPrefix = "\u001b]9;OW_DONE:";
+    private const string CompletionMarkerControlPrefix = "\u001b[1A\r\u001b[2K";
 
     // Automation terminals are pooled per id so that concurrent commands (e.g. an AI agent
     // running several shell commands at once) each get their own terminal tab instead of
@@ -148,6 +150,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var markerPrefix = PromptMarkerPrefix;
         var commandToSend = command;
         string? markerCommand = null;
+        OutputSequenceSuppressor? chatOutputSuppressor = null;
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -161,6 +164,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             markerCommand =
                 $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K\\033]9;OW_DONE:{executionId}:%s\\007' \"$__ow_exit\"";
             commandToSend = $"{command}\n{markerCommand}";
+            chatOutputSuppressor = new OutputSequenceSuppressor();
+            chatOutputSuppressor.SuppressOutput(Encoding.UTF8.GetBytes(markerCommand));
         }
 
         void OnConnectionClosed(object? sender, EventArgs args)
@@ -174,7 +179,10 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
-            var text = Encoding.UTF8.GetString(args.Data);
+            var data = chatOutputSuppressor?.FilterOutput(args.Data) ?? args.Data;
+            if (data.Length == 0) return;
+
+            var text = Encoding.UTF8.GetString(data);
             string current;
             int? completedExitCode = null;
 
@@ -183,7 +191,9 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
                 output.Append(text);
                 current = output.ToString();
 
-                while (TryExtractOscMarker(current, markerPrefix, out var exitCode, out var cleaned))
+                while ((chatOutputSuppressor != null
+                           ? TryExtractCompletionMarker(current, markerPrefix, out var exitCode, out var cleaned)
+                           : TryExtractOscMarker(current, markerPrefix, out exitCode, out cleaned)))
                 {
                     while (TryExtractOscMarker(cleaned, PromptMarkerPrefix, out _, out var promptCleaned))
                         cleaned = promptCleaned;
@@ -363,6 +373,56 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         int.TryParse(markerContent, out exitCode);
 
         cleanedOutput = current.Remove(markerIndex, endIndex - markerIndex + endLength);
+        return true;
+    }
+
+    internal static bool TryExtractCompletionMarker(string current, string markerPrefix, out int exitCode,
+        out string cleanedOutput)
+    {
+        exitCode = 0;
+        cleanedOutput = current;
+
+        var markerIndex = current.IndexOf(markerPrefix, StringComparison.Ordinal);
+        if (markerIndex < 0) return false;
+
+        var belIndex = current.IndexOf('\u0007', markerIndex);
+        var stIndex = current.IndexOf("\u001b\\", markerIndex, StringComparison.Ordinal);
+        var endIndex = belIndex;
+
+        if (endIndex < 0 || (stIndex >= 0 && stIndex < endIndex))
+            endIndex = stIndex;
+
+        if (endIndex < 0) return false;
+
+        var markerContent = current.Substring(markerIndex + markerPrefix.Length,
+            endIndex - (markerIndex + markerPrefix.Length));
+        int.TryParse(markerContent, out exitCode);
+
+        var promptMarkerIndex = markerIndex > 0
+            ? current.LastIndexOf(PromptMarkerPrefix, markerIndex - 1, StringComparison.Ordinal)
+            : -1;
+        if (promptMarkerIndex >= 0)
+        {
+            cleanedOutput = current[..promptMarkerIndex];
+            return true;
+        }
+
+        var clearSequenceIndex = markerIndex - CompletionMarkerControlPrefix.Length;
+        if (clearSequenceIndex >= 0 &&
+            current.AsSpan(clearSequenceIndex, CompletionMarkerControlPrefix.Length)
+                .SequenceEqual(CompletionMarkerControlPrefix))
+        {
+            var promptLineEnd = clearSequenceIndex > 0
+                ? current.LastIndexOf('\n', clearSequenceIndex - 1)
+                : -1;
+            var previousLineEnd = promptLineEnd > 0
+                ? current.LastIndexOf('\n', promptLineEnd - 1)
+                : -1;
+            cleanedOutput = previousLineEnd >= 0 ? current[..(previousLineEnd + 1)] : string.Empty;
+            return true;
+        }
+
+        cleanedOutput = current[..markerIndex];
         return true;
     }
 

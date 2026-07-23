@@ -49,4 +49,21 @@ public class PseudoTerminalConnectionTests
 
         Assert.Equal("__ow_broken\r\nnext", Encoding.ASCII.GetString(output));
     }
+
+    [Fact]
+    public void FilterOutput_UsesIndependentStateForSeparateConsumers()
+    {
+        var marker = Encoding.ASCII.GetBytes(MarkerCommand);
+        var terminalFilter = new OutputSequenceSuppressor();
+        var chatFilter = new OutputSequenceSuppressor();
+        terminalFilter.SuppressOutput(marker);
+        chatFilter.SuppressOutput(marker);
+        var rawOutput = Encoding.ASCII.GetBytes($"before{MarkerCommand}after");
+
+        var terminalOutput = terminalFilter.FilterOutput(rawOutput);
+        var chatOutput = chatFilter.FilterOutput(rawOutput);
+
+        Assert.Equal("beforeafter", Encoding.ASCII.GetString(terminalOutput));
+        Assert.Equal("beforeafter", Encoding.ASCII.GetString(chatOutput));
+    }
 }
