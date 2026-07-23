@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
 using OneWare.Essentials.Models;
@@ -16,6 +17,7 @@ public class AiFunctionProvider(
     private readonly Lock _registrationLock = new();
     private readonly List<IOneWareAiFunction> _registeredFunctions = [];
     private readonly List<string> _promptAdditions = [];
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeFunctions = new();
     private bool _builtInsRegistered;
 
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
@@ -90,6 +92,21 @@ public class AiFunctionProvider(
         return tools;
     }
 
+    public void CancelActiveFunctions()
+    {
+        foreach (var cancellationSource in _activeFunctions.Values)
+        {
+            try
+            {
+                cancellationSource.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The function completed while cancellation was being requested.
+            }
+        }
+    }
+
     private void EnsureBuiltInsRegistered()
     {
         lock (_registrationLock)
@@ -108,10 +125,8 @@ public class AiFunctionProvider(
             aiFileEditService);
     }
 
-    private async Task<string> NotifyFunctionStartedAsync(string functionName, string? detail = null)
+    private async Task NotifyFunctionStartedAsync(string id, string functionName, string? detail = null)
     {
-        var id = Guid.NewGuid().ToString();
-
         await Dispatcher.UIThread.InvokeAsync(() =>
             FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
             {
@@ -119,8 +134,6 @@ public class AiFunctionProvider(
                 FunctionName = functionName,
                 Detail = detail
             }));
-
-        return id;
     }
 
     private async Task NotifyFunctionCompletedAsync(string id, Exception? exception = null)
@@ -157,19 +170,25 @@ public class AiFunctionProvider(
                 : definition.FriendlyName;
 
             var detail = definition.DetailExtractor?.Invoke(arguments);
-            var id = await provider.NotifyFunctionStartedAsync(friendlyName!, detail);
+            var id = Guid.NewGuid().ToString();
+            using var functionCancellationSource =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            provider._activeFunctions[id] = functionCancellationSource;
+
             var context = new AiFunctionInvocationContext(id,
                 output => provider.RaiseFunctionProgress(id, output));
             Exception? exception = null;
             try
             {
+                await provider.NotifyFunctionStartedAsync(id, friendlyName!, detail);
+
                 if (definition.RunOnUiThread)
                 {
                     return await Dispatcher.UIThread.InvokeAsync(async () =>
-                        await InvokeDefinitionAsync(context, arguments, cancellationToken));
+                        await InvokeDefinitionAsync(context, arguments, functionCancellationSource.Token));
                 }
 
-                return await InvokeDefinitionAsync(context, arguments, cancellationToken);
+                return await InvokeDefinitionAsync(context, arguments, functionCancellationSource.Token);
             }
             catch (Exception ex)
             {
@@ -178,6 +197,7 @@ public class AiFunctionProvider(
             }
             finally
             {
+                provider._activeFunctions.TryRemove(id, out _);
                 await provider.NotifyFunctionCompletedAsync(id, exception);
             }
         }

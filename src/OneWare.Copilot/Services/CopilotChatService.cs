@@ -998,6 +998,7 @@ public sealed class CopilotChatService(
     public async Task AbortAsync()
     {
         ReleasePendingInputRequests();
+        toolProvider.CancelActiveFunctions();
         if (_session == null) return;
         await _session.AbortAsync();
     }
