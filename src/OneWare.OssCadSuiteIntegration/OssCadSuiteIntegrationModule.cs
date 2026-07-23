@@ -30,6 +30,7 @@ namespace OneWare.OssCadSuiteIntegration;
 public class OssCadSuiteIntegrationModule : OneWareModuleBase
 {
     public static readonly Package OssCadPackage = OssCadSuiteHelper.OssCadPackage;
+    public const string OpenGhwWithGtkWaveSetting = "VcdViewer_OpenGhwWithGtkWave";
     
     public override void RegisterServices(IServiceCollection services)
     {
@@ -324,8 +325,18 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
         {
             _ = serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x);
+            if (!settingsService.GetSettingValue<bool>(OpenGhwWithGtkWaveSetting)) return false;
+            if (!IsOssPathValid(settingsService.GetSettingValue<string>(OssCadSuiteHelper.OssPathSetting))) return false;
+
+            serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
             return true;
         }, ".ghw", ".fst", ".lxt");
+        
+        serviceProvider.Resolve<IMainDockService>().RegisterFileOpenOverwrite(x =>
+        {
+            serviceProvider.Resolve<GtkWaveService>().OpenInGtkWaveAsync(x).RunSynchronously();
+            return true;
+        }, ".fst");
         
         fpgaService.RegisterProjectEntryModification(x =>
         {

@@ -12,6 +12,8 @@ using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
+using GhwParserLib = OneWare.Ghw.Parser.GhwParser;
+using FstParserLib = OneWare.Fst.Parser.FstParser;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 
@@ -174,15 +176,25 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         if (cancellationToken.IsCancellationRequested) return false;
 
         var parseLock = LoadingThreads > 1 ? new Lock() : null;
+        var extension = Path.GetExtension(FullPath).ToLowerInvariant();
 
-        _vcdFile = VcdParser.ParseVcdDefinition(FullPath, parseLock);
+        if (extension == ".ghw")
+            _vcdFile = (await GhwParserLib.ParseGhwAsync(FullPath).ConfigureAwait(true)).VcdFile;
+        else if (extension == ".fst")
+            _vcdFile = (await FstParserLib.ParseFstAsync(FullPath).ConfigureAwait(true)).VcdFile;
+        else
+            _vcdFile = VcdParser.ParseVcdDefinition(FullPath, parseLock);
+
+        // VCD-specific operations (incremental signal streaming and last-time scanning) are only
+        // valid for VCD files; GHW and FST parsers already populate the full hierarchy synchronously.
+        var isVcd = extension is not (".ghw" or ".fst");
 
         Scopes.AddRange(_vcdFile.Definition.Scopes.Where(x => x.Signals.Count != 0 || x.Scopes.Count != 0)
             .Select(x => new VcdScopeModel(x)));
 
         WaveFormViewer.TimeScale = _vcdFile.Definition.TimeScale;
 
-        var lastTime = !_isLiveExecution ? await VcdParser.TryFindLastTime(FullPath) : 0;
+        var lastTime = !_isLiveExecution && isVcd ? await VcdParser.TryFindLastTime(FullPath) : null;
 
         if (cancellationToken.IsCancellationRequested) return false;
 
@@ -233,8 +245,15 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             }, TimeSpan.FromMilliseconds(100), DispatcherPriority.MaxValue)
             .DisposeWith(_compositeDisposable);
 
-        await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, cancellationToken, useThreads,
-            parseLock);
+        if (isVcd)
+            await VcdParser.ReadSignalsAsync(FullPath, _vcdFile, progress, cancellationToken, useThreads,
+                parseLock).ConfigureAwait(true);
+        else if (_vcdFile.Definition.ChangeTimes.Count != 0)
+        {
+            var maxTime = _vcdFile.Definition.ChangeTimes.Last();
+            if (maxTime > WaveFormViewer.Max) WaveFormViewer.Max = maxTime;
+            WaveFormViewer.LoadingMarkerOffset = maxTime;
+        }
 
         disposable.Dispose();
 
