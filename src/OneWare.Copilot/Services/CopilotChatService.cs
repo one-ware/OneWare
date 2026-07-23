@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -51,6 +52,11 @@ public sealed class CopilotChatService(
     private string? _requestedSessionId;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
     private readonly HashSet<string> _sessionApprovedTools = new();
+    private readonly HashSet<string> _temporaryAttachmentPaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Lock _submittedAttachmentsLock = new();
+    private readonly List<SubmittedAttachmentBatch> _submittedAttachmentBatches = [];
+
+    private sealed record SubmittedAttachmentBatch(string Content, ChatSendMode Mode, string[] TemporaryPaths);
 
     // Usage tracking
     public long LastInputTokens
@@ -557,6 +563,7 @@ public sealed class CopilotChatService(
         else
         {
             Attachments.Remove(attachment);
+            DeleteTemporaryAttachment(attachment.FilePath);
         }
     }
 
@@ -579,24 +586,196 @@ public sealed class CopilotChatService(
         }
     }
 
-    private IList<Attachment>? CollectAttachments()
+    public async Task<bool> TryAddClipboardAttachmentAsync(TopLevel topLevel)
+    {
+        if (topLevel.Clipboard is not { } clipboard) return false;
+
+        using var bitmap = await clipboard.TryGetBitmapAsync();
+        if (bitmap == null) return false;
+
+        var attachmentDirectory = Path.Combine(paths.SessionDirectory, "CopilotAttachments");
+        var filePath = Path.Combine(attachmentDirectory, $"clipboard-{Guid.NewGuid():N}.png");
+        try
+        {
+            Directory.CreateDirectory(attachmentDirectory);
+            bitmap.Save(filePath);
+        }
+        catch (IOException ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.LogWarning(ex, "Failed to save clipboard image for Copilot.");
+            TryDeleteFile(filePath);
+            return false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.LogWarning(ex, "Failed to save clipboard image for Copilot.");
+            TryDeleteFile(filePath);
+            return false;
+        }
+
+        lock (_submittedAttachmentsLock)
+            _temporaryAttachmentPaths.Add(filePath);
+
+        Attachments.Add(new CopilotAttachmentViewModel(
+            filePath,
+            $"Pasted image {Attachments.Count + 1}",
+            isActiveFile: false,
+            RemoveAttachment,
+            iconResourceKey: "VsImageLib.Image16X"));
+
+        return true;
+    }
+
+    private (IList<Attachment>? Attachments, CopilotAttachmentViewModel[] ExplicitAttachments,
+        string[] TemporaryPaths, bool IncludesActiveFile) CollectAttachments()
     {
         // Rebuild the active-file chip from the live editor so the sent payload reflects the
         // current selection even if the chip display lagged.
         RefreshActiveFileAttachment(focusChanged: false);
 
+        var activeFileAttachment = ActiveFileAttachment;
+        var explicitAttachments = Attachments.ToArray();
         var result = new List<Attachment>();
-        if (ActiveFileAttachment != null) result.Add(ActiveFileAttachment.ToSdkAttachment());
-        result.AddRange(Attachments.Select(a => a.ToSdkAttachment()));
+        if (activeFileAttachment != null) result.Add(activeFileAttachment.ToSdkAttachment());
+        result.AddRange(explicitAttachments.Select(a => a.ToSdkAttachment()));
 
-        return result.Count > 0 ? result : null;
+        return (
+            result.Count > 0 ? result : null,
+            explicitAttachments,
+            explicitAttachments.Select(x => x.FilePath)
+                .Where(IsTemporaryAttachment)
+                .ToArray(),
+            activeFileAttachment != null);
     }
 
-    private void ClearAttachmentsAfterSend()
+    private void ClearAttachmentsAfterSend(CopilotAttachmentViewModel[] submittedAttachments,
+        bool includedActiveFile)
     {
-        Attachments.Clear();
-        _activeFileDismissed = false;
-        RefreshActiveFileAttachment(focusChanged: false);
+        foreach (var attachment in submittedAttachments)
+            Attachments.Remove(attachment);
+
+        if (includedActiveFile)
+        {
+            _activeFileDismissed = false;
+            RefreshActiveFileAttachment(focusChanged: false);
+        }
+    }
+
+    private void RestoreAttachmentsAfterFailedSend(CopilotAttachmentViewModel[] submittedAttachments,
+        string[] temporaryPaths, bool includedActiveFile)
+    {
+        for (var index = submittedAttachments.Length - 1; index >= 0; index--)
+        {
+            var attachment = submittedAttachments[index];
+            if (temporaryPaths.Contains(attachment.FilePath, StringComparer.OrdinalIgnoreCase) &&
+                !IsTemporaryAttachment(attachment.FilePath))
+                continue;
+
+            if (!Attachments.Contains(attachment))
+                Attachments.Insert(0, attachment);
+        }
+
+        if (includedActiveFile)
+            RefreshActiveFileAttachment(focusChanged: false);
+    }
+
+    private void DeleteTemporaryAttachment(string filePath)
+    {
+        lock (_submittedAttachmentsLock)
+        {
+            if (!_temporaryAttachmentPaths.Contains(filePath)) return;
+        }
+
+        if (!TryDeleteFile(filePath)) return;
+
+        lock (_submittedAttachmentsLock)
+            _temporaryAttachmentPaths.Remove(filePath);
+    }
+
+    private bool IsTemporaryAttachment(string filePath)
+    {
+        lock (_submittedAttachmentsLock)
+            return _temporaryAttachmentPaths.Contains(filePath);
+    }
+
+    private string[] GetTemporaryAttachmentPaths()
+    {
+        lock (_submittedAttachmentsLock)
+            return _temporaryAttachmentPaths.ToArray();
+    }
+
+    private static bool TryDeleteFile(string filePath)
+    {
+        try
+        {
+            File.Delete(filePath);
+            return true;
+        }
+        catch (IOException ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.LogWarning(ex, "Failed to delete temporary Copilot attachment {FilePath}.", filePath);
+            return false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.LogWarning(ex, "Failed to delete temporary Copilot attachment {FilePath}.", filePath);
+            return false;
+        }
+    }
+
+    private void DeleteSubmittedAttachments(string content)
+    {
+        SubmittedAttachmentBatch? batch;
+        lock (_submittedAttachmentsLock)
+        {
+            batch = _submittedAttachmentBatches.FirstOrDefault(x =>
+                string.Equals(x.Content, content, StringComparison.Ordinal));
+            if (batch != null)
+                _submittedAttachmentBatches.Remove(batch);
+        }
+
+        if (batch != null)
+            DeleteTemporaryAttachments(batch);
+    }
+
+    private void DeleteMostRecentSubmittedAttachments(ChatSendMode mode)
+    {
+        SubmittedAttachmentBatch? batch;
+        lock (_submittedAttachmentsLock)
+        {
+            batch = _submittedAttachmentBatches.LastOrDefault(x => x.Mode == mode);
+            if (batch != null)
+                _submittedAttachmentBatches.Remove(batch);
+        }
+
+        if (batch != null)
+            DeleteTemporaryAttachments(batch);
+    }
+
+    private void DeleteSubmittedAttachments(ChatSendMode? mode = null)
+    {
+        SubmittedAttachmentBatch[] batches;
+        lock (_submittedAttachmentsLock)
+        {
+            batches = _submittedAttachmentBatches
+                .Where(x => mode == null || x.Mode == mode)
+                .ToArray();
+            foreach (var batch in batches)
+                _submittedAttachmentBatches.Remove(batch);
+        }
+
+        foreach (var batch in batches)
+            DeleteTemporaryAttachments(batch);
+    }
+
+    private void DeleteTemporaryAttachments(SubmittedAttachmentBatch batch)
+    {
+        foreach (var filePath in batch.TemporaryPaths)
+            DeleteTemporaryAttachment(filePath);
     }
 
     #endregion
@@ -979,8 +1158,8 @@ public sealed class CopilotChatService(
         if (_session == null) return;
 
         var options = new MessageOptions { Prompt = prompt };
-        var attachments = CollectAttachments();
-        if (attachments != null) options.Attachments = attachments;
+        var attachmentSnapshot = CollectAttachments();
+        if (attachmentSnapshot.Attachments != null) options.Attachments = attachmentSnapshot.Attachments;
 
         var sdkMode = mode switch
         {
@@ -990,9 +1169,29 @@ public sealed class CopilotChatService(
         };
         if (sdkMode != null) options.Mode = sdkMode;
 
-        await _session.SendAsync(options).ConfigureAwait(false);
+        var submittedBatch = new SubmittedAttachmentBatch(prompt, mode, attachmentSnapshot.TemporaryPaths);
+        lock (_submittedAttachmentsLock)
+            _submittedAttachmentBatches.Add(submittedBatch);
 
-        Dispatcher.UIThread.Post(ClearAttachmentsAfterSend);
+        await Dispatcher.UIThread.InvokeAsync(() => ClearAttachmentsAfterSend(
+            attachmentSnapshot.ExplicitAttachments,
+            attachmentSnapshot.IncludesActiveFile));
+
+        try
+        {
+            await _session.SendAsync(options).ConfigureAwait(false);
+        }
+        catch
+        {
+            lock (_submittedAttachmentsLock)
+                _submittedAttachmentBatches.Remove(submittedBatch);
+
+            await Dispatcher.UIThread.InvokeAsync(() => RestoreAttachmentsAfterFailedSend(
+                attachmentSnapshot.ExplicitAttachments,
+                attachmentSnapshot.TemporaryPaths,
+                attachmentSnapshot.IncludesActiveFile));
+            throw;
+        }
     }
 
     public async Task AbortAsync()
@@ -1007,6 +1206,8 @@ public sealed class CopilotChatService(
     {
         if (_session == null) return false;
         var result = await _session.Rpc.Queue.RemoveMostRecentAsync();
+        if (result.Removed)
+            DeleteMostRecentSubmittedAttachments(ChatSendMode.Queue);
         return result.Removed;
     }
 
@@ -1014,12 +1215,14 @@ public sealed class CopilotChatService(
     {
         if (_session == null) return false;
         await _session.Rpc.Queue.ClearAsync();
+        DeleteSubmittedAttachments(ChatSendMode.Queue);
         return true;
     }
 
     public async Task NewChatAsync()
     {
         ReleasePendingInputRequests();
+        DeleteSubmittedAttachments();
         lock (_sessionApprovedTools)
             _sessionApprovedTools.Clear();
         _requestedSessionId = null;
@@ -1048,6 +1251,10 @@ public sealed class CopilotChatService(
     public async ValueTask DisposeAsync()
     {
         ReleasePendingInputRequests();
+        DeleteSubmittedAttachments();
+
+        foreach (var filePath in GetTemporaryAttachmentPaths())
+            DeleteTemporaryAttachment(filePath);
 
         if (_attachmentTrackingInitialized)
         {
@@ -1151,6 +1358,7 @@ public sealed class CopilotChatService(
             }
             case UserMessageEvent x:
             {
+                DeleteSubmittedAttachments(x.Data.Content);
                 EventReceived?.Invoke(this,
                     new ChatUserMessageEvent(x.Data.Content));
                 break;

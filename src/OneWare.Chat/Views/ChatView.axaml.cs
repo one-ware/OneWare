@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using OneWare.Chat.ViewModels;
@@ -54,12 +55,29 @@ public partial class ChatView : UserControl
         Dispatcher.UIThread.Post(() => ScrollViewer.ScrollToEnd(), DispatcherPriority.Background);
     }
 
-    private void OnCommandBoxKeyDown(object? sender, KeyEventArgs e)
+    private async void OnCommandBoxKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key is not (Key.Enter or Key.Return)) return;
         if (DataContext is not ChatViewModel vm) return;
 
         var modifiers = e.KeyModifiers;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel?.PlatformSettings?.HotkeyConfiguration.Paste.Any(gesture => gesture.Matches(e)) == true)
+        {
+            e.Handled = true;
+            try
+            {
+                await PasteClipboardAsync(vm, topLevel);
+            }
+            catch (TimeoutException)
+            {
+                // Match Avalonia TextBox behavior when the platform clipboard is temporarily busy.
+            }
+
+            return;
+        }
+
+        if (e.Key is not (Key.Enter or Key.Return)) return;
 
         // Shift+Enter inserts a newline — let the TextBox handle it.
         if (modifiers.HasFlag(KeyModifiers.Shift)) return;
@@ -79,6 +97,24 @@ public partial class ChatView : UserControl
 
         // Plain Enter: steer while busy, otherwise start a new turn.
         Execute(vm.IsBusy ? vm.SteerCommand : vm.SendCommand, e);
+    }
+
+    private async Task PasteClipboardAsync(ChatViewModel viewModel, TopLevel topLevel)
+    {
+        if (topLevel.Clipboard == null) return;
+
+        if (viewModel.SelectedChatService != null &&
+            await viewModel.SelectedChatService.TryAddClipboardAttachmentAsync(topLevel))
+            return;
+
+        var clipboardText = await topLevel.Clipboard.TryGetTextAsync();
+        if (string.IsNullOrEmpty(clipboardText)) return;
+
+        var text = CommandBox.Text ?? string.Empty;
+        var selectionStart = Math.Min(CommandBox.SelectionStart, CommandBox.SelectionEnd);
+        var selectionEnd = Math.Max(CommandBox.SelectionStart, CommandBox.SelectionEnd);
+        CommandBox.Text = text[..selectionStart] + clipboardText + text[selectionEnd..];
+        CommandBox.CaretIndex = selectionStart + clipboardText.Length;
     }
 
     private static void Execute(System.Windows.Input.ICommand command, KeyEventArgs e)

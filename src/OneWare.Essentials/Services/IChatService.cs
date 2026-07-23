@@ -63,6 +63,12 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     /// should override this.
     /// </remarks>
     Task SendAsync(string prompt, ChatSendMode mode) => SendAsync(prompt);
+
+    /// <summary>
+    /// Adds an image from the clipboard as an attachment, if supported.
+    /// </summary>
+    Task<bool> TryAddClipboardAttachmentAsync(TopLevel topLevel) => Task.FromResult(false);
+
     /// <summary>
     /// Aborts the current request.
     /// </summary>
