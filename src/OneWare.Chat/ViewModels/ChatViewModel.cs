@@ -20,6 +20,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private readonly IMainDockService _mainDockService;
     private readonly IAiFunctionProvider _aiFunctionProvider;
+    private ChatMessageErrorViewModel? _notConnectedMessage;
     private readonly string _statePath;
     private readonly string _historyRootPath;
 
@@ -284,6 +285,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         WorkingStatusText = DefaultWorkingStatus;
         _assistantMessagesById.Clear();
         _assistantReasoningById.Clear();
+        _notConnectedMessage = null;
     }
 
     private async Task SendInternalAsync(ChatSendMode mode)
@@ -304,8 +306,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         if (!IsConnected)
         {
-            AddErrorMessage($"{SelectedChatService.Name} is not connected yet.");
+            // Replace (don't stack) the transient connection warning; it is removed
+            // again as soon as a message actually goes through.
+            if (_notConnectedMessage != null) Messages.Remove(_notConnectedMessage);
+            _notConnectedMessage = new ChatMessageErrorViewModel($"{SelectedChatService.Name} is not connected yet.");
+            AddMessage(_notConnectedMessage);
             return;
+        }
+
+        if (_notConnectedMessage != null)
+        {
+            Messages.Remove(_notConnectedMessage);
+            _notConnectedMessage = null;
         }
 
         var userMessage = new ChatMessageUserViewModel(prompt);
@@ -695,6 +707,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     _cancelledQueuedMessages.Clear();
                     _assistantMessagesById.Clear();
                     _assistantReasoningById.Clear();
+                    _notConnectedMessage = null;
                     if (SelectedChatService != null)
                         UpdateSelectedSessionFromService(SelectedChatService);
                 });
@@ -716,12 +729,32 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         Dispatcher.UIThread.Post(() =>
         {
-            Messages.Clear();
+            // Keep the visible transcript: a session reset (e.g. after a CLI update or
+            // re-login) starts a fresh backend session, but wiping the conversation from
+            // the view is unnecessary. Only in-flight state tied to the old session is
+            // dropped, and any still-streaming messages are finalized.
+            foreach (var message in Messages.OfType<ChatMessageAssistantViewModel>())
+                message.IsStreaming = false;
+            foreach (var message in Messages.OfType<ChatMessageReasoningViewModel>())
+                message.IsStreaming = false;
+
+            // Sweep transient service-status prompts (e.g. "Update Copilot CLI",
+            // "Login with GitHub") — after a reset they have been acted on.
+            foreach (var button in Messages.OfType<ChatMessageWithButtonViewModel>().ToList())
+                Messages.Remove(button);
+            if (_notConnectedMessage != null)
+            {
+                Messages.Remove(_notConnectedMessage);
+                _notConnectedMessage = null;
+            }
+
             QueuedMessages.Clear();
             _pendingLocalMessages.Clear();
             _cancelledQueuedMessages.Clear();
             _assistantMessagesById.Clear();
             _assistantReasoningById.Clear();
+            IsBusy = false;
+            WorkingStatusText = DefaultWorkingStatus;
 
             if (SelectedChatService != null)
             {

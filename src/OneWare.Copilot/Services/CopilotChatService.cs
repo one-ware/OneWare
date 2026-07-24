@@ -618,6 +618,10 @@ public sealed class CopilotChatService(
 
         if (!installResult) return false;
 
+        // Resume the conversation that was active before the reinstall/update
+        // instead of starting an empty session.
+        _requestedSessionId ??= CurrentSessionId;
+
         SessionReset?.Invoke(this, EventArgs.Empty);
 
         await InitializeAsync();
@@ -670,6 +674,8 @@ public sealed class CopilotChatService(
             {
                 await Dispatcher.UIThread.InvokeAsync(view.Close);
                 await showTask;
+                // Keep the previous conversation (if any) across the re-login.
+                _requestedSessionId ??= CurrentSessionId;
                 SessionReset?.Invoke(this, EventArgs.Empty);
                 return await InitializeAsync();
             }
