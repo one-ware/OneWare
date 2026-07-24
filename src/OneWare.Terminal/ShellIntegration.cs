@@ -91,7 +91,15 @@ public static class ShellIntegration
 
     private static string CreateScriptDirectory()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "oneware-shell-integration");
+        // Per-user, owner-controlled location. Deliberately NOT the shared temp directory:
+        // /tmp is world-writable, so a fixed path there could be pre-created by another
+        // (malicious) user, who could then swap the scripts our shells source (TOCTOU) or
+        // simply block other users from writing them. A dot-directory in the user's home
+        // is also space-free on Unix, which the pty argument handling requires.
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (string.IsNullOrEmpty(home)) home = Path.GetTempPath();
+
+        var dir = Path.Combine(home, ".oneware", "shell-integration");
         Directory.CreateDirectory(dir);
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -99,9 +107,7 @@ public static class ShellIntegration
             try
             {
                 File.SetUnixFileMode(dir,
-                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             }
             catch
             {
