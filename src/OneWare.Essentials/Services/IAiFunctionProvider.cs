@@ -24,6 +24,11 @@ public interface IAiFunctionProvider
     {
     }
 
+    /// <summary>Cancels the single running AI function with the given invocation id.</summary>
+    void CancelFunction(string id)
+    {
+    }
+
     /// <summary>Registers an additional AI function (e.g. from plugins).</summary>
     void RegisterFunction(IOneWareAiFunction function);
 

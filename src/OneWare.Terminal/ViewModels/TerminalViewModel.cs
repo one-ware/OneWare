@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Threading;
@@ -27,9 +24,7 @@ public class TerminalViewModel : ObservableObject
     public TerminalViewModel(string workingDir, string? startArguments = null)
     {
         WorkingDir = workingDir;
-        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? BuildWindowsStartArguments(WorkingDir)
-            : null);
+        StartArguments = startArguments;
     }
 
     public string? StartArguments { get; }
@@ -62,6 +57,12 @@ public class TerminalViewModel : ObservableObject
 
     public event EventHandler? TerminalReady;
 
+    /// <summary>
+    /// Raised when the underlying shell exits or the pty closes on its own,
+    /// i.e. not through <see cref="Close"/>. Lets owners close the containing tab.
+    /// </summary>
+    public event EventHandler? ConnectionClosed;
+
     public void Redraw()
     {
         if (TerminalVisible)
@@ -84,7 +85,7 @@ public class TerminalViewModel : ObservableObject
         lock (_createLock)
         {
             CloseConnection();
-            
+
             var shellExecutable = PlatformHelper.Platform switch
             {
                 PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
@@ -96,16 +97,14 @@ public class TerminalViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(shellExecutable))
             {
-                var environment = BuildTerminalEnvironment(shellExecutable);
-                var startArguments = StartArguments;
-                if (string.IsNullOrWhiteSpace(startArguments) &&
-                    Path.GetFileName(shellExecutable).Equals("zsh", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Ensure zsh runs interactively so precmd hooks fire.
-                    startArguments = "-i";
-                }
+                // Shell integration is installed via startup files, so the shell emits
+                // invisible OSC 633 command lifecycle sequences without anything being
+                // typed into (or echoed by) the terminal.
+                var integration = ShellIntegration.GetSpawnConfig(shellExecutable);
+                var startArguments = StartArguments ?? integration.Arguments;
 
-                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, environment, startArguments);
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, integration.Environment,
+                    startArguments);
 
                 if (terminal == null)
                 {
@@ -114,15 +113,15 @@ public class TerminalViewModel : ObservableObject
                 }
 
                 Connection = new PseudoTerminalConnection(terminal);
+                Connection.Closed += OnConnectionClosed;
 
                 Terminal = new VirtualTerminalController();
 
-                _ = Dispatcher.UIThread.InvokeAsync(async () =>
+                Dispatcher.UIThread.Post(() =>
                 {
-                    TerminalVisible = true;
                     Connection.Connect();
 
-                    await Task.Delay(500);
+                    TerminalVisible = true;
 
                     TerminalLoading = false;
 
@@ -134,7 +133,7 @@ public class TerminalViewModel : ObservableObject
 
     public void Send(string command)
     {
-        if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
+        if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.UTF8.GetBytes($"{command}\r"));
     }
 
     public void SendInterrupt()
@@ -151,173 +150,27 @@ public class TerminalViewModel : ObservableObject
         if (Connection is PseudoTerminalConnection ptc) ptc.KillProcess();
     }
 
-    public void SuppressEcho(byte[] data)
-    {
-        if (Connection is IOutputSuppressor suppressor)
-        {
-            suppressor.SuppressOutput(data);
-        }
-    }
-
     public void CloseConnection()
     {
         if (Connection != null)
         {
+            Connection.Closed -= OnConnectionClosed;
             Connection.Disconnect();
             Connection = null;
         }
     }
 
+    private void OnConnectionClosed(object? sender, EventArgs e)
+    {
+        if (sender is IConnection connection)
+            connection.Closed -= OnConnectionClosed;
+        if (!ReferenceEquals(sender, Connection)) return;
+
+        ConnectionClosed?.Invoke(this, EventArgs.Empty);
+    }
+
     public void Close()
     {
         CloseConnection();
-    }
-
-    private static string BuildWindowsStartArguments(string workingDir)
-    {
-        // The arguments string must include the full command line because
-        // Win32ConPtyPseudoTerminalProvider.BuildCommandLine returns just the arguments when provided
-        var escapedDir = workingDir.Replace("'", "''");
-
-        // Keep bootstrap inline so we do not execute external .ps1 files.
-        // This avoids requiring users to change PowerShell execution policy.
-        var bootstrapCmd =
-            "if (Test-Path function:prompt) { $function:__ow_original_prompt = $function:prompt }; " +
-            "function global:prompt { " +
-            "$esc = [char]27; $bel = [char]7; " +
-            "$code = if ($global:LASTEXITCODE -ne $null) { [int]$global:LASTEXITCODE } elseif ($?) { 0 } else { 1 }; " +
-            "Write-Host ($esc + ']9;OW_DONE:' + $code + $bel) -NoNewline; " +
-            "if (Test-Path function:__ow_original_prompt) { & __ow_original_prompt } else { " +
-            "'PS ' + $executionContext.SessionState.Path.CurrentLocation + ('>' * ($nestedPromptLevel + 1)) + ' ' " +
-            "} " +
-            "}; " +
-            $"Set-Location '{escapedDir}'";
-
-        return $"powershell.exe -NoProfile -NoExit -Command \"{bootstrapCmd}\"";
-    }
-
-    private static string? BuildTerminalEnvironment(string? shellExecutable)
-    {
-        if (string.IsNullOrWhiteSpace(shellExecutable)) return null;
-
-        var shellName = Path.GetFileName(shellExecutable);
-        
-        if (shellName.Equals("bash", StringComparison.OrdinalIgnoreCase))
-        {
-            var existingPromptCommand = Environment.GetEnvironmentVariable("PROMPT_COMMAND");
-            var markerCommand = "printf '\\033]9;OW_DONE:%s\\007' $?";
-            var combined = string.IsNullOrWhiteSpace(existingPromptCommand)
-                ? markerCommand
-                : markerCommand + ";" + existingPromptCommand;
-
-            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["PROMPT_COMMAND"] = combined
-            };
-
-            return BuildEnvironmentBlock(overrides);
-        }
-
-        if (shellName.Equals("zsh", StringComparison.OrdinalIgnoreCase))
-        {
-            var zshDotDir = EnsureZshDotDir();
-            if (string.IsNullOrWhiteSpace(zshDotDir)) return null;
-
-            var overrides = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["ZDOTDIR"] = zshDotDir
-            };
-
-            return BuildEnvironmentBlock(overrides);
-        }
-
-        return null;
-    }
-
-    private static string? EnsureZshDotDir()
-    {
-        try
-        {
-            var tempDir = Path.Combine(Path.GetTempPath(), "oneware", "zsh");
-            Directory.CreateDirectory(tempDir);
-
-            var userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var baseZdotdir = Environment.GetEnvironmentVariable("ZDOTDIR");
-            if (string.IsNullOrWhiteSpace(baseZdotdir)) baseZdotdir = userHome;
-
-            if (!string.IsNullOrWhiteSpace(baseZdotdir))
-            {
-                WriteZshFile(Path.Combine(tempDir, ".zshenv"), Path.Combine(baseZdotdir, ".zshenv"),
-                    "# oneware zshenv");
-                WriteZshFile(Path.Combine(tempDir, ".zprofile"), Path.Combine(baseZdotdir, ".zprofile"),
-                    "# oneware zprofile");
-                WriteZshFile(Path.Combine(tempDir, ".zlogin"), Path.Combine(baseZdotdir, ".zlogin"),
-                    "# oneware zlogin");
-            }
-
-            var zshrcPath = Path.Combine(tempDir, ".zshrc");
-            var zshrcBuilder = new StringBuilder();
-            zshrcBuilder.AppendLine("# oneware zshrc");
-
-            var originalZshrc = !string.IsNullOrWhiteSpace(baseZdotdir)
-                ? Path.Combine(baseZdotdir, ".zshrc")
-                : null;
-
-            if (!string.IsNullOrWhiteSpace(originalZshrc) && File.Exists(originalZshrc))
-            {
-                zshrcBuilder.Append("source ").Append('"').Append(originalZshrc).Append('"').AppendLine();
-            }
-
-            zshrcBuilder.AppendLine("autoload -Uz add-zsh-hook");
-            zshrcBuilder.AppendLine("_ow_precmd() { printf '\\033]9;OW_DONE:%s\\007' $?; }");
-            zshrcBuilder.AppendLine("add-zsh-hook precmd _ow_precmd");
-
-            File.WriteAllText(zshrcPath, zshrcBuilder.ToString(), Encoding.ASCII);
-            return tempDir;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static void WriteZshFile(string destinationPath, string sourcePath, string header)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine(header);
-        if (File.Exists(sourcePath))
-        {
-            builder.Append("source ").Append('"').Append(sourcePath).Append('"').AppendLine();
-        }
-
-        File.WriteAllText(destinationPath, builder.ToString(), Encoding.ASCII);
-    }
-
-    private static string BuildEnvironmentBlock(Dictionary<string, string> overrides)
-    {
-        var comparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
-
-        var env = new SortedDictionary<string, string>(comparer);
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-        {
-            if (entry.Key is not string key || entry.Value is not string value) continue;
-            env[key] = value;
-        }
-
-        foreach (var pair in overrides)
-        {
-            env[pair.Key] = pair.Value;
-        }
-
-        var builder = new StringBuilder();
-        foreach (var pair in env)
-        {
-            builder.Append(pair.Key).Append('=').Append(pair.Value).Append('\0');
-        }
-
-        builder.Append('\0');
-        return builder.ToString();
     }
 }

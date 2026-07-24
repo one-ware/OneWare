@@ -93,6 +93,14 @@ internal static class ConPtyNative
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct SecurityAttributes
+    {
+        public int nLength;
+        public IntPtr lpSecurityDescriptor;
+        public bool bInheritHandle;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct ProcessInformation
     {
         public IntPtr hProcess;

@@ -67,6 +67,17 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     /// Aborts the current request.
     /// </summary>
     Task AbortAsync();
+
+    /// <summary>
+    /// Removes the most recently queued message, if the service supports queue management.
+    /// </summary>
+    Task<bool> RemoveMostRecentQueuedMessageAsync() => Task.FromResult(false);
+
+    /// <summary>
+    /// Clears all queued messages, returning whether the service queue was cleared.
+    /// </summary>
+    Task<bool> ClearQueuedMessagesAsync() => Task.FromResult(false);
+
     /// <summary>
     /// Starts a new chat session.
     /// </summary>

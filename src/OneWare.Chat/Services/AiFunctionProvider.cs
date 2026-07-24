@@ -94,16 +94,21 @@ public class AiFunctionProvider(
 
     public void CancelActiveFunctions()
     {
-        foreach (var cancellationSource in _activeFunctions.Values)
+        foreach (var id in _activeFunctions.Keys)
+            CancelFunction(id);
+    }
+
+    public void CancelFunction(string id)
+    {
+        if (!_activeFunctions.TryGetValue(id, out var cancellationSource)) return;
+
+        try
         {
-            try
-            {
-                cancellationSource.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // The function completed while cancellation was being requested.
-            }
+            cancellationSource.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The function completed while cancellation was being requested.
         }
     }
 
@@ -143,7 +148,7 @@ public class AiFunctionProvider(
             {
                 Id = id,
                 Result = exception == null,
-                ToolOutput = exception?.ToString()
+                ToolOutput = exception is OperationCanceledException ? "Cancelled." : exception?.ToString()
             }));
     }
 
@@ -189,6 +194,13 @@ public class AiFunctionProvider(
                 }
 
                 return await InvokeDefinitionAsync(context, arguments, functionCancellationSource.Token);
+            }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Only this tool call was cancelled (e.g. via its stop button) — report it to the
+                // model as a result instead of failing the whole chat turn.
+                exception = ex;
+                return "The tool call was stopped by the user before it finished.";
             }
             catch (Exception ex)
             {

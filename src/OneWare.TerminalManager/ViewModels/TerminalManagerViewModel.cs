@@ -9,6 +9,7 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.Terminal.Provider;
 using OneWare.Terminal.ViewModels;
 using OneWare.TerminalManager.Models;
 
@@ -17,7 +18,12 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 {
     public const string IconKey = "Material.Console";
-    private const string PromptMarkerPrefix = "\u001b]9;OW_DONE:";
+
+    // After a command reports completion, wait briefly for another command-start event.
+    // Multi-line command blocks execute line by line (already buffered in the pty), so the
+    // next line's start marker arrives within milliseconds; only the final completion is
+    // followed by silence.
+    private static readonly TimeSpan MultiCommandGracePeriod = TimeSpan.FromMilliseconds(250);
 
     // Automation terminals are pooled per id so that concurrent commands (e.g. an AI agent
     // running several shell commands at once) each get their own terminal tab instead of
@@ -97,6 +103,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var title = GetUniqueTitle(name);
 
         var tab = new TerminalTabModel(title, new TerminalViewModel(homeFolder), this);
+        // Close the tab when its shell exits (e.g. the user or an automation command runs "exit").
+        tab.Terminal.ConnectionClosed += (_, _) => Dispatcher.UIThread.Post(tab.Close);
         Terminals.Add(tab);
 
         if (select) SelectedTerminalTab = tab;
@@ -135,93 +143,134 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 
         terminal.TerminalReady -= OnReady;
 
-        if (terminal.Connection == null)
+        if (terminal.Connection is not PseudoTerminalConnection connection)
         {
             if (closeWhenDone) terminal.Close();
             return new TerminalExecutionResult(string.Empty, -1, true);
         }
 
         var output = new StringBuilder();
-        var outputLock = new object();
-        var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stateLock = new object();
+        var resultTcs =
+            new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var commandSent = false;
-        var markerPrefix = PromptMarkerPrefix;
-        var commandToSend = command;
-        string? markerCommand = null;
+        // True between a command-start (OSC 633;C) and command-complete (OSC 633;D) marker,
+        // i.e. while the terminal output belongs to the command we sent. Prompt drawing,
+        // command echo and integration startup noise all happen outside that window.
+        var capturing = false;
+        var lastExitCode = 0;
+        CancellationTokenSource? graceCts = null;
+        // Strips echoed user keystrokes from the captured output only (not the visible terminal).
+        var echoFilter = new UserInputEchoFilter();
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        void CompleteWithResult()
         {
-            var executionId = Guid.NewGuid().ToString("N");
-            markerPrefix = $"{PromptMarkerPrefix}{executionId}:";
+            string finalOutput;
+            int exitCode;
+            lock (stateLock)
+            {
+                finalOutput = output.ToString();
+                exitCode = lastExitCode;
+            }
 
-            // Do not depend on PROMPT_COMMAND/precmd for automation completion. User shell
-            // configuration can replace those hooks, leaving the shell visibly idle while the
-            // caller waits forever. Appending a per-command marker also prevents startup or
-            // unrelated prompt markers from completing the wrong invocation.
-            markerCommand =
-                $"__ow_exit=$?; printf '\\033[1A\\r\\033[2K\\033]9;OW_DONE:{executionId}:%s\\007' \"$__ow_exit\"";
-            commandToSend = $"{command}\n{markerCommand}";
+            resultTcs.TrySetResult(new TerminalExecutionResult(finalOutput, exitCode, false));
+        }
+
+        async Task CompleteAfterGraceAsync(CancellationToken graceToken)
+        {
+            try
+            {
+                await Task.Delay(MultiCommandGracePeriod, graceToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return; // Another command line started; keep waiting for its completion.
+            }
+
+            CompleteWithResult();
         }
 
         void OnConnectionClosed(object? sender, EventArgs args)
         {
             string partialOutput;
-            lock (outputLock)
+            int exitCode;
+            lock (stateLock)
+            {
                 partialOutput = output.ToString();
+                exitCode = capturing ? -1 : lastExitCode;
+            }
 
-            resultTcs.TrySetResult(new TerminalExecutionResult(partialOutput, -1, true));
+            // The shell itself exited (e.g. the command was "exit 3"). Prefer the real
+            // process exit code over the marker-based one, which can never arrive.
+            if ((sender as PseudoTerminalConnection)?.ProcessExitCode is { } processExitCode)
+                exitCode = processExitCode;
+
+            resultTcs.TrySetResult(new TerminalExecutionResult(
+                partialOutput + "\n[terminal session ended]", exitCode, false));
+        }
+
+        void OnDataSent(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
+        {
+            lock (stateLock)
+            {
+                // Input sent while our command runs is user input typed into the terminal;
+                // remember it so its echo can be removed from the captured output.
+                if (capturing)
+                    echoFilter.OnUserInput(args.Data);
+            }
         }
 
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
-            var text = Encoding.UTF8.GetString(args.Data);
-            string current;
-            int? completedExitCode = null;
+            string? current = null;
 
-            lock (outputLock)
+            lock (stateLock)
             {
-                output.Append(text);
+                if (!capturing) return;
+                var filtered = echoFilter.Filter(args.Data);
+                if (filtered.Length == 0) return;
+                output.Append(Encoding.UTF8.GetString(filtered));
                 current = output.ToString();
+            }
 
-                while (TryExtractOscMarker(current, markerPrefix, out var exitCode, out var cleaned))
+            if (!resultTcs.Task.IsCompleted)
+                outputProgress?.Report(current);
+        }
+
+        void OnIntegrationEvent(object? sender, ShellIntegrationEventArgs args)
+        {
+            lock (stateLock)
+            {
+                if (args.IsCommandStarted)
                 {
-                    while (TryExtractOscMarker(cleaned, PromptMarkerPrefix, out _, out var promptCleaned))
-                        cleaned = promptCleaned;
-
-                    current = cleaned;
-                    output.Clear();
-                    output.Append(cleaned);
-
-                    if (!commandSent) continue;
-
-                    completedExitCode = exitCode;
-                    break;
+                    capturing = true;
+                    graceCts?.Cancel();
+                    graceCts = null;
+                }
+                else if (args.IsCommandCompleted && capturing)
+                {
+                    // Completion markers arriving before any command started (e.g. the
+                    // shell's very first prompt or the user pressing enter on an empty
+                    // prompt) do not belong to our command and are ignored.
+                    capturing = false;
+                    lastExitCode = args.ExitCode;
+                    graceCts?.Cancel();
+                    graceCts = new CancellationTokenSource();
+                    _ = CompleteAfterGraceAsync(graceCts.Token);
                 }
             }
-
-            if (completedExitCode is { } exitCodeResult)
-            {
-                outputProgress?.Report(current);
-                resultTcs.TrySetResult(new TerminalExecutionResult(current, exitCodeResult, false));
-                return;
-            }
-
-            if (commandSent && !resultTcs.Task.IsCompleted)
-                outputProgress?.Report(current);
         }
 
-        terminal.Connection.DataReceived += OnDataReceived;
-        terminal.Connection.Closed += OnConnectionClosed;
-        if (markerCommand != null)
+        connection.DataReceived += OnDataReceived;
+        connection.DataSent += OnDataSent;
+        connection.Closed += OnConnectionClosed;
+        connection.IntegrationEvent += OnIntegrationEvent;
+
+        if (!resultTcs.Task.IsCompleted && !cancellationToken.IsCancellationRequested)
         {
-            // The shell echoes queued input before executing it. Hide the internal marker
-            // command independently of the PTY's line-ending mode. The marker then moves back
-            // and clears the intermediate prompt before the final prompt is rendered.
-            terminal.SuppressEcho(Encoding.UTF8.GetBytes(markerCommand));
+            commandSent = true;
+            terminal.Send(command);
         }
-
-        commandSent = true;
-        terminal.Send(commandToSend);
 
         TerminalExecutionResult result;
 
@@ -232,28 +281,39 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         catch (OperationCanceledException)
         {
             string partialOutput;
-            lock (outputLock)
+            lock (stateLock)
                 partialOutput = output.ToString();
 
-            // The command exceeded its timeout or was cancelled but is still running
-            // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
-            // to a usable prompt and the terminal stays reusable.
-            var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
-            if (!recovered)
+            if (commandSent)
             {
-                // The interrupt did not free the shell (the process ignores SIGINT or is
-                // itself hung). Forcibly kill the process tree and discard this terminal
-                // so it is never reused in a stuck state by a subsequent command.
-                terminal.KillProcess();
-                DiscardAutomationTerminal(terminal);
+                // The command exceeded its timeout or was cancelled but is still running
+                // in the shell. First try a gentle interrupt (Ctrl+C) so the shell returns
+                // to a usable prompt and the terminal stays reusable.
+                var recovered = await TryRecoverPromptAsync(terminal, resultTcs.Task);
+                if (!recovered)
+                {
+                    // The interrupt did not free the shell (the process ignores SIGINT or is
+                    // itself hung). Forcibly kill the process tree and discard this terminal
+                    // so it is never reused in a stuck state by a subsequent command.
+                    terminal.KillProcess();
+                    DiscardAutomationTerminal(terminal);
+                }
             }
 
             result = new TerminalExecutionResult(partialOutput, -1, true);
         }
         finally
         {
-            terminal.Connection.DataReceived -= OnDataReceived;
-            terminal.Connection.Closed -= OnConnectionClosed;
+            lock (stateLock)
+            {
+                graceCts?.Cancel();
+                graceCts = null;
+            }
+
+            connection.DataReceived -= OnDataReceived;
+            connection.DataSent -= OnDataSent;
+            connection.Closed -= OnConnectionClosed;
+            connection.IntegrationEvent -= OnIntegrationEvent;
             if (closeWhenDone) terminal.Close();
         }
 
@@ -266,8 +326,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         terminal.SendInterrupt();
         try
         {
-            // Give the shell a moment to process the interrupt and emit a fresh
-            // prompt marker so the terminal can be reused by the next command.
+            // The interrupt makes the shell print a fresh prompt, whose integration
+            // marker completes the pending result and keeps the terminal reusable.
             await resultTask.WaitAsync(TimeSpan.FromSeconds(3));
             return true;
         }
@@ -331,39 +391,6 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         using var timeoutCts = new CancellationTokenSource(timeout.Value);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
         return await resultTask.WaitAsync(linkedCts.Token);
-    }
-
-    // prompt marker is injected via terminal environment during shell startup
-
-    private static bool TryExtractOscMarker(string current, string markerPrefix, out int exitCode,
-        out string cleanedOutput)
-    {
-        exitCode = 0;
-        cleanedOutput = current;
-
-        var markerIndex = current.IndexOf(markerPrefix, StringComparison.Ordinal);
-        if (markerIndex < 0) return false;
-
-        var belIndex = current.IndexOf('\u0007', markerIndex);
-        var stIndex = current.IndexOf("\u001b\\", markerIndex, StringComparison.Ordinal);
-
-        var endIndex = belIndex;
-        var endLength = 1;
-
-        if (endIndex < 0 || (stIndex >= 0 && stIndex < endIndex))
-        {
-            endIndex = stIndex;
-            endLength = 2;
-        }
-
-        if (endIndex < 0) return false;
-
-        var markerContent = current.Substring(markerIndex + markerPrefix.Length,
-            endIndex - (markerIndex + markerPrefix.Length));
-        int.TryParse(markerContent, out exitCode);
-
-        cleanedOutput = current.Remove(markerIndex, endIndex - markerIndex + endLength);
-        return true;
     }
 
     public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,

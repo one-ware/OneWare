@@ -15,7 +15,7 @@ internal static class NativeDelegates
 
     public delegate int chdir([MarshalAs(UnmanagedType.LPStr)] string path);
 
-    public delegate void close(int fd);
+    public delegate int close(int fd);
 
     public delegate int dup(int fd);
 
@@ -42,7 +42,7 @@ internal static class NativeDelegates
 
     public delegate int openpty(out int amaster, out int aslave, IntPtr name, IntPtr termp, IntPtr winp);
 
-    public delegate int pipe(IntPtr[] fds);
+    public delegate int pipe([Out] int[] fds);
 
     public delegate int posix_spawn_file_actions_addclose(IntPtr file_actions, int fildes);
 
@@ -64,6 +64,8 @@ internal static class NativeDelegates
     public delegate void setsid();
 
     public delegate int unlockpt(int fd);
+
+    public delegate int waitpid(int pid, ref int status, int options);
 
     public delegate int write(int fd, IntPtr buffer, int length);
 
@@ -151,9 +153,12 @@ internal static class Native
     public static NativeDelegates.posix_spawnp posix_spawnp = NativeDelegates.GetProc<NativeDelegates.posix_spawnp>();
     public static NativeDelegates.dup dup = NativeDelegates.GetProc<NativeDelegates.dup>();
     public static NativeDelegates.dup2 dup2 = NativeDelegates.GetProc<NativeDelegates.dup2>();
+    public static NativeDelegates.close close = NativeDelegates.GetProc<NativeDelegates.close>();
+    public static NativeDelegates.pipe pipe = NativeDelegates.GetProc<NativeDelegates.pipe>();
     public static NativeDelegates.setsid setsid = NativeDelegates.GetProc<NativeDelegates.setsid>();
     public static NativeDelegates.ioctl ioctl = NativeDelegates.GetProc<NativeDelegates.ioctl>();
     public static NativeDelegates.kill kill = NativeDelegates.GetProc<NativeDelegates.kill>();
+    public static NativeDelegates.waitpid waitpid = NativeDelegates.GetProc<NativeDelegates.waitpid>();
     public static NativeDelegates.execve execve = NativeDelegates.GetProc<NativeDelegates.execve>();
     public static NativeDelegates.fork fork = NativeDelegates.GetProc<NativeDelegates.fork>();
     public static NativeDelegates._exit _exit = NativeDelegates.GetProc<NativeDelegates._exit>();

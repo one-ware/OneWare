@@ -38,6 +38,7 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
                 var value = entry.Substring(separatorIndex + 1);
                 envMap[key] = value;
             }
+
         }
 
         var envVars = new List<string>(envMap.Count + 2);
@@ -59,6 +60,13 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         argvList.Add(null!);
         var argvArray = argvList.ToArray();
 
+        // Warm up the P/Invoke marshalling stubs used in the child while still in the
+        // parent: after forkpty the child cannot JIT-compile or allocate (the runtime's
+        // GC/JIT locks may be held by now-frozen threads), so the very first spawn in a
+        // process would otherwise deadlock inside the marshaller and leave a dead shell.
+        Native.chdir(".");
+        Native.execve("/nonexistent/oneware-marshal-warmup", argvArray, envArray);
+
         var pid = Native.forkpty(out var masterFd, IntPtr.Zero, IntPtr.Zero, ref winsize);
 
         //pid will be 0 on the forked process
@@ -68,6 +76,9 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
             Native.execve(argvArray[0], argvArray, envArray);
             Native._exit(1);
         }
+
+        if (pid < 0)
+            return null;
 
         var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);
