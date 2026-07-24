@@ -18,7 +18,12 @@ namespace OneWare.TerminalManager.ViewModels;
 public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
 {
     public const string IconKey = "Material.Console";
-    private const string CompletionMarkerControlPrefix = "\u001b[1A\r\u001b[2K";
+
+    // After a command reports completion, wait briefly for another command-start event.
+    // Multi-line command blocks execute line by line (already buffered in the pty), so the
+    // next line's start marker arrives within milliseconds; only the final completion is
+    // followed by silence.
+    private static readonly TimeSpan MultiCommandGracePeriod = TimeSpan.FromMilliseconds(250);
 
     // Automation terminals are pooled per id so that concurrent commands (e.g. an AI agent
     // running several shell commands at once) each get their own terminal tab instead of
@@ -143,36 +148,76 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
 
         var output = new StringBuilder();
-        var outputLock = new object();
-        var resultTcs = new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var executionId = terminal.NextExecutionId();
-        var completionCommand = terminal.BuildCompletionCommand(executionId);
-        var commandToSend = $"{command}\n{completionCommand}";
+        var stateLock = new object();
+        var resultTcs =
+            new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var commandSent = false;
-        var chatOutputSuppressor = new OutputSequenceSuppressor();
-        chatOutputSuppressor.SuppressOutput(Encoding.UTF8.GetBytes(completionCommand));
-        var interruptRecoveryScheduled = 0;
+        // True between a command-start (OSC 633;C) and command-complete (OSC 633;D) marker,
+        // i.e. while the terminal output belongs to the command we sent. Prompt drawing,
+        // command echo and integration startup noise all happen outside that window.
+        var capturing = false;
+        var lastExitCode = 0;
+        CancellationTokenSource? graceCts = null;
+        // Strips echoed user keystrokes from the captured output only (not the visible terminal).
+        var echoFilter = new UserInputEchoFilter();
+
+        void CompleteWithResult()
+        {
+            string finalOutput;
+            int exitCode;
+            lock (stateLock)
+            {
+                finalOutput = output.ToString();
+                exitCode = lastExitCode;
+            }
+
+            resultTcs.TrySetResult(new TerminalExecutionResult(finalOutput, exitCode, false));
+        }
+
+        async Task CompleteAfterGraceAsync(CancellationToken graceToken)
+        {
+            try
+            {
+                await Task.Delay(MultiCommandGracePeriod, graceToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return; // Another command line started; keep waiting for its completion.
+            }
+
+            CompleteWithResult();
+        }
 
         void OnConnectionClosed(object? sender, EventArgs args)
         {
             string partialOutput;
-            lock (outputLock)
+            lock (stateLock)
                 partialOutput = output.ToString();
 
             resultTcs.TrySetResult(new TerminalExecutionResult(partialOutput, -1, true));
         }
 
+        void OnDataSent(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
+        {
+            lock (stateLock)
+            {
+                // Input sent while our command runs is user input typed into the terminal;
+                // remember it so its echo can be removed from the captured output.
+                if (capturing)
+                    echoFilter.OnUserInput(args.Data);
+            }
+        }
+
         void OnDataReceived(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)
         {
-            var data = chatOutputSuppressor.FilterOutput(args.Data);
-            if (data.Length == 0) return;
+            string? current = null;
 
-            var text = Encoding.UTF8.GetString(data);
-            string current;
-
-            lock (outputLock)
+            lock (stateLock)
             {
-                output.Append(text);
+                if (!capturing) return;
+                var filtered = echoFilter.Filter(args.Data);
+                if (filtered.Length == 0) return;
+                output.Append(Encoding.UTF8.GetString(filtered));
                 current = output.ToString();
             }
 
@@ -180,51 +225,39 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
                 outputProgress?.Report(current);
         }
 
-        void OnCommandCompleted(object? sender, TerminalCommandCompletedEventArgs args)
+        void OnIntegrationEvent(object? sender, ShellIntegrationEventArgs args)
         {
-            if (!string.Equals(args.ExecutionId, executionId, StringComparison.Ordinal)) return;
-
-            string cleaned;
-            lock (outputLock)
+            lock (stateLock)
             {
-                cleaned = TrimCompletedOutput(output.ToString());
-                output.Clear();
-                output.Append(cleaned);
+                if (args.IsCommandStarted)
+                {
+                    capturing = true;
+                    graceCts?.Cancel();
+                    graceCts = null;
+                }
+                else if (args.IsCommandCompleted && capturing)
+                {
+                    // Completion markers arriving before any command started (e.g. the
+                    // shell's very first prompt or the user pressing enter on an empty
+                    // prompt) do not belong to our command and are ignored.
+                    capturing = false;
+                    lastExitCode = args.ExitCode;
+                    graceCts?.Cancel();
+                    graceCts = new CancellationTokenSource();
+                    _ = CompleteAfterGraceAsync(graceCts.Token);
+                }
             }
-
-            outputProgress?.Report(cleaned);
-            resultTcs.TrySetResult(new TerminalExecutionResult(cleaned, args.ExitCode, false));
-        }
-
-        void OnUserInterrupted(object? sender, EventArgs args)
-        {
-            if (Interlocked.Exchange(ref interruptRecoveryScheduled, 1) != 0) return;
-            _ = RecoverCompletionAfterUserInterruptAsync();
-        }
-
-        async Task RecoverCompletionAfterUserInterruptAsync()
-        {
-            await Task.Yield();
-            if (resultTcs.Task.IsCompleted) return;
-
-            var completionBytes = Encoding.UTF8.GetBytes(completionCommand);
-            connection.ResetOutputSuppression();
-            chatOutputSuppressor.Reset();
-            connection.SuppressOutput(completionBytes);
-            chatOutputSuppressor.SuppressOutput(completionBytes);
-            terminal.Send(completionCommand);
-            Interlocked.Exchange(ref interruptRecoveryScheduled, 0);
         }
 
         connection.DataReceived += OnDataReceived;
+        connection.DataSent += OnDataSent;
         connection.Closed += OnConnectionClosed;
-        connection.CommandCompleted += OnCommandCompleted;
-        connection.UserInterrupted += OnUserInterrupted;
-        terminal.SuppressEcho(Encoding.UTF8.GetBytes(completionCommand));
+        connection.IntegrationEvent += OnIntegrationEvent;
+
         if (!resultTcs.Task.IsCompleted && !cancellationToken.IsCancellationRequested)
         {
             commandSent = true;
-            terminal.Send(commandToSend);
+            terminal.Send(command);
         }
 
         TerminalExecutionResult result;
@@ -236,7 +269,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         catch (OperationCanceledException)
         {
             string partialOutput;
-            lock (outputLock)
+            lock (stateLock)
                 partialOutput = output.ToString();
 
             if (commandSent)
@@ -259,10 +292,16 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
         finally
         {
+            lock (stateLock)
+            {
+                graceCts?.Cancel();
+                graceCts = null;
+            }
+
             connection.DataReceived -= OnDataReceived;
+            connection.DataSent -= OnDataSent;
             connection.Closed -= OnConnectionClosed;
-            connection.CommandCompleted -= OnCommandCompleted;
-            connection.UserInterrupted -= OnUserInterrupted;
+            connection.IntegrationEvent -= OnIntegrationEvent;
             if (closeWhenDone) terminal.Close();
         }
 
@@ -275,8 +314,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         terminal.SendInterrupt();
         try
         {
-            // Give the shell a moment to process the interrupt and emit a fresh
-            // prompt marker so the terminal can be reused by the next command.
+            // The interrupt makes the shell print a fresh prompt, whose integration
+            // marker completes the pending result and keeps the terminal reusable.
             await resultTask.WaitAsync(TimeSpan.FromSeconds(3));
             return true;
         }
@@ -340,21 +379,6 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         using var timeoutCts = new CancellationTokenSource(timeout.Value);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
         return await resultTask.WaitAsync(linkedCts.Token);
-    }
-
-    internal static string TrimCompletedOutput(string current)
-    {
-        var clearSequenceIndex = current.LastIndexOf(CompletionMarkerControlPrefix, StringComparison.Ordinal);
-        if (clearSequenceIndex < 0) return current;
-
-        var promptLineEnd = clearSequenceIndex > 0
-            ? current.LastIndexOf('\n', clearSequenceIndex - 1)
-            : -1;
-        var previousLineEnd = promptLineEnd > 0
-            ? current.LastIndexOf('\n', promptLineEnd - 1)
-            : -1;
-
-        return previousLineEnd >= 0 ? current[..(previousLineEnd + 1)] : string.Empty;
     }
 
     public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,

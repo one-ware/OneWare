@@ -9,18 +9,13 @@ public class UnixPseudoTerminal : IPseudoTerminal
     private readonly int _cfg;
     private readonly Stream _stdin;
     private readonly Stream _stdout;
-    private readonly Stream _controlInput;
-    private readonly Stream _controlOutput;
     private bool _isDisposed;
 
-    public UnixPseudoTerminal(Process process, int cfg, Stream stdin, Stream stdout, Stream controlInput,
-        Stream controlOutput)
+    public UnixPseudoTerminal(Process process, int cfg, Stream stdin, Stream stdout)
     {
         Process = process;
         _stdin = stdin;
         _stdout = stdout;
-        _controlInput = controlInput;
-        _controlOutput = controlOutput;
         _cfg = cfg;
     }
 
@@ -32,8 +27,6 @@ public class UnixPseudoTerminal : IPseudoTerminal
         _isDisposed = true;
         _stdin.Dispose();
         _stdout.Dispose();
-        _controlInput.Dispose();
-        _controlOutput.Dispose();
     }
 
     public async Task<int> ReadAsync(byte[] buffer, int offset, int count)
@@ -79,18 +72,6 @@ public class UnixPseudoTerminal : IPseudoTerminal
                 Marshal.FreeHGlobal(buf);
             }
         });
-    }
-
-    public Task<int> ReadControlAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-    {
-        return _controlInput.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
-    }
-
-    public async Task WriteControlAsync(byte[] buffer, int offset, int count,
-        CancellationToken cancellationToken)
-    {
-        await _controlOutput.WriteAsync(buffer.AsMemory(offset, count), cancellationToken);
-        await _controlOutput.FlushAsync(cancellationToken);
     }
 
     public void SetSize(int columns, int rows)

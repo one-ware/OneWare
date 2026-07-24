@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Controls;
 
 namespace OneWare.Chat.ViewModels.ChatMessages;
@@ -28,6 +29,13 @@ public class ChatMessageToolViewModel : ObservableObject, IChatMessage, IEstimat
     public DateTimeOffset Timestamp { get; }
 
     public bool IsToolRunning
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    /// <summary>Cancels this tool invocation while it is running.</summary>
+    public IRelayCommand? StopCommand
     {
         get;
         set => SetProperty(ref field, value);

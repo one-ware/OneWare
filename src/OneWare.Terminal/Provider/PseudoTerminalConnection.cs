@@ -1,13 +1,11 @@
-using System.Text;
 using VtNetCore.Avalonia;
 
 namespace OneWare.Terminal.Provider;
 
-public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, IOutputFilter, IOutputSuppressor, IDisposable
+public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, IDisposable
 {
+    private readonly ShellIntegrationParser _parser = new();
     private CancellationTokenSource? _cancellationSource;
-    private readonly OutputSequenceSuppressor _outputSuppressor = new();
-    private long _outputVersion;
 
     public bool IsConnected { get; private set; }
 
@@ -15,16 +13,24 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
 
     public event EventHandler<EventArgs>? Closed;
 
-    public event EventHandler<TerminalCommandCompletedEventArgs>? CommandCompleted;
+    /// <summary>
+    /// Raised, in stream order relative to <see cref="DataReceived"/>, for every
+    /// shell-integration event (command started / command completed) emitted by the shell.
+    /// The sequences themselves are stripped from the data before it is forwarded.
+    /// </summary>
+    public event EventHandler<ShellIntegrationEventArgs>? IntegrationEvent;
 
-    public event EventHandler? UserInterrupted;
+    /// <summary>
+    /// Raised whenever data is written to the pty (user keystrokes or automation input),
+    /// before the write happens. Allows consumers to correlate input with its echo.
+    /// </summary>
+    public event EventHandler<DataReceivedEventArgs>? DataSent;
 
     public bool Connect()
     {
         _cancellationSource = new CancellationTokenSource();
 
         _ = ReadOutputAsync(_cancellationSource.Token);
-        _ = ReadControlAsync(_cancellationSource.Token);
 
         IsConnected = true;
 
@@ -42,9 +48,8 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
 
     public void SendData(byte[] data)
     {
+        DataSent?.Invoke(this, new DataReceivedEventArgs { Data = data });
         _ = terminal.WriteAsync(data, 0, data.Length);
-        if (data.Contains((byte)0x03) && _cancellationSource is { } cancellationSource)
-            _ = NotifyUserInterruptedAsync(cancellationSource.Token);
     }
 
     public void KillProcess()
@@ -58,21 +63,6 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
         {
             // Best effort: the process may already have exited or be unkillable.
         }
-    }
-
-    public void SuppressOutput(byte[] sequence)
-    {
-        _outputSuppressor.SuppressOutput(sequence);
-    }
-
-    public byte[] FilterOutput(byte[] data)
-    {
-        return _outputSuppressor.FilterOutput(data);
-    }
-
-    public void ResetOutputSuppression()
-    {
-        _outputSuppressor.Reset();
     }
 
     public void SetTerminalWindowSize(int columns, int rows)
@@ -107,34 +97,13 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
 
                 var receivedData = new byte[bytesReceived];
                 Buffer.BlockCopy(data, 0, receivedData, 0, bytesReceived);
-                DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = receivedData });
-                Interlocked.Increment(ref _outputVersion);
-            }
-        }
-        catch (Exception) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-    }
 
-    private async Task ReadControlAsync(CancellationToken cancellationToken)
-    {
-        var data = new byte[256];
-        var pending = new StringBuilder();
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var bytesReceived = await terminal.ReadControlAsync(data, 0, data.Length, cancellationToken);
-                if (bytesReceived <= 0) break;
-
-                pending.Append(Encoding.ASCII.GetString(data, 0, bytesReceived));
-                while (TryReadControlFrame(pending, out var executionId, out var exitCode))
+                foreach (var segment in _parser.Feed(receivedData))
                 {
-                    await WaitForOutputDrainAsync(cancellationToken);
-                    CommandCompleted?.Invoke(this, new TerminalCommandCompletedEventArgs(executionId, exitCode));
-
-                    var acknowledgement = Encoding.ASCII.GetBytes($"{executionId}\n");
-                    await terminal.WriteControlAsync(acknowledgement, 0, acknowledgement.Length, cancellationToken);
+                    if (segment.Data != null)
+                        DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = segment.Data });
+                    else if (segment.Event is { } integrationEvent)
+                        IntegrationEvent?.Invoke(this, new ShellIntegrationEventArgs(integrationEvent));
                 }
             }
         }
@@ -142,62 +111,15 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
         {
         }
     }
-
-    private async Task WaitForOutputDrainAsync(CancellationToken cancellationToken)
-    {
-        var previousVersion = Volatile.Read(ref _outputVersion);
-        var stableSamples = 0;
-
-        while (stableSamples < 3)
-        {
-            await Task.Delay(20, cancellationToken);
-            var currentVersion = Volatile.Read(ref _outputVersion);
-            if (currentVersion == previousVersion)
-            {
-                stableSamples++;
-            }
-            else
-            {
-                previousVersion = currentVersion;
-                stableSamples = 0;
-            }
-        }
-    }
-
-    private async Task NotifyUserInterruptedAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await WaitForOutputDrainAsync(cancellationToken);
-            UserInterrupted?.Invoke(this, EventArgs.Empty);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    internal static bool TryReadControlFrame(StringBuilder pending, out string executionId, out int exitCode)
-    {
-        executionId = string.Empty;
-        exitCode = 0;
-
-        var newlineIndex = pending.ToString().IndexOf('\n');
-        if (newlineIndex < 0) return false;
-
-        var line = pending.ToString(0, newlineIndex).TrimEnd('\r');
-        pending.Remove(0, newlineIndex + 1);
-
-        var separatorIndex = line.LastIndexOf(':');
-        if (separatorIndex <= 0 || !int.TryParse(line[(separatorIndex + 1)..], out exitCode))
-            return false;
-
-        executionId = line[..separatorIndex];
-        return true;
-    }
 }
 
-public sealed class TerminalCommandCompletedEventArgs(string executionId, int exitCode) : EventArgs
+public sealed class ShellIntegrationEventArgs(ShellIntegrationEvent integrationEvent) : EventArgs
 {
-    public string ExecutionId { get; } = executionId;
-    public int ExitCode { get; } = exitCode;
+    public ShellIntegrationEvent Event { get; } = integrationEvent;
+
+    public bool IsCommandStarted => Event.Command == 'C';
+
+    public bool IsCommandCompleted => Event.Command == 'D';
+
+    public int ExitCode => int.TryParse(Event.Argument, out var exitCode) ? exitCode : 0;
 }

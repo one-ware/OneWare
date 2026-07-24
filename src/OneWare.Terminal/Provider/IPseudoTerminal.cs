@@ -10,8 +10,4 @@ public interface IPseudoTerminal : IDisposable
     Task WriteAsync(byte[] buffer, int offset, int count);
 
     Task<int> ReadAsync(byte[] buffer, int offset, int count);
-
-    Task<int> ReadControlAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
-
-    Task WriteControlAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
 }

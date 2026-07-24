@@ -19,6 +19,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public const string IconKey = "Bootstrap.ChatLeft";
 
     private readonly IMainDockService _mainDockService;
+    private readonly IAiFunctionProvider _aiFunctionProvider;
     private readonly string _statePath;
     private readonly string _historyRootPath;
 
@@ -63,6 +64,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
         aiFunctionProvider.FunctionProgress += OnFunctionProgress;
 
+        _aiFunctionProvider = aiFunctionProvider;
         _mainDockService = mainDockService;
 
         var chatDirectory = Path.Combine(paths.AppDataDirectory, "Chat");
@@ -740,6 +742,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             IsToolRunning = true,
             ToolOutput = $"{function.Detail}"
         };
+        newMessage.StopCommand = new RelayCommand(
+            () => _aiFunctionProvider.CancelFunction(newMessage.Id),
+            () => newMessage.IsToolRunning);
         AddMessage(newMessage);
         ContentAdded?.Invoke(this, EventArgs.Empty);
     }
@@ -750,6 +755,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (toolFinished == null) return;
 
         toolFinished.IsToolRunning = false;
+        toolFinished.StopCommand = null;
         toolFinished.IsSuccessful = function.Result;
         if (!string.IsNullOrWhiteSpace(function.ToolOutput))
         {

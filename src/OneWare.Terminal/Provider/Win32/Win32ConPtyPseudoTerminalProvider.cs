@@ -24,7 +24,6 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         SafeFileHandle? inputWrite = null;
         SafeFileHandle? outputRead = null;
         SafeFileHandle? outputWrite = null;
-        NamedPipeServerStream? controlPipe = null;
         var pseudoConsole = IntPtr.Zero;
         var attributeList = IntPtr.Zero;
         var environmentBlock = IntPtr.Zero;
@@ -34,11 +33,6 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         {
             CreatePipePair(out inputRead, out inputWrite);
             CreatePipePair(out outputRead, out outputWrite);
-
-            var controlPipeName = $"OneWare-{Environment.ProcessId}-{Guid.NewGuid():N}-control";
-            controlPipe = new NamedPipeServerStream(controlPipeName, PipeDirection.InOut, 1,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-            var controlConnected = controlPipe.WaitForConnectionAsync();
 
             var result = ConPtyNative.CreatePseudoConsole(
                 new ConPtyNative.Coord((short)columns, (short)rows),
@@ -64,8 +58,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 lpAttributeList = attributeList
             };
 
-            environment = AddControlEnvironment(environment, controlPipeName);
-            environmentBlock = Marshal.StringToHGlobalUni(environment);
+            environmentBlock = Marshal.StringToHGlobalUni(BuildEnvironmentBlock(environment));
 
             var creationFlags = ConPtyNative.EXTENDED_STARTUPINFO_PRESENT |
                                 ConPtyNative.CREATE_UNICODE_ENVIRONMENT;
@@ -83,8 +76,7 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
 
             var process = Process.GetProcessById(processInformation.dwProcessId);
 
-            var terminal = new Win32ConPtyPseudoTerminal(process, pseudoConsole, inputWrite, outputRead,
-                controlPipe, controlConnected);
+            var terminal = new Win32ConPtyPseudoTerminal(process, pseudoConsole, inputWrite, outputRead);
             terminalCreated = true;
             return terminal;
         }
@@ -112,7 +104,6 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
             {
                 if (inputWrite is { IsInvalid: false }) inputWrite.Dispose();
                 if (outputRead is { IsInvalid: false }) outputRead.Dispose();
-                controlPipe?.Dispose();
             }
         }
     }
@@ -154,18 +145,16 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
             throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 
-    private static string AddControlEnvironment(string? environment, string controlPipeName)
+    private static string BuildEnvironmentBlock(string? environment)
     {
         var values = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(environment))
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
-            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-            {
-                if (entry.Key is string key && entry.Value is string value)
-                    values[key] = value;
-            }
+            if (entry.Key is string key && entry.Value is string value)
+                values[key] = value;
         }
-        else
+
+        if (!string.IsNullOrWhiteSpace(environment))
         {
             foreach (var entry in environment.Split('\0'))
             {
@@ -175,8 +164,6 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                     values[entry[..separator]] = entry[(separator + 1)..];
             }
         }
-
-        values["OW_CONTROL_PIPE"] = controlPipeName;
 
         var builder = new StringBuilder();
         foreach (var pair in values)

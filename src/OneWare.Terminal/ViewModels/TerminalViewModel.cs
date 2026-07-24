@@ -20,14 +20,11 @@ public class TerminalViewModel : ObservableObject
         : new UnixPseudoTerminalProvider();
 
     private readonly Lock _createLock = new();
-    private long _executionSequence;
 
     public TerminalViewModel(string workingDir, string? startArguments = null)
     {
         WorkingDir = workingDir;
-        StartArguments = startArguments ?? (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? BuildWindowsStartArguments(WorkingDir)
-            : null);
+        StartArguments = startArguments;
     }
 
     public string? StartArguments { get; }
@@ -82,7 +79,7 @@ public class TerminalViewModel : ObservableObject
         lock (_createLock)
         {
             CloseConnection();
-            
+
             var shellExecutable = PlatformHelper.Platform switch
             {
                 PlatformId.WinX64 or PlatformId.WinArm64 => PlatformHelper.GetFullPath("powershell.exe"),
@@ -94,15 +91,14 @@ public class TerminalViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(shellExecutable))
             {
-                var startArguments = StartArguments;
-                if (string.IsNullOrWhiteSpace(startArguments) &&
-                    Path.GetFileName(shellExecutable).Equals("zsh", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Ensure zsh runs interactively so precmd hooks fire.
-                    startArguments = "-i";
-                }
+                // Shell integration is installed via startup files, so the shell emits
+                // invisible OSC 633 command lifecycle sequences without anything being
+                // typed into (or echoed by) the terminal.
+                var integration = ShellIntegration.GetSpawnConfig(shellExecutable);
+                var startArguments = StartArguments ?? integration.Arguments;
 
-                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, null, startArguments);
+                var terminal = SProvider.Create(80, 32, WorkingDir, shellExecutable, integration.Environment,
+                    startArguments);
 
                 if (terminal == null)
                 {
@@ -114,19 +110,9 @@ public class TerminalViewModel : ObservableObject
 
                 Terminal = new VirtualTerminalController();
 
-                _ = Dispatcher.UIThread.InvokeAsync(async () =>
+                Dispatcher.UIThread.Post(() =>
                 {
                     Connection.Connect();
-
-                    await Task.Delay(300);
-
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        var setupCommand = BuildUnixControlFunction();
-                        SuppressEcho(Encoding.UTF8.GetBytes(setupCommand));
-                        Send(setupCommand);
-                        await Task.Delay(200);
-                    }
 
                     TerminalVisible = true;
 
@@ -140,7 +126,7 @@ public class TerminalViewModel : ObservableObject
 
     public void Send(string command)
     {
-        if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.ASCII.GetBytes($"{command}\r"));
+        if (Connection?.IsConnected ?? false) Connection.SendData(Encoding.UTF8.GetBytes($"{command}\r"));
     }
 
     public void SendInterrupt()
@@ -157,29 +143,6 @@ public class TerminalViewModel : ObservableObject
         if (Connection is PseudoTerminalConnection ptc) ptc.KillProcess();
     }
 
-    public void SuppressEcho(byte[] data)
-    {
-        if (Connection is IOutputSuppressor suppressor)
-        {
-            suppressor.SuppressOutput(data);
-        }
-    }
-
-    public string BuildCompletionCommand(string executionId)
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return $"$__ow_success=$?; __owc '{executionId}' $__ow_success $global:LASTEXITCODE";
-        }
-
-        return $"__owc {executionId}";
-    }
-
-    public string NextExecutionId()
-    {
-        return Interlocked.Increment(ref _executionSequence).ToString("x");
-    }
-
     public void CloseConnection()
     {
         if (Connection != null)
@@ -192,34 +155,5 @@ public class TerminalViewModel : ObservableObject
     public void Close()
     {
         CloseConnection();
-    }
-
-    private static string BuildWindowsStartArguments(string workingDir)
-    {
-        // The arguments string must include the full command line because
-        // Win32ConPtyPseudoTerminalProvider.BuildCommandLine returns just the arguments when provided
-        var escapedDir = workingDir.Replace("'", "''");
-
-        var bootstrapCmd =
-            "function global:__owc { param([string]$id,[bool]$success,$lastExitCode); " +
-            "$exitCode=if ($success) { 0 } elseif ($lastExitCode -ne 0) { [int]$lastExitCode } else { 1 }; " +
-            "$esc=[char]27; Write-Host ($esc + '[1A' + [char]13 + $esc + '[2K') -NoNewline; " +
-            "$pipe=[System.IO.Pipes.NamedPipeClientStream]::new(" +
-            "'.',$env:OW_CONTROL_PIPE,[System.IO.Pipes.PipeDirection]::InOut); " +
-            "try { $pipe.Connect(); $encoding=[System.Text.UTF8Encoding]::new($false); " +
-            "$writer=[System.IO.StreamWriter]::new($pipe,$encoding,1024,$true); " +
-            "$reader=[System.IO.StreamReader]::new($pipe,$encoding,$false,1024,$true); " +
-            "$writer.AutoFlush=$true; $writer.WriteLine($id + ':' + $exitCode); " +
-            "[void]$reader.ReadLine(); $writer.Dispose(); $reader.Dispose() } finally { $pipe.Dispose() } }; " +
-            $"Set-Location '{escapedDir}'";
-
-        return $"powershell.exe -NoProfile -NoExit -Command \"{bootstrapCmd}\"";
-    }
-
-    private static string BuildUnixControlFunction()
-    {
-        return "__owc(){ __ow_exit=$?; printf '\\033[1A\\r\\033[2K'; " +
-               "printf '%s:%s\\n' \"$1\" \"$__ow_exit\" >&198; IFS= read -r __ow_ack <&199; }; " +
-               "printf '\\033[2J\\033[3J\\033[H'";
     }
 }
