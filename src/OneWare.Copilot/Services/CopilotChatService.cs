@@ -1038,6 +1038,10 @@ public sealed class CopilotChatService(
 
         _requestedSessionId = sessionId;
 
+        // Not connected / no model yet (e.g. right after a CLI install): keep the
+        // requested id and resume lazily once the session is actually created.
+        if (_client == null || SelectedModel == null) return false;
+
         try
         {
             await InitializeSessionAsync();

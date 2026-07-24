@@ -756,10 +756,42 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             IsBusy = false;
             WorkingStatusText = DefaultWorkingStatus;
 
-            if (SelectedChatService != null)
+            if (SelectedChatService is { } service)
             {
-                UpdateSelectedSessionFromService(SelectedChatService);
+                // If the backend lost its session (e.g. the CLI was reinstalled while it
+                // was never connected), ask it to resume the conversation we remember for
+                // this service instead of silently starting a fresh one.
+                if (service is IChatServiceWithSessions sessions &&
+                    string.IsNullOrWhiteSpace(sessions.CurrentSessionId) &&
+                    _selectedSessionByService.TryGetValue(service.Name, out var remembered) &&
+                    !string.IsNullOrWhiteSpace(remembered))
+                {
+                    _ = RestoreRememberedSessionAsync(service, sessions, remembered);
+                }
+                else
+                {
+                    UpdateSelectedSessionFromService(service);
+                }
             }
+        });
+    }
+
+    private async Task RestoreRememberedSessionAsync(IChatService service, IChatServiceWithSessions sessions,
+        string sessionId)
+    {
+        try
+        {
+            await sessions.LoadSessionAsync(sessionId);
+        }
+        catch (Exception)
+        {
+            // Best effort — the service keeps the requested id and resumes lazily.
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (SelectedChatService == service)
+                UpdateSelectedSessionFromService(service);
         });
     }
 
