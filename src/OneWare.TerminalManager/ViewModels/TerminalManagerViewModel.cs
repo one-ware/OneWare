@@ -103,6 +103,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         var title = GetUniqueTitle(name);
 
         var tab = new TerminalTabModel(title, new TerminalViewModel(homeFolder), this);
+        // Close the tab when its shell exits (e.g. the user or an automation command runs "exit").
+        tab.Terminal.ConnectionClosed += (_, _) => Dispatcher.UIThread.Post(tab.Close);
         Terminals.Add(tab);
 
         if (select) SelectedTerminalTab = tab;
@@ -191,10 +193,20 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         void OnConnectionClosed(object? sender, EventArgs args)
         {
             string partialOutput;
+            int exitCode;
             lock (stateLock)
+            {
                 partialOutput = output.ToString();
+                exitCode = capturing ? -1 : lastExitCode;
+            }
 
-            resultTcs.TrySetResult(new TerminalExecutionResult(partialOutput, -1, true));
+            // The shell itself exited (e.g. the command was "exit 3"). Prefer the real
+            // process exit code over the marker-based one, which can never arrive.
+            if ((sender as PseudoTerminalConnection)?.ProcessExitCode is { } processExitCode)
+                exitCode = processExitCode;
+
+            resultTcs.TrySetResult(new TerminalExecutionResult(
+                partialOutput + "\n[terminal session ended]", exitCode, false));
         }
 
         void OnDataSent(object? sender, VtNetCore.Avalonia.DataReceivedEventArgs args)

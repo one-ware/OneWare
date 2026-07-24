@@ -179,4 +179,31 @@ public class PseudoTerminalConnectionTests
 
         Assert.Equal(42, exitCode);
     }
+
+    [Fact]
+    public async Task ShellExit_RaisesClosedInsteadOfHanging()
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        var bash = "/bin/bash";
+        var config = ShellIntegration.GetSpawnConfig(bash);
+
+        var provider = new UnixPseudoTerminalProvider();
+        using var terminal = provider.Create(80, 24, Path.GetTempPath(), bash, config.Environment,
+            config.Arguments);
+        Assert.NotNull(terminal);
+
+        using var connection = new PseudoTerminalConnection(terminal);
+        var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        connection.Closed += (_, _) => closed.TrySetResult();
+        connection.Connect();
+
+        // "exit 3" terminates the shell itself: no completion marker will ever arrive,
+        // so the connection must report closure to unblock pending executions.
+        connection.SendData(Encoding.UTF8.GetBytes("exit 3\r"));
+
+        await closed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.False(connection.IsConnected);
+        Assert.Equal(3, connection.ProcessExitCode);
+    }
 }

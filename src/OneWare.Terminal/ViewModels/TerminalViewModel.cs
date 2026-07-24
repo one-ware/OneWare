@@ -57,6 +57,12 @@ public class TerminalViewModel : ObservableObject
 
     public event EventHandler? TerminalReady;
 
+    /// <summary>
+    /// Raised when the underlying shell exits or the pty closes on its own,
+    /// i.e. not through <see cref="Close"/>. Lets owners close the containing tab.
+    /// </summary>
+    public event EventHandler? ConnectionClosed;
+
     public void Redraw()
     {
         if (TerminalVisible)
@@ -107,6 +113,7 @@ public class TerminalViewModel : ObservableObject
                 }
 
                 Connection = new PseudoTerminalConnection(terminal);
+                Connection.Closed += OnConnectionClosed;
 
                 Terminal = new VirtualTerminalController();
 
@@ -147,9 +154,19 @@ public class TerminalViewModel : ObservableObject
     {
         if (Connection != null)
         {
+            Connection.Closed -= OnConnectionClosed;
             Connection.Disconnect();
             Connection = null;
         }
+    }
+
+    private void OnConnectionClosed(object? sender, EventArgs e)
+    {
+        if (sender is IConnection connection)
+            connection.Closed -= OnConnectionClosed;
+        if (!ReferenceEquals(sender, Connection)) return;
+
+        ConnectionClosed?.Invoke(this, EventArgs.Empty);
     }
 
     public void Close()
