@@ -19,6 +19,7 @@ public class DebuggerModule : OneWareModuleBase
         services.AddSingleton<DebuggerVariablesViewModel>();
         services.AddSingleton<DebuggerExpressionsViewModel>();
         services.AddSingleton<DebuggerBreakpointsViewModel>();
+        services.AddSingleton<DebuggerInspectorViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -39,27 +40,22 @@ public class DebuggerModule : OneWareModuleBase
                 HoverDescription = "Path to the GDB executable for remote debugging via gdbserver."
             });
 
-        // Legt die Standardposition der Panels im Layout fest. Rechts wird RightPinned genutzt,
-        // weil das Standardlayout nur dafuer einen Bereich anlegt (DefaultLayout.cs) - genau wie
-        // beim AI-Chat-Panel.
+        // Beide Panels gehoeren ins Standardlayout, sonst kaeme nach "Reset Layout" nur das
+        // untere zurueck. Rechts genau ein angepinntes Dockable - dieselbe Konfiguration wie
+        // beim AI-Chat, der einzigen, die stabil laeuft.
         dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
-        dockService.RegisterLayoutExtension<DebuggerVariablesViewModel>(DockShowLocation.RightPinned);
-        dockService.RegisterLayoutExtension<DebuggerExpressionsViewModel>(DockShowLocation.RightPinned);
-        dockService.RegisterLayoutExtension<DebuggerBreakpointsViewModel>(DockShowLocation.RightPinned);
+        dockService.RegisterLayoutExtension<DebuggerInspectorViewModel>(DockShowLocation.RightPinned);
 
         // Ein einziger Menuepunkt oeffnet die komplette Debugging-Ansicht: Steuerung samt
-        // Call Stack und Ausgaben unten, Variables, Expressions und Breakpoints rechts.
+        // Console, Registers und Debugger Console unten, Variables, Expressions und Breakpoints
+        // als Reiter im rechten Panel.
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemModel("Debugging")
             {
                 Header = "Debugging",
                 Command = new RelayCommand(() =>
                 {
-                    dockService.Show(serviceProvider.Resolve<DebuggerVariablesViewModel>(),
-                        DockShowLocation.RightPinned);
-                    dockService.Show(serviceProvider.Resolve<DebuggerExpressionsViewModel>(),
-                        DockShowLocation.RightPinned);
-                    dockService.Show(serviceProvider.Resolve<DebuggerBreakpointsViewModel>(),
+                    dockService.Show(serviceProvider.Resolve<DebuggerInspectorViewModel>(),
                         DockShowLocation.RightPinned);
                     dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom);
                 }),

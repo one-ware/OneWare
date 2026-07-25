@@ -2,26 +2,17 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.EditorExtensions;
-using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels;
 
 /// <summary>
-///     Rechtes Panel: alle gesetzten Breakpoints, quer ueber alle Dateien.
-///     Bezieht seine Daten direkt aus dem anwendungsweiten <see cref="BreakpointStore" />,
+///     Reiter "Breakpoints" im Debugging-Panel: alle gesetzten Breakpoints, quer ueber alle
+///     Dateien. Bezieht seine Daten direkt aus dem anwendungsweiten <see cref="BreakpointStore" />,
 ///     zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind.
 /// </summary>
-public partial class DebuggerBreakpointsViewModel : ExtendedTool
+public partial class DebuggerBreakpointsViewModel : ObservableObject
 {
-    public const string IconKey = "Breakpoint";
-
     [ObservableProperty] private BreakPoint? _selectedBreakpoint;
-
-    public DebuggerBreakpointsViewModel() : base(IconKey)
-    {
-        Id = "DebuggerBreakpoints";
-        Title = "Breakpoints";
-    }
 
     public ObservableCollection<BreakPoint> Breakpoints => BreakpointStore.Instance.Breakpoints;
 

@@ -2,26 +2,17 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Debugger.Models;
-using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels;
 
 /// <summary>
-///     Rechtes Panel: benutzerdefinierte Ausdruecke und ihre aufgeloesten Werte, benannt nach
-///     der gleichnamigen Eclipse-Ansicht. Die Liste gehoert dem Benutzer und bleibt auch ohne
-///     laufende Session bestehen.
+///     Reiter "Expressions" im Debugging-Panel: benutzerdefinierte Ausdruecke und ihre
+///     aufgeloesten Werte. Die Liste gehoert dem Benutzer und bleibt auch ohne laufende
+///     Session bestehen.
 /// </summary>
-public partial class DebuggerExpressionsViewModel : ExtendedTool
+public partial class DebuggerExpressionsViewModel : ObservableObject
 {
-    public const string IconKey = "VsCodeLight.Debug";
-
     [ObservableProperty] private ExpressionRow? _selectedExpression;
-
-    public DebuggerExpressionsViewModel() : base(IconKey)
-    {
-        Id = "DebuggerExpressions";
-        Title = "Expressions";
-    }
 
     public ObservableCollection<ExpressionRow> Expressions { get; } = [];
 

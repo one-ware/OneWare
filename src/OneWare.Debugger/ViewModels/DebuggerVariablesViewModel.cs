@@ -1,24 +1,16 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Debugger.Models;
-using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels;
 
 /// <summary>
-///     Rechtes Panel: Variablen des aktuellen Stack-Frames, benannt nach der gleichnamigen
-///     Eclipse-Ansicht.
+///     Reiter "Variables" im Debugging-Panel: Variablen des aktuellen Stack-Frames,
+///     benannt nach der gleichnamigen Eclipse-Ansicht.
 /// </summary>
-public partial class DebuggerVariablesViewModel : ExtendedTool
+public partial class DebuggerVariablesViewModel : ObservableObject
 {
-    public const string IconKey = "Variable";
-
-    public DebuggerVariablesViewModel() : base(IconKey)
-    {
-        Id = "DebuggerVariables";
-        Title = "Variables";
-    }
-
     public ObservableCollection<VariableRow> Variables { get; } = [];
 
     /// <summary>

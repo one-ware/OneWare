@@ -6,8 +6,7 @@
              xmlns:models="clr-namespace:OneWare.Debugger.Models"
              mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
              x:Class="OneWare.Debugger.Views.DebuggerExpressionsView"
-             x:DataType="viewModels:DebuggerExpressionsViewModel"
-             Background="{DynamicResource ThemeControlLowBrush}">
+             x:DataType="viewModels:DebuggerExpressionsViewModel">
 
     <DockPanel LastChildFill="True">
         <Border DockPanel.Dock="Top"
@@ -15,38 +14,39 @@
                 BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
             <StackPanel Orientation="Horizontal" Margin="4" Spacing="4">
-                <Button Command="{Binding AddExpressionCommand}" Content="Add" Height="24" Padding="8,0" />
-                <Button Command="{Binding RemoveExpressionCommand}" Content="Remove" Height="24" Padding="8,0" />
+                <Button Command="{Binding AddExpressionCommand}" ToolTip.Tip="Add expression" Width="24" Height="24">
+                    <Image Width="14" Height="14" Source="{DynamicResource Material.Add}" />
+                </Button>
+                <Button Command="{Binding RemoveExpressionCommand}" ToolTip.Tip="Remove expression"
+                        Width="24" Height="24">
+                    <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                </Button>
             </StackPanel>
         </Border>
 
-        <DataGrid ItemsSource="{Binding Expressions}"
-                  SelectedItem="{Binding SelectedExpression}"
-                  Background="Transparent"
-                  RowBackground="Transparent"
-                  BorderThickness="0"
-                  CanUserResizeColumns="True">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Expression" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ExpressionRow">
-                            <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Expression}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate x:DataType="models:ExpressionRow">
-                            <TextBox Text="{Binding Expression, Mode=TwoWay}" BorderThickness="0" Padding="5,0" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellEditingTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Value" Width="*" IsReadOnly="True">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ExpressionRow">
-                            <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Value}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Border Margin="4"
+                CornerRadius="4"
+                ClipToBounds="True"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                Background="{DynamicResource ThemeBackgroundBrush}">
+            <DataGrid ItemsSource="{Binding Expressions}"
+                      SelectedItem="{Binding SelectedExpression}"
+                      GridLinesVisibility="Vertical"
+                      VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Expression" Width="*"
+                                        Binding="{CompiledBinding Expression, DataType=models:ExpressionRow}" />
+                    <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True"
+                                        Binding="{CompiledBinding Value, DataType=models:ExpressionRow}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </DockPanel>
 </UserControl>

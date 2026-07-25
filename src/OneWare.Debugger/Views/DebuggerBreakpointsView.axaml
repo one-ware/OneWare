@@ -6,8 +6,7 @@
              xmlns:editorExtensions="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
              x:Class="OneWare.Debugger.Views.DebuggerBreakpointsView"
-             x:DataType="viewModels:DebuggerBreakpointsViewModel"
-             Background="{DynamicResource ThemeControlLowBrush}">
+             x:DataType="viewModels:DebuggerBreakpointsViewModel">
 
     <DockPanel LastChildFill="True">
         <Border DockPanel.Dock="Top"
@@ -15,43 +14,39 @@
                 BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
             <StackPanel Orientation="Horizontal" Margin="4" Spacing="4">
-                <Button Command="{Binding RemoveBreakpointCommand}" Content="Remove" Height="24" Padding="8,0" />
+                <Button Command="{Binding RemoveBreakpointCommand}" ToolTip.Tip="Remove breakpoint"
+                        Width="24" Height="24">
+                    <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                </Button>
                 <Button Command="{Binding RemoveAllBreakpointsCommand}" Content="Remove All" Height="24"
                         Padding="8,0" />
             </StackPanel>
         </Border>
 
-        <DataGrid ItemsSource="{Binding Breakpoints}"
-                  SelectedItem="{Binding SelectedBreakpoint}"
-                  IsReadOnly="True"
-                  Background="Transparent"
-                  RowBackground="Transparent"
-                  BorderThickness="0"
-                  CanUserResizeColumns="True">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Width="24">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="editorExtensions:BreakPoint">
-                            <Image Width="12" Height="12" Source="{DynamicResource Breakpoint}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="File" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="editorExtensions:BreakPoint">
-                            <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding File}"
-                                       ToolTip.Tip="{Binding File}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Line" Width="60">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="editorExtensions:BreakPoint">
-                            <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Line}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Border Margin="4"
+                CornerRadius="4"
+                ClipToBounds="True"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                Background="{DynamicResource ThemeBackgroundBrush}">
+            <DataGrid ItemsSource="{Binding Breakpoints}"
+                      SelectedItem="{Binding SelectedBreakpoint}"
+                      GridLinesVisibility="Vertical"
+                      VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="File" Width="*"
+                                        Binding="{CompiledBinding File, DataType=editorExtensions:BreakPoint}" />
+                    <DataGridTextColumn Header="Line" Width="Auto"
+                                        Binding="{CompiledBinding Line, DataType=editorExtensions:BreakPoint}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </DockPanel>
 </UserControl>

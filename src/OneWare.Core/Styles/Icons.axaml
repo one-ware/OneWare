@@ -1151,6 +1151,22 @@
         <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
                          Geometry="M17,17H7V14L3,18L7,22V19H19V13H17M7,7H17V10L21,6L17,2V5H5V11H7V7Z" />
     </DrawingImage>
+    <DrawingImage x:Key="Material.Sync">
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                         Geometry="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+    </DrawingImage>
+    <DrawingImage x:Key="Material.Add">
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                         Geometry="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+    </DrawingImage>
+    <DrawingImage x:Key="Material.Remove">
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                         Geometry="M19 13H5v-2h14v2z" />
+    </DrawingImage>
+    <DrawingImage x:Key="Material.BugReport">
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                         Geometry="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z" />
+    </DrawingImage>
     <DrawingImage x:Key="MaterialDesign.Delete">
         <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
                          Geometry="F1M128,-363L384,-363 384,-107C384,-84,364,-64,341,-64L171,-64C148,-64,128,-84,128,-107L128,-363z M203,-448L309,-448 331,-427 405,-427 405,-384 107,-384 107,-427 181,-427 203,-448z" />
