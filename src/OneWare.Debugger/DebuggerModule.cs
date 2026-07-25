@@ -1,6 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.Debugger.Helpers;
 using OneWare.Debugger.ViewModels;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -27,13 +27,13 @@ public class DebuggerModule : OneWareModuleBase
         settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
             new FilePathSetting(
                 "GDB Binary Path",
-                SuggestGdbPath(),
-                "Auto-detected",
+                GdbLocator.Find(paths.NativeToolsDirectory) ?? string.Empty,
+                "No GDB found - Select Path or install GDB",
                 paths.NativeToolsDirectory,
                 PlatformHelper.ExistsOnPath,
                 PlatformHelper.ExeFile)
             {
-                HoverDescription = "Pfad zur GDB-Executable für Remote-Debugging über gdbserver."
+                HoverDescription = "Path to the GDB executable for remote debugging via gdbserver."
             });
 
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
@@ -44,24 +44,5 @@ public class DebuggerModule : OneWareModuleBase
                     dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
                 Icon = new IconModel(DebuggerViewModel.IconKey)
             });
-    }
-
-    private static string SuggestGdbPath()
-    {
-        // Plattformüblicher Standard-Installationsort zuerst prüfen.
-        string? defaultLocation = null;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            defaultLocation = @"C:\Program Files\gdb\bin\gdb.exe";
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            defaultLocation = "/opt/homebrew/bin/gdb";
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            defaultLocation = "/usr/bin/gdb";
-
-        if (defaultLocation != null && File.Exists(defaultLocation))
-            return defaultLocation;
-
-        // Kein GDB am Standardort -> im System-PATH suchen.
-        var binaryName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "gdb.exe" : "gdb";
-        return PlatformHelper.GetFullPath(binaryName) ?? binaryName;
     }
 }
