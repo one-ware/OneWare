@@ -1,3 +1,10 @@
+## 1.0.24
+
+- Improve Copilot Terminal Handling
+- Add TIFF Support for Image Viewer
+- Fix CCF-File Convert
+- Add possibility to set runtime arguments by file
+
 ## 1.0.23
 
 - Fix Verilog Node Extractor Issue

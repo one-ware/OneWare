@@ -102,6 +102,13 @@ public abstract class ProjectViewModelBase : ExtendedTool
     private List<int> GetIndexPathFromNode(IProjectExplorerNode node)
     {
         List<int> indexPath = [];
+
+        if (node is IProjectRoot root)
+        {
+            indexPath.Add(Projects.IndexOf(root));
+            return indexPath;
+        }
+
         if (node.Parent?.Children != null)
         {
             indexPath.Add(node.Parent.Children.IndexOf(node));

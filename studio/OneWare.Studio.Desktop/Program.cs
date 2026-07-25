@@ -260,6 +260,8 @@ internal abstract class Program
     {
         try
         {
+            EnvironmentDefaultsService.Load();
+
             Option<string> dirOption = new("--oneware-dir")
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
             Option<string> projectsDirOption = new("--oneware-projects-dir")

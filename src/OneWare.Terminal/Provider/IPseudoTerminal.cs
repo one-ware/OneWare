@@ -10,4 +10,11 @@ public interface IPseudoTerminal : IDisposable
     Task WriteAsync(byte[] buffer, int offset, int count);
 
     Task<int> ReadAsync(byte[] buffer, int offset, int count);
+
+    /// <summary>
+    /// Returns the exit code of the terminal's child process once it has exited,
+    /// or <see langword="null"/> if it is still running or the code cannot be determined.
+    /// May block briefly while the process finishes terminating.
+    /// </summary>
+    int? GetExitCode();
 }

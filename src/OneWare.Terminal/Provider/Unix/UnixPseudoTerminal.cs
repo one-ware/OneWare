@@ -10,6 +10,7 @@ public class UnixPseudoTerminal : IPseudoTerminal
     private readonly Stream _stdin;
     private readonly Stream _stdout;
     private bool _isDisposed;
+    private int? _exitCode;
 
     public UnixPseudoTerminal(Process process, int cfg, Stream stdin, Stream stdout)
     {
@@ -20,6 +21,42 @@ public class UnixPseudoTerminal : IPseudoTerminal
     }
 
     public Process Process { get; }
+
+    public int? GetExitCode()
+    {
+        // waitpid reaps the child exactly once; cache the result for later callers.
+        if (_exitCode != null) return _exitCode;
+
+        try
+        {
+            const int WNOHANG = 1;
+            var status = 0;
+
+            // Called right after pty EOF, so the child is dead or exiting. Poll briefly
+            // instead of blocking forever in case the EOF had another cause.
+            for (var i = 0; i < 100; i++)
+            {
+                var result = Native.waitpid(Process.Id, ref status, WNOHANG);
+                if (result == Process.Id)
+                {
+                    if ((status & 0x7f) == 0)
+                        _exitCode = (status >> 8) & 0xff; // WIFEXITED → WEXITSTATUS
+                    else
+                        _exitCode = 128 + (status & 0x7f); // killed by signal, shell convention
+                    return _exitCode;
+                }
+
+                if (result < 0) return null; // not our child / already reaped elsewhere
+                Thread.Sleep(10);
+            }
+        }
+        catch
+        {
+            // Best effort only.
+        }
+
+        return null;
+    }
 
     public void Dispose()
     {

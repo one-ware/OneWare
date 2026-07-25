@@ -618,6 +618,10 @@ public sealed class CopilotChatService(
 
         if (!installResult) return false;
 
+        // Resume the conversation that was active before the reinstall/update
+        // instead of starting an empty session.
+        _requestedSessionId ??= CurrentSessionId;
+
         SessionReset?.Invoke(this, EventArgs.Empty);
 
         await InitializeAsync();
@@ -670,6 +674,8 @@ public sealed class CopilotChatService(
             {
                 await Dispatcher.UIThread.InvokeAsync(view.Close);
                 await showTask;
+                // Keep the previous conversation (if any) across the re-login.
+                _requestedSessionId ??= CurrentSessionId;
                 SessionReset?.Invoke(this, EventArgs.Empty);
                 return await InitializeAsync();
             }
@@ -998,8 +1004,23 @@ public sealed class CopilotChatService(
     public async Task AbortAsync()
     {
         ReleasePendingInputRequests();
+        toolProvider.CancelActiveFunctions();
         if (_session == null) return;
         await _session.AbortAsync();
+    }
+
+    public async Task<bool> RemoveMostRecentQueuedMessageAsync()
+    {
+        if (_session == null) return false;
+        var result = await _session.Rpc.Queue.RemoveMostRecentAsync();
+        return result.Removed;
+    }
+
+    public async Task<bool> ClearQueuedMessagesAsync()
+    {
+        if (_session == null) return false;
+        await _session.Rpc.Queue.ClearAsync();
+        return true;
     }
 
     public async Task NewChatAsync()
@@ -1016,6 +1037,10 @@ public sealed class CopilotChatService(
         if (string.IsNullOrWhiteSpace(sessionId)) return false;
 
         _requestedSessionId = sessionId;
+
+        // Not connected / no model yet (e.g. right after a CLI install): keep the
+        // requested id and resume lazily once the session is actually created.
+        if (_client == null || SelectedModel == null) return false;
 
         try
         {

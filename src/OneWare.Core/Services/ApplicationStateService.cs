@@ -194,18 +194,16 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         {
             var executablePath = Environment.ProcessPath;
             var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
-            
-            // Remove last argument if it's not a flag
-            if (args.Length > 0)
-            {
-                var lastArg = args.Last();
 
-                if (!lastArg.StartsWith("-", StringComparison.Ordinal))
-                {
-                    args = args.Take(args.Length - 1).ToArray();
-                }
+            // Do not repeat a positional file, directory, or URI launch action after restarting.
+            // Preserve a trailing option value, which is also a non-flag argument.
+            if (args.Length > 0 &&
+                !args[^1].StartsWith("-", StringComparison.Ordinal) &&
+                (args.Length == 1 || !args[^2].StartsWith("-", StringComparison.Ordinal)))
+            {
+                args = args[..^1];
             }
-            
+
             if (string.IsNullOrEmpty(executablePath))
             {
                 ContainerLocator.Container.Resolve<ILogger>()?.Error("Cannot restart: executable path not found");

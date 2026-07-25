@@ -585,10 +585,6 @@ public class App : Application
                 retainedFileCountLimit: 7,
                 shared: true
             )
-            .WriteTo.File(
-                Path.Combine(logPath, "current.txt"),
-                shared: true
-            )
             .WriteTo.Console(
                 theme: onewareTheme
             )

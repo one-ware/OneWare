@@ -9,9 +9,25 @@ public interface IAiFunctionProvider
     event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
     /// <summary>Fired when an AI function completes.</summary>
     event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
+    /// <summary>Fired when a running AI function reports incremental output.</summary>
+    event EventHandler<AiFunctionProgressEvent>? FunctionProgress
+    {
+        add { }
+        remove { }
+    }
 
     /// <summary>Returns available AI tools for this provider.</summary>
     ICollection<AIFunction> GetTools();
+
+    /// <summary>Cancels all AI functions that are currently running.</summary>
+    void CancelActiveFunctions()
+    {
+    }
+
+    /// <summary>Cancels the single running AI function with the given invocation id.</summary>
+    void CancelFunction(string id)
+    {
+    }
 
     /// <summary>Registers an additional AI function (e.g. from plugins).</summary>
     void RegisterFunction(IOneWareAiFunction function);

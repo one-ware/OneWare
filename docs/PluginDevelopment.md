@@ -248,8 +248,9 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `ITerminalManagerService` (src/OneWare.Essentials/Services/ITerminalManagerService.cs)
 
-- `ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, cancellationToken)`:
-  run a command in a terminal pane and return the result.
+- `ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, outputProgress, cancellationToken)`:
+  run a command in a terminal pane and return the result. Pass an optional `IProgress<string>`
+  as `outputProgress` to receive the accumulated output in real time while the command runs.
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 
@@ -323,8 +324,13 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
-- `GetTools()`: register AI tools for chat or automation.
-- `FunctionStarted`, `FunctionCompleted` events.
+- `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
+- `GetTools()`: return the registered tools for chat or automation.
+- `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
+  invocation by its unique ID.
+- Set `OneWareAiFunction.InvocationHandler` when a tool needs an
+  `AiFunctionInvocationContext` for invocation-scoped progress reporting. Keep `Handler` as the
+  typed delegate used to generate the tool schema.
 
 #### `ISerialMonitorService` (src/OneWare.Essentials/Services/ISerialMonitorService.cs)
 

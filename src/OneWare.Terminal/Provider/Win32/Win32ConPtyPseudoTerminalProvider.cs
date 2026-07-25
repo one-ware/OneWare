@@ -1,5 +1,7 @@
+using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -56,17 +58,16 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 lpAttributeList = attributeList
             };
 
-            if (!string.IsNullOrWhiteSpace(environment)) environmentBlock = Marshal.StringToHGlobalUni(environment);
+            environmentBlock = Marshal.StringToHGlobalUni(BuildEnvironmentBlock(environment));
 
             var creationFlags = ConPtyNative.EXTENDED_STARTUPINFO_PRESENT |
-                                (environmentBlock != IntPtr.Zero ? ConPtyNative.CREATE_UNICODE_ENVIRONMENT : 0);
+                                ConPtyNative.CREATE_UNICODE_ENVIRONMENT;
 
             var commandLineBuilder = new StringBuilder(commandLine);
 
             if (!ConPtyNative.CreateProcessW(null, commandLineBuilder, IntPtr.Zero, IntPtr.Zero, false, creationFlags,
                     environmentBlock, initialDirectory, ref startupInfo, out var processInformation))
             {
-                ConPtyNative.ClosePseudoConsole(pseudoConsole);
                 return null;
             }
 
@@ -115,16 +116,60 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
         return command;
     }
 
-    private static void CreatePipePair(out SafeFileHandle readPipe, out SafeFileHandle writePipe)
+    private static void CreatePipePair(out SafeFileHandle readPipe, out SafeFileHandle writePipe,
+        bool inheritRead = false, bool inheritWrite = false)
     {
-        if (!ConPtyNative.CreatePipe(out readPipe, out writePipe, IntPtr.Zero, 0))
+        var securityAttributes = new ConPtyNative.SecurityAttributes
+        {
+            nLength = Marshal.SizeOf<ConPtyNative.SecurityAttributes>(),
+            bInheritHandle = true
+        };
+        var securityAttributesPointer = Marshal.AllocHGlobal(securityAttributes.nLength);
+        try
+        {
+            Marshal.StructureToPtr(securityAttributes, securityAttributesPointer, false);
+            if (!ConPtyNative.CreatePipe(out readPipe, out writePipe, securityAttributesPointer, 0))
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(securityAttributesPointer);
+        }
+
+        if (!inheritRead &&
+            !ConPtyNative.SetHandleInformation(readPipe, ConPtyNative.HANDLE_FLAG_INHERIT, 0))
             throw new Win32Exception(Marshal.GetLastWin32Error());
 
-        if (!ConPtyNative.SetHandleInformation(readPipe, ConPtyNative.HANDLE_FLAG_INHERIT, 0))
+        if (!inheritWrite &&
+            !ConPtyNative.SetHandleInformation(writePipe, ConPtyNative.HANDLE_FLAG_INHERIT, 0))
             throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
 
-        if (!ConPtyNative.SetHandleInformation(writePipe, ConPtyNative.HANDLE_FLAG_INHERIT, 0))
-            throw new Win32Exception(Marshal.GetLastWin32Error());
+    private static string BuildEnvironmentBlock(string? environment)
+    {
+        var values = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            if (entry.Key is string key && entry.Value is string value)
+                values[key] = value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(environment))
+        {
+            foreach (var entry in environment.Split('\0'))
+            {
+                if (string.IsNullOrEmpty(entry)) continue;
+                var separator = entry.IndexOf('=');
+                if (separator > 0)
+                    values[entry[..separator]] = entry[(separator + 1)..];
+            }
+        }
+
+        var builder = new StringBuilder();
+        foreach (var pair in values)
+            builder.Append(pair.Key).Append('=').Append(pair.Value).Append('\0');
+        builder.Append('\0');
+        return builder.ToString();
     }
 
     private static void InitializeAttributeList(IntPtr pseudoConsole, out IntPtr attributeList)
@@ -148,5 +193,6 @@ public class Win32ConPtyPseudoTerminalProvider : IPseudoTerminalProvider
                 ConPtyNative.PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, pseudoConsole, IntPtr.Size,
                 IntPtr.Zero, IntPtr.Zero))
             throw new Win32Exception(Marshal.GetLastWin32Error());
+
     }
 }

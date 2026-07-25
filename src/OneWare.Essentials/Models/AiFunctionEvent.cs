@@ -16,3 +16,8 @@ public class AiFunctionCompletedEvent : AiFunctionEvent
     public required bool Result { get; init; }
     public string? ToolOutput { get; init; }
 }
+
+public class AiFunctionProgressEvent : AiFunctionEvent
+{
+    public required string Output { get; init; }
+}

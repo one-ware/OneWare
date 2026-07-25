@@ -58,13 +58,13 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "1.0.70",
+                Version = "1.0.74",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-win32-x64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-win32-x64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -77,7 +77,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-win32-arm64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-win32-arm64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -90,7 +90,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-linux-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-linux-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -103,7 +103,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-linux-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-linux-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -116,7 +116,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-darwin-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-darwin-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -129,7 +129,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.70/copilot-darwin-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-darwin-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

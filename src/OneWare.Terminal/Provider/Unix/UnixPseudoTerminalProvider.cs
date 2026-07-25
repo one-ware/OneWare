@@ -38,6 +38,7 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
                 var value = entry.Substring(separatorIndex + 1);
                 envMap[key] = value;
             }
+
         }
 
         var envVars = new List<string>(envMap.Count + 2);
@@ -47,21 +48,37 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
         envVars.Add("TERM=xterm-256color");
         envVars.Add(null!);
 
+        // Build all managed data (argv/env arrays) in the PARENT before forking.
+        // After forkpty the child shares the address space of a multithreaded runtime whose GC
+        // and JIT locks may be held by other (now-frozen) threads. Running not-yet-JIT-compiled
+        // managed code or allocating there can deadlock or segfault (exit 139), so the child must
+        // only perform native calls on pre-built arrays.
+        var envArray = envVars.ToArray();
+
+        var argvList = new List<string> { command };
+        if (arguments != null) argvList.AddRange(arguments.Split(' '));
+        argvList.Add(null!);
+        var argvArray = argvList.ToArray();
+
+        // Warm up the P/Invoke marshalling stubs used in the child while still in the
+        // parent: after forkpty the child cannot JIT-compile or allocate (the runtime's
+        // GC/JIT locks may be held by now-frozen threads), so the very first spawn in a
+        // process would otherwise deadlock inside the marshaller and leave a dead shell.
+        Native.chdir(".");
+        Native.execve("/nonexistent/oneware-marshal-warmup", argvArray, envArray);
+
         var pid = Native.forkpty(out var masterFd, IntPtr.Zero, IntPtr.Zero, ref winsize);
 
         //pid will be 0 on the forked process
         if (pid == 0)
         {
             Native.chdir(initialDirectory);
-
-            var argsArray = new List<string> { command };
-            if (arguments != null) argsArray.AddRange(arguments.Split(' '));
-
-            argsArray.Add(null!);
-
-            Native.execve(argsArray[0], argsArray.ToArray(), envVars.ToArray());
-            Environment.Exit(1);
+            Native.execve(argvArray[0], argvArray, envArray);
+            Native._exit(1);
         }
+
+        if (pid < 0)
+            return null;
 
         var stdin = Native.dup(masterFd);
         var process = Process.GetProcessById(pid);

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
 using OneWare.Essentials.Models;
@@ -16,10 +17,12 @@ public class AiFunctionProvider(
     private readonly Lock _registrationLock = new();
     private readonly List<IOneWareAiFunction> _registeredFunctions = [];
     private readonly List<string> _promptAdditions = [];
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeFunctions = new();
     private bool _builtInsRegistered;
 
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
     public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
+    public event EventHandler<AiFunctionProgressEvent>? FunctionProgress;
 
     public void RegisterFunction(IOneWareAiFunction function)
     {
@@ -89,6 +92,26 @@ public class AiFunctionProvider(
         return tools;
     }
 
+    public void CancelActiveFunctions()
+    {
+        foreach (var id in _activeFunctions.Keys)
+            CancelFunction(id);
+    }
+
+    public void CancelFunction(string id)
+    {
+        if (!_activeFunctions.TryGetValue(id, out var cancellationSource)) return;
+
+        try
+        {
+            cancellationSource.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The function completed while cancellation was being requested.
+        }
+    }
+
     private void EnsureBuiltInsRegistered()
     {
         lock (_registrationLock)
@@ -107,10 +130,8 @@ public class AiFunctionProvider(
             aiFileEditService);
     }
 
-    private async Task<string> NotifyFunctionStartedAsync(string functionName, string? detail = null)
+    private async Task NotifyFunctionStartedAsync(string id, string functionName, string? detail = null)
     {
-        var id = Guid.NewGuid().ToString();
-
         await Dispatcher.UIThread.InvokeAsync(() =>
             FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
             {
@@ -118,8 +139,6 @@ public class AiFunctionProvider(
                 FunctionName = functionName,
                 Detail = detail
             }));
-
-        return id;
     }
 
     private async Task NotifyFunctionCompletedAsync(string id, Exception? exception = null)
@@ -129,7 +148,17 @@ public class AiFunctionProvider(
             {
                 Id = id,
                 Result = exception == null,
-                ToolOutput = exception?.ToString()
+                ToolOutput = exception is OperationCanceledException ? "Cancelled." : exception?.ToString()
+            }));
+    }
+
+    private void RaiseFunctionProgress(string id, string output)
+    {
+        Dispatcher.UIThread.Post(() =>
+            FunctionProgress?.Invoke(this, new AiFunctionProgressEvent
+            {
+                Id = id,
+                Output = output
             }));
     }
 
@@ -146,17 +175,32 @@ public class AiFunctionProvider(
                 : definition.FriendlyName;
 
             var detail = definition.DetailExtractor?.Invoke(arguments);
-            var id = await provider.NotifyFunctionStartedAsync(friendlyName!, detail);
+            var id = Guid.NewGuid().ToString();
+            using var functionCancellationSource =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            provider._activeFunctions[id] = functionCancellationSource;
+
+            var context = new AiFunctionInvocationContext(id,
+                output => provider.RaiseFunctionProgress(id, output));
             Exception? exception = null;
             try
             {
+                await provider.NotifyFunctionStartedAsync(id, friendlyName!, detail);
+
                 if (definition.RunOnUiThread)
                 {
                     return await Dispatcher.UIThread.InvokeAsync(async () =>
-                        await base.InvokeCoreAsync(arguments, cancellationToken));
+                        await InvokeDefinitionAsync(context, arguments, functionCancellationSource.Token));
                 }
 
-                return await base.InvokeCoreAsync(arguments, cancellationToken);
+                return await InvokeDefinitionAsync(context, arguments, functionCancellationSource.Token);
+            }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Only this tool call was cancelled (e.g. via its stop button) — report it to the
+                // model as a result instead of failing the whole chat turn.
+                exception = ex;
+                return "The tool call was stopped by the user before it finished.";
             }
             catch (Exception ex)
             {
@@ -165,8 +209,17 @@ public class AiFunctionProvider(
             }
             finally
             {
+                provider._activeFunctions.TryRemove(id, out _);
                 await provider.NotifyFunctionCompletedAsync(id, exception);
             }
+        }
+
+        private ValueTask<object?> InvokeDefinitionAsync(AiFunctionInvocationContext context,
+            AIFunctionArguments arguments, CancellationToken cancellationToken)
+        {
+            return definition.InvocationHandler != null
+                ? definition.InvocationHandler(context, arguments, cancellationToken)
+                : base.InvokeCoreAsync(arguments, cancellationToken);
         }
     }
 }
