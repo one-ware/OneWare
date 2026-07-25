@@ -310,7 +310,11 @@ public class GdbSession(
     }
 
 
-    private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
+    /// <summary>
+    ///     Setzt ein Kommando direkt am Backend ab. Oeffentlich, weil die Debugger Console
+    ///     dem Benutzer eine freie Eingabezeile anbietet.
+    /// </summary>
+    public Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
     {
         return Task.Run(() => RunCommand(command, 10000, args));
     }

@@ -9,6 +9,20 @@
              x:DataType="viewModels:DebuggerViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
+    <UserControl.Styles>
+        <!-- Abgesetzte Kommandos heben sich von der Antwort des Backends ab. -->
+        <Style Selector="SelectableTextBlock.consoleLine">
+            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Padding" Value="0,1" />
+        </Style>
+        <Style Selector="SelectableTextBlock.consoleLine.command">
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Styles>
+
     <DockPanel LastChildFill="True">
 
         <Border DockPanel.Dock="Top"
@@ -16,8 +30,8 @@
                 BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
             <StackPanel Orientation="Horizontal" Spacing="2" Margin="4" VerticalAlignment="Center">
-                <Button Width="24" Height="24" Command="{Binding StartCommand}" ToolTip.Tip="Start">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Start}" />
+                <Button Width="24" Height="24" Command="{Binding StartCommand}" ToolTip.Tip="Start Debugging">
+                    <Image Source="{DynamicResource Material.BugReport}" />
                 </Button>
                 <Button Width="24" Height="24" Command="{Binding PauseCommand}" ToolTip.Tip="Pause"
                         IsVisible="{Binding IsRunning}">
@@ -49,44 +63,51 @@
             </StackPanel>
         </Border>
 
-        <TabControl Padding="0" Margin="0">
+        <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
 
             <TabItem Header="Console">
-                <ScrollViewer>
-                    <ItemsControl ItemsSource="{Binding Console}" Margin="6">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <TextBlock Text="{Binding}" TextWrapping="Wrap" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                    <ScrollViewer Name="ConsoleScroll" Padding="8,6">
+                        <ItemsControl ItemsSource="{Binding Console}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:ConsoleLine">
+                                    <SelectableTextBlock Classes="consoleLine"
+                                                         Classes.command="{Binding IsCommand}"
+                                                         Text="{Binding Text}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
             </TabItem>
 
             <TabItem Header="Registers">
-                <DataGrid ItemsSource="{Binding Registers}"
-                          IsReadOnly="True"
-                          Background="Transparent"
-                          RowBackground="Transparent"
-                          BorderThickness="0"
-                          CanUserResizeColumns="True">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Register" Width="*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="models:RegisterRow">
-                                    <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Name}" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="Value" Width="*">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="models:RegisterRow">
-                                    <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Value}" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Border Margin="4"
+                        CornerRadius="4"
+                        ClipToBounds="True"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                        Background="{DynamicResource ThemeBackgroundBrush}">
+                    <DataGrid ItemsSource="{Binding Registers}"
+                              GridLinesVisibility="Vertical"
+                              VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                              BorderThickness="0"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Register" Width="*"
+                                                Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
+                            <DataGridTextColumn Header="Value" Width="*"
+                                                Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
             </TabItem>
 
             <TabItem Header="Debugger Console">
@@ -97,23 +118,31 @@
                         <DockPanel Background="{DynamicResource ThemeBackgroundBrush}">
                             <Button DockPanel.Dock="Right" Margin="4" Height="26" Padding="8,0"
                                     Command="{Binding SendCommandCommand}" Content="Send" />
-                            <TextBox Text="{Binding CommandText, Mode=TwoWay}"
+                            <TextBox Name="CommandBox"
+                                     Text="{Binding CommandText, Mode=TwoWay}"
                                      Watermark="Command for the debug backend"
+                                     FontFamily="{DynamicResource EditorFont}"
                                      Background="{DynamicResource ThemeControlLowBrush}"
                                      BorderThickness="0"
                                      Padding="6,2" />
                         </DockPanel>
                     </Border>
 
-                    <ScrollViewer>
-                        <ItemsControl ItemsSource="{Binding DebuggerConsole}" Margin="6">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
-                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                    <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <ScrollViewer Name="DebuggerConsoleScroll" Padding="8,6">
+                            <ItemsControl ItemsSource="{Binding DebuggerConsole}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ConsoleLine">
+                                        <SelectableTextBlock Classes="consoleLine"
+                                                             Classes.command="{Binding IsCommand}"
+                                                             Text="{Binding Text}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
                 </DockPanel>
             </TabItem>
 
