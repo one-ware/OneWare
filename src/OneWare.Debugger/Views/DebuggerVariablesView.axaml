@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
+             x:Class="OneWare.Debugger.Views.DebuggerVariablesView"
+             x:DataType="viewModels:DebuggerVariablesViewModel"
+             Background="{DynamicResource ThemeControlLowBrush}">
+
+    <DockPanel LastChildFill="True">
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <StackPanel Orientation="Horizontal" Margin="4" Spacing="4">
+                <Button Command="{Binding RefreshCommand}" Content="Refresh" Height="24" Padding="8,0" />
+            </StackPanel>
+        </Border>
+
+        <DataGrid ItemsSource="{Binding Variables}"
+                  IsReadOnly="True"
+                  Background="Transparent"
+                  RowBackground="Transparent"
+                  BorderThickness="0"
+                  CanUserResizeColumns="True">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Name" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:VariableRow">
+                            <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Name}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Value" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:VariableRow">
+                            <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Value}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Type" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:VariableRow">
+                            <TextBlock VerticalAlignment="Center" Padding="5,0" Opacity="0.7" Text="{Binding Type}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

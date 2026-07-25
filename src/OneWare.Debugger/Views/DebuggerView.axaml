@@ -1,8 +1,122 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Debugger.Views.DebuggerView" Background="{DynamicResource ThemeControlLowBrush}">
-    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Coming Soon!" />
+             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="260"
+             x:Class="OneWare.Debugger.Views.DebuggerView"
+             x:DataType="viewModels:DebuggerViewModel"
+             Background="{DynamicResource ThemeControlLowBrush}">
+
+    <DockPanel LastChildFill="True">
+
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="2" Margin="4" VerticalAlignment="Center">
+                <Button Width="24" Height="24" Command="{Binding StartCommand}" ToolTip.Tip="Start">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Start}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding PauseCommand}" ToolTip.Tip="Pause"
+                        IsVisible="{Binding IsRunning}">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Pause}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
+                        IsVisible="{Binding !IsRunning}">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Continue}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Stop}" />
+                </Button>
+
+                <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+
+                <Button Width="24" Height="24" Command="{Binding StepOverCommand}" ToolTip.Tip="Step Over">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Over}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding StepIntoCommand}" ToolTip.Tip="Step Into">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Into}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding StepOutCommand}" ToolTip.Tip="Step Out">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Out}" />
+                </Button>
+
+                <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+
+                <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding StatusText}" />
+            </StackPanel>
+        </Border>
+
+        <TabControl Padding="0" Margin="0">
+
+            <TabItem Header="Console">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Console}" Margin="6">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Registers">
+                <DataGrid ItemsSource="{Binding Registers}"
+                          IsReadOnly="True"
+                          Background="Transparent"
+                          RowBackground="Transparent"
+                          BorderThickness="0"
+                          CanUserResizeColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Register" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="models:RegisterRow">
+                                    <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Name}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Value" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="models:RegisterRow">
+                                    <TextBlock VerticalAlignment="Center" Padding="5,0" Text="{Binding Value}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="Debugger Console">
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Bottom"
+                            BorderThickness="0,1,0,0"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <DockPanel Background="{DynamicResource ThemeBackgroundBrush}">
+                            <Button DockPanel.Dock="Right" Margin="4" Height="26" Padding="8,0"
+                                    Command="{Binding SendCommandCommand}" Content="Send" />
+                            <TextBox Text="{Binding CommandText, Mode=TwoWay}"
+                                     Watermark="Command for the debug backend"
+                                     Background="{DynamicResource ThemeControlLowBrush}"
+                                     BorderThickness="0"
+                                     Padding="6,2" />
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding DebuggerConsole}" Margin="6">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
 </UserControl>

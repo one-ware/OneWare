@@ -16,6 +16,9 @@ public class DebuggerModule : OneWareModuleBase
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<DebuggerViewModel>();
+        services.AddSingleton<DebuggerVariablesViewModel>();
+        services.AddSingleton<DebuggerExpressionsViewModel>();
+        services.AddSingleton<DebuggerBreakpointsViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -36,12 +39,30 @@ public class DebuggerModule : OneWareModuleBase
                 HoverDescription = "Path to the GDB executable for remote debugging via gdbserver."
             });
 
+        // Legt die Standardposition der Panels im Layout fest. Rechts wird RightPinned genutzt,
+        // weil das Standardlayout nur dafuer einen Bereich anlegt (DefaultLayout.cs) - genau wie
+        // beim AI-Chat-Panel.
+        dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
+        dockService.RegisterLayoutExtension<DebuggerVariablesViewModel>(DockShowLocation.RightPinned);
+        dockService.RegisterLayoutExtension<DebuggerExpressionsViewModel>(DockShowLocation.RightPinned);
+        dockService.RegisterLayoutExtension<DebuggerBreakpointsViewModel>(DockShowLocation.RightPinned);
+
+        // Ein einziger Menuepunkt oeffnet die komplette Debugging-Ansicht: Steuerung samt
+        // Call Stack und Ausgaben unten, Variables, Expressions und Breakpoints rechts.
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemModel("Debugger")
+            new MenuItemModel("Debugging")
             {
-                Header = "Debugger",
+                Header = "Debugging",
                 Command = new RelayCommand(() =>
-                    dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
+                {
+                    dockService.Show(serviceProvider.Resolve<DebuggerVariablesViewModel>(),
+                        DockShowLocation.RightPinned);
+                    dockService.Show(serviceProvider.Resolve<DebuggerExpressionsViewModel>(),
+                        DockShowLocation.RightPinned);
+                    dockService.Show(serviceProvider.Resolve<DebuggerBreakpointsViewModel>(),
+                        DockShowLocation.RightPinned);
+                    dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom);
+                }),
                 Icon = new IconModel(DebuggerViewModel.IconKey)
             });
     }
