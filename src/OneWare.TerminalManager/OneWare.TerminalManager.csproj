@@ -6,6 +6,7 @@
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
         <ProjectReference Include="..\OneWare.Terminal\OneWare.Terminal.csproj"/>
+        <InternalsVisibleTo Include="OneWare.Studio.Desktop.UnitTests"/>
     </ItemGroup>
 
 </Project>

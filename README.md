@@ -62,6 +62,32 @@ More information about One AI [here](https://one-ware.com/docs/one-ai/getting-st
 3. `cd OneWare/studio/OneWare.Studio.Desktop`
 4. `dotnet run`
 
+### Deployment defaults
+
+An installation script can provide persistent defaults through `OneWareStudio.defaults.json` at:
+
+| Platform | Path |
+|---|---|
+| Windows | `%ProgramData%\OneWare\OneWareStudio.defaults.json` |
+| macOS | `/Library/Application Support/OneWare/OneWareStudio.defaults.json` |
+| Linux | `/etc/oneware/OneWareStudio.defaults.json` |
+
+The file maps the environment variables used by command-line arguments to values:
+
+```json
+{
+  "ONEWARE_DIR": "/workspace/OneWare",
+  "ONEWARE_PROJECTS_DIR": "/workspace/Projects",
+  "ONEWARE_APPDATA_DIR": "/workspace/AppData",
+  "ONEWARE_MODULES": "/plugins/ExamplePlugin.dll",
+  "ONEWARE_AUTOLAUNCH": "example-action",
+  "ONEWARE_PACKAGE_REPOSITORY": "https://packages.example.com/oneware-packages.json"
+}
+```
+
+Existing environment variables and command-line arguments take precedence. Only `ONEWARE_` variables are accepted;
+invalid files and entries are ignored with a console warning.
+
 ## Nuget
 
 | Package                             | Download                                                                            |

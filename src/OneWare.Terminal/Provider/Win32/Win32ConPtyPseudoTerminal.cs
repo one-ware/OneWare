@@ -21,6 +21,18 @@ public class Win32ConPtyPseudoTerminal : IPseudoTerminal
 
     public Process Process { get; }
 
+    public int? GetExitCode()
+    {
+        try
+        {
+            return Process.WaitForExit(2000) ? Process.ExitCode : null;
+        }
+        catch
+        {
+            return null; // Best effort only.
+        }
+    }
+
     public void SetSize(int columns, int rows)
     {
         if (_pseudoConsole != IntPtr.Zero && columns >= 1 && rows >= 1)

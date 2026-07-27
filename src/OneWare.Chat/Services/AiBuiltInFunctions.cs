@@ -279,6 +279,8 @@ internal static class AiBuiltInFunctions
             progress,
             cancellationToken);
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var truncatedOutput = TruncateTerminalOutput(terminalResult.Output, out var outputTruncated);
         var result = outputTruncated
             ? terminalResult with { Output = truncatedOutput }
