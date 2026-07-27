@@ -6,9 +6,12 @@ namespace OneWare.Essentials.Services;
 public interface IToolService
 {
     /// <summary>
-    /// Registers a tool. At least one execution strategy must be attached separately via
-    /// <see cref="RegisterStrategy"/>, before or after this call - the Settings entry for the tool is
-    /// built as soon as both are known, regardless of order.
+    /// Registers a tool. At least one execution strategy must become available for it separately -
+    /// via <see cref="RegisterUniversalStrategy"/>, via <see cref="RegisterStrategy"/> naming this
+    /// tool's key in its <c>supportedToolKeys</c>, or via a strategy whose key appears in this tool's
+    /// <see cref="ToolContext.PreferredStrategyKeys"/>. Any of these can happen before or after this
+    /// call - the Settings entry for the tool is built as soon as the tool and at least one available
+    /// strategy are both known, regardless of order.
     /// </summary>
     void Register(ToolContext description);
 
@@ -33,12 +36,27 @@ public interface IToolService
     ToolConfiguration GetGlobalToolConfiguration();
 
     /// <summary>
-    /// Registers an execution strategy for a tool.
+    /// Registers an execution strategy globally, under its own
+    /// <see cref="IToolExecutionStrategy.GetStrategyKey"/>. Without <paramref name="supportedToolKeys"/>,
+    /// the strategy is only available to a tool that explicitly lists this key in its own
+    /// <see cref="ToolContext.PreferredStrategyKeys"/> - a tool-side opt-in. Pass
+    /// <paramref name="supportedToolKeys"/> for the reverse, strategy-side opt-in: the tool keys this
+    /// strategy explicitly supports, regardless of whether those tools listed it as preferred - e.g. a
+    /// Docker extension attaching itself to tools declared by a module it has no reference to. A
+    /// strategy available through either path is also eligible to become a tool's default pick; see
+    /// <see cref="ToolContext.PreferredStrategyKeys"/>.
     /// </summary>
-    public void RegisterStrategy(string toolKey, IToolExecutionStrategy strategy);
+    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string>? supportedToolKeys = null);
 
     /// <summary>
-    /// Unregisters an execution strategy by key.
+    /// Registers an execution strategy that is available to every tool, regardless of what any tool or
+    /// strategy declares. Intended for a generic fallback such as a native-process strategy, which can
+    /// run any tool by executable name and needs no tool-specific wiring.
+    /// </summary>
+    public void RegisterUniversalStrategy(IToolExecutionStrategy strategy);
+
+    /// <summary>
+    /// Unregisters an execution strategy by key, removing it for every tool it was available to.
     /// </summary>
     public void UnregisterStrategy(string strategyKey);
 
@@ -58,11 +76,13 @@ public interface IToolService
     IToolExecutionStrategy GetStrategy(string toolKey);
 
     /// <summary>
-    /// Returns the strategy registered for a tool under a specific strategy key, bypassing the tool's
-    /// configured strategy setting entirely. Used to force a specific call onto a specific strategy
+    /// Returns the strategy registered under a specific strategy key, if it is actually available to
+    /// the given tool (universal, explicitly supporting this tool key, or listed in the tool's
+    /// <see cref="ToolContext.PreferredStrategyKeys"/>), bypassing the tool's configured strategy
+    /// setting entirely. Used to force a specific call onto a specific strategy
     /// (see <see cref="OneWare.Essentials.ToolEngine.ToolCommand.ForcedStrategyKey"/>).
     /// </summary>
-    /// <returns>The matching strategy, or <c>null</c> if no such strategy is registered for the tool.</returns>
+    /// <returns>The matching strategy, or <c>null</c> if it isn't available to the tool.</returns>
     IToolExecutionStrategy? TryGetStrategy(string toolKey, string strategyKey);
 
     /// <summary>

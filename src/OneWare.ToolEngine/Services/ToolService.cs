@@ -12,7 +12,9 @@ public class ToolService : IToolService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly ObservableCollection<ToolContext> _tools = new();
-    private readonly Dictionary<string, Dictionary<string, IToolExecutionStrategy>> _toolStrategies = new();
+    private readonly Dictionary<string, IToolExecutionStrategy> _strategies = new();
+    private readonly HashSet<string> _universalStrategyKeys = new();
+    private readonly Dictionary<string, HashSet<string>> _strategySupportedToolKeys = new();
 
     public ToolService(ISettingsService settingsService, ILogger logger)
     {
@@ -58,17 +60,31 @@ public class ToolService : IToolService
         return config;
     }
 
-    public void RegisterStrategy(string toolKey, IToolExecutionStrategy strategy)
+    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string>? supportedToolKeys = null)
     {
-        if (!_toolStrategies.TryGetValue(toolKey, out var strategyMap))
+        var strategyKey = strategy.GetStrategyKey();
+        _strategies[strategyKey] = strategy;
+
+        if (supportedToolKeys is { Count: > 0 })
         {
-            strategyMap = new Dictionary<string, IToolExecutionStrategy>();
-            _toolStrategies[toolKey] = strategyMap;
+            if (!_strategySupportedToolKeys.TryGetValue(strategyKey, out var supported))
+            {
+                supported = new HashSet<string>();
+                _strategySupportedToolKeys[strategyKey] = supported;
+            }
+
+            foreach (var toolKey in supportedToolKeys) supported.Add(toolKey);
         }
 
-        strategyMap[strategy.GetStrategyKey()] = strategy;
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
+    }
 
-        SyncStrategyOptions(toolKey);
+    public void RegisterUniversalStrategy(IToolExecutionStrategy strategy)
+    {
+        _strategies[strategy.GetStrategyKey()] = strategy;
+        _universalStrategyKeys.Add(strategy.GetStrategyKey());
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
     }
 
     /// <summary>
@@ -102,26 +118,36 @@ public class ToolService : IToolService
 
     public void UnregisterStrategy(string strategyKey)
     {
-        foreach (var toolEntry in _toolStrategies)
-        {
-            var strategyMap = toolEntry.Value;
-            strategyMap.Remove(strategyKey);
-        }
+        _strategies.Remove(strategyKey);
+        _universalStrategyKeys.Remove(strategyKey);
+        _strategySupportedToolKeys.Remove(strategyKey);
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
     }
 
+    /// <summary>
+    /// Computes the strategy keys available to a tool from all three opt-in paths: universal
+    /// strategies, strategies that explicitly declared this tool key as supported, and strategies
+    /// named in the tool's own <see cref="ToolContext.PreferredStrategyKeys"/>.
+    /// </summary>
     public string[] GetStrategyKeys(string toolKey)
     {
-        if (_toolStrategies.TryGetValue(toolKey, out var strategies))
-            return strategies.Values
-                .Select(s => s.GetStrategyKey())
-                .ToArray();
+        var keys = new HashSet<string>(_universalStrategyKeys);
 
-        return [];
+        foreach (var (strategyKey, supportedToolKeys) in _strategySupportedToolKeys)
+            if (supportedToolKeys.Contains(toolKey)) keys.Add(strategyKey);
+
+        var tool = _tools.FirstOrDefault(t => t.Key == toolKey);
+        if (tool is not null)
+            foreach (var strategyKey in tool.PreferredStrategyKeys)
+                if (_strategies.ContainsKey(strategyKey)) keys.Add(strategyKey);
+
+        return keys.ToArray();
     }
 
     public IReadOnlyList<IToolExecutionStrategy> GetStrategies(string toolKey)
     {
-        return _toolStrategies[toolKey].Values.ToList();
+        return GetStrategyKeys(toolKey).Select(key => _strategies[key]).ToList();
     }
 
     public IToolExecutionStrategy GetStrategy(string toolKey)
@@ -131,28 +157,25 @@ public class ToolService : IToolService
             throw new InvalidOperationException(
                 $"No Setting  for key '{toolKey}' was found. Register Tool first bevor you are using it");
         }
-        
+
         var strategyKey = _settingsService.GetSettingValue<string>(toolKey);
-        if (_toolStrategies.TryGetValue(toolKey, out var strategies) &&
-            strategies.TryGetValue(strategyKey, out var strategy))
-            return strategy;
-        
+        var strategy = TryGetStrategy(toolKey, strategyKey);
+        if (strategy is not null) return strategy;
+
         _logger.LogError($"No execution strategy found for tool '{toolKey}' and strategy '{strategyKey}'");
         _logger.LogError("Using default strategy");
-        
-        if (strategies != null && strategies.TryGetValue(NativeStrategy.ToolKey, out var defaultStrategy))
-            return defaultStrategy;
-        
+
+        var fallback = TryGetStrategy(toolKey, NativeStrategy.ToolKey);
+        if (fallback is not null) return fallback;
+
         throw new InvalidOperationException($"No strategy with key '{toolKey}' was found.");
     }
 
     public IToolExecutionStrategy? TryGetStrategy(string toolKey, string strategyKey)
     {
-        if (_toolStrategies.TryGetValue(toolKey, out var strategies) &&
-            strategies.TryGetValue(strategyKey, out var strategy))
-            return strategy;
+        if (!GetStrategyKeys(toolKey).Contains(strategyKey)) return null;
 
-        return null;
+        return _strategies.GetValueOrDefault(strategyKey);
     }
 
     public IReadOnlyDictionary<string, string> GetStrategyConfiguration(string toolKey)
