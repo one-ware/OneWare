@@ -7,11 +7,14 @@ public interface IToolService
 {
     /// <summary>
     /// Registers a tool. At least one execution strategy must become available for it separately -
-    /// via <see cref="RegisterUniversalStrategy"/>, via <see cref="RegisterStrategy"/> naming this
-    /// tool's key in its <c>supportedToolKeys</c>, or via a strategy whose key appears in this tool's
+    /// via <see cref="RegisterUniversalStrategy"/>, via a
+    /// <see cref="RegisterStrategy(IToolExecutionStrategy, Func{ToolContext, bool})"/> predicate that
+    /// matches this tool, or via a strategy whose key appears in this tool's
     /// <see cref="ToolContext.PreferredStrategyKeys"/>. Any of these can happen before or after this
-    /// call - the Settings entry for the tool is built as soon as the tool and at least one available
-    /// strategy are both known, regardless of order.
+    /// call, and at any point during the application's lifetime - not just during plugin/module
+    /// startup, whose relative order is not guaranteed. The Settings entry for the tool is built as
+    /// soon as the tool and at least one available strategy are both known, and is kept in sync with
+    /// whichever registrations happen afterwards.
     /// </summary>
     void Register(ToolContext description);
 
@@ -37,16 +40,31 @@ public interface IToolService
 
     /// <summary>
     /// Registers an execution strategy globally, under its own
-    /// <see cref="IToolExecutionStrategy.GetStrategyKey"/>. Without <paramref name="supportedToolKeys"/>,
-    /// the strategy is only available to a tool that explicitly lists this key in its own
-    /// <see cref="ToolContext.PreferredStrategyKeys"/> - a tool-side opt-in. Pass
-    /// <paramref name="supportedToolKeys"/> for the reverse, strategy-side opt-in: the tool keys this
-    /// strategy explicitly supports, regardless of whether those tools listed it as preferred - e.g. a
-    /// Docker extension attaching itself to tools declared by a module it has no reference to. A
-    /// strategy available through either path is also eligible to become a tool's default pick; see
-    /// <see cref="ToolContext.PreferredStrategyKeys"/>.
+    /// <see cref="IToolExecutionStrategy.GetStrategyKey"/>. The strategy is only available to a tool
+    /// that explicitly lists this key in its own <see cref="ToolContext.PreferredStrategyKeys"/> - a
+    /// tool-side opt-in. Use one of the overloads below for the reverse, strategy-side opt-in.
     /// </summary>
-    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string>? supportedToolKeys = null);
+    public void RegisterStrategy(IToolExecutionStrategy strategy);
+
+    /// <summary>
+    /// Registers an execution strategy globally and declares the fixed set of tool keys it explicitly
+    /// supports, regardless of whether those tools listed it as preferred - e.g. a Docker extension
+    /// attaching itself to tools declared by a module it has no reference to. Sugar for
+    /// <see cref="RegisterStrategy(IToolExecutionStrategy, System.Func{ToolContext, bool})"/> matching
+    /// on <see cref="ToolContext.Key"/>; a strategy available through either path is also eligible to
+    /// become a tool's default pick, see <see cref="ToolContext.PreferredStrategyKeys"/>.
+    /// </summary>
+    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string> supportedToolKeys);
+
+    /// <summary>
+    /// Registers an execution strategy globally and declares which tools it supports via a predicate.
+    /// The predicate is re-evaluated on demand against every tool - including ones registered later,
+    /// since plugin/module load order is not guaranteed and new tools can be registered at any point
+    /// during the application's lifetime. Prefer this over the <c>supportedToolKeys</c> overload when
+    /// the supported tools can't be enumerated up front, e.g. matched by a name pattern or by a marker
+    /// in <see cref="ToolContext.StrategyConfiguration"/>.
+    /// </summary>
+    public void RegisterStrategy(IToolExecutionStrategy strategy, Func<ToolContext, bool> supportsTool);
 
     /// <summary>
     /// Registers an execution strategy that is available to every tool, regardless of what any tool or
@@ -109,7 +127,7 @@ public interface IToolService
 
     /// <summary>
     /// Returns the fully merged strategy configuration for a specific call: the tool's plugin-declared
-    /// defaults, overridden by any user Settings override (both from <see cref="GetStrategyConfiguration"/>),
+    /// defaults, overridden by any user Settings override (both from <see cref="GetStrategyConfiguration(string)"/>),
     /// overridden in turn by <see cref="ToolCommand.StrategyConfigurationOverrides"/> for this call only.
     /// A strategy implementation should call this instead of merging the layers itself.
     /// </summary>

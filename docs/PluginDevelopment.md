@@ -256,12 +256,15 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 - `Register(toolContext)`: add a tool. At least one strategy must become available for it
   separately (see below), before or after this call, in any order.
-- `RegisterStrategy(strategy, supportedToolKeys?)`: register a strategy globally, under its own
-  `GetStrategyKey()`. Without `supportedToolKeys` it's only available to a tool that lists this key
-  in its own `ToolContext.PreferredStrategyKeys` (tool-side opt-in). With `supportedToolKeys`, it's
-  also available to exactly those tool keys regardless of whether they listed it (strategy-side
-  opt-in) - e.g. a Docker extension attaching itself to tools declared by a module it has no
-  reference to.
+- `RegisterStrategy(strategy)`: register a strategy globally, under its own `GetStrategyKey()`.
+  Only available to a tool that lists this key in its own `ToolContext.PreferredStrategyKeys`
+  (tool-side opt-in).
+- `RegisterStrategy(strategy, supportedToolKeys)` / `RegisterStrategy(strategy, supportsTool)`:
+  same, plus a strategy-side opt-in - available to exactly the given tool keys, or to any tool
+  matching the predicate, regardless of whether those tools listed it as preferred. Use the
+  predicate form when the supported tools can't be enumerated up front (e.g. a Docker extension
+  matching tools by name pattern); it's re-evaluated on demand, so it also covers tools registered
+  after the strategy, since plugin load order isn't guaranteed.
 - `RegisterUniversalStrategy(strategy)`: register a strategy available to every tool - used for a
   generic fallback like a native-process strategy, which needs no tool-specific wiring.
 - `Unregister(toolContext)` / `Unregister(toolKey)` / `UnregisterStrategy(strategyKey)`: remove.

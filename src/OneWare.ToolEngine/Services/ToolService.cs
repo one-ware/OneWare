@@ -14,7 +14,7 @@ public class ToolService : IToolService
     private readonly ObservableCollection<ToolContext> _tools = new();
     private readonly Dictionary<string, IToolExecutionStrategy> _strategies = new();
     private readonly HashSet<string> _universalStrategyKeys = new();
-    private readonly Dictionary<string, HashSet<string>> _strategySupportedToolKeys = new();
+    private readonly Dictionary<string, Func<ToolContext, bool>> _strategyToolPredicates = new();
 
     public ToolService(ISettingsService settingsService, ILogger logger)
     {
@@ -60,21 +60,23 @@ public class ToolService : IToolService
         return config;
     }
 
-    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string>? supportedToolKeys = null)
+    public void RegisterStrategy(IToolExecutionStrategy strategy)
+    {
+        _strategies[strategy.GetStrategyKey()] = strategy;
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
+    }
+
+    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string> supportedToolKeys)
+    {
+        RegisterStrategy(strategy, tool => supportedToolKeys.Contains(tool.Key));
+    }
+
+    public void RegisterStrategy(IToolExecutionStrategy strategy, Func<ToolContext, bool> supportsTool)
     {
         var strategyKey = strategy.GetStrategyKey();
         _strategies[strategyKey] = strategy;
-
-        if (supportedToolKeys is { Count: > 0 })
-        {
-            if (!_strategySupportedToolKeys.TryGetValue(strategyKey, out var supported))
-            {
-                supported = new HashSet<string>();
-                _strategySupportedToolKeys[strategyKey] = supported;
-            }
-
-            foreach (var toolKey in supportedToolKeys) supported.Add(toolKey);
-        }
+        _strategyToolPredicates[strategyKey] = supportsTool;
 
         foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
     }
@@ -120,27 +122,31 @@ public class ToolService : IToolService
     {
         _strategies.Remove(strategyKey);
         _universalStrategyKeys.Remove(strategyKey);
-        _strategySupportedToolKeys.Remove(strategyKey);
+        _strategyToolPredicates.Remove(strategyKey);
 
         foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
     }
 
     /// <summary>
     /// Computes the strategy keys available to a tool from all three opt-in paths: universal
-    /// strategies, strategies that explicitly declared this tool key as supported, and strategies
-    /// named in the tool's own <see cref="ToolContext.PreferredStrategyKeys"/>.
+    /// strategies, strategies whose predicate matches this tool, and strategies named in the tool's
+    /// own <see cref="ToolContext.PreferredStrategyKeys"/>. Evaluated fresh on every call, so it stays
+    /// correct regardless of the order tools and strategies were registered in, or when a tool was
+    /// registered relative to a matching strategy's predicate.
     /// </summary>
     public string[] GetStrategyKeys(string toolKey)
     {
         var keys = new HashSet<string>(_universalStrategyKeys);
 
-        foreach (var (strategyKey, supportedToolKeys) in _strategySupportedToolKeys)
-            if (supportedToolKeys.Contains(toolKey)) keys.Add(strategyKey);
-
         var tool = _tools.FirstOrDefault(t => t.Key == toolKey);
         if (tool is not null)
+        {
+            foreach (var (strategyKey, supportsTool) in _strategyToolPredicates)
+                if (supportsTool(tool)) keys.Add(strategyKey);
+
             foreach (var strategyKey in tool.PreferredStrategyKeys)
                 if (_strategies.ContainsKey(strategyKey)) keys.Add(strategyKey);
+        }
 
         return keys.ToArray();
     }
