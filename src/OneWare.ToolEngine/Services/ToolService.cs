@@ -171,6 +171,13 @@ public class ToolService : IToolService
         return merged;
     }
 
+    public IReadOnlyDictionary<string, string> GetStrategyConfiguration(string toolKey, string prefix)
+    {
+        return GetStrategyConfiguration(toolKey)
+            .Where(kv => kv.Key.StartsWith(prefix, StringComparison.Ordinal))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
     public void SetStrategyConfigurationValue(string toolKey, string configKey, string value)
     {
         var overrideKey = StrategyConfigOverrideKey(toolKey);

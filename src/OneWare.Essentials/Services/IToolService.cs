@@ -75,6 +75,13 @@ public interface IToolService
     IReadOnlyDictionary<string, string> GetStrategyConfiguration(string toolKey);
 
     /// <summary>
+    /// Returns the subset of <see cref="GetStrategyConfiguration(string)"/> whose keys start with
+    /// <paramref name="prefix"/> (e.g. "docker." to get only that strategy's keys). Convenience filter for
+    /// a strategy that only cares about its own namespace within the tool's configuration.
+    /// </summary>
+    IReadOnlyDictionary<string, string> GetStrategyConfiguration(string toolKey, string prefix);
+
+    /// <summary>
     /// Sets a user override for a single strategy configuration key on a tool, taking precedence over the
     /// owning plugin's declared default for that key. Other keys are left untouched.
     /// </summary>
