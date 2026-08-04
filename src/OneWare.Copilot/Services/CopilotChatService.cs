@@ -657,41 +657,31 @@ public sealed class CopilotChatService(
 
             if (!PlatformHelper.ExistsOnPath(cliPath)) return false;
 
-            using var cts = new CancellationTokenSource();
-            var viewModel = new CopilotDeviceLoginViewModel(cts);
+            var viewModel = new DeviceCodeLoginViewModel("Login to GitHub Copilot",
+                "Open the browser page and enter the code below.",
+                (prompt, token) => RunCopilotLoginAsync(cliPath, prompt, token))
+            {
+                VerificationUrl = "https://github.com/login/device"
+            };
+
             var view = new CopilotDeviceLoginView
             {
                 DataContext = viewModel
             };
 
             var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
-            var showTask = windowService.ShowDialogAsync(view, ownerWindow);
-            var loginTask = RunCopilotLoginAsync(cliPath, viewModel, cts.Token);
 
-            var loginResult = await loginTask;
+            // The view model owns the login task and closes the dialog on success.
+            await windowService.ShowDialogAsync(view, ownerWindow);
 
-            if (loginResult)
+            if (viewModel.Success)
             {
-                await Dispatcher.UIThread.InvokeAsync(view.Close);
-                await showTask;
                 // Keep the previous conversation (if any) across the re-login.
                 _requestedSessionId ??= CurrentSessionId;
                 SessionReset?.Invoke(this, EventArgs.Empty);
                 return await InitializeAsync();
             }
 
-            if (cts.IsCancellationRequested)
-            {
-                UpdateLoginStatus(viewModel, "Login cancelled.");
-            }
-            else
-            {
-                UpdateLoginStatus(viewModel, "Authentication failed.");
-            }
-
-            // Keep dialog lifecycle contained in this method so the token source
-            // is not disposed while the window can still trigger cancellation.
-            await showTask;
             return false;
         }
         catch (Exception e)
@@ -1415,7 +1405,7 @@ public sealed class CopilotChatService(
             source.TrySetResult(new UserInputResponse { Answer = string.Empty, WasFreeform = true });
     }
 
-    private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,
+    private async Task<bool> RunCopilotLoginAsync(string cliPath, IDeviceCodeLoginPrompt prompt,
         CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(cliPath, "login")
@@ -1435,20 +1425,20 @@ public sealed class CopilotChatService(
         {
             if (!process.Start())
             {
-                UpdateLoginStatus(viewModel, "Failed to start Copilot CLI.");
+                prompt.Status = "Failed to start Copilot CLI.";
                 return false;
             }
         }
         catch (Exception ex)
         {
-            UpdateLoginStatus(viewModel, $"Failed to start Copilot CLI: {ex.Message}");
+            prompt.Status = $"Failed to start Copilot CLI: {ex.Message}";
             return false;
         }
 
-        UpdateLoginStatus(viewModel, "Waiting for device code...");
+        prompt.Status = "Waiting for device code...";
 
-        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, viewModel, cancellationToken);
-        var stderrTask = ReadLoginStreamAsync(process.StandardError, viewModel, cancellationToken);
+        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, prompt, cancellationToken);
+        var stderrTask = ReadLoginStreamAsync(process.StandardError, prompt, cancellationToken);
 
         try
         {
@@ -1457,6 +1447,7 @@ public sealed class CopilotChatService(
         catch (OperationCanceledException)
         {
             TryKillProcess(process);
+            prompt.Status = "Login cancelled.";
             return false;
         }
 
@@ -1464,67 +1455,47 @@ public sealed class CopilotChatService(
 
         if (process.ExitCode != 0)
         {
-            UpdateLoginStatus(viewModel, $"Copilot CLI exited with code {process.ExitCode}.");
+            prompt.Status = $"Copilot CLI exited with code {process.ExitCode}.";
             return false;
         }
 
         return true;
     }
 
-    private async Task ReadLoginStreamAsync(StreamReader reader, CopilotDeviceLoginViewModel viewModel,
+    private async Task ReadLoginStreamAsync(StreamReader reader, IDeviceCodeLoginPrompt prompt,
         CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync();
             if (line == null) break;
-            ApplyLoginOutputLine(viewModel, line);
+            ApplyLoginOutputLine(prompt, line);
         }
     }
 
-    private void ApplyLoginOutputLine(CopilotDeviceLoginViewModel viewModel, string line)
+    private void ApplyLoginOutputLine(IDeviceCodeLoginPrompt prompt, string line)
     {
         if (string.IsNullOrWhiteSpace(line)) return;
 
-        UpdateLoginViewModel(viewModel, () =>
+        var urlMatch = DeviceLoginUrlRegex.Match(line);
+        if (urlMatch.Success && string.IsNullOrWhiteSpace(prompt.VerificationUrl))
         {
-            var urlMatch = DeviceLoginUrlRegex.Match(line);
-            if (urlMatch.Success && string.IsNullOrWhiteSpace(viewModel.VerificationUrl))
-            {
-                viewModel.VerificationUrl = urlMatch.Value;
-            }
-
-            var codeMatch = DeviceLoginCodeRegex.Match(line);
-            if (codeMatch.Success && string.IsNullOrWhiteSpace(viewModel.UserCode))
-            {
-                viewModel.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
-            }
-
-            if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
-            {
-                viewModel.StatusText = "Waiting for authorization...";
-            }
-            else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
-            {
-                viewModel.StatusText = "Enter the code in your browser.";
-            }
-        });
-    }
-
-    private static void UpdateLoginStatus(CopilotDeviceLoginViewModel viewModel, string status)
-    {
-        UpdateLoginViewModel(viewModel, () => viewModel.StatusText = status);
-    }
-
-    private static void UpdateLoginViewModel(CopilotDeviceLoginViewModel viewModel, Action update)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            update();
+            prompt.VerificationUrl = urlMatch.Value;
         }
-        else
+
+        var codeMatch = DeviceLoginCodeRegex.Match(line);
+        if (codeMatch.Success && string.IsNullOrWhiteSpace(prompt.UserCode))
         {
-            Dispatcher.UIThread.Post(update);
+            prompt.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
+        }
+
+        if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "Waiting for authorization...";
+        }
+        else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "Enter the code in your browser.";
         }
     }
 
