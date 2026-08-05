@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls"
              xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="360"
+             mc:Ignorable="d" d:DesignWidth="360" MinHeight="170"
              x:Class="OneWare.Essentials.Controls.DeviceCodeLoginPanel"
              x:DataType="viewModels:DeviceCodeLoginViewModel">
     <StackPanel Orientation="Vertical" Spacing="10">
