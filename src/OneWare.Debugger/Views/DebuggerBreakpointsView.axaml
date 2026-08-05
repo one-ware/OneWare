@@ -18,8 +18,12 @@
                         Width="24" Height="24">
                     <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
                 </Button>
-                <Button Command="{Binding RemoveAllBreakpointsCommand}" Content="Remove All" Height="24"
-                        Padding="8,0" />
+                <Button Command="{Binding RemoveAllBreakpointsCommand}" Height="24" Padding="6,0"
+                        ToolTip.Tip="Remove all breakpoints">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
 

@@ -8,7 +8,9 @@ namespace OneWare.Debugger.ViewModels;
 /// <summary>
 ///     Reiter "Breakpoints" im Debugging-Panel: alle gesetzten Breakpoints, quer ueber alle
 ///     Dateien. Bezieht seine Daten direkt aus dem anwendungsweiten <see cref="BreakpointStore" />,
-///     zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind.
+///     zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind. Es ist derselbe
+///     Store, den die laufende Session an GDB weiterreicht - die Liste zeigt damit genau das, was
+///     am Ziel scharf ist.
 /// </summary>
 public partial class DebuggerBreakpointsViewModel : ObservableObject
 {
@@ -27,7 +29,10 @@ public partial class DebuggerBreakpointsViewModel : ObservableObject
     [RelayCommand]
     private void RemoveAllBreakpoints()
     {
-        BreakpointStore.Instance.Breakpoints.Clear();
+        // Nicht Clear(): die Session haengt an CollectionChanged und braucht die entfernten
+        // Eintraege, um sie auch am Ziel abzuraeumen. Clear meldet sie nicht einzeln.
+        foreach (var breakpoint in Breakpoints.ToArray()) BreakpointStore.Instance.Remove(breakpoint);
+
         SelectedBreakpoint = null;
     }
 

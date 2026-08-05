@@ -89,7 +89,10 @@ public class ExtendedTextEditor : TextEditor
     {
         TextArea.LeftMargins.RemoveMany(TextArea.LeftMargins.Where(x => x is BreakPointMargin));
         if (enable && !string.IsNullOrWhiteSpace(filePath))
-            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, new BreakpointStore()));
+            // Der anwendungsweite Store, nicht ein eigener je Editor: sonst landen gesetzte
+            // Breakpoints in einer Instanz, die weder die Breakpoint-Liste noch die laufende
+            // Session je zu sehen bekommt.
+            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, BreakpointStore.Instance));
     }
 
     public void SetEnableFolding(bool enable)

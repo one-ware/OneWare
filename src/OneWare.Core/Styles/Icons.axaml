@@ -1163,6 +1163,10 @@
         <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
                          Geometry="M19 13H5v-2h14v2z" />
     </DrawingImage>
+    <DrawingImage x:Key="Material.DeleteSweep">
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                         Geometry="M15 16h4v2h-4zm0-8h7v2h-7zm0 4h6v2h-6zM3 18c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V8H3v10zM14 5h-3l-1-1H6L5 5H2v2h12z" />
+    </DrawingImage>
     <DrawingImage x:Key="Material.BugReport">
         <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
                          Geometry="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z" />
@@ -1174,6 +1178,15 @@
     <DrawingImage x:Key="MaterialDesign.DeleteForever">
         <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
                          Geometry="F1M211,-289L180,-259 226,-213 181,-168 211,-138 256,-183 301,-138 331,-168 286,-213 331,-259 301,-289 256,-243 211,-289z M128,-363L384,-363 384,-107C384,-84,364,-64,341,-64L171,-64C148,-64,128,-84,128,-107L128,-363z M203,-448L309,-448 331,-427 405,-427 405,-384 107,-384 107,-427 181,-427 203,-448z" />
+    </DrawingImage>
+    <!-- Gruen wie VsCodeLight.Debug-Start, damit Starten und Fortsetzen dieselbe Farbe tragen. -->
+    <DrawingImage x:Key="MaterialDesign.PlayArrow">
+        <GeometryDrawing Brush="#388A34"
+                         Geometry="F1M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" />
+    </DrawingImage>
+    <DrawingImage x:Key="MaterialDesign.EyeTracking">
+        <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"
+                         Geometry="F1M240-40H120q-33 0-56.5-23.5T40-120v-120h80v120h120v80Zm480 0v-80h120v-120h80v120q0 33-23.5 56.5T840-40H720ZM480-220q-120 0-217.5-71T120-480q45-118 142.5-189T480-740q120 0 217.5 71T840-480q-45 118-142.5 189T480-220Zm0-80q88 0 161-48t112-132q-39-84-112-132t-161-48q-88 0-161 48T207-480q39 84 112 132t161 48Zm0-40q58 0 99-41t41-99q0-58-41-99t-99-41q-58 0-99 41t-41 99q0 58 41 99t99 41Zm0-80q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420ZM40-720v-120q0-33 23.5-56.5T120-920h120v80H120v120H40Zm800 0v-120H720v-80h120q33 0 56.5 23.5T920-840v120h-80ZM480-480Z" />
     </DrawingImage>
     <DrawingImage x:Key="BoxIcons.RegularReset">
         <GeometryDrawing Brush="{DynamicResource ThemeControlVeryHighBrush}"

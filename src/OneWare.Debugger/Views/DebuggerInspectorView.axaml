@@ -13,9 +13,6 @@
         <TabItem Header="Variables">
             <views:DebuggerVariablesView DataContext="{Binding Variables}" />
         </TabItem>
-        <TabItem Header="Expressions">
-            <views:DebuggerExpressionsView DataContext="{Binding Expressions}" />
-        </TabItem>
         <TabItem Header="Breakpoints">
             <views:DebuggerBreakpointsView DataContext="{Binding Breakpoints}" />
         </TabItem>

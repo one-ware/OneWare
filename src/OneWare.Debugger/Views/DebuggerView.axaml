@@ -39,7 +39,7 @@
                 </Button>
                 <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
                         IsVisible="{Binding !IsRunning}">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Continue}" />
+                    <Image Source="{DynamicResource MaterialDesign.PlayArrow}" />
                 </Button>
                 <Button Width="24" Height="24" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
                     <Image Source="{DynamicResource VsCodeLight.Debug-Stop}" />
@@ -63,25 +63,33 @@
             </StackPanel>
         </Border>
 
-        <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
+        <!-- Eigene Zeile ueber dem TabControl, damit die gewaehlte Programmdatei in jedem Reiter
+             sichtbar bleibt und nicht mit dem Wechsel auf Registers oder Memory verschwindet. -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <DockPanel Margin="4" LastChildFill="True">
+                <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Opacity="0.7"
+                           Margin="0,0,6,0" Text="Executable" />
+                <Button DockPanel.Dock="Right" Margin="4,0,0,0" Height="24" Padding="8,0"
+                        Command="{Binding BrowseExecutableCommand}" Content="..."
+                        ToolTip.Tip="Select an executable outside the project" />
+                <ComboBox ItemsSource="{Binding Executables}"
+                          SelectedItem="{Binding SelectedExecutable}"
+                          PlaceholderText="No executable - debugging without symbols"
+                          HorizontalAlignment="Stretch"
+                          Height="24">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ExecutableOption">
+                            <TextBlock Text="{Binding Display}" ToolTip.Tip="{Binding Path}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </DockPanel>
+        </Border>
 
-            <TabItem Header="Console">
-                <Border Background="{DynamicResource ThemeBackgroundBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                    <ScrollViewer Name="ConsoleScroll" Padding="8,6">
-                        <ItemsControl ItemsSource="{Binding Console}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:ConsoleLine">
-                                    <SelectableTextBlock Classes="consoleLine"
-                                                         Classes.command="{Binding IsCommand}"
-                                                         Text="{Binding Text}" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Border>
-            </TabItem>
+        <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
 
             <TabItem Header="Registers">
                 <Border Margin="4"
@@ -108,6 +116,62 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
+            </TabItem>
+
+            <TabItem Header="Memory">
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Top"
+                            Background="{DynamicResource ThemeBackgroundBrush}"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <DockPanel Margin="4" LastChildFill="True">
+                            <Button DockPanel.Dock="Right" Margin="4,0,0,0" Width="24" Height="24"
+                                    Command="{Binding AddMemoryWatchCommand}"
+                                    ToolTip.Tip="Watch this address">
+                                <Image Width="14" Height="14"
+                                       Source="{DynamicResource MaterialDesign.EyeTracking}" />
+                            </Button>
+                            <Button DockPanel.Dock="Right" Width="24" Height="24"
+                                    Command="{Binding RemoveMemoryWatchCommand}" ToolTip.Tip="Remove address">
+                                <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                            </Button>
+                            <TextBox Text="{Binding MemoryAddressText, Mode=TwoWay}"
+                                     Watermark="Address, e.g. 0x2001ff80 or &amp;buffer"
+                                     FontFamily="{DynamicResource EditorFont}"
+                                     Background="{DynamicResource ThemeControlLowBrush}"
+                                     BorderThickness="0"
+                                     Height="24"
+                                     Padding="6,2" />
+                        </DockPanel>
+                    </Border>
+
+                    <Border Margin="4"
+                            CornerRadius="4"
+                            ClipToBounds="True"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            Background="{DynamicResource ThemeBackgroundBrush}">
+                        <DataGrid ItemsSource="{Binding MemoryWatches}"
+                                  SelectedItem="{Binding SelectedMemoryRow}"
+                                  GridLinesVisibility="Vertical"
+                                  VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                                  BorderThickness="0"
+                                  AutoGenerateColumns="False"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Address" Width="Auto"
+                                                    Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
+                                <DataGridTextColumn Header="Bytes" Width="Auto"
+                                                    Binding="{CompiledBinding Length, DataType=models:MemoryRow}" />
+                                <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True"
+                                                    Binding="{CompiledBinding Value, DataType=models:MemoryRow}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </DockPanel>
             </TabItem>
 
             <TabItem Header="Debugger Console">
