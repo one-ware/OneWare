@@ -130,8 +130,13 @@ public class MainDockService : Factory, IMainDockService
         base.FloatDockable(dockable);
     }
 
-    public override void CloseDockable(IDockable dockable)
+    public override void CloseDockable(IDockable? dockable)
     {
+        // When closing a floating window in Windows, the method might get called with a null dockable
+        // This is likely a bug with the dock library
+        // We check it to prevent a crash
+        if (dockable == null) return;
+        
         try
         {
             base.CloseDockable(dockable);
@@ -149,9 +154,9 @@ public class MainDockService : Factory, IMainDockService
         }
     }
 
-    private void SafeRemoveDockable(IDockable dockable)
+    private void SafeRemoveDockable(IDockable? dockable)
     {
-        if (dockable.Owner is IDock { VisibleDockables: { } dockables } &&
+        if (dockable?.Owner is IDock { VisibleDockables: { } dockables } &&
             dockables.Contains(dockable))
         {
             dockables.Remove(dockable);
