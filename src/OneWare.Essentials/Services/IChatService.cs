@@ -28,6 +28,12 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     public Control? FooterUiExtension => null;
 
     /// <summary>
+    /// Optional UI extension displayed in the chat header, next to the session history button
+    /// (e.g. an account/overflow menu).
+    /// </summary>
+    public Control? HeaderUiExtension => null;
+
+    /// <summary>
     /// Fired when the chat session is reset.
     /// </summary>
     event EventHandler SessionReset;

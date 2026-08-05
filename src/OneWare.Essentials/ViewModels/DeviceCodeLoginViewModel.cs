@@ -37,6 +37,8 @@ public interface IDeviceCodeLoginPrompt
 /// </summary>
 public class DeviceCodeLoginViewModel : FlexibleWindowViewModelBase, IDeviceCodeLoginPrompt
 {
+    private const int MaxDisplayedUrlLength = 60;
+
     /// <summary>
     ///     Performs the login and reports progress through <paramref name="prompt" />.
     ///     Returns true when the user was logged in successfully.
@@ -102,8 +104,19 @@ public class DeviceCodeLoginViewModel : FlexibleWindowViewModelBase, IDeviceCode
     public string VerificationUrl
     {
         get => _verificationUrl;
-        set => SetUiProperty(ref _verificationUrl, value);
+        set
+        {
+            SetUiProperty(ref _verificationUrl, value);
+            OnPropertyChangedFromAnyThread(nameof(VerificationUrlLabel));
+        }
     }
+
+    /// <summary>
+    ///     Display text for <see cref="VerificationUrl" />. Browser based flows use long authorization URLs that
+    ///     would blow up the dialog layout, so those are shown as a short label instead.
+    /// </summary>
+    public string VerificationUrlLabel =>
+        VerificationUrl.Length > MaxDisplayedUrlLength ? "Open the sign-in page" : VerificationUrl;
 
     public override void OnWindowOpened(FlexibleWindow window)
     {
@@ -232,6 +245,11 @@ public class DeviceCodeLoginViewModel : FlexibleWindowViewModelBase, IDeviceCode
 
         field = value;
 
+        OnPropertyChangedFromAnyThread(propertyName);
+    }
+
+    private void OnPropertyChangedFromAnyThread(string? propertyName)
+    {
         if (Dispatcher.UIThread.CheckAccess()) OnPropertyChanged(propertyName);
         else Dispatcher.UIThread.Post(() => OnPropertyChanged(propertyName));
     }

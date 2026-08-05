@@ -12,7 +12,7 @@
 
         <StackPanel Spacing="4" Orientation="Horizontal"
                     IsVisible="{Binding VerificationUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <controls:HyperLink Url="{Binding VerificationUrl}" Label="{Binding VerificationUrl}" />
+            <controls:HyperLink Url="{Binding VerificationUrl}" Label="{Binding VerificationUrlLabel}" />
         </StackPanel>
 
         <StackPanel Spacing="4"
