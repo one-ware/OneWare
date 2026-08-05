@@ -254,21 +254,47 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 
-- `Register(toolContext, strategy)`: add a tool + default strategy.
-- `RegisterStrategy(toolKey, strategy)`: add a strategy for an existing tool.
+- `Register(toolContext)`: add a tool. At least one strategy must become available for it
+  separately (see below), before or after this call, in any order.
+- `RegisterStrategy(strategy)`: register a strategy globally, under its own `GetStrategyKey()`.
+  Only available to a tool that lists this key in its own `ToolContext.PreferredStrategyKeys`
+  (tool-side opt-in).
+- `RegisterStrategy(strategy, supportedToolKeys)` / `RegisterStrategy(strategy, supportsTool)`:
+  same, plus a strategy-side opt-in - available to exactly the given tool keys, or to any tool
+  matching the predicate, regardless of whether those tools listed it as preferred. Use the
+  predicate form when the supported tools can't be enumerated up front (e.g. a Docker extension
+  matching tools by name pattern); it's re-evaluated on demand, so it also covers tools registered
+  after the strategy, since plugin load order isn't guaranteed.
+- `RegisterUniversalStrategy(strategy)`: register a strategy available to every tool - used for a
+  generic fallback like a native-process strategy, which needs no tool-specific wiring.
 - `Unregister(toolContext)` / `Unregister(toolKey)` / `UnregisterStrategy(strategyKey)`: remove.
-- `GetAllTools()`, `GetStrategies(toolKey)`, `GetStrategy(toolKey)`, `GetStrategyKeys(toolKey)`:
-  query registered tools and strategies.
+- `GetAllTools()`, `GetStrategies(toolKey)`, `GetStrategy(toolKey)`, `GetStrategyKeys(toolKey)`,
+  `TryGetStrategy(toolKey, strategyKey)`: query registered tools and strategies. `TryGetStrategy`
+  bypasses the tool's configured setting - used to resolve a `ToolCommand.ForcedStrategyKey`.
+- `GetStrategyConfiguration(toolKey[, prefix])`, `SetStrategyConfigurationValue(toolKey, key, value)`,
+  `GetEffectiveStrategyConfiguration(command)`: read/write opaque per-tool strategy configuration
+  (e.g. `"docker.image"`), layered as plugin default -> user Settings override -> per-call override
+  (`ToolCommand.StrategyConfigurationOverrides` / `IToolCommandBuilder.WithStrategyConfiguration`). A
+  strategy implementation should read via `GetEffectiveStrategyConfiguration` rather than merging the
+  layers itself.
 
 #### `IToolExecutionStrategy` (src/OneWare.Essentials/Services/IToolExecutionStrategy.cs)
 
-- `ExecuteAsync(ToolCommand)`: run a tool.
+- `ExecuteAsync(ToolCommand)`: run a tool and wait for completion.
+- `StartWeakProcess(ToolCommand)`: start a fire-and-forget process without tracking it.
+- `StartProcess(ToolCommand)` / `StopProcess(handle)`: start a long-running background process
+  tracked by an opaque `Guid` handle, and stop it later.
 - `GetStrategyName()`: display name.
-- `GetStrategyKey()`: unique key.
+- `GetStrategyKey()`: unique key, used for registration and `ToolCommand.ForcedStrategyKey`.
 
 #### `IToolExecutionDispatcherService` (src/OneWare.Essentials/Services/IToolExecutionDispatcherService.cs)
 
-- `ExecuteAsync(ToolCommand)`: dispatch a tool command through configured strategy.
+- `ExecuteAsync(ToolCommand)` / `StartWeakProcess(ToolCommand)` / `StartProcess(ToolCommand)` /
+  `StopProcess(handle)`: dispatch a tool command through its configured execution strategy (or the
+  strategy named by `ToolCommand.ForcedStrategyKey`, if set). `StopProcess` routes back to whichever
+  strategy started the process, even if the tool's configured strategy has since changed.
+- `CreateToolCommandBuilder(toolName)`: entry point for the fluent `IToolCommandBuilder` used to
+  build a `ToolCommand`.
 
 #### `IPackageService` (src/OneWare.Essentials/Services/IPackageService.cs)
 

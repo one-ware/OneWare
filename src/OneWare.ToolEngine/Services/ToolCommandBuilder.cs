@@ -9,6 +9,7 @@ public class ToolCommandBuilder : IToolCommandBuilder
 {
     private readonly List<ICommandArgument> _args = new();
     private readonly Dictionary<string, string> _envVars = new();
+    private readonly Dictionary<string, string> _strategyConfigurationOverrides = new();
     private readonly List<ToolPort> _exposedPorts = new();
     private readonly List<ToolPortMapping> _portMappings = new();
     private readonly string _toolName;
@@ -19,6 +20,7 @@ public class ToolCommandBuilder : IToolCommandBuilder
     private AppState _state = AppState.Loading;
     private string _status = "Running...";
     private string _workingDir = ".";
+    private string? _forcedStrategyKey;
 
     internal ToolCommandBuilder(string toolName)
     {
@@ -201,6 +203,18 @@ public class ToolCommandBuilder : IToolCommandBuilder
         return this;
     }
 
+    public IToolCommandBuilder ForceStrategy(string strategyKey)
+    {
+        _forcedStrategyKey = strategyKey;
+        return this;
+    }
+
+    public IToolCommandBuilder WithStrategyConfiguration(string key, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(key)) _strategyConfigurationOverrides[key] = value;
+        return this;
+    }
+
     public ToolCommand Build()
     {
         if (string.IsNullOrWhiteSpace(_toolName) && string.IsNullOrWhiteSpace(_executable))
@@ -219,7 +233,9 @@ public class ToolCommandBuilder : IToolCommandBuilder
             ErrorHandler = _errorHandler,
             EnvironmentVariables = new Dictionary<string, string>(_envVars),
             PortMappings = _portMappings,
-            ExposedPorts = _exposedPorts
+            ExposedPorts = _exposedPorts,
+            ForcedStrategyKey = _forcedStrategyKey,
+            StrategyConfigurationOverrides = new Dictionary<string, string>(_strategyConfigurationOverrides)
         };
     }
 }

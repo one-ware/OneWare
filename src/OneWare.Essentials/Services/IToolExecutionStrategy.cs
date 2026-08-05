@@ -21,6 +21,21 @@ public interface IToolExecutionStrategy
     public WeakReference<Process> StartWeakProcess(ToolCommand command);
 
     /// <summary>
+    ///     Starts the tool as a long-running background process that is tracked by the strategy until it is
+    ///     explicitly stopped via <see cref="StopProcess"/> or exits on its own.
+    /// </summary>
+    /// <param name="command">The run configuration for the strategy.</param>
+    /// <returns>An opaque handle identifying the started process.</returns>
+    public Guid StartProcess(ToolCommand command);
+
+    /// <summary>
+    ///     Stops a background process previously started with <see cref="StartProcess"/>.
+    /// </summary>
+    /// <param name="handle">The handle returned by <see cref="StartProcess"/>.</param>
+    /// <returns><c>true</c> if a running process was found for the handle and stopped; otherwise <c>false</c>.</returns>
+    public bool StopProcess(Guid handle);
+
+    /// <summary>
     ///     Returns the display name for a strategy.
     ///     Is used in settings vies
     /// </summary>
