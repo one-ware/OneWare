@@ -14,6 +14,7 @@ public class ConfigurationProfileServiceTests
 {
     private readonly ISettingsService _settingsService = Substitute.For<ISettingsService>();
     private readonly IPackageService _packageService = Substitute.For<IPackageService>();
+    private readonly IHttpService _httpService = Substitute.For<IHttpService>();
     private readonly IPaths _paths = Substitute.For<IPaths>();
     private readonly ILogger<ConfigurationProfileService> _logger = Substitute.For<ILogger<ConfigurationProfileService>>();
     private readonly ConfigurationProfileService _service;
@@ -21,7 +22,8 @@ public class ConfigurationProfileServiceTests
     public ConfigurationProfileServiceTests()
     {
         _paths.SettingsPath.Returns(Path.Combine(Path.GetTempPath(), $"test-settings-{Guid.NewGuid()}.json"));
-        _service = new ConfigurationProfileService(_settingsService, _packageService, _paths, _logger);
+        _paths.AppDataDirectory.Returns(Path.Combine(Path.GetTempPath(), $"test-appdata-{Guid.NewGuid()}"));
+        _service = new ConfigurationProfileService(_settingsService, _packageService, _httpService, _paths, _logger);
     }
 
     [Fact]
@@ -225,5 +227,138 @@ public class ConfigurationProfileServiceTests
         var profile = await _service.ExportAsync();
 
         Assert.Equal(1, profile.Version);
+    }
+
+    [Fact]
+    public async Task LoadFromSourceAsync_ReadsLocalFile()
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), $"test-profile-{Guid.NewGuid()}.onewareconfig");
+        try
+        {
+            await _service.SaveToFileAsync(new ConfigurationProfile { Name = "From File" }, tempPath);
+
+            var loaded = await _service.LoadFromSourceAsync(tempPath);
+
+            Assert.Equal("From File", loaded.Name);
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFromSourceAsync_DownloadsHttpUrl()
+    {
+        const string url = "https://config.example.com/team.onewareconfig";
+        _httpService.DownloadTextAsync(url, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns("""{"name":"From Url"}""");
+
+        var loaded = await _service.LoadFromSourceAsync(url);
+
+        Assert.Equal("From Url", loaded.Name);
+    }
+
+    [Fact]
+    public async Task LoadFromSourceAsync_ThrowsWhenDownloadFails()
+    {
+        const string url = "https://config.example.com/missing.onewareconfig";
+        _httpService.DownloadTextAsync(url, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns((string?)null);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.LoadFromSourceAsync(url));
+    }
+
+    [Fact]
+    public async Task ApplyEnvironmentProfileAsync_ReturnsFalseWhenVariableNotSet()
+    {
+        using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, null);
+
+        Assert.False(await _service.ApplyEnvironmentProfileAsync());
+    }
+
+    [Fact]
+    public async Task ApplyEnvironmentProfileAsync_AppliesProfileOnceThenSkips()
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), $"test-profile-{Guid.NewGuid()}.onewareconfig");
+        try
+        {
+            await _service.SaveToFileAsync(
+                new ConfigurationProfile { Settings = { ["General_SelectedTheme"] = JsonSerializer.SerializeToElement("Dark") } },
+                tempPath);
+
+            _settingsService.HasSetting("General_SelectedTheme").Returns(true);
+            _settingsService.GetSetting("General_SelectedTheme").Returns(new Setting("Light"));
+            _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
+
+            using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, tempPath);
+            using var __ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileModeEnvironmentVariable, null);
+
+            Assert.True(await _service.ApplyEnvironmentProfileAsync());
+
+            // Unchanged profile must not be re-applied, so user edits survive the next launch.
+            Assert.False(await _service.ApplyEnvironmentProfileAsync());
+
+            _settingsService.Received(1).SetSettingValue("General_SelectedTheme", "Dark");
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+            if (Directory.Exists(_paths.AppDataDirectory)) Directory.Delete(_paths.AppDataDirectory, true);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyEnvironmentProfileAsync_ReAppliesInAlwaysMode()
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), $"test-profile-{Guid.NewGuid()}.onewareconfig");
+        try
+        {
+            await _service.SaveToFileAsync(
+                new ConfigurationProfile { Settings = { ["General_SelectedTheme"] = JsonSerializer.SerializeToElement("Dark") } },
+                tempPath);
+
+            _settingsService.HasSetting("General_SelectedTheme").Returns(true);
+            _settingsService.GetSetting("General_SelectedTheme").Returns(new Setting("Light"));
+            _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
+
+            using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, tempPath);
+            using var __ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileModeEnvironmentVariable, "always");
+
+            Assert.True(await _service.ApplyEnvironmentProfileAsync());
+            Assert.True(await _service.ApplyEnvironmentProfileAsync());
+
+            _settingsService.Received(2).SetSettingValue("General_SelectedTheme", "Dark");
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+            if (Directory.Exists(_paths.AppDataDirectory)) Directory.Delete(_paths.AppDataDirectory, true);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyEnvironmentProfileAsync_ReturnsFalseWhenProfileIsMissing()
+    {
+        var missingPath = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid()}.onewareconfig");
+        using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, missingPath);
+
+        // A broken profile must be logged and skipped rather than block startup.
+        Assert.False(await _service.ApplyEnvironmentProfileAsync());
+    }
+
+    private sealed class EnvironmentVariableScope : IDisposable
+    {
+        private readonly string _name;
+        private readonly string? _original;
+
+        public EnvironmentVariableScope(string name, string? value)
+        {
+            _name = name;
+            _original = Environment.GetEnvironmentVariable(name);
+            Environment.SetEnvironmentVariable(name, value);
+        }
+
+        public void Dispose() => Environment.SetEnvironmentVariable(_name, _original);
     }
 }
