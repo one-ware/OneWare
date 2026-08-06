@@ -29,6 +29,7 @@ public class PackageService : ObservableObject, IPackageService
     private readonly ISettingsService _settingsService;
     private readonly IApplicationStateService _applicationStateService;
     private readonly IPackageStateStore _stateStore;
+    private readonly OnnxRuntimePackageMigration _onnxRuntimePackageMigration;
     private readonly IPackageInstaller _defaultInstaller;
     private readonly IPaths _paths;
     private readonly Dictionary<string, Type> _installersByType = new(StringComparer.OrdinalIgnoreCase);
@@ -40,11 +41,13 @@ public class PackageService : ObservableObject, IPackageService
 
     public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
         ISettingsService settingsService, ILogger logger, IApplicationStateService applicationStateService,
-        IHttpService httpService, IPaths paths, ICompositeServiceProvider compositeServiceProvider, GenericPackageInstaller genericPackageInstaller)
+        IHttpService httpService, IPaths paths, ICompositeServiceProvider compositeServiceProvider,
+        GenericPackageInstaller genericPackageInstaller, OnnxRuntimePackageMigration onnxRuntimePackageMigration)
     {
         _catalog = catalog;
         _downloader = downloader;
         _stateStore = stateStore;
+        _onnxRuntimePackageMigration = onnxRuntimePackageMigration;
         _settingsService = settingsService;
         _logger = logger;
         _applicationStateService = applicationStateService;
@@ -364,6 +367,7 @@ public class PackageService : ObservableObject, IPackageService
     private async Task<bool> RefreshInternalAsync()
     {
         await WaitForInstallsAsync();
+        await _onnxRuntimePackageMigration.MigrateAsync();
 
         IsUpdating = true;
         var result = true;

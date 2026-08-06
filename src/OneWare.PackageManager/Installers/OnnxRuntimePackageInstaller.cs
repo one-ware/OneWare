@@ -25,9 +25,6 @@ public class OnnxRuntimePackageInstaller : PackageInstallerBase
         var recommendedExecutionProvider = runtime switch
         {
             "onnxruntime-nvidia" => OnnxExecutionProvider.Cuda,
-            "onnxruntime-directml" => OnnxExecutionProvider.DirectMl,
-            "onnxruntime-openvino" => OnnxExecutionProvider.OpenVino,
-            "onnxruntime-qnn" => OnnxExecutionProvider.Qnn,
             _ => OnnxExecutionProvider.Cpu
         };
         settingsService.SetSettingValue("OnnxRuntime_SelectedExecutionProvider", recommendedExecutionProvider);

@@ -161,8 +161,8 @@ COMPONENTS UNDER THE MIT LICENSE
   - Microsoft.IdentityModel.JsonWebTokens 8.15.0
   - Microsoft.IdentityModel.Logging 8.15.0
   - Microsoft.IdentityModel.Tokens 8.15.0
-  - Microsoft.ML.OnnxRuntime 1.23.2
-  - Microsoft.ML.OnnxRuntime.Managed 1.23.2
+  - Microsoft.ML.OnnxRuntime 1.28.0
+  - Microsoft.ML.OnnxRuntime.Managed 1.28.0
   - Microsoft.NET.ILLink.Tasks 10.0.7
   - Microsoft.NET.Sdk.WebAssembly.Pack 10.0.7
   - Microsoft.NET.StringTools 18.0.2
