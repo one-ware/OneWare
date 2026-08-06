@@ -14,35 +14,38 @@ namespace OneWare.Debugger.ViewModels;
 /// </summary>
 public partial class DebuggerBreakpointsViewModel : ObservableObject
 {
-    [ObservableProperty] private BreakPoint? _selectedBreakpoint;
+    public ObservableCollection<BreakPoint> SelectedBreakpoints { get; } = new();
+    
+    public DebuggerBreakpointsViewModel()
+    {
+        SelectedBreakpoints.CollectionChanged += (_, _) =>
+            RemoveBreakpointCommand.NotifyCanExecuteChanged();
+
+        // Store und ViewModel sind beide Singletons und leben so lange wie die App -
+        // das Abo muss nicht wieder geloest werden.
+        Breakpoints.CollectionChanged += (_, _) =>
+            RemoveAllBreakpointsCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanRemoveBreakpoint() => SelectedBreakpoints.Count > 0;
+
+    private bool CanRemoveAllBreakpoints() => Breakpoints.Count > 0;
 
     public ObservableCollection<BreakPoint> Breakpoints => BreakpointStore.Instance.Breakpoints;
 
     [RelayCommand(CanExecute = nameof(CanRemoveBreakpoint))]
     private void RemoveBreakpoint()
     {
-        if (SelectedBreakpoint is null) return;
-        BreakpointStore.Instance.Remove(SelectedBreakpoint);
-        SelectedBreakpoint = null;
+        foreach (var breakpoint in SelectedBreakpoints.ToArray()) BreakpointStore.Instance.Remove(breakpoint);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanRemoveAllBreakpoints))]
     private void RemoveAllBreakpoints()
     {
-        // Nicht Clear(): die Session haengt an CollectionChanged und braucht die entfernten
-        // Eintraege, um sie auch am Ziel abzuraeumen. Clear meldet sie nicht einzeln.
+        // Store nicht per Clear() leeren: die Session haengt an CollectionChanged und braucht die
+        // entfernten Eintraege einzeln, um sie auch am Ziel abzuraeumen. Clear meldet nur ein Reset.
         foreach (var breakpoint in Breakpoints.ToArray()) BreakpointStore.Instance.Remove(breakpoint);
-
-        SelectedBreakpoint = null;
-    }
-
-    private bool CanRemoveBreakpoint()
-    {
-        return SelectedBreakpoint is not null;
-    }
-
-    partial void OnSelectedBreakpointChanged(BreakPoint? value)
-    {
-        RemoveBreakpointCommand.NotifyCanExecuteChanged();
+        // Rein lokale Auswahl - hier ist Clear() unkritisch, daran haengt nur CanExecute.
+        SelectedBreakpoints.Clear();
     }
 }
