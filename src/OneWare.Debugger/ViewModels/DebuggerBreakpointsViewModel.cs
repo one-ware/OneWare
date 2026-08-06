@@ -6,7 +6,7 @@ using OneWare.Essentials.EditorExtensions;
 namespace OneWare.Debugger.ViewModels;
 
 /// <summary>
-///     Reiter "Breakpoints" im Debugging-Panel: alle gesetzten Breakpoints, quer ueber alle
+///     Reiter "Breakpoints" im Debugger-Panel: alle gesetzten Breakpoints, quer ueber alle
 ///     Dateien. Bezieht seine Daten direkt aus dem anwendungsweiten <see cref="BreakpointStore" />,
 ///     zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind. Es ist derselbe
 ///     Store, den die laufende Session an GDB weiterreicht - die Liste zeigt damit genau das, was

@@ -1,4 +1,4 @@
-namespace OneWare.Essentials.Debugging;
+namespace OneWare.Essentials.Debugger;
 
 /// <summary>
 /// Where the target is halted.

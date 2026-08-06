@@ -1,4 +1,4 @@
-namespace OneWare.Essentials.Debugging;
+namespace OneWare.Essentials.Debugger;
 
 /// <summary>
 /// What the user asked to debug, handed to <see cref="IDebuggerService.StartAsync"/>.

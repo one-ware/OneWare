@@ -1,6 +1,6 @@
 using OneWare.Essentials.EditorExtensions;
 
-namespace OneWare.Essentials.Debugging;
+namespace OneWare.Essentials.Debugger;
 
 /// <summary>
 /// A running, controllable debug session.

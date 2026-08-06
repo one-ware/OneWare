@@ -1,4 +1,4 @@
-namespace OneWare.Essentials.Debugging;
+namespace OneWare.Essentials.Debugger;
 
 /// <summary>
 /// A single register as read from the target.

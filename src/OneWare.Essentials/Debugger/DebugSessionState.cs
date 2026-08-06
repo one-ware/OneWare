@@ -1,4 +1,4 @@
-namespace OneWare.Essentials.Debugging;
+namespace OneWare.Essentials.Debugger;
 
 /// <summary>
 /// Everything the user interface knows about the target at one point in time.

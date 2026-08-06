@@ -27,7 +27,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
-using OneWare.Essentials.Debugging;
+using OneWare.Essentials.Debugger;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 

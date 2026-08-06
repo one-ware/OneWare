@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
-using OneWare.Essentials.Debugging;
+using OneWare.Essentials.Debugger;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 

@@ -21,7 +21,7 @@ public class DebuggerInspectorViewModel : ExtendedTool
         Breakpoints = breakpoints;
 
         Id = "DebuggerInspector";
-        Title = "Debugging";
+        Title = "Debugger";
     }
 
     public DebuggerVariablesViewModel Variables { get; }

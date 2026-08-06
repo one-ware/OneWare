@@ -1,7 +1,7 @@
 using System.Collections.Specialized;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Debugging;
+using OneWare.Essentials.Debugger;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 

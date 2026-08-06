@@ -1,4 +1,4 @@
-namespace OneWare.Essentials.Debugging;
+namespace OneWare.Essentials.Debugger;
 
 /// <summary>
 /// Orchestrates debugging: holds the registered backends and owns the one session that can be

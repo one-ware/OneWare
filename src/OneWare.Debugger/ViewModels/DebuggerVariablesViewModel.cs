@@ -2,12 +2,12 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Debugger.Models;
-using OneWare.Essentials.Debugging;
+using OneWare.Essentials.Debugger;
 
 namespace OneWare.Debugger.ViewModels;
 
 /// <summary>
-///     Reiter "Variables" im Debugging-Panel: Variablen des aktuellen Stack-Frames,
+///     Reiter "Variables" im Debugger-Panel: Variablen des aktuellen Stack-Frames,
 ///     benannt nach der gleichnamigen Eclipse-Ansicht.
 /// </summary>
 /// <remarks>

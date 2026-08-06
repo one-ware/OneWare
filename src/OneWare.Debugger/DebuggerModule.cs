@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.Helpers;
 using OneWare.Debugger.ViewModels;
-using OneWare.Essentials.Debugging;
+using OneWare.Essentials.Debugger;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -65,13 +65,13 @@ public class DebuggerModule : OneWareModuleBase
         dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
         dockService.RegisterLayoutExtension<DebuggerInspectorViewModel>(DockShowLocation.RightPinned);
 
-        // Ein einziger Menuepunkt oeffnet die komplette Debugging-Ansicht: Steuerung samt
+        // Ein einziger Menuepunkt oeffnet die komplette Debugger-Ansicht: Steuerung samt
         // Registers und Debugger Console unten, Variables und Breakpoints als Reiter im rechten
         // Panel.
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
-            new MenuItemModel("Debugging")
+            new MenuItemModel("Debugger")
             {
-                Header = "Debugging",
+                Header = "Debugger",
                 Command = new RelayCommand(() =>
                 {
                     dockService.Show(serviceProvider.Resolve<DebuggerInspectorViewModel>(),

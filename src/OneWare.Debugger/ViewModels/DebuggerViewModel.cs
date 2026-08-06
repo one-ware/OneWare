@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Models;
-using OneWare.Essentials.Debugging;
+using OneWare.Essentials.Debugger;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
