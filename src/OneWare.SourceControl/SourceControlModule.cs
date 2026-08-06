@@ -7,6 +7,7 @@ using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.SourceControl.LoginProviders;
 using OneWare.SourceControl.Settings;
 using OneWare.SourceControl.ViewModels;
 using OneWare.SourceControl.Views;
@@ -22,6 +23,7 @@ public class SourceControlModule : OneWareModuleBase
         services.AddTransient<CompareGitViewModel>();
         services.AddSingleton<SourceControlViewModel>();
         services.AddSingleton<GitHubAccountSettingViewModel>();
+        services.AddSingleton<GithubLoginProvider>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)

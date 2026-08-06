@@ -71,6 +71,9 @@
                         </Button.Flyout>
                         <Image Source="{DynamicResource Bootstrap.Clock}" Width="12" Height="12" />
                     </Button>
+
+                    <ContentControl VerticalAlignment="Center"
+                                    Content="{Binding SelectedChatService.HeaderUiExtension, FallbackValue={x:Null}}" />
                 </StackPanel>
             </DockPanel>
         </Border>
