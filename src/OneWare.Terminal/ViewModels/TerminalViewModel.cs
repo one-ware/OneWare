@@ -36,6 +36,17 @@ public class TerminalViewModel : ObservableObject
         set => SetProperty(ref field, value);
     }
 
+    /// <summary>
+    /// The connection the terminal control binds to. It buffers output while no control is
+    /// attached (an unselected terminal tab, a collapsed terminal pane) and replays it on the
+    /// next attach, so switching tabs never loses output.
+    /// </summary>
+    public IConnection? ViewConnection
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
 
     public VirtualTerminalController? Terminal
     {
@@ -79,7 +90,15 @@ public class TerminalViewModel : ObservableObject
 
     public void CreateConnection()
     {
-        if (Connection is { IsConnected: true }) return;
+        if (Connection is { IsConnected: true })
+        {
+            // Already usable. Still announce readiness: callers subscribe to TerminalReady
+            // before calling this and would otherwise wait for an event that never comes.
+            TerminalLoading = false;
+            Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
+            return;
+        }
+
         TerminalLoading = true;
 
         lock (_createLock)
@@ -109,11 +128,16 @@ public class TerminalViewModel : ObservableObject
                 if (terminal == null)
                 {
                     ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                    TerminalLoading = false;
+                    // Unblock anyone waiting for readiness; they detect the missing
+                    // connection and fail fast instead of hanging.
+                    Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
                     return;
                 }
 
                 Connection = new PseudoTerminalConnection(terminal);
                 Connection.Closed += OnConnectionClosed;
+                ViewConnection = new ReplayBufferedConnection(Connection);
 
                 Terminal = new VirtualTerminalController();
 
@@ -127,6 +151,12 @@ public class TerminalViewModel : ObservableObject
 
                     TerminalReady?.Invoke(this, EventArgs.Empty);
                 });
+            }
+            else
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error("No supported shell found for this platform!");
+                TerminalLoading = false;
+                Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
             }
         }
     }
@@ -158,6 +188,9 @@ public class TerminalViewModel : ObservableObject
             Connection.Disconnect();
             Connection = null;
         }
+
+        if (ViewConnection is IDisposable disposableView) disposableView.Dispose();
+        ViewConnection = null;
     }
 
     private void OnConnectionClosed(object? sender, EventArgs e)

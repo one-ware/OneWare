@@ -63,9 +63,11 @@ public static class ShellIntegration
 
         // The arguments string must contain the full command line because the ConPTY
         // provider uses it verbatim when it is not empty.
+        // -ExecutionPolicy Bypass is required so the integration script can be dot-sourced
+        // regardless of the system execution policy (matches VS Code behaviour).
         var exe = Path.GetFileName(shellExecutable);
         return new SpawnConfig(
-            $"{exe} -NoLogo -NoProfile -NoExit -Command \". '{escaped}'\"", null);
+            $"{exe} -NoLogo -NoProfile -NoExit -ExecutionPolicy Bypass -Command \". '{escaped}'\"", null);
     }
 
     private static readonly Lock WriteLock = new();
@@ -175,23 +177,41 @@ public static class ShellIntegration
         # OneWare shell integration for PowerShell.
         $Global:__OneWareOriginalPrompt = $function:Prompt
 
+        # Reads a line and emits the command-started marker right before it executes.
+        # PSReadLine is used when available; it is frequently NOT loaded yet while this
+        # script is sourced (powershell.exe -Command runs before the interactive REPL
+        # imports it), so the module is resolved per call instead of once at install time.
+        $Global:__OneWareReadLineHook = {
+            $__ow_line = if (Get-Module -Name PSReadLine) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::ReadLine($Host.Runspace, $ExecutionContext)
+            } else {
+                $Host.UI.ReadLine()
+            }
+            [Console]::Write("$([char]0x1b)]633;C$([char]0x07)")
+            return $__ow_line
+        }
+
+        function Global:__OneWareEnsureReadLineHook {
+            $__ow_current = (Get-Item -LiteralPath function:global:PSConsoleHostReadLine -ErrorAction SilentlyContinue).ScriptBlock
+            if ($null -eq $__ow_current -or $__ow_current -ne $Global:__OneWareReadLineHook) {
+                Set-Item -LiteralPath function:global:PSConsoleHostReadLine -Value $Global:__OneWareReadLineHook
+            }
+        }
+
         function Global:Prompt() {
             $__ow_success = $?
             $__ow_exit = if ($__ow_success) { 0 }
                 elseif ($Global:LASTEXITCODE -is [int] -and $Global:LASTEXITCODE -ne 0) { $Global:LASTEXITCODE }
                 else { 1 }
+            # PSReadLine overwrites PSConsoleHostReadLine when it is imported, which can
+            # happen after this script ran. Re-installing on every prompt keeps the
+            # command-started marker working regardless of module load order.
+            __OneWareEnsureReadLineHook
             $__ow_out = "$([char]0x1b)]633;D;$__ow_exit$([char]0x07)"
             $__ow_out += if ($Global:__OneWareOriginalPrompt) { $Global:__OneWareOriginalPrompt.Invoke() } else { "PS $PWD> " }
             return $__ow_out
         }
 
-        # Emit the command-started marker once a line has been read, before it executes.
-        if (Get-Module -Name PSReadLine) {
-            function Global:PSConsoleHostReadLine {
-                $__ow_line = [Microsoft.PowerShell.PSConsoleReadLine]::ReadLine($Host.Runspace, $ExecutionContext)
-                [Console]::Write("$([char]0x1b)]633;C$([char]0x07)")
-                return $__ow_line
-            }
-        }
+        __OneWareEnsureReadLineHook
         """;
 }
