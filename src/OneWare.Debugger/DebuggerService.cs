@@ -181,9 +181,11 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
             foreach (BreakPoint breakpoint in e.NewItems)
                 _ = session.SetBreakpointAsync(breakpoint);
 
-        if (e.OldItems != null)
+        if (e.OldItems == null) return;
+        {
             foreach (BreakPoint breakpoint in e.OldItems)
                 _ = session.RemoveBreakpointAsync(breakpoint);
+        }
     }
 
     private void OnSessionStateChanged(object? sender, DebugSessionState state)
