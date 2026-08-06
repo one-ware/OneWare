@@ -36,6 +36,17 @@ public class TerminalViewModel : ObservableObject
         set => SetProperty(ref field, value);
     }
 
+    /// <summary>
+    /// The connection the terminal control binds to. It buffers output while no control is
+    /// attached (an unselected terminal tab, a collapsed terminal pane) and replays it on the
+    /// next attach, so switching tabs never loses output.
+    /// </summary>
+    public IConnection? ViewConnection
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
 
     public VirtualTerminalController? Terminal
     {
@@ -126,6 +137,7 @@ public class TerminalViewModel : ObservableObject
 
                 Connection = new PseudoTerminalConnection(terminal);
                 Connection.Closed += OnConnectionClosed;
+                ViewConnection = new ReplayBufferedConnection(Connection);
 
                 Terminal = new VirtualTerminalController();
 
@@ -176,6 +188,9 @@ public class TerminalViewModel : ObservableObject
             Connection.Disconnect();
             Connection = null;
         }
+
+        if (ViewConnection is IDisposable disposableView) disposableView.Dispose();
+        ViewConnection = null;
     }
 
     private void OnConnectionClosed(object? sender, EventArgs e)
