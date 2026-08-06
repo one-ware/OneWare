@@ -250,7 +250,14 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 - `ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, outputProgress, cancellationToken)`:
   run a command in a terminal pane and return the result. Pass an optional `IProgress<string>`
-  as `outputProgress` to receive the accumulated output in real time while the command runs.
+  as `outputProgress` to receive the accumulated output in real time while the command runs
+  (rate limited to a few updates per second).
+  Completion is detected through the shell integration markers the shell emits at prompt
+  boundaries. Always pass a `timeout`: shells without working integration fall back to
+  treating a command as finished once its output has been idle for a few seconds, and the
+  `timeout` is the only hard upper bound. `TerminalExecutionResult.TimedOut` is `true` when
+  the command was aborted (timeout or cancellation); in that case the terminal is interrupted
+  with Ctrl+C and, if that fails, its process tree is killed.
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 

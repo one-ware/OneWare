@@ -79,7 +79,15 @@ public class TerminalViewModel : ObservableObject
 
     public void CreateConnection()
     {
-        if (Connection is { IsConnected: true }) return;
+        if (Connection is { IsConnected: true })
+        {
+            // Already usable. Still announce readiness: callers subscribe to TerminalReady
+            // before calling this and would otherwise wait for an event that never comes.
+            TerminalLoading = false;
+            Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
+            return;
+        }
+
         TerminalLoading = true;
 
         lock (_createLock)
@@ -109,6 +117,10 @@ public class TerminalViewModel : ObservableObject
                 if (terminal == null)
                 {
                     ContainerLocator.Container.Resolve<ILogger>().Error("Error creating terminal!");
+                    TerminalLoading = false;
+                    // Unblock anyone waiting for readiness; they detect the missing
+                    // connection and fail fast instead of hanging.
+                    Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
                     return;
                 }
 
@@ -127,6 +139,12 @@ public class TerminalViewModel : ObservableObject
 
                     TerminalReady?.Invoke(this, EventArgs.Empty);
                 });
+            }
+            else
+            {
+                ContainerLocator.Container.Resolve<ILogger>().Error("No supported shell found for this platform!");
+                TerminalLoading = false;
+                Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
             }
         }
     }
