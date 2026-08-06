@@ -63,9 +63,11 @@ public static class ShellIntegration
 
         // The arguments string must contain the full command line because the ConPTY
         // provider uses it verbatim when it is not empty.
+        // -ExecutionPolicy Bypass is required so the integration script can be dot-sourced
+        // regardless of the system execution policy (matches VS Code behaviour).
         var exe = Path.GetFileName(shellExecutable);
         return new SpawnConfig(
-            $"{exe} -NoLogo -NoProfile -NoExit -Command \". '{escaped}'\"", null);
+            $"{exe} -NoLogo -NoProfile -NoExit -ExecutionPolicy Bypass -Command \". '{escaped}'\"", null);
     }
 
     private static readonly Lock WriteLock = new();
