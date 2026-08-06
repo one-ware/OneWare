@@ -64,6 +64,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         aiFunctionProvider.FunctionStarted += OnFunctionStarted;
         aiFunctionProvider.FunctionCompleted += OnFunctionCompleted;
         aiFunctionProvider.FunctionProgress += OnFunctionProgress;
+        aiFunctionProvider.FunctionContent += OnFunctionContent;
 
         _aiFunctionProvider = aiFunctionProvider;
         _mainDockService = mainDockService;
@@ -836,6 +837,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (tool == null || !tool.IsToolRunning) return;
 
         tool.ToolOutput = progress.Output;
+    }
+
+    private void OnFunctionContent(object? sender, AiFunctionContentEvent content)
+    {
+        var tool = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.Id == content.Id);
+        if (tool == null) return;
+
+        tool.EmbeddedContent = content.Content;
+        ContentAdded?.Invoke(this, EventArgs.Empty);
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)

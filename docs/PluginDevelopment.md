@@ -258,6 +258,18 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
   `timeout` is the only hard upper bound. `TerminalExecutionResult.TimedOut` is `true` when
   the command was aborted (timeout or cancellation); in that case the terminal is interrupted
   with Ctrl+C and, if that fails, its process tree is killed.
+- `CreateEmbeddedTerminal(title, command, workingDirectory)`: create an `IEmbeddedTerminal`, a
+  live terminal view model that is rendered *inside your own view* instead of the terminal
+  pane. Bind it to a `ContentControl` (the `ViewLocator` resolves the view). The user can move
+  it into a tab of the terminal pane from its header; when that happens the host stops
+  rendering it, because a terminal can only be displayed in one place at a time.
+- `ExecuteInTerminalAsync(embeddedTerminal, timeout, outputProgress, cancellationToken)`: run
+  the embedded terminal's `Command` in it. Same completion semantics as above, but the shell
+  stays alive afterwards so the user can keep using it. Call `IEmbeddedTerminal.CloseShell()`
+  when the terminal is no longer needed; the already rendered output stays visible.
+
+  Both members are default interface methods that throw `NotSupportedException` on
+  implementations predating them, so guard the first call if you support external hosts.
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 
@@ -333,11 +345,15 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 - `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
 - `GetTools()`: return the registered tools for chat or automation.
-- `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
-  invocation by its unique ID.
+- `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` and `FunctionContent` events
+  identify each concurrent invocation by its unique ID.
 - Set `OneWareAiFunction.InvocationHandler` when a tool needs an
   `AiFunctionInvocationContext` for invocation-scoped progress reporting. Keep `Handler` as the
   typed delegate used to generate the tool schema.
+- `AiFunctionInvocationContext.ReportProgress(text)` updates the text shown in the chat tool
+  box. `ReportContent(viewModel)` instead puts a live view model there, rendered through the
+  `ViewLocator` (this is how `runTerminalCommand` embeds a real terminal). The view model is
+  not persisted, so always report the text as well for restored sessions.
 
 #### `ISerialMonitorService` (src/OneWare.Essentials/Services/ISerialMonitorService.cs)
 

@@ -20,7 +20,7 @@
     <Panel Background="{DynamicResource ThemeControlLowBrush}">
         <TextBlock Text="Terminal is not connected." IsVisible="{Binding !TerminalVisible}" VerticalAlignment="Center"
                    HorizontalAlignment="Center" />
-        <vt100:VirtualTerminalControl Connection="{Binding Connection}"
+        <vt100:VirtualTerminalControl Connection="{Binding ViewConnection}"
                                       Terminal="{Binding Terminal}" TextPadding="5"
                                       FontFamily="{DynamicResource EditorFont}"
                                       IsVisible="{Binding TerminalVisible}" />

@@ -23,6 +23,7 @@ public class AiFunctionProvider(
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
     public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
     public event EventHandler<AiFunctionProgressEvent>? FunctionProgress;
+    public event EventHandler<AiFunctionContentEvent>? FunctionContent;
 
     public void RegisterFunction(IOneWareAiFunction function)
     {
@@ -162,6 +163,16 @@ public class AiFunctionProvider(
             }));
     }
 
+    private void RaiseFunctionContent(string id, object? content)
+    {
+        Dispatcher.UIThread.Post(() =>
+            FunctionContent?.Invoke(this, new AiFunctionContentEvent
+            {
+                Id = id,
+                Content = content
+            }));
+    }
+
     private sealed class RegisteredOneWareAiFunction(
         AiFunctionProvider provider,
         AIFunction innerFunction,
@@ -181,7 +192,8 @@ public class AiFunctionProvider(
             provider._activeFunctions[id] = functionCancellationSource;
 
             var context = new AiFunctionInvocationContext(id,
-                output => provider.RaiseFunctionProgress(id, output));
+                output => provider.RaiseFunctionProgress(id, output),
+                content => provider.RaiseFunctionContent(id, content));
             Exception? exception = null;
             try
             {

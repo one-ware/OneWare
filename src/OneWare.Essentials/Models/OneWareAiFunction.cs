@@ -33,11 +33,18 @@ public interface IOneWareAiFunction
         InvocationHandler => null;
 }
 
-public sealed class AiFunctionInvocationContext(string id, Action<string> reportProgress)
+public sealed class AiFunctionInvocationContext(string id, Action<string> reportProgress,
+    Action<object?>? reportContent = null)
 {
     public string Id { get; } = id;
 
     public void ReportProgress(string output) => reportProgress(output);
+
+    /// <summary>
+    /// Attaches a live view model to this invocation's chat tool box (rendered through the
+    /// application's view locator), or removes it again by passing <see langword="null"/>.
+    /// </summary>
+    public void ReportContent(object? content) => reportContent?.Invoke(content);
 }
 
 public sealed class OneWareAiFunction : IOneWareAiFunction

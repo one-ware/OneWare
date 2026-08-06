@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.TerminalManager.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+             x:Class="OneWare.TerminalManager.Views.EmbeddedTerminalView"
+             x:DataType="viewModels:EmbeddedTerminalViewModel">
+
+    <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}" ClipToBounds="True">
+        <Grid RowDefinitions="Auto, *">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeControlMidBrush}" Padding="6 3">
+                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="5">
+                    <Image Grid.Column="0" Source="{DynamicResource Material.Console}" Height="12"
+                           VerticalAlignment="Center" />
+
+                    <SelectableTextBlock Grid.Column="1" Text="{Binding Command}" TextTrimming="CharacterEllipsis"
+                                         FontFamily="{DynamicResource EditorFont}" VerticalAlignment="Center"
+                                         ToolTip.Tip="{Binding Command}" />
+
+                    <Button Grid.Column="2" Padding="3 1" VerticalAlignment="Center"
+                            Command="{Binding ShowInPaneCommand}"
+                            IsVisible="{Binding !IsShownInPane}"
+                            ToolTip.Tip="Open this terminal in the Terminal panel">
+                        <Image Source="{DynamicResource MaterialDesign.DesktopWindows}" Height="12" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <ContentControl Grid.Row="1" Height="180" Content="{Binding HostedTerminal}"
+                            IsVisible="{Binding !IsShownInPane}" />
+
+            <TextBlock Grid.Row="1" Margin="8" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       IsVisible="{Binding IsShownInPane}"
+                       Text="This terminal was moved to the Terminal panel." />
+        </Grid>
+    </Border>
+
+</UserControl>

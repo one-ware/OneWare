@@ -267,18 +267,20 @@ internal static class AiBuiltInFunctions
     {
         var resolvedWorkDir = ResolvePath(projectExplorerService, workDir);
 
-        var progress = context == null
+        // A live mini terminal inside the chat tool box makes the streamed text output
+        // redundant, and skipping it also avoids re-rendering the whole output on the UI
+        // thread for every chunk a chatty command produces.
+        var embedded = TryCreateEmbeddedTerminal(terminalManagerService, context, command, resolvedWorkDir);
+
+        var progress = context == null || embedded != null
             ? null
             : new DelegateProgress(raw => context.ReportProgress(FormatTerminalProgress(command, raw)));
 
-        var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
-            command,
-            "AI Chat",
-            resolvedWorkDir,
-            true,
-            TerminalCommandTimeout,
-            progress,
-            cancellationToken);
+        var terminalResult = embedded != null
+            ? await terminalManagerService.ExecuteInTerminalAsync(
+                embedded, TerminalCommandTimeout, progress, cancellationToken)
+            : await terminalManagerService.ExecuteInTerminalAsync(
+                command, "AI Chat", resolvedWorkDir, true, TerminalCommandTimeout, progress, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -288,7 +290,8 @@ internal static class AiBuiltInFunctions
         var truncatedOutput = TruncateTerminalOutput(cleanedOutput, out var outputTruncated);
         var result = terminalResult with { Output = truncatedOutput };
 
-        // Show the final, cleaned output in the chat tool box.
+        // Keep the plain output around as well: it is what a restored chat session shows once
+        // the live terminal is gone.
         context?.ReportProgress(FormatTerminalProgress(command, terminalResult.Output));
 
         return new
@@ -304,6 +307,27 @@ internal static class AiBuiltInFunctions
                       "derived from it. Judge the result from the output instead."
                     : null
         };
+    }
+
+    /// <summary>
+    /// Creates the live terminal shown inside the chat tool box, or null when there is no chat
+    /// box to host it (direct handler invocation) or the terminal manager does not support it.
+    /// </summary>
+    private static IEmbeddedTerminal? TryCreateEmbeddedTerminal(ITerminalManagerService terminalManagerService,
+        AiFunctionInvocationContext? context, string command, string? workingDirectory)
+    {
+        if (context == null) return null;
+
+        try
+        {
+            var embedded = terminalManagerService.CreateEmbeddedTerminal("AI Chat", command, workingDirectory);
+            context.ReportContent(embedded);
+            return embedded;
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
     }
 
     private static string FormatTerminalProgress(string command, string rawOutput)

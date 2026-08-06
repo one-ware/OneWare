@@ -36,6 +36,22 @@ public class TerminalViewModel : ObservableObject
         set => SetProperty(ref field, value);
     }
 
+    /// <summary>
+    /// The connection the terminal control binds to. It buffers output while no control is
+    /// attached (hidden tab, virtualized list) and replays it on the next attach.
+    /// </summary>
+    public IConnection? ViewConnection
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>
+    /// When false, showing the terminal view no longer starts a shell. Used for terminals whose
+    /// shell was released on purpose but whose output stays on screen.
+    /// </summary>
+    public bool AllowConnect { get; set; } = true;
+
 
     public VirtualTerminalController? Terminal
     {
@@ -79,6 +95,13 @@ public class TerminalViewModel : ObservableObject
 
     public void CreateConnection()
     {
+        if (!AllowConnect)
+        {
+            TerminalLoading = false;
+            Dispatcher.UIThread.Post(() => TerminalReady?.Invoke(this, EventArgs.Empty));
+            return;
+        }
+
         if (Connection is { IsConnected: true })
         {
             // Already usable. Still announce readiness: callers subscribe to TerminalReady
@@ -126,6 +149,7 @@ public class TerminalViewModel : ObservableObject
 
                 Connection = new PseudoTerminalConnection(terminal);
                 Connection.Closed += OnConnectionClosed;
+                ViewConnection = new ReplayBufferedConnection(Connection);
 
                 Terminal = new VirtualTerminalController();
 
@@ -176,6 +200,9 @@ public class TerminalViewModel : ObservableObject
             Connection.Disconnect();
             Connection = null;
         }
+
+        if (ViewConnection is IDisposable disposableView) disposableView.Dispose();
+        ViewConnection = null;
     }
 
     private void OnConnectionClosed(object? sender, EventArgs e)

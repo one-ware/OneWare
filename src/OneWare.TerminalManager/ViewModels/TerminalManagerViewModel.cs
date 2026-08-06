@@ -65,6 +65,13 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     private readonly object _automationLock = new();
     private readonly Dictionary<string, List<TerminalTabModel>> _automationPools = new(StringComparer.Ordinal);
     private readonly HashSet<TerminalViewModel> _busyAutomationTerminals = new();
+
+    // Terminals hosted outside the terminal pane (the AI chat mini terminals). Their shells
+    // are kept alive so the user can keep interacting with them, but only for the most recent
+    // few: one live shell per executed command would pile up processes over a long session.
+    private const int MaxLiveEmbeddedTerminals = 3;
+    private readonly List<EmbeddedTerminalViewModel> _embeddedTerminals = new();
+
     private readonly IMainDockService _mainDockService;
     private readonly IPaths _paths;
 
@@ -147,6 +154,95 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         if (select) SelectedTerminalTab = tab;
 
         return tab;
+    }
+
+    public IEmbeddedTerminal CreateEmbeddedTerminal(string title, string command, string? workingDirectory = null)
+    {
+        var homeFolder = workingDirectory
+                         ?? _projectExplorerService.ActiveProject?.FullPath
+                         ?? _paths.ProjectsDirectory;
+
+        var embedded = new EmbeddedTerminalViewModel(this, title, command, new TerminalViewModel(homeFolder));
+
+        // Trim before adding: the new terminal is about to run a command and must survive.
+        TrimLiveEmbeddedTerminals();
+        _embeddedTerminals.Add(embedded);
+
+        return embedded;
+    }
+
+    public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(IEmbeddedTerminal terminal,
+        TimeSpan? timeout = null, IProgress<string>? outputProgress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (terminal is not EmbeddedTerminalViewModel embedded)
+            throw new ArgumentException("The terminal was not created by this service.", nameof(terminal));
+
+        embedded.IsRunning = true;
+        try
+        {
+            // closeWhenDone is false: the shell stays alive so the user can inspect or keep
+            // using the mini terminal after the command finished.
+            return await ExecuteInTerminalAsync(embedded.Terminal, embedded.Command, timeout, false,
+                outputProgress, cancellationToken);
+        }
+        finally
+        {
+            embedded.IsRunning = false;
+        }
+    }
+
+    /// <summary>
+    /// Moves an embedded terminal out of its host and into a tab of the terminal pane. The
+    /// host stops rendering it first: a terminal can only be displayed in one place.
+    /// </summary>
+    public void ShowEmbeddedTerminalInPane(EmbeddedTerminalViewModel embedded)
+    {
+        if (embedded.IsShownInPane)
+        {
+            var existing = Terminals.FirstOrDefault(t => ReferenceEquals(t.Terminal, embedded.Terminal));
+            if (existing != null) SelectedTerminalTab = existing;
+            _mainDockService.Show<ITerminalManagerService>();
+            return;
+        }
+
+        embedded.IsShownInPane = true;
+        _embeddedTerminals.Remove(embedded);
+
+        // Give the host a layout pass to detach its terminal control before a new one is
+        // created for the tab, so the shell output is never consumed by two controls at once.
+        Dispatcher.UIThread.Post(() =>
+        {
+            var tab = new TerminalTabModel(GetUniqueTitle(embedded.Title), embedded.Terminal, this);
+            embedded.Terminal.ConnectionClosed += (_, _) => Dispatcher.UIThread.Post(tab.Close);
+
+            Terminals.Add(tab);
+            SelectedTerminalTab = tab;
+            _mainDockService.Show<ITerminalManagerService>();
+        }, DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// Releases the shells of the oldest embedded terminals so that at most
+    /// <see cref="MaxLiveEmbeddedTerminals"/> shell processes are kept alive for them. Called
+    /// before a new one is added; terminals still executing a command are never touched.
+    /// </summary>
+    private void TrimLiveEmbeddedTerminals()
+    {
+        _embeddedTerminals.RemoveAll(x => x.IsShellClosed);
+
+        var live = _embeddedTerminals.Count;
+        foreach (var embedded in _embeddedTerminals.ToList())
+        {
+            if (live < MaxLiveEmbeddedTerminals) break;
+            if (embedded.IsRunning) continue;
+
+            // Only the shell is released; the output the terminal already rendered stays
+            // visible in its host.
+            embedded.CloseShell();
+            _embeddedTerminals.Remove(embedded);
+            live--;
+        }
     }
 
     public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(TerminalViewModel terminal, string command,

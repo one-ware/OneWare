@@ -9,7 +9,7 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageToolView"
              x:DataType="chatMessages:ChatMessageToolViewModel">
 
-    <Expander Margin="0 2" VerticalAlignment="Top" IsExpanded="{Binding IsToolRunning, Mode=OneWay}">
+    <Expander Margin="0 2" VerticalAlignment="Top" IsExpanded="{Binding IsExpandedByDefault, Mode=OneWay}">
         <Expander.Header>
             <Grid ColumnDefinitions="Auto, Auto, Auto" ColumnSpacing="5" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
@@ -31,14 +31,18 @@
                 </Button>
             </Grid>
         </Expander.Header>
-        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
-                MaxHeight="200" Padding="5">
-            <ScrollViewer x:Name="OutputScrollViewer" HorizontalScrollBarVisibility="Disabled"
-                          VerticalScrollBarVisibility="Auto">
-                <SelectableTextBlock TextWrapping="Wrap" FontFamily="{DynamicResource EditorFont}"
-                                     Text="{Binding ToolOutput}" />
-            </ScrollViewer>
-        </Border>
+        <Panel Margin="1 4 1 0">
+            <ContentControl Content="{Binding EmbeddedContent}" IsVisible="{Binding HasEmbeddedContent}" />
+
+            <Border Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+                    MaxHeight="200" Padding="5" IsVisible="{Binding !HasEmbeddedContent}">
+                <ScrollViewer x:Name="OutputScrollViewer" HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <SelectableTextBlock TextWrapping="Wrap" FontFamily="{DynamicResource EditorFont}"
+                                         Text="{Binding ToolOutput}" />
+                </ScrollViewer>
+            </Border>
+        </Panel>
     </Expander>
 
 </UserControl>

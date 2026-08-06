@@ -16,6 +16,13 @@ public interface IAiFunctionProvider
         remove { }
     }
 
+    /// <summary>Fired when a running AI function attaches a live view model to its tool box.</summary>
+    event EventHandler<AiFunctionContentEvent>? FunctionContent
+    {
+        add { }
+        remove { }
+    }
+
     /// <summary>Returns available AI tools for this provider.</summary>
     ICollection<AIFunction> GetTools();
 
