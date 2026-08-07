@@ -95,6 +95,17 @@
                                    Text="{Binding WorkingStatusText}" />
                     </Grid>
 
+                    <!-- Waiting for the chat service to finish connecting -->
+                    <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5"
+                          IsVisible="{Binding IsWaitingForConnection}">
+                        <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Column="1"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                                   FontStyle="Italic"
+                                   Text="{Binding StatusText}" />
+                    </Grid>
+
                     <!-- Queued messages (dimmed, pinned below the conversation) -->
                     <ItemsControl Opacity="0.5" ItemsSource="{Binding QueuedMessages}">
                         <ItemsControl.ItemTemplate>

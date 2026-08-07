@@ -864,10 +864,11 @@ public sealed class CopilotChatService(
 
 
         await _sync.WaitAsync().ConfigureAwait(false);
-        await DisposeAsync();
 
         try
         {
+            await DisposeAsync();
+
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));

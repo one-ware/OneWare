@@ -34,6 +34,17 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
     private bool _initialized;
+
+    // Single-flight guard: initialization is kicked off automatically when a service is
+    // selected. A send that happens while that is still running must join the running
+    // operation instead of starting a second (destructive) initialization.
+    private Task<bool>? _initializeTask;
+    private IChatService? _initializeTaskService;
+
+    // Completion sources waiting for the selected service to report a connected status.
+    private readonly List<TaskCompletionSource<bool>> _connectionWaiters = [];
+
+    private static readonly TimeSpan ConnectionWaitTimeout = TimeSpan.FromMinutes(2);
     // FIFO of messages sent locally so the echoed ChatUserMessageEvent can be matched
     // (suppressed for normal/steered sends, or used to activate a queued message).
     private readonly Queue<PendingLocalMessage> _pendingLocalMessages = new();
@@ -136,6 +147,41 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 SteerCommand.NotifyCanExecuteChanged();
                 QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
+
+                if (value) ReleaseConnectionWaiters(true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// True while a send is waiting for the selected service to finish connecting.
+    /// </summary>
+    public bool IsWaitingForConnection
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value))
+            {
+                SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// True while the selected service is still initializing/starting up. Sending is allowed in
+    /// this state; the message is held back until the connection is up.
+    /// </summary>
+    public bool IsConnecting
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value))
+            {
+                SendCommand.NotifyCanExecuteChanged();
             }
         }
     }
@@ -194,6 +240,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 oldValue.EventReceived -= OnEventReceived;
                 oldValue.StatusChanged -= OnStatusChanged;
                 oldValue.SessionReset -= OnSessionReset;
+                ReleaseConnectionWaiters(false);
             }
 
             if (value == null) return;
@@ -234,13 +281,86 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private async Task<bool> InitializeCurrentAsync()
     {
-        if (SelectedChatService == null) return false;
-        
-        var status = await SelectedChatService.InitializeAsync();
+        var service = SelectedChatService;
+        if (service == null) return false;
+
+        // Join an initialization that is already running for this service instead of
+        // starting a second one (a concurrent initialization tears down the client the
+        // first one is still setting up).
+        if (_initializeTask is { } running && _initializeTaskService == service)
+        {
+            return await running;
+        }
+
+        var task = InitializeServiceAsync(service);
+        _initializeTask = task;
+        _initializeTaskService = service;
+        IsConnecting = true;
+
+        try
+        {
+            return await task;
+        }
+        finally
+        {
+            if (ReferenceEquals(_initializeTask, task))
+            {
+                _initializeTask = null;
+                _initializeTaskService = null;
+                IsConnecting = false;
+            }
+        }
+    }
+
+    private async Task<bool> InitializeServiceAsync(IChatService service)
+    {
+        var status = await service.InitializeAsync();
+
+        if (SelectedChatService != service) return status;
 
         IsInitialized = status;
 
+        if (!status) ReleaseConnectionWaiters(false);
+
         return status;
+    }
+
+    /// <summary>
+    /// Waits until the selected service reports a connected status, instead of failing a send
+    /// that arrives while the service is still starting up.
+    /// </summary>
+    private async Task<bool> WaitForConnectionAsync()
+    {
+        if (IsConnected) return true;
+
+        var waiter = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _connectionWaiters.Add(waiter);
+
+        IsWaitingForConnection = true;
+
+        try
+        {
+            return await waiter.Task.WaitAsync(ConnectionWaitTimeout);
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
+        finally
+        {
+            _connectionWaiters.Remove(waiter);
+            IsWaitingForConnection = _connectionWaiters.Count > 0;
+        }
+    }
+
+    private void ReleaseConnectionWaiters(bool connected)
+    {
+        if (_connectionWaiters.Count == 0) return;
+
+        foreach (var waiter in _connectionWaiters.ToArray())
+        {
+            waiter.TrySetResult(connected);
+        }
     }
 
     private async Task InitializeAndRestoreCurrentServiceAsync(IChatService chatService)
@@ -293,26 +413,39 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         var prompt = CurrentMessage.Trim();
         if (string.IsNullOrWhiteSpace(prompt)) return;
 
-        if (SelectedChatService == null)
+        var chatService = SelectedChatService;
+        if (chatService == null)
         {
             AddErrorMessage("No chat service selected.");
             return;
         }
 
-        if (!IsInitialized)
+        var initialized = IsInitialized;
+        if (!initialized)
         {
-            await InitializeCurrentAsync();
+            initialized = await InitializeCurrentAsync();
         }
 
         if (!IsConnected)
         {
-            // Replace (don't stack) the transient connection warning; it is removed
-            // again as soon as a message actually goes through.
-            if (_notConnectedMessage != null) Messages.Remove(_notConnectedMessage);
-            _notConnectedMessage = new ChatMessageErrorViewModel($"{SelectedChatService.Name} is not connected yet.");
-            AddMessage(_notConnectedMessage);
-            return;
+            // The service may still be starting up (typical right after IDE launch).
+            // Wait for it to connect instead of rejecting the message.
+            var connected = initialized && await WaitForConnectionAsync();
+
+            if (!connected)
+            {
+                // Replace (don't stack) the transient connection warning; it is removed
+                // again as soon as a message actually goes through.
+                if (_notConnectedMessage != null) Messages.Remove(_notConnectedMessage);
+                _notConnectedMessage =
+                    new ChatMessageErrorViewModel($"{chatService.Name} is not connected yet.");
+                AddMessage(_notConnectedMessage);
+                return;
+            }
         }
+
+        // The user may have switched services while we were waiting for the connection.
+        if (!ReferenceEquals(SelectedChatService, chatService)) return;
 
         if (_notConnectedMessage != null)
         {
@@ -354,7 +487,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         try
         {
-            await SelectedChatService.SendAsync(prompt, mode);
+            await chatService.SendAsync(prompt, mode);
         }
         catch (Exception ex)
         {
@@ -435,7 +568,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private bool CanRemoveQueuedMessage(ChatMessageUserViewModel? message) =>
         message != null && ReferenceEquals(QueuedMessages.LastOrDefault(), message);
 
-    private bool CanSend() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
+    private bool CanSend() => (IsConnected || IsConnecting) && !IsWaitingForConnection &&
+                              !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private bool CanAbort() => IsConnected && IsBusy;
 
