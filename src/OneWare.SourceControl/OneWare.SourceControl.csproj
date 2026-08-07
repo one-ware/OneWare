@@ -11,5 +11,8 @@
     
     <ItemGroup>
         <PackageReference Include="LibGit2Sharp" Version="0.32.0"/>
+        <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.8.3" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.10" />
     </ItemGroup>
 </Project>
