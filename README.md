@@ -81,12 +81,43 @@ The file maps the environment variables used by command-line arguments to values
   "ONEWARE_APPDATA_DIR": "/workspace/AppData",
   "ONEWARE_MODULES": "/plugins/ExamplePlugin.dll",
   "ONEWARE_AUTOLAUNCH": "example-action",
-  "ONEWARE_PACKAGE_REPOSITORY": "https://packages.example.com/oneware-packages.json"
+  "ONEWARE_PACKAGE_REPOSITORY": "https://packages.example.com/oneware-packages.json",
+  "ONEWARE_CONFIGURATION_PROFILE": "/workspace/team.onewareconfig"
 }
 ```
 
 Existing environment variables and command-line arguments take precedence. Only `ONEWARE_` variables are accepted;
 invalid files and entries are ignored with a console warning.
+
+### Configuration profiles
+
+A configuration profile (`*.onewareconfig`) captures IDE settings, installed packages, and custom package sources.
+Export one from a configured installation via **Extras → Export Configuration...**, then have every deployed machine
+apply it automatically by setting `ONEWARE_CONFIGURATION_PROFILE` — either in `OneWareStudio.defaults.json` above, as a
+real environment variable, or via the `--configuration-profile` argument:
+
+```bash
+OneWareStudio --configuration-profile /workspace/team.onewareconfig
+OneWareStudio --configuration-profile https://config.example.com/team.onewareconfig
+```
+
+The value is a local file path or an `http(s)` URL, so a profile can be served centrally and updated without touching
+each machine.
+
+By default a profile is applied only when its content differs from the last profile applied on that machine, so it will
+not overwrite settings the user changed afterwards. Set `ONEWARE_CONFIGURATION_PROFILE_MODE` to `always` to re-apply on
+every launch instead:
+
+```json
+{
+  "ONEWARE_CONFIGURATION_PROFILE": "https://config.example.com/team.onewareconfig",
+  "ONEWARE_CONFIGURATION_PROFILE_MODE": "always"
+}
+```
+
+Packages that are already installed are left untouched, and a profile that cannot be downloaded or parsed is logged and
+skipped rather than blocking startup. Settings that are only read while the application starts take effect on the next
+launch.
 
 ## Nuget
 

@@ -280,6 +280,11 @@ internal abstract class Program
                 Description =
                     "Overrides the package repository URL(s) used by OneWare Studio. Separate multiple URLs with ';'. (optional)"
             };
+            Option<string> configurationProfileOption = new("--configuration-profile")
+            {
+                Description =
+                    "Applies a configuration profile (settings, packages, package sources) at startup. Accepts a file path or an http(s) URL. (optional)"
+            };
             Argument<string?> openArgument = new("open")
             {
                 Description = "File/Folder path or oneware:// URI to open",
@@ -295,7 +300,8 @@ internal abstract class Program
                     projectsDirOption,
                     moduleOption,
                     autoLaunchOption,
-                    packageRepositoryOption
+                    packageRepositoryOption,
+                    configurationProfileOption
                 },
                 Arguments =
                 {
@@ -328,6 +334,10 @@ internal abstract class Program
                 var packageRepositoryValue = parseResult.GetValue(packageRepositoryOption);
                 if (!string.IsNullOrEmpty(packageRepositoryValue))
                     Environment.SetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY", packageRepositoryValue);
+
+                var configurationProfileValue = parseResult.GetValue(configurationProfileOption);
+                if (!string.IsNullOrEmpty(configurationProfileValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_CONFIGURATION_PROFILE", configurationProfileValue);
 
                 var openValue = parseResult.GetValue(openArgument);
                 if (!string.IsNullOrEmpty(openValue))
