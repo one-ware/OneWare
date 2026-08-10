@@ -454,6 +454,164 @@ public sealed class CopilotChatService(
         }
     }
 
+    public Control HeaderUiExtension => new CopilotChatHeaderView
+    {
+        DataContext = this
+    };
+
+    #region Account
+
+    /// <summary>
+    ///     Auth type of a login that OneWare stored itself and can therefore remove again. Every other
+    ///     source (gh CLI, environment variable, API key) is owned outside of OneWare.
+    /// </summary>
+    private const string RemovableAuthType = "user";
+
+    /// <summary>GitHub account the Copilot CLI is signed in with, if known.</summary>
+    public string? AccountLogin
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>How the CLI is authenticated ("user", "gh-cli", "env", ...).</summary>
+    public string? AccountAuthType
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>Account line for the header menu, including where the login comes from.</summary>
+    public string? AccountStatusText
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool IsAuthenticated
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>
+    ///     Signing out is only possible for a login performed through OneWare. The CLI also accepts
+    ///     credentials from the gh CLI or from COPILOT_GITHUB_TOKEN/GH_TOKEN/GITHUB_TOKEN, and those
+    ///     have to be removed where they are configured.
+    /// </summary>
+    public bool CanSignOut
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public IAsyncRelayCommand<Control?> SignInCommand => field ??= new AsyncRelayCommand<Control?>(SignInAsync);
+
+    public IAsyncRelayCommand<Control?> SignOutCommand => field ??= new AsyncRelayCommand<Control?>(SignOutAsync);
+
+    private void ApplyAuthStatus(GetAuthStatusResponse? status)
+    {
+        IsAuthenticated = status?.IsAuthenticated ?? false;
+        AccountLogin = IsAuthenticated ? status?.Login : null;
+        AccountAuthType = IsAuthenticated ? status?.AuthType : null;
+        CanSignOut = IsAuthenticated && IsRemovableAuth(AccountAuthType);
+        AccountStatusText = IsAuthenticated
+            ? string.IsNullOrWhiteSpace(AccountLogin)
+                ? DescribeAuthSource(AccountAuthType)
+                : $"{AccountLogin} ({DescribeAuthSource(AccountAuthType)})"
+            : null;
+    }
+
+    private static bool IsRemovableAuth(string? authType) =>
+        string.Equals(authType, RemovableAuthType, StringComparison.OrdinalIgnoreCase);
+
+    private static string DescribeAuthSource(string? authType) => authType?.ToLowerInvariant() switch
+    {
+        RemovableAuthType => "GitHub login",
+        "gh-cli" or "ghcli" => "GitHub CLI",
+        "env" => "environment variable",
+        "api-key" or "apikey" => "API key",
+        null or "" => "unknown source",
+        _ => authType
+    };
+
+    private async Task SignInAsync(Control? owner)
+    {
+        if (IsAuthenticated) return;
+
+        if (await AuthenticateAsync(owner)) await InitializeAsync();
+    }
+
+    private async Task SignOutAsync(Control? owner)
+    {
+        var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
+
+        var confirmation = await windowService.ShowYesNoAsync("Sign out",
+            string.IsNullOrWhiteSpace(AccountLogin)
+                ? "Sign out of GitHub Copilot?"
+                : $"Sign out of GitHub Copilot ({AccountLogin})?",
+            MessageBoxIcon.Warning, ownerWindow);
+
+        if (confirmation != MessageBoxStatus.Yes) return;
+
+        if (!await RunSignOutAsync())
+        {
+            await windowService.ShowMessageAsync("Sign out",
+                "Could not sign out of GitHub Copilot. See the output for details.",
+                MessageBoxIcon.Error, ownerWindow);
+            return;
+        }
+
+        // Drop the conversation of the signed out account instead of resuming it after the next login.
+        _requestedSessionId = null;
+        SessionReset?.Invoke(this, EventArgs.Empty);
+
+        // Re-initializing refreshes the account state and offers the login button again.
+        await InitializeAsync();
+
+        // The CLI falls back to any other credential it can find, so signing out of the OneWare login
+        // does not necessarily leave the CLI unauthenticated.
+        if (IsAuthenticated)
+            await windowService.ShowMessageAsync("Sign out",
+                $"The GitHub login was removed, but Copilot is still authenticated through the " +
+                $"{DescribeAuthSource(AccountAuthType)}. Remove it there to sign out completely.",
+                MessageBoxIcon.Info, ownerWindow);
+    }
+
+    private async Task<bool> RunSignOutAsync()
+    {
+        if (_client == null) return false;
+
+        try
+        {
+            var removedAny = false;
+
+            // The CLI can hold several stored users; HasMoreUsers tells us another one took over.
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                var currentAuth = await _client.Rpc.Account.GetCurrentAuthAsync();
+
+                if (currentAuth.AuthInfo is not { } authInfo || !IsRemovableAuth(authInfo.Type)) break;
+
+                var result = await _client.Rpc.Account.LogoutAsync(authInfo);
+                removedAny = true;
+
+                if (!result.HasMoreUsers) break;
+            }
+
+            if (removedAny) ApplyAuthStatus(null);
+
+            return removedAny;
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, "Copilot sign out failed.");
+            return false;
+        }
+    }
+
+    #endregion
+
     #region Attachments
 
     private bool _attachmentTrackingInitialized;
@@ -641,6 +799,7 @@ public sealed class CopilotChatService(
             {
                 var currentAuthStatus = await _client.GetAuthStatusAsync();
                 isAuthenticated = currentAuthStatus.IsAuthenticated;
+                ApplyAuthStatus(currentAuthStatus);
             }
             catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
                                          ex.Message.Contains("401"))
@@ -649,6 +808,7 @@ public sealed class CopilotChatService(
                 ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
                     "Authentication check failed with 401, treating as unauthenticated.");
                 isAuthenticated = false;
+                ApplyAuthStatus(null);
             }
 
             if (isAuthenticated) return true;
@@ -657,41 +817,28 @@ public sealed class CopilotChatService(
 
             if (!PlatformHelper.ExistsOnPath(cliPath)) return false;
 
-            using var cts = new CancellationTokenSource();
-            var viewModel = new CopilotDeviceLoginViewModel(cts);
+            var viewModel = new DeviceCodeLoginViewModel("Login to GitHub Copilot",
+                "Authorize OneWare in your browser to finish the sign in.",
+                (prompt, token) => RunCopilotLoginAsync(cliPath, prompt, token));
+
             var view = new CopilotDeviceLoginView
             {
                 DataContext = viewModel
             };
 
             var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
-            var showTask = windowService.ShowDialogAsync(view, ownerWindow);
-            var loginTask = RunCopilotLoginAsync(cliPath, viewModel, cts.Token);
 
-            var loginResult = await loginTask;
+            // The view model owns the login task and closes the dialog on success.
+            await windowService.ShowDialogAsync(view, ownerWindow);
 
-            if (loginResult)
+            if (viewModel.Success)
             {
-                await Dispatcher.UIThread.InvokeAsync(view.Close);
-                await showTask;
                 // Keep the previous conversation (if any) across the re-login.
                 _requestedSessionId ??= CurrentSessionId;
                 SessionReset?.Invoke(this, EventArgs.Empty);
                 return await InitializeAsync();
             }
 
-            if (cts.IsCancellationRequested)
-            {
-                UpdateLoginStatus(viewModel, "Login cancelled.");
-            }
-            else
-            {
-                UpdateLoginStatus(viewModel, "Authentication failed.");
-            }
-
-            // Keep dialog lifecycle contained in this method so the token source
-            // is not disposed while the window can still trigger cancellation.
-            await showTask;
             return false;
         }
         catch (Exception e)
@@ -744,6 +891,7 @@ public sealed class CopilotChatService(
             {
                 var authStatus = await _client.GetAuthStatusAsync();
                 isAuthenticated = authStatus.IsAuthenticated;
+                ApplyAuthStatus(authStatus);
             }
             catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
                                          ex.Message.Contains("401"))
@@ -752,6 +900,7 @@ public sealed class CopilotChatService(
                 ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
                     "Authentication check failed with 401, treating as unauthenticated.");
                 isAuthenticated = false;
+                ApplyAuthStatus(null);
             }
 
             if (!isAuthenticated)
@@ -1415,7 +1564,7 @@ public sealed class CopilotChatService(
             source.TrySetResult(new UserInputResponse { Answer = string.Empty, WasFreeform = true });
     }
 
-    private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,
+    private async Task<bool> RunCopilotLoginAsync(string cliPath, IDeviceCodeLoginPrompt prompt,
         CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(cliPath, "login")
@@ -1435,20 +1584,20 @@ public sealed class CopilotChatService(
         {
             if (!process.Start())
             {
-                UpdateLoginStatus(viewModel, "Failed to start Copilot CLI.");
+                prompt.Status = "Failed to start Copilot CLI.";
                 return false;
             }
         }
         catch (Exception ex)
         {
-            UpdateLoginStatus(viewModel, $"Failed to start Copilot CLI: {ex.Message}");
+            prompt.Status = $"Failed to start Copilot CLI: {ex.Message}";
             return false;
         }
 
-        UpdateLoginStatus(viewModel, "Waiting for device code...");
+        prompt.Status = "Starting sign in...";
 
-        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, viewModel, cancellationToken);
-        var stderrTask = ReadLoginStreamAsync(process.StandardError, viewModel, cancellationToken);
+        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, prompt, cancellationToken);
+        var stderrTask = ReadLoginStreamAsync(process.StandardError, prompt, cancellationToken);
 
         try
         {
@@ -1457,6 +1606,7 @@ public sealed class CopilotChatService(
         catch (OperationCanceledException)
         {
             TryKillProcess(process);
+            prompt.Status = "Login cancelled.";
             return false;
         }
 
@@ -1464,67 +1614,62 @@ public sealed class CopilotChatService(
 
         if (process.ExitCode != 0)
         {
-            UpdateLoginStatus(viewModel, $"Copilot CLI exited with code {process.ExitCode}.");
+            prompt.Status = $"Copilot CLI exited with code {process.ExitCode}.";
             return false;
         }
 
         return true;
     }
 
-    private async Task ReadLoginStreamAsync(StreamReader reader, CopilotDeviceLoginViewModel viewModel,
+    private async Task ReadLoginStreamAsync(StreamReader reader, IDeviceCodeLoginPrompt prompt,
         CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync();
             if (line == null) break;
-            ApplyLoginOutputLine(viewModel, line);
+            ApplyLoginOutputLine(prompt, line);
         }
     }
 
-    private void ApplyLoginOutputLine(CopilotDeviceLoginViewModel viewModel, string line)
+    /// <summary>
+    ///     Translates the login output of the Copilot CLI into dialog state. The CLI picks the flow itself:
+    ///     on a desktop it opens the browser and captures the result on a loopback callback (no code to type),
+    ///     remote/headless environments fall back to the device code flow.
+    /// </summary>
+    private void ApplyLoginOutputLine(IDeviceCodeLoginPrompt prompt, string line)
     {
         if (string.IsNullOrWhiteSpace(line)) return;
 
-        UpdateLoginViewModel(viewModel, () =>
+        var urlMatch = DeviceLoginUrlRegex.Match(line);
+        if (urlMatch.Success && string.IsNullOrWhiteSpace(prompt.VerificationUrl))
         {
-            var urlMatch = DeviceLoginUrlRegex.Match(line);
-            if (urlMatch.Success && string.IsNullOrWhiteSpace(viewModel.VerificationUrl))
-            {
-                viewModel.VerificationUrl = urlMatch.Value;
-            }
-
-            var codeMatch = DeviceLoginCodeRegex.Match(line);
-            if (codeMatch.Success && string.IsNullOrWhiteSpace(viewModel.UserCode))
-            {
-                viewModel.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
-            }
-
-            if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
-            {
-                viewModel.StatusText = "Waiting for authorization...";
-            }
-            else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
-            {
-                viewModel.StatusText = "Enter the code in your browser.";
-            }
-        });
-    }
-
-    private static void UpdateLoginStatus(CopilotDeviceLoginViewModel viewModel, string status)
-    {
-        UpdateLoginViewModel(viewModel, () => viewModel.StatusText = status);
-    }
-
-    private static void UpdateLoginViewModel(CopilotDeviceLoginViewModel viewModel, Action update)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            update();
+            prompt.VerificationUrl = urlMatch.Value;
         }
-        else
+
+        var codeMatch = DeviceLoginCodeRegex.Match(line);
+        if (codeMatch.Success && string.IsNullOrWhiteSpace(prompt.UserCode))
         {
-            Dispatcher.UIThread.Post(update);
+            prompt.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
+        }
+
+        if (line.Contains("Opening your browser", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "Opening your browser...";
+        }
+        else if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = string.IsNullOrWhiteSpace(prompt.UserCode)
+                ? "Waiting for the authorization in your browser..."
+                : "Waiting for authorization...";
+        }
+        else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "Enter the code in your browser.";
+        }
+        else if (line.Contains("doesn't open automatically", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "If the browser did not open, use the link below.";
         }
     }
 
