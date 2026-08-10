@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using OneWare.Chat.ViewModels;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Chat.Views;
 
@@ -56,8 +57,23 @@ public partial class ChatView : UserControl
 
     private void OnCommandBoxKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key is not (Key.Enter or Key.Return)) return;
+        if (e.Key is not (Key.Enter or Key.Return or Key.V)) return;
         if (DataContext is not ChatViewModel vm) return;
+
+        // --- Ctrl+V: try image paste first ---
+        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control)
+            && !e.KeyModifiers.HasFlag(KeyModifiers.Shift)
+            && !e.KeyModifiers.HasFlag(KeyModifiers.Alt)
+            && vm.SelectedChatService is IChatService chatService)
+        {
+            // Mark as handled immediately (synchronously) to prevent the TextBox from
+            // processing the keystroke before our async clipboard check completes.
+            e.Handled = true;
+            _ = HandleClipboardPasteAsync(chatService);
+            return;
+        }
+
+        if (e.Key is not (Key.Enter or Key.Return)) return;
 
         var modifiers = e.KeyModifiers;
 
@@ -79,6 +95,72 @@ public partial class ChatView : UserControl
 
         // Plain Enter: steer while busy, otherwise start a new turn.
         Execute(vm.IsBusy ? vm.SteerCommand : vm.SendCommand, e);
+    }
+
+    private async Task HandleClipboardPasteAsync(IChatService chatService)
+    {
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard == null) return;
+
+        try
+        {
+            var formats = await clipboard.GetFormatsAsync();
+
+            // Check for image data first.
+            var imageFormat = formats.FirstOrDefault(f =>
+                string.Equals(f, "PNG", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f, "image/png", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f, "image/jpeg", StringComparison.OrdinalIgnoreCase));
+
+            if (imageFormat != null)
+            {
+                var raw = await clipboard.GetDataAsync(imageFormat);
+                if (raw is byte[] bytes && bytes.Length > 0)
+                {
+                    var mimeType = imageFormat.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase)
+                        ? "image/jpeg"
+                        : "image/png";
+                    var ext = mimeType == "image/jpeg" ? ".jpg" : ".png";
+                    var name = $"image{ext}";
+
+                    if (chatService.TryAddImageAttachment(bytes, mimeType, name))
+                        return;
+                }
+            }
+        }
+        catch
+        {
+            // Clipboard access failed — fall through to text paste.
+        }
+
+        // No image (or service doesn't support it): fall back to pasting text.
+        await FallbackTextPasteAsync();
+    }
+
+    private async Task FallbackTextPasteAsync()
+    {
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard == null) return;
+
+        try
+        {
+            var text = await clipboard.GetTextAsync();
+            if (string.IsNullOrEmpty(text)) return;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var start = Math.Min(CommandBox.SelectionStart, CommandBox.SelectionEnd);
+                var end = Math.Max(CommandBox.SelectionStart, CommandBox.SelectionEnd);
+                var current = CommandBox.Text ?? string.Empty;
+                CommandBox.Text = current.Remove(start, end - start).Insert(start, text);
+                CommandBox.CaretIndex = start + text.Length;
+                CommandBox.SelectionStart = CommandBox.SelectionEnd = CommandBox.CaretIndex;
+            });
+        }
+        catch
+        {
+            // Best-effort; ignore clipboard errors.
+        }
     }
 
     private static void Execute(System.Windows.Input.ICommand command, KeyEventArgs e)

@@ -1,3 +1,8 @@
+## 1.0.25
+
+- Improve Copilot Terminal Handling in Windows
+- Add possibility to add default startup configuration
+
 ## 1.0.24
 
 - Improve Copilot Terminal Handling

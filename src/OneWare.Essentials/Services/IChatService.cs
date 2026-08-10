@@ -85,6 +85,13 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     Task<bool> ClearQueuedMessagesAsync() => Task.FromResult(false);
 
     /// <summary>
+    /// Attaches raw image data (e.g. from a clipboard paste) to the next message.
+    /// Returns <see langword="true"/> if the service accepted the image; <see langword="false"/>
+    /// if image attachments are not supported and the caller should fall back to text paste.
+    /// </summary>
+    bool TryAddImageAttachment(byte[] data, string mimeType, string displayName) => false;
+
+    /// <summary>
     /// Starts a new chat session.
     /// </summary>
     Task NewChatAsync();

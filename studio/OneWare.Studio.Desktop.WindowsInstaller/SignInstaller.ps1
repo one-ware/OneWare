@@ -1,1 +1,1 @@
-signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a bin\Release\en-us\OneWare.Studio.Desktop.WindowsInstaller.msi
+signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /d "OneWare Studio" /du "https://www.one-ware.com" /a bin\Release\en-us\OneWare.Studio.Desktop.WindowsInstaller.msi

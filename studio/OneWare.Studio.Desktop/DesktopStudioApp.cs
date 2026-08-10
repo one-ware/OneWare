@@ -161,6 +161,10 @@ public class DesktopStudioApp : StudioApp
         Services.Resolve<IPackageService>().RegisterPackageRepository(
             "https://raw.githubusercontent.com/FEntwumS/FEntwumS.SVNRExtension/main/oneware-extension.json");
 
+        // Apply a deployment configuration profile before the rest of startup reads settings, and
+        // after the repositories are registered so profile packages can be resolved.
+        await Services.Resolve<IConfigurationProfileService>().ApplyEnvironmentProfileAsync();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             var key = Services.Resolve<IApplicationStateService>()

@@ -13,7 +13,7 @@ internal static class AiBuiltInFunctions
     private const int MaxTerminalOutputLines = 220;
     private const int MaxTerminalOutputChars = 12000;
 
-    private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromHours(12);
+    private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromMinutes(30);
 
     public static void Register(
         IAiFunctionProvider functionProvider,
@@ -154,6 +154,7 @@ internal static class AiBuiltInFunctions
                           Executes a command in the IDE terminal and returns the output.
                           Use this to run shell commands; output appears in the IDE terminal panel.
                           Output is automatically truncated to avoid oversized responses.
+                          Commands must not wait for interactive input; they are aborted after 30 minutes.
                           """,
             Handler = ([Description("Shell command to execute")] string command,
                     [Description("Absolute working directory for execution (optional, defaults to active project).")]
@@ -281,10 +282,11 @@ internal static class AiBuiltInFunctions
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var truncatedOutput = TruncateTerminalOutput(terminalResult.Output, out var outputTruncated);
-        var result = outputTruncated
-            ? terminalResult with { Output = truncatedOutput }
-            : terminalResult;
+        // Control sequences are meaningless to the model and can make up most of the
+        // payload for commands that draw progress bars, so they are removed here as well.
+        var cleanedOutput = StripAnsiEscapes(terminalResult.Output);
+        var truncatedOutput = TruncateTerminalOutput(cleanedOutput, out var outputTruncated);
+        var result = terminalResult with { Output = truncatedOutput };
 
         // Show the final, cleaned output in the chat tool box.
         context?.ReportProgress(FormatTerminalProgress(command, terminalResult.Output));
@@ -293,7 +295,14 @@ internal static class AiBuiltInFunctions
         {
             result,
             outputTruncated,
-            originalOutputLength = terminalResult.Output.Length
+            originalOutputLength = terminalResult.Output.Length,
+            note = terminalResult.TimedOut
+                ? $"The command did not finish within {TerminalCommandTimeout.TotalMinutes:0} minutes and was aborted. " +
+                  "The output above is partial and the exit code is unknown."
+                : terminalResult.ExitCode < 0
+                    ? "The shell did not report an exit code for this command, so success or failure cannot be " +
+                      "derived from it. Judge the result from the output instead."
+                    : null
         };
     }
 

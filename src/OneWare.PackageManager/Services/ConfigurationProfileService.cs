@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
@@ -11,6 +13,8 @@ namespace OneWare.PackageManager.Services;
 
 public class ConfigurationProfileService : IConfigurationProfileService
 {
+    private const string AppliedMarkerFileName = "configuration-profile.applied";
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -20,17 +24,20 @@ public class ConfigurationProfileService : IConfigurationProfileService
 
     private readonly ISettingsService _settingsService;
     private readonly IPackageService _packageService;
+    private readonly IHttpService _httpService;
     private readonly IPaths _paths;
     private readonly ILogger _logger;
 
     public ConfigurationProfileService(
         ISettingsService settingsService,
         IPackageService packageService,
+        IHttpService httpService,
         IPaths paths,
         ILogger<ConfigurationProfileService> logger)
     {
         _settingsService = settingsService;
         _packageService = packageService;
+        _httpService = httpService;
         _paths = paths;
         _logger = logger;
     }
@@ -80,6 +87,119 @@ public class ConfigurationProfileService : IConfigurationProfileService
         var profile = await JsonSerializer.DeserializeAsync<ConfigurationProfile>(stream, SerializerOptions,
             cancellationToken);
         return profile ?? throw new InvalidOperationException("Failed to deserialize configuration profile.");
+    }
+
+    public async Task<ConfigurationProfile> LoadFromSourceAsync(string source,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+            throw new ArgumentException("Profile source must not be empty.", nameof(source));
+
+        source = source.Trim();
+
+        if (!IsHttpUrl(source)) return await LoadFromFileAsync(source, cancellationToken);
+
+        var content = await _httpService.DownloadTextAsync(source, cancellationToken: cancellationToken);
+        if (string.IsNullOrWhiteSpace(content))
+            throw new InvalidOperationException($"Failed to download configuration profile from '{source}'.");
+
+        return Deserialize(content);
+    }
+
+    public async Task<bool> ApplyEnvironmentProfileAsync(CancellationToken cancellationToken = default)
+    {
+        var source = Environment.GetEnvironmentVariable(IConfigurationProfileService.ProfileEnvironmentVariable);
+        if (string.IsNullOrWhiteSpace(source)) return false;
+
+        source = source.Trim();
+
+        try
+        {
+            var profile = await LoadFromSourceAsync(source, cancellationToken);
+
+            // "once" (default) applies a given profile only when its content changed since the last
+            // run, so a deployment default does not overwrite the user's own settings on every
+            // launch. "always" re-applies unconditionally for locked-down deployments.
+            var alwaysApply = string.Equals(
+                Environment.GetEnvironmentVariable(IConfigurationProfileService.ProfileModeEnvironmentVariable)?.Trim(),
+                "always", StringComparison.OrdinalIgnoreCase);
+
+            var fingerprint = ComputeFingerprint(source, profile);
+
+            if (!alwaysApply && ReadAppliedFingerprint() == fingerprint)
+            {
+                _logger.Log($"Configuration profile '{source}' was already applied, skipping.");
+                return false;
+            }
+
+            _logger.Log($"Applying configuration profile from '{source}'...");
+            await ImportAsync(profile, cancellationToken);
+
+            if (!cancellationToken.IsCancellationRequested)
+                WriteAppliedFingerprint(fingerprint);
+
+            _logger.Log($"Configuration profile from '{source}' applied.");
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            // A broken profile must never stop the IDE from starting.
+            _logger.Error($"Failed to apply configuration profile from '{source}': {e.Message}", e);
+            return false;
+        }
+    }
+
+    private static bool IsHttpUrl(string source) =>
+        Uri.TryCreate(source, UriKind.Absolute, out var uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private static ConfigurationProfile Deserialize(string content)
+    {
+        var profile = JsonSerializer.Deserialize<ConfigurationProfile>(content, SerializerOptions);
+        return profile ?? throw new InvalidOperationException("Failed to deserialize configuration profile.");
+    }
+
+    private string AppliedMarkerPath => Path.Combine(_paths.AppDataDirectory, AppliedMarkerFileName);
+
+    /// <summary>
+    /// Identifies a profile by source and content, so both editing the profile in place and
+    /// pointing the variable at a different profile trigger a re-apply.
+    /// </summary>
+    private static string ComputeFingerprint(string source, ConfigurationProfile profile)
+    {
+        var payload = source + "\n" + JsonSerializer.Serialize(profile, SerializerOptions);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
+    }
+
+    private string? ReadAppliedFingerprint()
+    {
+        try
+        {
+            return File.Exists(AppliedMarkerPath) ? File.ReadAllText(AppliedMarkerPath).Trim() : null;
+        }
+        catch (Exception e)
+        {
+            _logger.Warning($"Failed to read configuration profile marker: {e.Message}");
+            return null;
+        }
+    }
+
+    private void WriteAppliedFingerprint(string fingerprint)
+    {
+        try
+        {
+            Directory.CreateDirectory(_paths.AppDataDirectory);
+            File.WriteAllText(AppliedMarkerPath, fingerprint);
+        }
+        catch (Exception e)
+        {
+            // Losing the marker only means the profile is applied again next launch.
+            _logger.Warning($"Failed to persist configuration profile marker: {e.Message}");
+        }
     }
 
     private void ExportSettings(ConfigurationProfile profile)

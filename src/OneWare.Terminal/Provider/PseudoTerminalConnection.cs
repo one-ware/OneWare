@@ -16,6 +16,20 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
     /// </summary>
     public int? ProcessExitCode { get; private set; }
 
+    /// <summary>
+    /// True once the shell has emitted at least one OSC 633 sequence, i.e. the integration
+    /// hooks are installed and command lifecycle markers can be relied on. Automation waits
+    /// for this before sending a command so the markers of that command cannot be missed.
+    /// </summary>
+    public bool ShellIntegrationDetected { get; private set; }
+
+    /// <summary>
+    /// Set by consumers after they waited for <see cref="ShellIntegrationDetected"/> in vain,
+    /// so every following command on the same shell skips the probe delay and goes straight
+    /// to the marker-less fallback.
+    /// </summary>
+    public bool ShellIntegrationProbeFailed { get; set; }
+
     public event EventHandler<DataReceivedEventArgs>? DataReceived;
 
     public event EventHandler<EventArgs>? Closed;
@@ -128,7 +142,10 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
                     if (segment.Data != null)
                         DataReceived?.Invoke(this, new DataReceivedEventArgs { Data = segment.Data });
                     else if (segment.Event is { } integrationEvent)
+                    {
+                        ShellIntegrationDetected = true;
                         IntegrationEvent?.Invoke(this, new ShellIntegrationEventArgs(integrationEvent));
+                    }
                 }
             }
         }

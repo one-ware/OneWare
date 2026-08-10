@@ -12,8 +12,15 @@
             <Border Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="3"
                     Padding="4 1" Margin="0 0 4 0" ToolTip.Tip="{Binding FilePath}">
                 <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                    <!-- Thumbnail for image attachments -->
+                    <Image Source="{Binding ThumbnailBitmap}" Width="16" Height="16"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding IsImage}"
+                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    <!-- File icon for non-image attachments -->
                     <Image Source="{DynamicResource VsImageLib.File16X}" Width="12" Height="12"
-                           VerticalAlignment="Center" />
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding !IsImage}" />
                     <TextBlock Text="{Binding DisplayName}" FontSize="11" VerticalAlignment="Center" />
                     <TextBlock Text="{Binding Detail}" FontSize="11" FontStyle="Italic"
                                VerticalAlignment="Center"

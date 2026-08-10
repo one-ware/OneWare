@@ -716,6 +716,7 @@ public sealed class CopilotChatService(
         {
             Attachments.Remove(attachment);
         }
+        attachment.Dispose();
     }
 
     public IAsyncRelayCommand<Visual?> AddAttachmentCommand => field ??= new AsyncRelayCommand<Visual?>(AddAttachmentAsync);
@@ -752,9 +753,18 @@ public sealed class CopilotChatService(
 
     private void ClearAttachmentsAfterSend()
     {
+        foreach (var attachment in Attachments)
+            attachment.Dispose();
         Attachments.Clear();
         _activeFileDismissed = false;
         RefreshActiveFileAttachment(focusChanged: false);
+    }
+
+    public bool TryAddImageAttachment(byte[] data, string mimeType, string displayName)
+    {
+        EnsureAttachmentTracking();
+        Attachments.Add(new CopilotAttachmentViewModel(data, mimeType, displayName, isActiveFile: false, RemoveAttachment));
+        return true;
     }
 
     #endregion
@@ -854,10 +864,11 @@ public sealed class CopilotChatService(
 
 
         await _sync.WaitAsync().ConfigureAwait(false);
-        await DisposeAsync();
 
         try
         {
+            await DisposeAsync();
+
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
