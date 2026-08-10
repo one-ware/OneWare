@@ -193,16 +193,11 @@ public class ApplicationStateService : ObservableObject, IApplicationStateServic
         try
         {
             var executablePath = Environment.ProcessPath;
-            var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
 
-            // Do not repeat a positional file, directory, or URI launch action after restarting.
-            // Preserve a trailing option value, which is also a non-flag argument.
-            if (args.Length > 0 &&
-                !args[^1].StartsWith("-", StringComparison.Ordinal) &&
-                (args.Length == 1 || !args[^2].StartsWith("-", StringComparison.Ordinal)))
-            {
-                args = args[..^1];
-            }
+            // The entry point knows the command line schema and provides the arguments to restart with,
+            // which excludes the positional launch argument so no file/folder/URI is opened again.
+            var args = ApplicationArguments.RestartArguments?.ToArray()
+                       ?? Environment.GetCommandLineArgs().Skip(1).ToArray();
 
             if (string.IsNullOrEmpty(executablePath))
             {

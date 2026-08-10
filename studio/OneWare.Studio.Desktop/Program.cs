@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
 using System.Globalization;
@@ -351,6 +352,8 @@ internal abstract class Program
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
 
+            ApplicationArguments.RestartArguments = BuildRestartArguments(args, commandLineParseResult, openArgument);
+
             if (args.LastOrDefault() is "--help" or "-h") return 0;
 
             // Check for single instance
@@ -415,5 +418,30 @@ internal abstract class Program
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Returns the arguments to use when the application restarts itself: all options of the current
+    /// command line, without the positional launch argument (file/folder/URI), which must not be
+    /// opened again after a restart.
+    /// </summary>
+    private static string[] BuildRestartArguments(string[] args, ParseResult parseResult,
+        Argument<string?> openArgument)
+    {
+        var restartArguments = new List<string>(args);
+
+        var positionalTokens = (parseResult.GetResult(openArgument)?.Tokens.Select(x => x.Value) ?? [])
+            .Concat(parseResult.UnmatchedTokens);
+
+        foreach (var token in positionalTokens)
+        {
+            // Keep options, only positional values can trigger a launch action.
+            if (token.StartsWith('-')) continue;
+
+            var index = restartArguments.LastIndexOf(token);
+            if (index >= 0) restartArguments.RemoveAt(index);
+        }
+
+        return restartArguments.ToArray();
     }
 }
