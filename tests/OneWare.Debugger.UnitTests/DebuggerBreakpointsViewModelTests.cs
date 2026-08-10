@@ -53,7 +53,22 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
 
         vm.RemoveBreakpointCommand.Execute(null);
 
-        Assert.Equal([second], vm.Breakpoints);
+        Assert.Equal([second], vm.Breakpoints.Cast<BreakPoint>());
+    }
+
+    [Fact]
+    public void BreakpointsAreSortedByFileThenLine()
+    {
+        var vm = new DebuggerBreakpointsViewModel();
+
+        // Absichtlich in der falschen Reihenfolge eingetragen: die Sicht sortiert, nicht der Store.
+        var uart = Add(@"C:\proj\src\uart.vhd", 5);
+        var topTen = Add(@"C:\proj\src\top.vhd", 10);
+        var topNine = Add(@"C:\proj\src\top.vhd", 9);
+
+        // Zeile 9 vor Zeile 10: Line ist ein int und wird numerisch sortiert. Als Text waere
+        // "10" vor "9" gelandet.
+        Assert.Equal([topNine, topTen, uart], vm.Breakpoints.Cast<BreakPoint>());
     }
 
     [Fact]
