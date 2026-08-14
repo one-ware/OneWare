@@ -375,7 +375,11 @@ public class PackageService : ObservableObject, IPackageService
                 .Select(item => new[] { item })
                 .ToList();
 
-            var allRepos = _repositoryUrls.Concat(customRepositories);
+            var onlyCustomSources = _settingsService.GetSettingValue<bool>("PackageManager_OnlyCustomSources");
+            var allRepos = onlyCustomSources
+                ? customRepositories
+                : _repositoryUrls.Concat(customRepositories).ToList();
+
             result = await _catalog.RefreshAsync(allRepos);
 
             var installed = await _stateStore.LoadAsync();
