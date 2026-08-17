@@ -19,7 +19,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.Services;
 
-public class PackageService : ObservableObject, IPackageService
+public class PackageService : ObservableObject, IPackageService, IDisposable
 {
     private readonly ICompositeServiceProvider _compositeServiceProvider;
     private readonly IPackageCatalog _catalog;
