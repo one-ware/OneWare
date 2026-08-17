@@ -64,7 +64,8 @@ More information about One AI [here](https://one-ware.com/docs/one-ai/getting-st
 
 ### Configuration profiles
 
-A configuration profile (`*.onewareconfig`) captures IDE settings, installed packages, and custom package sources.
+A configuration profile (`*.onewareconfig`) captures IDE settings (including custom package sources) and installed
+packages.
 Export one from a configured installation via **Extras → Export Configuration...**, then have every deployed machine
 apply it automatically by setting `ONEWARE_CONFIGURATION_PROFILE` — either in `OneWareStudio.defaults.json` above, as a
 real environment variable, or via the `--configuration-profile` argument:
@@ -89,8 +90,8 @@ every launch instead:
 ```
 
 Packages that are already installed are left untouched, and a profile that cannot be downloaded or parsed is logged and
-skipped rather than blocking startup. Settings that are only read while the application starts take effect on the next
-launch.
+skipped rather than blocking startup. A package entry without a `version` installs the latest stable version. Settings
+that are only read while the application starts take effect on the next launch.
 
 ## Nuget
 

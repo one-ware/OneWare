@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -53,9 +52,6 @@ public class ConfigurationProfileService : IConfigurationProfileService
         // Export installed packages
         ExportPackages(profile);
 
-        // Export custom package sources
-        ExportPackageSources(profile);
-
         return Task.FromResult(profile);
     }
 
@@ -70,12 +66,9 @@ public class ConfigurationProfileService : IConfigurationProfileService
         progress?.Report(new ConfigurationImportProgress(ConfigurationImportStep.Settings,
             ConfigurationImportStatus.Running));
         
-        // Apply settings
+        // Apply settings (includes custom package sources, so packages can be resolved)
         ImportSettings(profile);
 
-        // Add package sources first so packages can be resolved
-        ImportPackageSources(profile);
-        
         progress?.Report(new ConfigurationImportProgress(ConfigurationImportStep.Settings,
             ConfigurationImportStatus.Completed));
         
@@ -172,24 +165,6 @@ public class ConfigurationProfileService : IConfigurationProfileService
         }
     }
 
-    private void ExportPackageSources(ConfigurationProfile profile)
-    {
-        try
-        {
-            if (!_settingsService.HasSetting("PackageManager_Sources")) return;
-
-            var sources = _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
-            foreach (var source in sources)
-            {
-                profile.PackageSources.Add(source);
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.Error("Failed to export package sources: " + e.Message, e);
-        }
-    }
-
     private void ImportSettings(ConfigurationProfile profile)
     {
         try
@@ -228,30 +203,6 @@ public class ConfigurationProfileService : IConfigurationProfileService
         }
     }
 
-    private void ImportPackageSources(ConfigurationProfile profile)
-    {
-        try
-        {
-            if (!_settingsService.HasSetting("PackageManager_Sources")) return;
-            if (profile.PackageSources.Count == 0) return;
-
-            var sources = _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
-            foreach (var source in profile.PackageSources)
-            {
-                if (!sources.Contains(source))
-                {
-                    sources.Add(source);
-                }
-            }
-
-            _settingsService.Save(_paths.SettingsPath, false);
-        }
-        catch (Exception e)
-        {
-            _logger.Error("Failed to import package sources: " + e.Message, e);
-        }
-    }
-
     private async Task ImportPackagesAsync(ConfigurationProfile profile, CancellationToken cancellationToken)
     {
         if (profile.Packages.Count == 0) return;
@@ -275,12 +226,19 @@ public class ConfigurationProfileService : IConfigurationProfileService
                 }
 
                 PackageVersion? targetVersion = null;
-                if (packageEntry.Version != null)
+                if (!string.IsNullOrWhiteSpace(packageEntry.Version))
                 {
                     targetVersion =
                         existingState.Package.Versions?.FirstOrDefault(x => x.Version == packageEntry.Version);
+
+                    if (targetVersion == null)
+                    {
+                        _logger.Warning(
+                            $"Version '{packageEntry.Version}' of package '{packageEntry.Id}' was not found, falling back to the latest stable version.");
+                    }
                 }
 
+                // A null target version makes the package service resolve the latest stable version
                 var result = await _packageService.InstallAsync(packageEntry.Id, targetVersion, false, false,
                     cancellationToken);
 
