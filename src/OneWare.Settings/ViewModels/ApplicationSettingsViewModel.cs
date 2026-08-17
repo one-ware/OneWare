@@ -10,14 +10,11 @@ namespace OneWare.Settings.ViewModels;
 public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 {
     private readonly IPaths _paths;
-
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
-
+    
     private string _searchText = string.Empty;
-
     private object? _selectedItem = new();
-
     private SettingsPageViewModel? _selectedPage;
 
     public ApplicationSettingsViewModel(ISettingsService settingsService, IPaths paths, IWindowService windowService)
@@ -166,7 +163,6 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
     public void Save(FlexibleWindow window)
     {
         Close(window);
-        _settingsService.Save(_paths.SettingsPath, false);
     }
 
     public async Task ResetDialogAsync(FlexibleWindow window)
@@ -177,5 +173,11 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 
         if (result == MessageBoxStatus.Yes)
             _settingsService.ResetAll();
+    }
+
+    public override bool OnWindowClosing(FlexibleWindow window)
+    {
+        _settingsService.Save(_paths.SettingsPath, false);
+        return base.OnWindowClosing(window);
     }
 }

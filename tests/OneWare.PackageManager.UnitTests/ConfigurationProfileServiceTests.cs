@@ -37,8 +37,6 @@ public class ConfigurationProfileServiceTests
             ["test-plugin"] = packageState
         });
 
-        _settingsService.HasSetting("PackageManager_Sources").Returns(false);
-
         var profile = await _service.ExportAsync();
 
         Assert.Single(profile.Packages);
@@ -56,8 +54,6 @@ public class ConfigurationProfileServiceTests
         {
             ["not-installed"] = packageState
         });
-
-        _settingsService.HasSetting("PackageManager_Sources").Returns(false);
 
         var profile = await _service.ExportAsync();
 
@@ -82,9 +78,9 @@ public class ConfigurationProfileServiceTests
                 },
                 Packages =
                 [
-                    new ConfigurationProfilePackage { Id = "ghdl-plugin", Version = "2.0.0" }
-                ],
-                PackageSources = ["https://example.com/repo"]
+                    new ConfigurationProfilePackage { Id = "ghdl-plugin", Version = "2.0.0" },
+                    new ConfigurationProfilePackage { Id = "latest-plugin" }
+                ]
             };
 
             await _service.SaveToFileAsync(profile, tempPath);
@@ -93,11 +89,11 @@ public class ConfigurationProfileServiceTests
             Assert.Equal(profile.Name, loaded.Name);
             Assert.Equal(profile.Description, loaded.Description);
             Assert.Equal(profile.Version, loaded.Version);
-            Assert.Single(loaded.Packages);
+            Assert.Equal(2, loaded.Packages.Count);
             Assert.Equal("ghdl-plugin", loaded.Packages[0].Id);
             Assert.Equal("2.0.0", loaded.Packages[0].Version);
-            Assert.Single(loaded.PackageSources);
-            Assert.Equal("https://example.com/repo", loaded.PackageSources[0]);
+            Assert.Equal("latest-plugin", loaded.Packages[1].Id);
+            Assert.Null(loaded.Packages[1].Version);
             Assert.Equal(2, loaded.Settings.Count);
         }
         finally
@@ -133,7 +129,103 @@ public class ConfigurationProfileServiceTests
         {
             ["test-plugin"] = packageState
         });
-        _packageService.RefreshAsync().Returns(true);
+        _packageService.RefreshAsync(true).Returns(true);
+        _packageService.InstallAsync(
+                Arg.Any<string>(),
+                Arg.Any<PackageVersion?>(),
+                Arg.Any<bool>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new PackageInstallResult { Status = PackageInstallResultReason.Installed });
+
+        await _service.ImportAsync(profile);
+
+        await _packageService.Received(1).RefreshAsync(true);
+        await _packageService.Received(1).InstallAsync(
+            "test-plugin",
+            Arg.Is<PackageVersion?>(v => v != null && v.Version == "1.0.0"),
+            false,
+            false,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ImportAsync_ReportsPackageProgress()
+    {
+        var profile = new ConfigurationProfile
+        {
+            Packages =
+            [
+                new ConfigurationProfilePackage { Id = "test-plugin" },
+                new ConfigurationProfilePackage { Id = "other-plugin" }
+            ]
+        };
+
+        var packageState = Substitute.For<IPackageState>();
+        packageState.Package.Returns(new Package
+        {
+            Id = "test-plugin",
+            Name = "Test Plugin",
+            Versions = [new PackageVersion { Version = "1.0.0" }]
+        });
+        packageState.InstalledVersion.Returns((PackageVersion?)null);
+
+        _packageService.Packages.Returns(new Dictionary<string, IPackageState>
+        {
+            ["test-plugin"] = packageState
+        });
+        _packageService.RefreshAsync(true).Returns(true);
+        _packageService.InstallAsync(
+                Arg.Any<string>(),
+                Arg.Any<PackageVersion?>(),
+                Arg.Any<bool>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new PackageInstallResult { Status = PackageInstallResultReason.Installed });
+
+        var reports = new List<ConfigurationImportProgress>();
+        var progress = new Progress<ConfigurationImportProgress>();
+        progress.ProgressChanged += (_, p) => reports.Add(p);
+
+        await _service.ImportAsync(profile, progress);
+
+        // Progress<T> marshals to the synchronization context, so give the callbacks a chance to run
+        await Task.Delay(50);
+
+        Assert.Contains(reports, r => r.Step == ConfigurationImportStep.Packages && r.Detail == "Test Plugin (1/2)");
+        Assert.Contains(reports, r => r.Step == ConfigurationImportStep.Packages && r.Value is > 0 and < 1);
+        Assert.Contains(reports,
+            r => r.Step == ConfigurationImportStep.Packages && r.Status == ConfigurationImportStatus.Completed);
+    }
+
+    [Fact]
+    public async Task ImportAsync_WithoutVersion_InstallsLatestStable()
+    {
+        var profile = new ConfigurationProfile
+        {
+            Packages =
+            [
+                new ConfigurationProfilePackage { Id = "test-plugin" }
+            ]
+        };
+
+        var packageState = Substitute.For<IPackageState>();
+        packageState.Package.Returns(new Package
+        {
+            Id = "test-plugin",
+            Versions =
+            [
+                new PackageVersion { Version = "1.0.0" },
+                new PackageVersion { Version = "2.0.0" }
+            ]
+        });
+        packageState.InstalledVersion.Returns((PackageVersion?)null);
+
+        _packageService.Packages.Returns(new Dictionary<string, IPackageState>
+        {
+            ["test-plugin"] = packageState
+        });
+        _packageService.RefreshAsync(true).Returns(true);
         _packageService.InstallAsync(
                 Arg.Any<string>(),
                 Arg.Any<PackageVersion?>(),
@@ -146,7 +238,52 @@ public class ConfigurationProfileServiceTests
 
         await _packageService.Received(1).InstallAsync(
             "test-plugin",
-            Arg.Is<PackageVersion?>(v => v != null && v.Version == "1.0.0"),
+            null,
+            false,
+            false,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ImportAsync_WithUnknownVersion_FallsBackToLatestStable()
+    {
+        var profile = new ConfigurationProfile
+        {
+            Packages =
+            [
+                new ConfigurationProfilePackage { Id = "test-plugin", Version = "9.9.9" }
+            ]
+        };
+
+        var packageState = Substitute.For<IPackageState>();
+        packageState.Package.Returns(new Package
+        {
+            Id = "test-plugin",
+            Versions =
+            [
+                new PackageVersion { Version = "1.0.0" }
+            ]
+        });
+        packageState.InstalledVersion.Returns((PackageVersion?)null);
+
+        _packageService.Packages.Returns(new Dictionary<string, IPackageState>
+        {
+            ["test-plugin"] = packageState
+        });
+        _packageService.RefreshAsync(true).Returns(true);
+        _packageService.InstallAsync(
+                Arg.Any<string>(),
+                Arg.Any<PackageVersion?>(),
+                Arg.Any<bool>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new PackageInstallResult { Status = PackageInstallResultReason.Installed });
+
+        await _service.ImportAsync(profile);
+
+        await _packageService.Received(1).InstallAsync(
+            "test-plugin",
+            null,
             false,
             false,
             Arg.Any<CancellationToken>());
@@ -170,7 +307,7 @@ public class ConfigurationProfileServiceTests
         {
             ["already-installed"] = packageState
         });
-        _packageService.RefreshAsync().Returns(true);
+        _packageService.RefreshAsync(true).Returns(true);
 
         await _service.ImportAsync(profile);
 
@@ -209,7 +346,6 @@ public class ConfigurationProfileServiceTests
     public async Task ExportAsync_SetsExportTimestamp()
     {
         _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
-        _settingsService.HasSetting("PackageManager_Sources").Returns(false);
 
         var before = DateTimeOffset.UtcNow;
         var profile = await _service.ExportAsync();
@@ -222,7 +358,6 @@ public class ConfigurationProfileServiceTests
     public async Task ExportAsync_VersionIs1()
     {
         _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
-        _settingsService.HasSetting("PackageManager_Sources").Returns(false);
 
         var profile = await _service.ExportAsync();
 
@@ -267,98 +402,5 @@ public class ConfigurationProfileServiceTests
             .Returns((string?)null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.LoadFromSourceAsync(url));
-    }
-
-    [Fact]
-    public async Task ApplyEnvironmentProfileAsync_ReturnsFalseWhenVariableNotSet()
-    {
-        using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, null);
-
-        Assert.False(await _service.ApplyEnvironmentProfileAsync());
-    }
-
-    [Fact]
-    public async Task ApplyEnvironmentProfileAsync_AppliesProfileOnceThenSkips()
-    {
-        var tempPath = Path.Combine(Path.GetTempPath(), $"test-profile-{Guid.NewGuid()}.onewareconfig");
-        try
-        {
-            await _service.SaveToFileAsync(
-                new ConfigurationProfile { Settings = { ["General_SelectedTheme"] = JsonSerializer.SerializeToElement("Dark") } },
-                tempPath);
-
-            _settingsService.HasSetting("General_SelectedTheme").Returns(true);
-            _settingsService.GetSetting("General_SelectedTheme").Returns(new Setting("Light"));
-            _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
-
-            using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, tempPath);
-            using var __ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileModeEnvironmentVariable, null);
-
-            Assert.True(await _service.ApplyEnvironmentProfileAsync());
-
-            // Unchanged profile must not be re-applied, so user edits survive the next launch.
-            Assert.False(await _service.ApplyEnvironmentProfileAsync());
-
-            _settingsService.Received(1).SetSettingValue("General_SelectedTheme", "Dark");
-        }
-        finally
-        {
-            if (File.Exists(tempPath)) File.Delete(tempPath);
-            if (Directory.Exists(_paths.AppDataDirectory)) Directory.Delete(_paths.AppDataDirectory, true);
-        }
-    }
-
-    [Fact]
-    public async Task ApplyEnvironmentProfileAsync_ReAppliesInAlwaysMode()
-    {
-        var tempPath = Path.Combine(Path.GetTempPath(), $"test-profile-{Guid.NewGuid()}.onewareconfig");
-        try
-        {
-            await _service.SaveToFileAsync(
-                new ConfigurationProfile { Settings = { ["General_SelectedTheme"] = JsonSerializer.SerializeToElement("Dark") } },
-                tempPath);
-
-            _settingsService.HasSetting("General_SelectedTheme").Returns(true);
-            _settingsService.GetSetting("General_SelectedTheme").Returns(new Setting("Light"));
-            _packageService.Packages.Returns(new Dictionary<string, IPackageState>());
-
-            using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, tempPath);
-            using var __ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileModeEnvironmentVariable, "always");
-
-            Assert.True(await _service.ApplyEnvironmentProfileAsync());
-            Assert.True(await _service.ApplyEnvironmentProfileAsync());
-
-            _settingsService.Received(2).SetSettingValue("General_SelectedTheme", "Dark");
-        }
-        finally
-        {
-            if (File.Exists(tempPath)) File.Delete(tempPath);
-            if (Directory.Exists(_paths.AppDataDirectory)) Directory.Delete(_paths.AppDataDirectory, true);
-        }
-    }
-
-    [Fact]
-    public async Task ApplyEnvironmentProfileAsync_ReturnsFalseWhenProfileIsMissing()
-    {
-        var missingPath = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid()}.onewareconfig");
-        using var _ = new EnvironmentVariableScope(IConfigurationProfileService.ProfileEnvironmentVariable, missingPath);
-
-        // A broken profile must be logged and skipped rather than block startup.
-        Assert.False(await _service.ApplyEnvironmentProfileAsync());
-    }
-
-    private sealed class EnvironmentVariableScope : IDisposable
-    {
-        private readonly string _name;
-        private readonly string? _original;
-
-        public EnvironmentVariableScope(string name, string? value)
-        {
-            _name = name;
-            _original = Environment.GetEnvironmentVariable(name);
-            Environment.SetEnvironmentVariable(name, value);
-        }
-
-        public void Dispose() => Environment.SetEnvironmentVariable(_name, _original);
     }
 }

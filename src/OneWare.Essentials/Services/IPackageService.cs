@@ -60,8 +60,19 @@ public interface IPackageService : INotifyPropertyChanged
 
     /// <summary>
     /// Refreshes package metadata from repositories.
+    /// Joins an already running refresh if there is one.
     /// </summary>
+    [Obsolete]
     Task<bool> RefreshAsync();
+
+    /// <summary>
+    /// Refreshes package metadata from repositories.
+    /// </summary>
+    /// <param name="force">
+    /// When <c>true</c>, a new refresh is always started instead of joining an already running one.
+    /// Use this after changing settings the refresh depends on, e.g. custom package sources.
+    /// </param>
+    Task<bool> RefreshAsync(bool force);
 
     /// <summary>
     /// Installs a package by definition.

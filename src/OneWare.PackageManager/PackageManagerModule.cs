@@ -4,12 +4,15 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Installers;
+using OneWare.PackageManager.Models;
 using OneWare.PackageManager.Services;
 using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
@@ -253,7 +256,7 @@ public class PackageManagerModule : OneWareModuleBase
         });
 
         serviceProvider.Resolve<ISettingsService>().RegisterSettingCategory("Package Manager", 0, "PackageManager");
-
+        
         serviceProvider.Resolve<ISettingsService>()
             .RegisterSetting("Package Manager", "Sources", "PackageManager_Sources",
                 new ListBoxSetting("Custom Package Sources")
@@ -265,9 +268,21 @@ public class PackageManagerModule : OneWareModuleBase
                                             - A Direct link to a package manifest
                                             """
                 });
+        
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("Package Manager", "Sources", "PackageManager_OnlyCustomSources", 
+            new CheckBoxSetting("Use only custom package sources", false)
+            {
+                MarkdownDocumentation = """
+                                        Ignore the built-in OneWare package sources and load packages only from
+                                        the custom sources configured above. Built-in extensions will no longer
+                                        appear in the package manager.
+                                        """
+            });
+
 
         var mainDockService = serviceProvider.Resolve<IMainDockService>();
         var configProfileService = serviceProvider.Resolve<IConfigurationProfileService>();
+        var logger = serviceProvider.Resolve<ILogger>();
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", new MenuItemModel("ExportConfiguration")
         {
@@ -311,11 +326,46 @@ public class PackageManagerModule : OneWareModuleBase
 
                 if (path == null) return;
 
-                var profile = await configProfileService.LoadFromFileAsync(path);
-                await configProfileService.ImportAsync(profile);
+                await windowService.ShowDialogAsync(new ConfigurationProfileImportView
+                {
+                    DataContext = new ConfigurationProfileImportViewModel(path, ConfigurationProfileSourceKind.File,
+                        configProfileService, logger)
+                }, owner);
             }),
             Icon = new IconModel("VsImageLib.ImportPackage16X"),
             Priority = 102,
         });
+        
+        serviceProvider.Resolve<IApplicationStateService>().RegisterUrlLaunchAction("config", 
+            s => _ = DownloadAndApplyConfigurationProfileAsync(s));
+    }
+
+    private static async Task DownloadAndApplyConfigurationProfileAsync(string? url)
+    {
+        if (string.IsNullOrEmpty(url))
+            return;
+        
+        var applicationStateService = ContainerLocator.Container.Resolve<IApplicationStateService>();
+        var logger = ContainerLocator.Container.Resolve<ILogger>();
+        var state = applicationStateService.AddState("Importing configuration profile...", AppState.Idle);
+
+        try
+        {
+            
+            var configProfileService = ContainerLocator.Container.Resolve<IConfigurationProfileService>(); 
+            await ContainerLocator.Container.Resolve<IWindowService>().ShowDialogAsync(new ConfigurationProfileImportView()
+            {
+               DataContext = new ConfigurationProfileImportViewModel(url.TrimStart('/'),
+                   ConfigurationProfileSourceKind.Url, configProfileService, logger)
+            });
+        }
+        catch (Exception e)
+        {
+            logger.Error(e.Message, e);
+        }
+        finally
+        {
+            applicationStateService.RemoveState(state);
+        }
     }
 }

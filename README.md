@@ -62,36 +62,10 @@ More information about One AI [here](https://one-ware.com/docs/one-ai/getting-st
 3. `cd OneWare/studio/OneWare.Studio.Desktop`
 4. `dotnet run`
 
-### Deployment defaults
-
-An installation script can provide persistent defaults through `OneWareStudio.defaults.json` at:
-
-| Platform | Path |
-|---|---|
-| Windows | `%ProgramData%\OneWare\OneWareStudio.defaults.json` |
-| macOS | `/Library/Application Support/OneWare/OneWareStudio.defaults.json` |
-| Linux | `/etc/oneware/OneWareStudio.defaults.json` |
-
-The file maps the environment variables used by command-line arguments to values:
-
-```json
-{
-  "ONEWARE_DIR": "/workspace/OneWare",
-  "ONEWARE_PROJECTS_DIR": "/workspace/Projects",
-  "ONEWARE_APPDATA_DIR": "/workspace/AppData",
-  "ONEWARE_MODULES": "/plugins/ExamplePlugin.dll",
-  "ONEWARE_AUTOLAUNCH": "example-action",
-  "ONEWARE_PACKAGE_REPOSITORY": "https://packages.example.com/oneware-packages.json",
-  "ONEWARE_CONFIGURATION_PROFILE": "/workspace/team.onewareconfig"
-}
-```
-
-Existing environment variables and command-line arguments take precedence. Only `ONEWARE_` variables are accepted;
-invalid files and entries are ignored with a console warning.
-
 ### Configuration profiles
 
-A configuration profile (`*.onewareconfig`) captures IDE settings, installed packages, and custom package sources.
+A configuration profile (`*.onewareconfig`) captures IDE settings (including custom package sources) and installed
+packages.
 Export one from a configured installation via **Extras → Export Configuration...**, then have every deployed machine
 apply it automatically by setting `ONEWARE_CONFIGURATION_PROFILE` — either in `OneWareStudio.defaults.json` above, as a
 real environment variable, or via the `--configuration-profile` argument:
@@ -116,8 +90,8 @@ every launch instead:
 ```
 
 Packages that are already installed are left untouched, and a profile that cannot be downloaded or parsed is logged and
-skipped rather than blocking startup. Settings that are only read while the application starts take effect on the next
-launch.
+skipped rather than blocking startup. A package entry without a `version` installs the latest stable version. Settings
+that are only read while the application starts take effect on the next launch.
 
 ## Nuget
 

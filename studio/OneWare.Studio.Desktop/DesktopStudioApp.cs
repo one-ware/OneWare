@@ -157,11 +157,7 @@ public class DesktopStudioApp : StudioApp
                 ];
 
         Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
-
-        // Apply a deployment configuration profile before the rest of startup reads settings, and
-        // after the repositories are registered so profile packages can be resolved.
-        await Services.Resolve<IConfigurationProfileService>().ApplyEnvironmentProfileAsync();
-
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             var key = Services.Resolve<IApplicationStateService>()
@@ -198,7 +194,7 @@ public class DesktopStudioApp : StudioApp
             }
 
             //step 2: Load the installed plugins
-            await packageService.RefreshAsync();
+            await packageService.RefreshAsync(false);
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages

@@ -3,8 +3,8 @@ using System.Text.Json.Serialization;
 namespace OneWare.Essentials.Models;
 
 /// <summary>
-/// Represents an exported IDE configuration profile that captures settings, installed packages,
-/// and package sources for easy replication across installations.
+/// Represents an exported IDE configuration profile that captures settings and installed packages
+/// for easy replication across installations.
 /// </summary>
 public class ConfigurationProfile
 {
@@ -43,12 +43,6 @@ public class ConfigurationProfile
     /// </summary>
     [JsonPropertyName("packages")]
     public List<ConfigurationProfilePackage> Packages { get; set; } = [];
-
-    /// <summary>
-    /// Custom package repository URLs.
-    /// </summary>
-    [JsonPropertyName("packageSources")]
-    public List<string> PackageSources { get; set; } = [];
 }
 
 /// <summary>
@@ -63,7 +57,7 @@ public class ConfigurationProfilePackage
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// The installed version (null means latest).
+    /// The version to install. If omitted, the latest stable version is installed.
     /// </summary>
     [JsonPropertyName("version")]
     public string? Version { get; set; }
