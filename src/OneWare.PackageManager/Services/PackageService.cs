@@ -35,7 +35,8 @@ public class PackageService : ObservableObject, IPackageService
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
     private readonly Dictionary<string, CancellationTokenSource> _installCancellation = new();
     private readonly List<string[]> _repositoryUrls = [];
-
+    
+    private bool _disposed;
     private Task<bool>? _currentRefreshTask;
 
     public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
@@ -52,6 +53,8 @@ public class PackageService : ObservableObject, IPackageService
         _paths = paths;
         _defaultInstaller = genericPackageInstaller;
         _compositeServiceProvider = compositeServiceProvider;
+
+        _settingsService.Saved += OnSettingsSaved;
     }
 
     public bool IsUpdating
@@ -75,6 +78,34 @@ public class PackageService : ObservableObject, IPackageService
 
     public event EventHandler? PackagesUpdated;
     public event EventHandler<PackageProgressEventArgs>? PackageProgress;
+
+    public void Dispose()
+    {
+        if (_disposed) 
+            return;
+        
+        _disposed = true;
+        PackagesUpdated = null; 
+        PackageProgress = null; 
+        
+        foreach (var cts in _installCancellation.Values.ToArray())
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // already completed and disposed by the owning install task
+            }
+        }
+
+        _installCancellation.Clear();
+        _activeInstalls.Clear();
+        _currentRefreshTask = null;
+
+        _settingsService.Saved -= OnSettingsSaved;
+    }
 
     public void RegisterPackage(Package package)
     {
@@ -591,6 +622,11 @@ public class PackageService : ObservableObject, IPackageService
             _applicationStateService.RemoveState(stateHandle);
             state.IsIndeterminate = false;
         }
+    }
+    
+    private void OnSettingsSaved(object? sender, EventArgs e)
+    {
+        _ = RefreshAsync();
     }
 
     private void UpdateStatus(PackageState state)

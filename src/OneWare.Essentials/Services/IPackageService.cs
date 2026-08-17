@@ -7,7 +7,7 @@ using OneWare.Essentials.PackageManager.Compatibility;
 
 namespace OneWare.Essentials.Services;
 
-public interface IPackageService : INotifyPropertyChanged
+public interface IPackageService : INotifyPropertyChanged, IDisposable
 {
     /// <summary>
     /// True while package operations are running.

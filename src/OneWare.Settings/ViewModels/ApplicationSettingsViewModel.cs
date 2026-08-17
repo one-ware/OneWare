@@ -12,24 +12,19 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
     private readonly IPaths _paths;
     private readonly ISettingsService _settingsService;
     private readonly IWindowService _windowService;
-    private readonly IPackageService _packageService;
-    private readonly bool _onlyCustomPackagesSettingValue;
     
     private string _searchText = string.Empty;
     private object? _selectedItem = new();
     private SettingsPageViewModel? _selectedPage;
 
-    public ApplicationSettingsViewModel(ISettingsService settingsService, IPaths paths, 
-        IPackageService packageService, IWindowService windowService)
+    public ApplicationSettingsViewModel(ISettingsService settingsService, IPaths paths, IWindowService windowService)
     {
         Id = "Settings";
         Title = "Settings";
 
         _settingsService = settingsService;
-        _packageService = packageService;
         _paths = paths;
         _windowService = windowService;
-        _onlyCustomPackagesSettingValue = GetOnlyCustomPackagesSettingValue();
 
         var s = settingsService as SettingsService;
         if (s == null) return;
@@ -182,15 +177,7 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 
     public override bool OnWindowClosing(FlexibleWindow window)
     {
-        if (_onlyCustomPackagesSettingValue != GetOnlyCustomPackagesSettingValue())
-            _ = _packageService.RefreshAsync();
-        
         _settingsService.Save(_paths.SettingsPath, false);
         return base.OnWindowClosing(window);
-    }
-
-    private bool GetOnlyCustomPackagesSettingValue()
-    {
-        return _settingsService.GetSettingValue<bool>("PackageManager_OnlyCustomSources");
     }
 }
