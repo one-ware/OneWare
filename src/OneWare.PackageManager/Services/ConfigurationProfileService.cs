@@ -209,6 +209,10 @@ public class ConfigurationProfileService : IConfigurationProfileService
     private async Task ImportPackagesAsync(ConfigurationProfile profile,
         IProgress<ConfigurationImportProgress>? progress, CancellationToken cancellationToken)
     {
+        // Force a refresh so the catalog is built from the package sources of the imported profile,
+        // instead of joining a refresh that was started with the previous settings
+        await _packageService.RefreshAsync(true);
+        
         if (profile.Packages.Count == 0) return;
 
         var total = profile.Packages.Count;
@@ -236,10 +240,6 @@ public class ConfigurationProfileService : IConfigurationProfileService
         }
 
         ReportPackages("Refreshing package sources...", 0);
-
-        // Force a refresh so the catalog is built from the package sources of the imported profile,
-        // instead of joining a refresh that was started with the previous settings
-        await _packageService.RefreshAsync(true);
 
         _packageService.PackageProgress += OnPackageProgress;
 
