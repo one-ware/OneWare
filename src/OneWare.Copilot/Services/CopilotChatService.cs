@@ -878,7 +878,7 @@ public sealed class CopilotChatService(
                 return false;
             }
 
-            if (packageService.IsLoaded || await packageService.RefreshAsync())
+            if (packageService.IsLoaded || await packageService.RefreshAsync(false))
             {
                 if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
                     state.Status is PackageStatus.UpdateAvailable)

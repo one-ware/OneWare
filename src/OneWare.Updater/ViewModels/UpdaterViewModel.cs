@@ -179,7 +179,7 @@ public class UpdaterViewModel : ObservableObject
 
         Status = UpdaterStatus.UpdatingPackages;
 
-        var loadPackages = await _packageService.RefreshAsync();
+        var loadPackages = await _packageService.RefreshAsync(false);
 
         if (!loadPackages)
         {

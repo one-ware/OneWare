@@ -19,7 +19,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.Services;
 
-public class PackageService : ObservableObject, IPackageService
+public class PackageService : ObservableObject, IPackageService, IDisposable
 {
     private readonly ICompositeServiceProvider _compositeServiceProvider;
     private readonly IPackageCatalog _catalog;
@@ -35,8 +35,10 @@ public class PackageService : ObservableObject, IPackageService
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
     private readonly Dictionary<string, CancellationTokenSource> _installCancellation = new();
     private readonly List<string[]> _repositoryUrls = [];
-
+    
+    private bool _disposed;
     private Task<bool>? _currentRefreshTask;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
         ISettingsService settingsService, ILogger logger, IApplicationStateService applicationStateService,
@@ -52,6 +54,8 @@ public class PackageService : ObservableObject, IPackageService
         _paths = paths;
         _defaultInstaller = genericPackageInstaller;
         _compositeServiceProvider = compositeServiceProvider;
+
+        _settingsService.Saved += OnSettingsSaved;
     }
 
     public bool IsUpdating
@@ -75,6 +79,34 @@ public class PackageService : ObservableObject, IPackageService
 
     public event EventHandler? PackagesUpdated;
     public event EventHandler<PackageProgressEventArgs>? PackageProgress;
+
+    public void Dispose()
+    {
+        if (_disposed) 
+            return;
+        
+        _disposed = true;
+        PackagesUpdated = null; 
+        PackageProgress = null; 
+        
+        foreach (var cts in _installCancellation.Values.ToArray())
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // already completed and disposed by the owning install task
+            }
+        }
+
+        _installCancellation.Clear();
+        _activeInstalls.Clear();
+        _currentRefreshTask = null;
+
+        _settingsService.Saved -= OnSettingsSaved;
+    }
 
     public void RegisterPackage(Package package)
     {
@@ -122,17 +154,34 @@ public class PackageService : ObservableObject, IPackageService
             cts.Cancel();
     }
 
-    public async Task<bool> RefreshAsync()
+    [Obsolete]
+    public Task<bool> RefreshAsync()
+    {
+        return RefreshAsync(false);
+    }
+
+    public async Task<bool> RefreshAsync(bool force)
     {
         try
         {
-            if (_currentRefreshTask is { IsCompleted: false })
+            // Join an already running refresh unless the caller requires one that uses the current settings
+            if (!force && _currentRefreshTask is { IsCompleted: false } pending)
             {
-                return await _currentRefreshTask;
+                return await pending;
             }
 
-            _currentRefreshTask = RefreshInternalAsync();
-            return await _currentRefreshTask;
+            // Serialize refreshes, a forced refresh must not run in parallel with an outdated one
+            await _refreshLock.WaitAsync();
+            try
+            {
+                var refreshTask = RefreshInternalAsync();
+                _currentRefreshTask = refreshTask;
+                return await refreshTask;
+            }
+            finally
+            {
+                _refreshLock.Release();
+            }
         }
         catch (Exception e)
         {
@@ -375,7 +424,11 @@ public class PackageService : ObservableObject, IPackageService
                 .Select(item => new[] { item })
                 .ToList();
 
-            var allRepos = _repositoryUrls.Concat(customRepositories);
+            var onlyCustomSources = _settingsService.GetSettingValue<bool>("PackageManager_OnlyCustomSources");
+            var allRepos = onlyCustomSources
+                ? customRepositories
+                : _repositoryUrls.Concat(customRepositories).ToList();
+
             result = await _catalog.RefreshAsync(allRepos);
 
             var installed = await _stateStore.LoadAsync();
@@ -587,6 +640,11 @@ public class PackageService : ObservableObject, IPackageService
             _applicationStateService.RemoveState(stateHandle);
             state.IsIndeterminate = false;
         }
+    }
+    
+    private void OnSettingsSaved(object? sender, EventArgs e)
+    {
+        _ = RefreshAsync(false);
     }
 
     private void UpdateStatus(PackageState state)

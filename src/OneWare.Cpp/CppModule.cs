@@ -164,7 +164,7 @@ public class CppModule : OneWareModuleBase
                     new PackageTarget
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/clangd/clangd/releases/download/18.1.3/clangd-mac-19.1.2.zip",
+                        Url = "https://github.com/clangd/clangd/releases/download/19.1.2/clangd-mac-19.1.2.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -216,6 +216,52 @@ public class CppModule : OneWareModuleBase
                             new PackageAutoSetting
                             {
                                 RelativePath = "clangd_21.1.8/bin/clangd",
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    }
+                ]
+            },
+            new PackageVersion
+            {
+                Version = "22.1.6",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/22.1.6/clangd-windows-22.1.6.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = Path.Combine("clangd_22.1.6", "bin", "clangd.exe"),
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/22.1.6/clangd-linux-22.1.6.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "clangd_22.1.6/bin/clangd",
+                                SettingKey = LspPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-x64",
+                        Url = "https://github.com/clangd/clangd/releases/download/22.1.6/clangd-mac-22.1.6.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "clangd_22.1.6/bin/clangd",
                                 SettingKey = LspPathSetting
                             }
                         ]

@@ -1,5 +1,6 @@
 ## 1.0.25
 
+- Add option to the Windows Installer to remove all user data when uninstalling
 - Improve Copilot Terminal Handling in Windows
 - Add possibility to add default startup configuration
 

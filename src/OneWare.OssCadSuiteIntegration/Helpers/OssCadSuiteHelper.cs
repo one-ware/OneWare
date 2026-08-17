@@ -19,18 +19,24 @@ public class OssCadSuiteHelper
         Links = [ new PackageLink { Name = "GitHub", Url = "https://github.com/YosysHQ/oss-cad-suite-build" } ],
         Tabs = [ /* ... deine Tabs ... */ ],
         Versions = [
-            CreateVersion("2024.07.27", "2024-07-27", hasLinuxArm: false),
-            CreateVersion("2025.01.22", "2025-01-22", hasLinuxArm: false),
-            CreateVersion("2025.08.27", "2025-08-27", hasLinuxArm: true),
-            CreateVersion("2026.02.19", "2026-02-19", hasLinuxArm: true)
+            CreateVersion("2024.07.27", "2024-07-27", hasLinuxArm: false, hasOfficialWindowsArchive: false),
+            CreateVersion("2025.01.22", "2025-01-22", hasLinuxArm: false, hasOfficialWindowsArchive: false),
+            CreateVersion("2025.08.27", "2025-08-27", hasLinuxArm: true, hasOfficialWindowsArchive: false),
+            CreateVersion("2026.02.19", "2026-02-19", hasLinuxArm: true, hasOfficialWindowsArchive: false),
+            CreateVersion("2026.08.17", "2026-08-17", hasLinuxArm: true, hasOfficialWindowsArchive: true)
         ]
     };
 
-    private static PackageVersion CreateVersion(string version, string tag, bool hasLinuxArm)
+    /// <param name="hasOfficialWindowsArchive">
+    /// Upstream only started shipping a windows-x64 .tgz with the 2026-08-17 release. Older versions ship a
+    /// self extracting .exe on Windows, so they use the repacked archive from the fork instead.
+    /// </param>
+    private static PackageVersion CreateVersion(string version, string tag, bool hasLinuxArm,
+        bool hasOfficialWindowsArchive)
     {
         var targets = new List<PackageTarget>
         {
-            CreateTarget("win-x64", "windows-x64", tag, isCustomRepo: true),
+            CreateTarget("win-x64", "windows-x64", tag, isCustomRepo: !hasOfficialWindowsArchive),
             CreateTarget("linux-x64", "linux-x64", tag),
             CreateTarget("osx-x64", "darwin-x64", tag),
             CreateTarget("osx-arm64", "darwin-arm64", tag)
