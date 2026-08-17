@@ -1,6 +1,26 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Fragment>
+        <!-- User data locations, see OneWare.Core Paths. The environment variables are expanded by
+             the RemoveFolderEx custom action -->
+        <Property Id="ONEWAREAPPDATAFOLDER" Value="%APPDATA%\OneWareStudio" />
+        <Property Id="ONEWAREDOCUMENTSFOLDER" Value="%USERPROFILE%\OneWareStudio" />
+
         <ComponentGroup Id="StudioComponents" Directory="INSTALLFOLDER">
+
+            <!-- Removes settings and documents on uninstall, but only if the user opted in.
+                 Never runs while updating, because UPGRADINGPRODUCTCODE is set in that case -->
+            <Component Id="UserDataCleanupComponent" Guid="{2c74addf-161c-49ef-a3a9-d828c5b3dc56}">
+                <RegistryValue Root="HKLM" Key="Software\!(loc.Company)\!(loc.ProductNameFolder)"
+                    Name="InstallFolder" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+
+                <util:RemoveFolderEx Id="RemoveAppDataFolder" On="uninstall"
+                    Property="ONEWAREAPPDATAFOLDER"
+                    Condition="REMOVEUSERDATA = &quot;1&quot; AND NOT UPGRADINGPRODUCTCODE" />
+
+                <util:RemoveFolderEx Id="RemoveDocumentsFolder" On="uninstall"
+                    Property="ONEWAREDOCUMENTSFOLDER"
+                    Condition="REMOVEUSERDATA = &quot;1&quot; AND NOT UPGRADINGPRODUCTCODE" />
+            </Component>
 
             <Component Id="OneWareStudioExeComponent" Guid="{7a73a50a-c9e7-4511-af5d-642296257da6}">
                 <File Id="OneWareStudioExe" Source="!(bindpath.publish)\OneWareStudio.exe"

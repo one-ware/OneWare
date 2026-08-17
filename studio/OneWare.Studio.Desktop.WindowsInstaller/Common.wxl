@@ -8,5 +8,10 @@
   <String Id="Keywords" Value="dotnet,core,application,installer,vhdplus"/>
   <String Id="DowngradeErrorMessage" Value="A newer version of OneWare Studio is already installed."/>
   <String Id="LaunchOnExit" Value="Launch OneWare Studio"/>
+  <String Id="RemoveUserDataDlg_Title" Value="[ProductName] Setup"/>
+  <String Id="RemoveUserDataDlgTitle" Value="{\WixUI_Font_Title}Remove User Data"/>
+  <String Id="RemoveUserDataDlgDescription" Value="Choose whether your settings and files should be removed."/>
+  <String Id="RemoveUserDataDlgText" Value="By default your settings, packages and projects are kept, so they are still available if you install OneWare Studio again. They are also always kept when updating OneWare Studio."/>
+  <String Id="RemoveUserDataDlgCheckBox" Value="Also remove all user data (settings, packages and projects)"/>
   <String Id="Language" Value="1033"/>
 </WixLocalization>
