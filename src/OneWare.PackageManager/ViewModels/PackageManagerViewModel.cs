@@ -158,7 +158,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task RefreshPackagesAsync()
     {
-        await _packageService.RefreshAsync();
+        await _packageService.RefreshAsync(false);
     }
 
     public Control ShowExtensionManager()

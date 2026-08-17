@@ -194,7 +194,7 @@ public class DesktopStudioApp : StudioApp
             }
 
             //step 2: Load the installed plugins
-            await packageService.RefreshAsync();
+            await packageService.RefreshAsync(false);
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages

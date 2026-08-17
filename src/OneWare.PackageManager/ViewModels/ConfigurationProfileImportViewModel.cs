@@ -122,7 +122,7 @@ public class ConfigurationProfileImportViewModel : FlexibleWindowViewModelBase
     {
         foreach (var step in Steps)
             if (step.Status == ConfigurationImportStatus.Running)
-                step.Status = ConfigurationImportStatus.Pending;
+                step.Reset();
     }
     
     private static bool IsHttpUrl(string source) =>

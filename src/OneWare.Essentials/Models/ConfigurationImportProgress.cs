@@ -44,4 +44,15 @@ public enum ConfigurationImportStatus
 /// <param name="Status">The current status of <paramref name="Step"/>.</param>
 public readonly record struct ConfigurationImportProgress(
     ConfigurationImportStep Step,
-    ConfigurationImportStatus Status);
+    ConfigurationImportStatus Status)
+{
+    /// <summary>
+    /// Optional description of what the step is currently doing, e.g. the package being installed.
+    /// </summary>
+    public string? Detail { get; init; }
+
+    /// <summary>
+    /// Optional progress of the step between 0 and 1. <c>null</c> means indeterminate.
+    /// </summary>
+    public double? Value { get; init; }
+}

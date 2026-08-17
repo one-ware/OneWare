@@ -64,7 +64,10 @@ public class ConfigurationProfileService : IConfigurationProfileService
         CancellationToken cancellationToken = default)
     {
         progress?.Report(new ConfigurationImportProgress(ConfigurationImportStep.Settings,
-            ConfigurationImportStatus.Running));
+            ConfigurationImportStatus.Running)
+        {
+            Detail = $"{profile.Settings.Count} settings"
+        });
         
         // Apply settings (includes custom package sources, so packages can be resolved)
         ImportSettings(profile);
@@ -76,7 +79,7 @@ public class ConfigurationProfileService : IConfigurationProfileService
             ConfigurationImportStatus.Running));
         
         // Install packages
-        await ImportPackagesAsync(profile, cancellationToken);
+        await ImportPackagesAsync(profile, progress, cancellationToken);
 
         progress?.Report(new ConfigurationImportProgress(ConfigurationImportStep.Packages,
             ConfigurationImportStatus.Completed));
@@ -203,60 +206,114 @@ public class ConfigurationProfileService : IConfigurationProfileService
         }
     }
 
-    private async Task ImportPackagesAsync(ConfigurationProfile profile, CancellationToken cancellationToken)
+    private async Task ImportPackagesAsync(ConfigurationProfile profile,
+        IProgress<ConfigurationImportProgress>? progress, CancellationToken cancellationToken)
     {
         if (profile.Packages.Count == 0) return;
+
+        var total = profile.Packages.Count;
+        var finished = 0;
+        string? currentPackageId = null;
+        string? currentDetail = null;
+
+        void ReportPackages(string? detail, double? value)
+        {
+            progress?.Report(new ConfigurationImportProgress(ConfigurationImportStep.Packages,
+                ConfigurationImportStatus.Running)
+            {
+                Detail = detail,
+                Value = value
+            });
+        }
+
+        // Feeds the download/extraction progress of the package that is currently being installed
+        void OnPackageProgress(object? sender, PackageProgressEventArgs args)
+        {
+            if (currentPackageId == null || args.PackageId != currentPackageId) return;
+
+            var packageProgress = args.IsIndeterminate ? 1d : Math.Clamp(args.Progress, 0f, 1f);
+            ReportPackages(currentDetail, (finished + packageProgress) / total);
+        }
+
+        ReportPackages("Refreshing package sources...", 0);
 
         // Force a refresh so the catalog is built from the package sources of the imported profile,
         // instead of joining a refresh that was started with the previous settings
         await _packageService.RefreshAsync(true);
 
-        foreach (var packageEntry in profile.Packages)
+        _packageService.PackageProgress += OnPackageProgress;
+
+        try
         {
-            if (cancellationToken.IsCancellationRequested) break;
-
-            try
+            foreach (var packageEntry in profile.Packages)
             {
-                if(!_packageService.Packages.TryGetValue(packageEntry.Id, out var existingState)) continue;
-                
-                // Skip if already installed
-                if (existingState.InstalledVersion != null)
-                {
-                    _logger.Log($"Package '{packageEntry.Id}' is already installed, skipping.");
-                    continue;
-                }
+                if (cancellationToken.IsCancellationRequested) break;
 
-                PackageVersion? targetVersion = null;
-                if (!string.IsNullOrWhiteSpace(packageEntry.Version))
+                try
                 {
-                    targetVersion =
-                        existingState.Package.Versions?.FirstOrDefault(x => x.Version == packageEntry.Version);
+                    currentDetail = $"{packageEntry.Id} ({finished + 1}/{total})";
+                    ReportPackages(currentDetail, (double)finished / total);
 
-                    if (targetVersion == null)
+                    if (!_packageService.Packages.TryGetValue(packageEntry.Id, out var existingState))
+                    {
+                        _logger.Warning($"Package '{packageEntry.Id}' was not found in any package source.");
+                        continue;
+                    }
+
+                    var packageName = existingState.Package.Name ?? packageEntry.Id;
+                    currentPackageId = packageEntry.Id;
+                    currentDetail = $"{packageName} ({finished + 1}/{total})";
+                    ReportPackages(currentDetail, (double)finished / total);
+
+                    // Skip if already installed
+                    if (existingState.InstalledVersion != null)
+                    {
+                        _logger.Log($"Package '{packageEntry.Id}' is already installed, skipping.");
+                        continue;
+                    }
+
+                    PackageVersion? targetVersion = null;
+                    if (!string.IsNullOrWhiteSpace(packageEntry.Version))
+                    {
+                        targetVersion =
+                            existingState.Package.Versions?.FirstOrDefault(x => x.Version == packageEntry.Version);
+
+                        if (targetVersion == null)
+                        {
+                            _logger.Warning(
+                                $"Version '{packageEntry.Version}' of package '{packageEntry.Id}' was not found, falling back to the latest stable version.");
+                        }
+                    }
+
+                    // A null target version makes the package service resolve the latest stable version
+                    var result = await _packageService.InstallAsync(packageEntry.Id, targetVersion, false, false,
+                        cancellationToken);
+
+                    if (result.Status == PackageInstallResultReason.Installed)
+                    {
+                        _logger.Log($"Successfully installed package '{packageEntry.Id}'.");
+                    }
+                    else
                     {
                         _logger.Warning(
-                            $"Version '{packageEntry.Version}' of package '{packageEntry.Id}' was not found, falling back to the latest stable version.");
+                            $"Failed to install package '{packageEntry.Id}': {result.Status}");
                     }
                 }
-
-                // A null target version makes the package service resolve the latest stable version
-                var result = await _packageService.InstallAsync(packageEntry.Id, targetVersion, false, false,
-                    cancellationToken);
-
-                if (result.Status == PackageInstallResultReason.Installed)
+                catch (Exception e)
                 {
-                    _logger.Log($"Successfully installed package '{packageEntry.Id}'.");
+                    _logger.Warning($"Error installing package '{packageEntry.Id}': {e.Message}");
                 }
-                else
+                finally
                 {
-                    _logger.Warning(
-                        $"Failed to install package '{packageEntry.Id}': {result.Status}");
+                    currentPackageId = null;
+                    finished++;
+                    ReportPackages(currentDetail, (double)finished / total);
                 }
             }
-            catch (Exception e)
-            {
-                _logger.Warning($"Error installing package '{packageEntry.Id}': {e.Message}");
-            }
+        }
+        finally
+        {
+            _packageService.PackageProgress -= OnPackageProgress;
         }
     }
 }

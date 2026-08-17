@@ -644,7 +644,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     
     private void OnSettingsSaved(object? sender, EventArgs e)
     {
-        _ = RefreshAsync();
+        _ = RefreshAsync(false);
     }
 
     private void UpdateStatus(PackageState state)

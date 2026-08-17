@@ -57,14 +57,26 @@
                 <ItemsControl ItemsSource="{Binding Steps}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="models:ConfigurationImportStepModel">
-                            <Grid ColumnDefinitions="Auto, *, Auto" Height="30" Margin="4 2">
-                                <TextBlock Grid.Column="0" Text="{Binding Title}" />
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" Margin="4 4">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Title}" Height="20" />
 
-                                <Panel Grid.Column="2" Width="16" Height="16">
+                                <Panel Grid.Row="0" Grid.Column="1" Width="16" Height="16">
                                     <controls:Spinner Width="16" Height="16" IsVisible="{Binding IsRunning}" />
                                     <Image Source="{DynamicResource BoxIcons.RegularCheck.Green}"
                                            IsVisible="{Binding IsCompleted}" />
                                 </Panel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                            Margin="0 4 0 0" Spacing="2"
+                                            IsVisible="{Binding ShowProgress}">
+                                    <ProgressBar Height="6" Minimum="0" Maximum="100"
+                                                 Value="{Binding ProgressPercent}"
+                                                 IsIndeterminate="{Binding !IsDeterminate}" />
+                                    <TextBlock Text="{Binding Detail}"
+                                               FontSize="11" Opacity="0.7"
+                                               TextTrimming="CharacterEllipsis"
+                                               IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                </StackPanel>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

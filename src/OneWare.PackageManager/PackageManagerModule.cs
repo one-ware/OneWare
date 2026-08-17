@@ -347,7 +347,7 @@ public class PackageManagerModule : OneWareModuleBase
         
         var applicationStateService = ContainerLocator.Container.Resolve<IApplicationStateService>();
         var logger = ContainerLocator.Container.Resolve<ILogger>();
-        var state = applicationStateService.AddState("Importing configuration profile...", AppState.Loading);
+        var state = applicationStateService.AddState("Importing configuration profile...", AppState.Idle);
 
         try
         {

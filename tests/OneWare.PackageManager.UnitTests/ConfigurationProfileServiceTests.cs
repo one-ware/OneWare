@@ -150,6 +150,55 @@ public class ConfigurationProfileServiceTests
     }
 
     [Fact]
+    public async Task ImportAsync_ReportsPackageProgress()
+    {
+        var profile = new ConfigurationProfile
+        {
+            Packages =
+            [
+                new ConfigurationProfilePackage { Id = "test-plugin" },
+                new ConfigurationProfilePackage { Id = "other-plugin" }
+            ]
+        };
+
+        var packageState = Substitute.For<IPackageState>();
+        packageState.Package.Returns(new Package
+        {
+            Id = "test-plugin",
+            Name = "Test Plugin",
+            Versions = [new PackageVersion { Version = "1.0.0" }]
+        });
+        packageState.InstalledVersion.Returns((PackageVersion?)null);
+
+        _packageService.Packages.Returns(new Dictionary<string, IPackageState>
+        {
+            ["test-plugin"] = packageState
+        });
+        _packageService.RefreshAsync(true).Returns(true);
+        _packageService.InstallAsync(
+                Arg.Any<string>(),
+                Arg.Any<PackageVersion?>(),
+                Arg.Any<bool>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new PackageInstallResult { Status = PackageInstallResultReason.Installed });
+
+        var reports = new List<ConfigurationImportProgress>();
+        var progress = new Progress<ConfigurationImportProgress>();
+        progress.ProgressChanged += (_, p) => reports.Add(p);
+
+        await _service.ImportAsync(profile, progress);
+
+        // Progress<T> marshals to the synchronization context, so give the callbacks a chance to run
+        await Task.Delay(50);
+
+        Assert.Contains(reports, r => r.Step == ConfigurationImportStep.Packages && r.Detail == "Test Plugin (1/2)");
+        Assert.Contains(reports, r => r.Step == ConfigurationImportStep.Packages && r.Value is > 0 and < 1);
+        Assert.Contains(reports,
+            r => r.Step == ConfigurationImportStep.Packages && r.Status == ConfigurationImportStatus.Completed);
+    }
+
+    [Fact]
     public async Task ImportAsync_WithoutVersion_InstallsLatestStable()
     {
         var profile = new ConfigurationProfile
