@@ -129,7 +129,7 @@ public class ConfigurationProfileServiceTests
         {
             ["test-plugin"] = packageState
         });
-        _packageService.RefreshAsync().Returns(true);
+        _packageService.RefreshAsync(true).Returns(true);
         _packageService.InstallAsync(
                 Arg.Any<string>(),
                 Arg.Any<PackageVersion?>(),
@@ -140,6 +140,7 @@ public class ConfigurationProfileServiceTests
 
         await _service.ImportAsync(profile);
 
+        await _packageService.Received(1).RefreshAsync(true);
         await _packageService.Received(1).InstallAsync(
             "test-plugin",
             Arg.Is<PackageVersion?>(v => v != null && v.Version == "1.0.0"),
@@ -175,7 +176,7 @@ public class ConfigurationProfileServiceTests
         {
             ["test-plugin"] = packageState
         });
-        _packageService.RefreshAsync().Returns(true);
+        _packageService.RefreshAsync(true).Returns(true);
         _packageService.InstallAsync(
                 Arg.Any<string>(),
                 Arg.Any<PackageVersion?>(),
@@ -220,7 +221,7 @@ public class ConfigurationProfileServiceTests
         {
             ["test-plugin"] = packageState
         });
-        _packageService.RefreshAsync().Returns(true);
+        _packageService.RefreshAsync(true).Returns(true);
         _packageService.InstallAsync(
                 Arg.Any<string>(),
                 Arg.Any<PackageVersion?>(),
@@ -257,7 +258,7 @@ public class ConfigurationProfileServiceTests
         {
             ["already-installed"] = packageState
         });
-        _packageService.RefreshAsync().Returns(true);
+        _packageService.RefreshAsync(true).Returns(true);
 
         await _service.ImportAsync(profile);
 

@@ -207,8 +207,9 @@ public class ConfigurationProfileService : IConfigurationProfileService
     {
         if (profile.Packages.Count == 0) return;
 
-        // Ensure package catalog is refreshed so we can resolve packages
-        await _packageService.RefreshAsync();
+        // Force a refresh so the catalog is built from the package sources of the imported profile,
+        // instead of joining a refresh that was started with the previous settings
+        await _packageService.RefreshAsync(true);
 
         foreach (var packageEntry in profile.Packages)
         {

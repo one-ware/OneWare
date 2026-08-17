@@ -38,6 +38,7 @@ public class PackageService : ObservableObject, IPackageService
     
     private bool _disposed;
     private Task<bool>? _currentRefreshTask;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
         ISettingsService settingsService, ILogger logger, IApplicationStateService applicationStateService,
@@ -153,17 +154,34 @@ public class PackageService : ObservableObject, IPackageService
             cts.Cancel();
     }
 
-    public async Task<bool> RefreshAsync()
+    [Obsolete]
+    public Task<bool> RefreshAsync()
+    {
+        return RefreshAsync(false);
+    }
+
+    public async Task<bool> RefreshAsync(bool force)
     {
         try
         {
-            if (_currentRefreshTask is { IsCompleted: false })
+            // Join an already running refresh unless the caller requires one that uses the current settings
+            if (!force && _currentRefreshTask is { IsCompleted: false } pending)
             {
-                return await _currentRefreshTask;
+                return await pending;
             }
 
-            _currentRefreshTask = RefreshInternalAsync();
-            return await _currentRefreshTask;
+            // Serialize refreshes, a forced refresh must not run in parallel with an outdated one
+            await _refreshLock.WaitAsync();
+            try
+            {
+                var refreshTask = RefreshInternalAsync();
+                _currentRefreshTask = refreshTask;
+                return await refreshTask;
+            }
+            finally
+            {
+                _refreshLock.Release();
+            }
         }
         catch (Exception e)
         {
