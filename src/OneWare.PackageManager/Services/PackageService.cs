@@ -347,7 +347,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
         if (package.IconUrl == null) return null;
 
-        return await _httpService.DownloadImageAsync(package.IconUrl);
+        return await _httpService.DownloadImageAsync(package.IconUrl, true);
     }
 
     private IImage? CreateImageFromBase64(string icon, string? packageId)

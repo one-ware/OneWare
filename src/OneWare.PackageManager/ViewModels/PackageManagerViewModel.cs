@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
@@ -56,14 +57,19 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         SelectedCategory = GetAllCategory() ?? PackageCategories.FirstOrDefault();
 
-        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
+        _packageService.WhenValueChanged(x => x.IsUpdating)
+            .Subscribe(x => Dispatcher.UIThread.Post(() => IsLoading = x));
 
         UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x => x.Value.Status == PackageStatus.UpdateAvailable));
         
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
-            ConstructPackageViewModels();
-            UpdateAllCommand.NotifyCanExecuteChanged();
+            // PackagesUpdated can be raised from a background thread
+            Dispatcher.UIThread.Post(() =>
+            {
+                ConstructPackageViewModels();
+                UpdateAllCommand.NotifyCanExecuteChanged();
+            });
         });
 
         ConstructPackageViewModels();
@@ -235,7 +241,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     {
         if (SelectedCategory?.SelectedPackage == null)
             return;
-
+        
         await SelectedCategory.SelectedPackage.ResolveTabsAsync();
     }
 
@@ -277,6 +283,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             SelectedCategory = categoryVm;
             SelectedCategory.SelectedPackage = packageVm;
 
+            _ = packageVm.ResolveIconAsync();
             await packageVm.ResolveTabsAsync();
             return packageVm;
         }

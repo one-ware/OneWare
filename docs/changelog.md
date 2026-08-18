@@ -1,6 +1,12 @@
-## 1.0.25
+## 1.0.26
 
 - Add option to the Windows Installer to remove all user data when uninstalling
+- Add possibility to install default configurations using oneware://config links
+- Removed Deployment defaults
+- Silence some warnings when GitHub Servers are down
+
+## 1.0.25
+
 - Improve Copilot Terminal Handling in Windows
 - Add possibility to add default startup configuration
 

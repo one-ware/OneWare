@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -223,7 +224,14 @@ internal abstract class Program
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}");
 
-            ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
+            var mainWindow = ContainerLocator.Container?.Resolve<MainWindow>();
+            if (mainWindow != null)
+            {
+                if (mainWindow.WindowState == WindowState.Minimized)
+                    mainWindow.WindowState = WindowState.Normal;
+
+                mainWindow.Activate();
+            }
 
             if (target == "activateWindow")
             {
