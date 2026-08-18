@@ -235,7 +235,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     {
         if (SelectedCategory?.SelectedPackage == null)
             return;
-
+        
         await SelectedCategory.SelectedPackage.ResolveTabsAsync();
     }
 
@@ -277,6 +277,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             SelectedCategory = categoryVm;
             SelectedCategory.SelectedPackage = packageVm;
 
+            _ = packageVm.ResolveIconAsync();
             await packageVm.ResolveTabsAsync();
             return packageVm;
         }

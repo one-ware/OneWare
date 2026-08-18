@@ -54,7 +54,13 @@ public class HttpService : IHttpService
         return false;
     }
 
-    public async Task<IImage?> DownloadImageAsync(string url, TimeSpan timeout = default,
+    public Task<IImage?> DownloadImageAsync(string url, TimeSpan timeout = default,
+        CancellationToken cancellationToken = default)
+    {
+        return DownloadImageAsync(url, false, timeout, cancellationToken);
+    }
+
+    public async Task<IImage?> DownloadImageAsync(string url, bool silent, TimeSpan timeout = default,
         CancellationToken cancellationToken = default)
     {
         try
@@ -65,6 +71,12 @@ public class HttpService : IHttpService
 
             using var download = await client.GetAsync(
                 url, cancellationToken);
+
+            if (!download.IsSuccessStatusCode)
+            {
+                _logger.LogDebug("Image download failed with status {StatusCode}: {Url}", download.StatusCode, url);
+                return null;
+            }
 
             var extension = Path.GetExtension(url);
 
@@ -86,15 +98,18 @@ public class HttpService : IHttpService
         }
         catch (HttpRequestException e)
         {
-            LogOfflineOrUnexpected(e, url, "image");
+            LogOfflineOrUnexpected(e, url, "image", silent);
         }
         catch (TaskCanceledException e)
         {
-            LogOfflineOrUnexpected(e, url, "image");
+            LogOfflineOrUnexpected(e, url, "image", silent);
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            if (silent)
+                _logger.LogDebug(e, "Failed to download image: {Url}", url);
+            else
+                _logger.Error(e.Message, e);
         }
 
         return null;
@@ -204,12 +219,12 @@ public class HttpService : IHttpService
         return false;
     }
 
-    private void LogOfflineOrUnexpected(Exception exception, string url, string contentType)
+    private void LogOfflineOrUnexpected(Exception exception, string url, string contentType, bool silent = false)
     {
         // Offline/timeout cases are expected and should not show user-visible warnings.
-        if (IsConnectivityIssue(exception))
+        if (silent || IsConnectivityIssue(exception))
         {
-            _logger.LogDebug(exception, "Skipping {ContentType} download while offline: {Url}", contentType, url);
+            _logger.LogDebug(exception, "Skipping {ContentType} download: {Url}", contentType, url);
             return;
         }
 
