@@ -16,10 +16,8 @@ public partial class DebuggerView : UserControl
         DataContextChanged += OnDataContextChanged;
     }
 
-    /// <summary>
-    ///     Haelt die Konsole am unteren Rand, damit neue Ausgaben sichtbar bleiben, ohne dass der
-    ///     Benutzer scrollen muss.
-    /// </summary>
+    // Haelt die Konsole am unteren Rand, damit neue Ausgaben sichtbar bleiben, ohne dass der
+    // Benutzer scrollen muss.
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         Unsubscribe();

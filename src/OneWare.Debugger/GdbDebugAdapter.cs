@@ -1,23 +1,22 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
-using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Entities;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger;
 
-/// <summary>
-///     Das GDB-Backend des Kerns. Deckt lokales Debuggen und, ueber
-///     <see cref="DebugLaunchRequest.RemoteEndpoint" />, auch angehaengte Ziele wie den SVNR ab.
-/// </summary>
+// Das GDB-Backend des Kerns. Deckt lokales Debuggen und, ueber
+// RemoteEndpoint, auch angehaengte Ziele wie den SVNR ab.
 public class GdbDebugAdapter(ILogger logger, ISettingsService settingsService, IPaths paths) : IDebugAdapter
 {
     public const string AdapterId = "gdb";
 
     public string Id => AdapterId;
 
-    public string DisplayName => "GDB";
+    public string DisplayName => "GNU Debugger";
 
     public bool CanLaunch(DebugLaunchRequest launchRequest)
     {
@@ -50,12 +49,10 @@ public class GdbDebugAdapter(ILogger logger, ISettingsService settingsService, I
             launchRequest.WorkingDirectory, asyncMode, logger);
     }
 
-    /// <summary>
-    ///     Ermittelt den zu verwendenden GDB-Pfad.
-    ///     Ein explizit gesetztes Setting hat Vorrang; ist es leer, wird bei jedem Aufruf neu gesucht.
-    ///     Dadurch wirkt eine nachträgliche GDB-Installation sofort, ohne dass die Einstellung
-    ///     zurückgesetzt werden muss.
-    /// </summary>
+    // Ermittelt den zu verwendenden GDB-Pfad.
+    // Ein explizit gesetztes Setting hat Vorrang; ist es leer, wird bei jedem Aufruf neu gesucht.
+    // Dadurch wirkt eine nachträgliche GDB-Installation sofort, ohne dass die Einstellung
+    // zurückgesetzt werden muss.
     private string? ResolveGdbPath()
     {
         if (!settingsService.HasSetting(DebuggerModule.GdbPathSetting))

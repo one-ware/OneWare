@@ -6,13 +6,11 @@ using OneWare.Essentials.EditorExtensions;
 
 namespace OneWare.Debugger.ViewModels;
 
-/// <summary>
-///     Reiter "Breakpoints" im Debugger-Panel: alle gesetzten Breakpoints, quer ueber alle
-///     Dateien. Bezieht seine Daten direkt aus dem anwendungsweiten <see cref="BreakpointStore" />,
-///     zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind. Es ist derselbe
-///     Store, den die laufende Session an GDB weiterreicht - die Liste zeigt damit genau das, was
-///     am Ziel scharf ist.
-/// </summary>
+// Reiter "Breakpoints" im Debugger-Panel: alle gesetzten Breakpoints, quer ueber alle
+// Dateien. Bezieht seine Daten direkt aus dem anwendungsweiten BreakpointStore,
+// zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind. Es ist derselbe
+// Store, den die laufende Session an GDB weiterreicht - die Liste zeigt damit genau das, was
+// am Ziel scharf ist.
 public partial class DebuggerBreakpointsViewModel : ObservableObject
 {
     public ObservableCollection<BreakPoint> SelectedBreakpoints { get; } = new();
@@ -38,12 +36,10 @@ public partial class DebuggerBreakpointsViewModel : ObservableObject
 
     private bool CanRemoveAllBreakpoints() => BreakpointStore.Instance.Breakpoints.Count > 0;
 
-    /// <summary>
-    ///     Sortierte Sicht auf den Store: nach Datei, darin nach Zeile. <see cref="BreakPoint.Line" />
-    ///     ist ein <see cref="int" /> und wird darum numerisch sortiert - Zeile 9 steht vor Zeile 10,
-    ///     nicht dahinter. Ueber die Spaltenkoepfe laesst sich die Sortierung zur Laufzeit umstellen;
-    ///     die hier gesetzte gilt beim Oeffnen.
-    /// </summary>
+    // Sortierte Sicht auf den Store: nach Datei, darin nach Zeile. Line
+    // ist ein int und wird darum numerisch sortiert - Zeile 9 steht vor Zeile 10,
+    // nicht dahinter. Ueber die Spaltenkoepfe laesst sich die Sortierung zur Laufzeit umstellen;
+    // die hier gesetzte gilt beim Oeffnen.
     public DataGridCollectionView Breakpoints { get; }
 
     [RelayCommand(CanExecute = nameof(CanRemoveBreakpoint))]

@@ -2,19 +2,17 @@ using System.Collections.Specialized;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Entities;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger;
 
-/// <summary>
-///     Haelt die registrierten Backends und besitzt die eine Session, die gleichzeitig laufen kann.
-/// </summary>
-/// <remarks>
-///     Alles, was hier nach aussen geht, ist auf den UI-Thread gebracht. Die Session meldet sich
-///     aus ihrem Lesethread; das an genau einer Stelle einzusammeln ist einfacher, als es jedem
-///     Panel einzeln aufzutragen.
-/// </remarks>
+// Haelt die registrierten Backends und besitzt die eine Session, die gleichzeitig laufen kann.
+// Alles, was hier nach aussen geht, ist auf den UI-Thread gebracht. Die Session meldet sich
+// aus ihrem Lesethread; das an genau einer Stelle einzusammeln ist einfacher, als es jedem
+// Panel einzeln aufzutragen.
 public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) : IDebuggerService
 {
     private readonly List<IDebugAdapter> _adapters = [];
@@ -191,10 +189,8 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
         await CleanupProviderAsync();
     }
 
-    /// <summary>
-    ///     Gibt frei, was der Vorbereiter der laufenden Sitzung belegt hat. Mehrfach aufrufbar -
-    ///     der zweite Aufruf findet nichts mehr vor.
-    /// </summary>
+    // Gibt frei, was der Vorbereiter der laufenden Sitzung belegt hat. Mehrfach aufrufbar -
+    // der zweite Aufruf findet nichts mehr vor.
     private async Task CleanupProviderAsync()
     {
         if (_activeProvider is not { } provider) return;
@@ -260,10 +256,8 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
         return _session.SendRawCommandAsync(command);
     }
 
-    /// <summary>
-    ///     Haelt die Breakpoints des Editors und die des laufenden Ziels zusammen, damit ein
-    ///     waehrend der Sitzung gesetzter roter Punkt sofort greift.
-    /// </summary>
+    // Haelt die Breakpoints des Editors und die des laufenden Ziels zusammen, damit ein
+    // waehrend der Sitzung gesetzter roter Punkt sofort greift.
     private void OnBreakpointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         var session = _session;
@@ -294,10 +288,8 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
         });
     }
 
-    /// <summary>
-    ///     Die Zeile, auf der das Ziel steht - auch wenn dort gar kein Breakpoint gesetzt ist, denn
-    ///     nach einem Einzelschritt will der Nutzer trotzdem sehen, wo er ist.
-    /// </summary>
+    // Die Zeile, auf der das Ziel steht - auch wenn dort gar kein Breakpoint gesetzt ist, denn
+    // nach einem Einzelschritt will der Nutzer trotzdem sehen, wo er ist.
     private BreakPoint? FindCurrentBreakpoint(DebugSessionState state)
     {
         if (state.IsRunning) return null;

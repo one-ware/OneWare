@@ -2,22 +2,18 @@ using System.Text;
 
 namespace OneWare.Debugger.Helpers;
 
-/// <summary>
-///     Bereitet rohe GDB/MI-Zeilen fuer die Anzeige auf.
-///     GDB/MI kennt drei Stream-Records, deren Nutzlast ein C-escapter String ist:
-///     <c>~</c> Konsole, <c>@</c> Zielprogramm, <c>&amp;</c> Log. Ihre Anfuehrungszeichen und
-///     Escape-Sequenzen sind Protokoll und gehoeren nicht auf den Bildschirm.
-///     Exec-Async-Records (<c>*</c>) bleiben unveraendert stehen, weil sie im Reiter
-///     "Debugger Console" genau das sind, was man sehen will. Ebenso die Eingabeaufforderung
-///     <c>(gdb)</c>, die die Antworten optisch trennt. Entfernt werden die inhaltsleere Quittung
-///     <c>^done</c> und die Notify-Records (<c>=</c>); <c>^error</c> wird auf seine Meldung
-///     eingedampft.
-/// </summary>
+// Bereitet rohe GDB/MI-Zeilen fuer die Anzeige auf.
+// GDB/MI kennt drei Stream-Records, deren Nutzlast ein C-escapter String ist:
+// ~ Konsole, @ Zielprogramm, & Log. Ihre Anfuehrungszeichen und
+// Escape-Sequenzen sind Protokoll und gehoeren nicht auf den Bildschirm.
+// Exec-Async-Records (*) bleiben unveraendert stehen, weil sie im Reiter
+// "Debugger Console" genau das sind, was man sehen will. Ebenso die Eingabeaufforderung
+// (gdb), die die Antworten optisch trennt. Entfernt werden die inhaltsleere Quittung
+// ^done und die Notify-Records (=); ^error wird auf seine Meldung
+// eingedampft.
 public static class GdbOutputFormatter
 {
-    /// <summary>
-    ///     Liefert die anzuzeigende Zeile oder <c>null</c>, wenn die Zeile reines Rauschen ist.
-    /// </summary>
+    // Liefert die anzuzeigende Zeile oder null, wenn die Zeile reines Rauschen ist.
     public static string? Format(string rawLine)
     {
         if (string.IsNullOrWhiteSpace(rawLine)) return null;
@@ -47,9 +43,7 @@ public static class GdbOutputFormatter
         return payload.TrimEnd('\r', '\n') is { Length: > 0 } trimmed ? trimmed : null;
     }
 
-    /// <summary>
-    ///     Entfernt die umschliessenden Anfuehrungszeichen und loest die C-Escape-Sequenzen auf.
-    /// </summary>
+    // Entfernt die umschliessenden Anfuehrungszeichen und loest die C-Escape-Sequenzen auf.
     private static string Unquote(string value)
     {
         if (value.Length >= 2 && value[0] == '"' && value[^1] == '"')

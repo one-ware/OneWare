@@ -26,26 +26,22 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
 using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Entities;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger;
 
-/// <summary>
-///     GDB hinter <see cref="IDebugSession" />. Spricht MI ueber die Standardstroeme eines
-///     GDB-Prozesses und uebersetzt zwischen dessen Records und dem
-///     <see cref="DebugSessionState" />, den die Oberflaeche anzeigt.
-/// </summary>
-/// <remarks>
-///     Nach jedem Halt werden Frame und Register in einem Rutsch gelesen und als ein
-///     <see cref="DebugSessionState" /> veroeffentlicht. Die Panels ziehen sich also nichts selbst,
-///     und es kann keinen Zustand geben, in dem Register und Frame aus verschiedenen Halts stammen.
-/// </remarks>
+// GDB hinter IDebugSession. Spricht MI ueber die Standardstroeme eines
+// GDB-Prozesses und uebersetzt zwischen dessen Records und dem
+// DebugSessionState, den die Oberflaeche anzeigt.
+// Nach jedem Halt werden Frame und Register in einem Rutsch gelesen und als ein
+// DebugSessionState veroeffentlicht. Die Panels ziehen sich also nichts selbst,
+// und es kann keinen Zustand geben, in dem Register und Frame aus verschiedenen Halts stammen.
 public class GdbSession : IDebugSession
 {
-    /// <summary>
-    ///     GDB antwortet auf jedes Kommando; laenger als das zu warten heisst, dass etwas haengt.
-    /// </summary>
+    // GDB antwortet auf jedes Kommando; laenger als das zu warten heisst, dass etwas haengt.
     private const int CommandTimeout = 10000;
 
     private readonly bool _asyncMode;
@@ -63,10 +59,8 @@ public class GdbSession : IDebugSession
     private GdbCommandResult? _lastResult;
     private Process? _process;
 
-    /// <summary>
-    ///     Registernamen aendern sich waehrend einer Session nicht, also einmal lesen und behalten.
-    ///     Bei jedem Halt nur noch die Werte zu holen spart pro Schritt ein Kommando.
-    /// </summary>
+    // Registernamen aendern sich waehrend einer Session nicht, also einmal lesen und behalten.
+    // Bei jedem Halt nur noch die Werte zu holen spart pro Schritt ein Kommando.
     private IReadOnlyList<string>? _registerNames;
 
     private bool _running;
@@ -90,11 +84,9 @@ public class GdbSession : IDebugSession
             workingDirectory);
     }
 
-    /// <summary>
-    ///     Das Verzeichnis der Programmdatei hat Vorrang, sonst das des Projekts. Existiert keines
-    ///     von beiden, bleibt das aktuelle - ein nicht vorhandenes Arbeitsverzeichnis laesst den
-    ///     Prozessstart scheitern, und daran soll ein fehlendes ELF nicht schuld sein.
-    /// </summary>
+    // Das Verzeichnis der Programmdatei hat Vorrang, sonst das des Projekts. Existiert keines
+    // von beiden, bleibt das aktuelle - ein nicht vorhandenes Arbeitsverzeichnis laesst den
+    // Prozessstart scheitern, und daran soll ein fehlendes ELF nicht schuld sein.
     private static string FirstExistingDirectory(params string?[] candidates)
     {
         foreach (var candidate in candidates)
@@ -198,11 +190,9 @@ public class GdbSession : IDebugSession
         });
     }
 
-    /// <summary>
-    ///     Ohne Symboldatei gibt es keine Quellzeilen. <c>-exec-step</c> scheitert dort mit
-    ///     "Cannot find bounds of current function", weil es eine Zeile sucht, die es nicht gibt -
-    ///     geschritten wird dann ueber einzelne Instruktionen.
-    /// </summary>
+    // Ohne Symboldatei gibt es keine Quellzeilen. -exec-step scheitert dort mit
+    // "Cannot find bounds of current function", weil es eine Zeile sucht, die es nicht gibt -
+    // geschritten wird dann ueber einzelne Instruktionen.
     private bool StepsOverInstructions => _elfFile == null;
 
     public Task StepIntoAsync()
@@ -254,10 +244,8 @@ public class GdbSession : IDebugSession
         return string.IsNullOrEmpty(contents) ? null : FormatBytes(contents);
     }
 
-    /// <summary>
-    ///     Macht aus der Hex-Kette von GDB Bytepaare mit Leerzeichen. Ohne die Trennung ist bei
-    ///     mehr als ein paar Bytes nicht mehr zu erkennen, wo eines aufhoert.
-    /// </summary>
+    // Macht aus der Hex-Kette von GDB Bytepaare mit Leerzeichen. Ohne die Trennung ist bei
+    // mehr als ein paar Bytes nicht mehr zu erkennen, wo eines aufhoert.
     private static string FormatBytes(string contents)
     {
         var bytes = new List<string>(contents.Length / 2);
@@ -296,9 +284,7 @@ public class GdbSession : IDebugSession
         }
     }
 
-    /// <summary>
-    ///     Baut die Verbindung zum Stub auf. Ohne Endpunkt debuggt GDB lokal und es ist nichts zu tun.
-    /// </summary>
+    // Baut die Verbindung zum Stub auf. Ohne Endpunkt debuggt GDB lokal und es ist nichts zu tun.
     private async Task<bool> ConnectRemoteAsync()
     {
         if (_remoteEndpoint == null) return true;
@@ -379,7 +365,8 @@ public class GdbSession : IDebugSession
         if (string.IsNullOrWhiteSpace(rawLine)) return;
 
         // Aufgabe 1: anzeigen (aufbereitet statt roh) -> 
-        // laut Vertrag traegt OutputReceived lesbaren Text, keine MI-Protokollsyntax. Wer MI sehen will, sieht es an den Records, die der Formatter stehen laesst.
+        // laut Vertrag traegt OutputReceived lesbaren Text, keine MI-Protokollsyntax. Wer MI sehen will,
+        // sieht es an den Records, die der Formatter stehen laesst.
         var formatted = GdbOutputFormatter.Format(rawLine);
 
         if (formatted != null)
@@ -417,7 +404,8 @@ public class GdbSession : IDebugSession
                     Monitor.PulseAll(_eventLock);
                 }
 
-                // Nicht abwarten: dieser Aufruf laeuft auf dem Lesethread, der frei bleiben muss, damit die Antworten der Kommandos aus HandleEvent ueberhaupt ankommen. -> deswegen async 
+                // Nicht abwarten: dieser Aufruf laeuft auf dem Lesethread, der frei bleiben muss, damit die
+                // Antworten der Kommandos aus HandleEvent ueberhaupt ankommen. -> deswegen async 
                 _ = HandleEventAsync(gdbEvent);
                 break;
         }
@@ -487,10 +475,8 @@ public class GdbSession : IDebugSession
         return registers;
     }
 
-    /// <summary>
-    ///     Liest die lokalen Variablen des aktuellen Frames. Ohne Symbole meldet GDB hier nichts -
-    ///     dann bleibt das Panel leer, und die Register sind alles, was es zu sehen gibt.
-    /// </summary>
+    // Liest die lokalen Variablen des aktuellen Frames. Ohne Symbole meldet GDB hier nichts -
+    // dann bleibt das Panel leer, und die Register sind alles, was es zu sehen gibt.
     private async Task<IReadOnlyList<DebugVariable>> ReadLocalsAsync()
     {
         // Das Argument 1 heisst "mit Werten", nicht nur mit Namen.
@@ -550,7 +536,8 @@ public class GdbSession : IDebugSession
         StateChanged?.Invoke(this, state);
     }
     
-    // Übergibt Dateipfade + Zeilennummer an in Unix-Schreibweise an GDB -> C:/Meine Projekte/Test/file.c:lineNr
+    // Übergibt Dateipfade + Zeilennummer an in Unix-Schreibweise an GDB -> C:/Meine
+    // Projekte/Test/file.c:lineNr
     private static string Format(BreakPoint breakpoint)
     {
         return $"\"{breakpoint.File.Replace('\\', '/')}:{breakpoint.Line}\"";

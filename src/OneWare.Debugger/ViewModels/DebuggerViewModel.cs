@@ -7,6 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Models;
 using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Entities;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -15,15 +17,11 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels;
 
-/// <summary>
-///     Unteres Panel: Steuerleiste der Debug-Session sowie die Reiter Registers und
-///     Debugger Console.
-/// </summary>
-/// <remarks>
-///     Bindet ausschliesslich an <see cref="IDebuggerService" />, nie an eine Session. Damit muss
-///     beim Starten und Beenden nichts umgehaengt werden, und das Panel funktioniert auch dann,
-///     wenn es erst waehrend einer laufenden Session geoeffnet wird.
-/// </remarks>
+// Unteres Panel: Steuerleiste der Debug-Session sowie die Reiter Registers und
+// Debugger Console.
+// Bindet ausschliesslich an IDebuggerService, nie an eine Session. Damit muss
+// beim Starten und Beenden nichts umgehaengt werden, und das Panel funktioniert auch dann,
+// wenn es erst waehrend einer laufenden Session geoeffnet wird.
 public partial class DebuggerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.BugReport";
@@ -34,37 +32,27 @@ public partial class DebuggerViewModel : ExtendedTool
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
 
-    /// <summary>
-    ///     Reihenfolge der Reiter: 0 Registers, 1 Memory, 2 Debugger Console.
-    /// </summary>
+    // Reihenfolge der Reiter: 0 Registers, 1 Memory, 2 Debugger Console.
     private const int DebuggerConsoleTabIndex = 2;
 
-    /// <summary>
-    ///     Adresse, die der Eingabezeile im Memory-Reiter entnommen und beim Hinzufuegen zur
-    ///     Beobachtungsliste gemacht wird.
-    /// </summary>
+    // Adresse, die der Eingabezeile im Memory-Reiter entnommen und beim Hinzufuegen zur
+    // Beobachtungsliste gemacht wird.
     [ObservableProperty] private string _memoryAddressText = string.Empty;
 
     [ObservableProperty] private MemoryRow? _selectedMemoryRow;
 
-    /// <summary>
-    ///     Die Programmdatei, mit der gestartet wird. <c>null</c> heisst: ohne Symbole, so wie es
-    ///     ein Ziel verlangt, das sein Programm selbst haelt.
-    /// </summary>
+    // Die Programmdatei, mit der gestartet wird. null heisst: ohne Symbole, so wie es
+    // ein Ziel verlangt, das sein Programm selbst haelt.
     [ObservableProperty] private ExecutableOption? _selectedExecutable;
 
-    /// <summary>
-    ///     Eingabezeile der Debugger Console, ueber die sich Kommandos direkt an das Backend
-    ///     schicken lassen.
-    /// </summary>
+    // Eingabezeile der Debugger Console, ueber die sich Kommandos direkt an das Backend
+    // schicken lassen.
     [ObservableProperty] private string _commandText = string.Empty;
 
     [ObservableProperty] private bool _isRunning;
 
-    /// <summary>
-    ///     Ein Vorbereiter arbeitet gerade. Es gibt dann noch keine Sitzung, aber starten darf man
-    ///     trotzdem nicht mehr - <see cref="IsSessionActive" /> allein wuerde den Knopf offen lassen.
-    /// </summary>
+    // Ein Vorbereiter arbeitet gerade. Es gibt dann noch keine Sitzung, aber starten darf man
+    // trotzdem nicht mehr - IsSessionActive allein wuerde den Knopf offen lassen.
     [ObservableProperty] private bool _isPreparing;
 
     [ObservableProperty] private bool _isSessionActive;
@@ -75,10 +63,8 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private IDebugSession? _attachedSession;
 
-    /// <summary>
-    ///     Laeuft nur waehrend <see cref="IDebugLaunchProvider.PrepareAsync" />. Stop hat in dieser
-    ///     Zeit keine Sitzung zum Beenden und bricht stattdessen hierueber ab.
-    /// </summary>
+    // Laeuft nur waehrend IDebugLaunchProvider.PrepareAsync. Stop hat in dieser
+    // Zeit keine Sitzung zum Beenden und bricht stattdessen hierueber ab.
     private CancellationTokenSource? _prepareCancellation;
 
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
@@ -102,28 +88,22 @@ public partial class DebuggerViewModel : ExtendedTool
         RefreshExecutables();
     }
 
-    /// <summary>
-    ///     Zur Auswahl stehende Programmdateien: die ELF-Dateien des aktiven Projekts und alles,
-    ///     was ueber den Durchsuchen-Knopf dazugekommen ist.
-    /// </summary>
+    // Zur Auswahl stehende Programmdateien: die ELF-Dateien des aktiven Projekts und alles,
+    // was ueber den Durchsuchen-Knopf dazugekommen ist.
     public ObservableCollection<ExecutableOption> Executables { get; } = [];
 
-    /// <summary>Registerinhalte, wie sie beim letzten Halt gelesen wurden.</summary>
+    // Registerinhalte, wie sie beim letzten Halt gelesen wurden.
     public ObservableCollection<RegisterRow> Registers { get; } = [];
 
-    /// <summary>
-    ///     Vom Benutzer beobachtete Speicheradressen. Bleiben ueber Sessions hinweg stehen, damit
-    ///     man dieselben Adressen nach einem Neustart nicht wieder eintippen muss.
-    /// </summary>
+    // Vom Benutzer beobachtete Speicheradressen. Bleiben ueber Sessions hinweg stehen, damit
+    // man dieselben Adressen nach einem Neustart nicht wieder eintippen muss.
     public ObservableCollection<MemoryRow> MemoryWatches { get; } = [];
 
-    /// <summary>Verkehr mit dem Debugger-Backend, inklusive abgesetzter Kommandos.</summary>
+    // Verkehr mit dem Debugger-Backend, inklusive abgesetzter Kommandos.
     public ObservableCollection<ConsoleLine> DebuggerConsole { get; } = [];
 
-    /// <summary>
-    ///     Laesst den Benutzer eine Programmdatei ausserhalb des Projekts waehlen und uebernimmt
-    ///     sie in die Auswahl.
-    /// </summary>
+    // Laesst den Benutzer eine Programmdatei ausserhalb des Projekts waehlen und uebernimmt
+    // sie in die Auswahl.
     [RelayCommand]
     private async Task BrowseExecutableAsync()
     {
@@ -187,16 +167,12 @@ public partial class DebuggerViewModel : ExtendedTool
                        "need one.");
     }
 
-    /// <summary>
-    ///     Startet ueber einen Vorbereiter: der bringt sein Ziel hoch und liefert die
-    ///     Startanforderung, gestartet wird damit im Service.
-    /// </summary>
-    /// <remarks>
-    ///     Das Vorbereiten dauert - assemblieren, eine serielle Schnittstelle suchen, ein Programm
-    ///     uebertragen. Solange gibt es keine Sitzung, weshalb der Startknopf ueber
-    ///     <see cref="IsPreparing" /> gesperrt wird und nicht ueber <see cref="IsSessionActive" />.
-    ///     Was dabei geschieht, meldet der Vorbereiter selbst; hier steht nur, dass etwas laeuft.
-    /// </remarks>
+    // Startet ueber einen Vorbereiter: der bringt sein Ziel hoch und liefert die
+    // Startanforderung, gestartet wird damit im Service.
+    // Das Vorbereiten dauert - assemblieren, eine serielle Schnittstelle suchen, ein Programm
+    // uebertragen. Solange gibt es keine Sitzung, weshalb der Startknopf ueber
+    // IsPreparing gesperrt wird und nicht ueber IsSessionActive.
+    // Was dabei geschieht, meldet der Vorbereiter selbst; hier steht nur, dass etwas laeuft.
     private async Task StartWithProviderAsync(IDebugLaunchProvider provider)
     {
         IsPreparing = true;
@@ -270,11 +246,9 @@ public partial class DebuggerViewModel : ExtendedTool
         return _debuggerService.SendRawCommandAsync(command);
     }
 
-    /// <summary>
-    ///     Nimmt die eingetippte Adresse in die Beobachtungsliste auf und liest sie sofort, sofern
-    ///     das Ziel gerade haelt. Ohne das sofortige Lesen stuende die neue Zeile bis zum naechsten
-    ///     Halt leer da, und man wuesste nicht, ob die Adresse ueberhaupt lesbar ist.
-    /// </summary>
+    // Nimmt die eingetippte Adresse in die Beobachtungsliste auf und liest sie sofort, sofern
+    // das Ziel gerade haelt. Ohne das sofortige Lesen stuende die neue Zeile bis zum naechsten
+    // Halt leer da, und man wuesste nicht, ob die Adresse ueberhaupt lesbar ist.
     [RelayCommand]
     private async Task AddMemoryWatchAsync()
     {
@@ -309,10 +283,8 @@ public partial class DebuggerViewModel : ExtendedTool
         RemoveMemoryWatchCommand.NotifyCanExecuteChanged();
     }
 
-    /// <summary>
-    ///     Eine im Raster bearbeitete Adresse oder Laenge wird sofort neu gelesen. Der Wert selbst
-    ///     ist ausgenommen, sonst loeste das Schreiben des Ergebnisses das naechste Lesen aus.
-    /// </summary>
+    // Eine im Raster bearbeitete Adresse oder Laenge wird sofort neu gelesen. Der Wert selbst
+    // ist ausgenommen, sonst loeste das Schreiben des Ergebnisses das naechste Lesen aus.
     private void OnMemoryRowChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is not MemoryRow row) return;
@@ -345,16 +317,12 @@ public partial class DebuggerViewModel : ExtendedTool
         foreach (var row in MemoryWatches.ToArray()) await RefreshMemoryRowAsync(row);
     }
 
-    /// <summary>
-    ///     Stellt zusammen, was gedebuggt werden soll: die Programmdatei aus dem aktiven Projekt und,
-    ///     sofern eingerichtet, die Adresse des Stubs.
-    /// </summary>
-    /// <remarks>
-    ///     Fehlt beides, wird trotzdem gestartet. GDB laeuft dann ohne Ziel, und genau das ist der
-    ///     Fall, in dem man es braucht: die Debugger Console beantwortet Kommandos, man kann die
-    ///     Installation pruefen und sich von Hand an ein Ziel haengen. Den Start hier abzulehnen
-    ///     hiesse, dem Nutzer den Weg zu verbauen, auf dem er das Problem ueberhaupt findet.
-    /// </remarks>
+    // Stellt zusammen, was gedebuggt werden soll: die Programmdatei aus dem aktiven Projekt und,
+    // sofern eingerichtet, die Adresse des Stubs.
+    // Fehlt beides, wird trotzdem gestartet. GDB laeuft dann ohne Ziel, und genau das ist der
+    // Fall, in dem man es braucht: die Debugger Console beantwortet Kommandos, man kann die
+    // Installation pruefen und sich von Hand an ein Ziel haengen. Den Start hier abzulehnen
+    // hiesse, dem Nutzer den Weg zu verbauen, auf dem er das Problem ueberhaupt findet.
     private DebugLaunchRequest BuildLaunchRequest()
     {
         var endpoint = _settingsService.GetSettingValue<string>(DebuggerModule.RemoteEndpointSetting);
@@ -364,19 +332,13 @@ public partial class DebuggerViewModel : ExtendedTool
             _projectExplorerService.ActiveProject?.FullPath);
     }
 
-    /// <summary>
-    ///     Liest die Auswahlliste neu ein: die passenden Vorbereiter, danach alle ELF-Dateien des
-    ///     aktiven Projekts und alles, was der Benutzer von Hand dazugelegt hat.
-    /// </summary>
-    /// <remarks>
-    ///     Die Vorbereiter stehen oben, weil sie den Regelfall abdecken, sobald es einen gibt: wer
-    ///     ein SVNR-Projekt offen hat, will es debuggen und nicht eine ELF-Datei von Hand suchen.
-    ///     <para>
-    ///     Die getroffene Auswahl bleibt stehen, solange es sie noch gibt. Sie bei jedem Einlesen
-    ///     zurueckzusetzen hiesse, dass ein Neubau des Projekts die Einstellung des Benutzers
-    ///     verwirft.
-    ///     </para>
-    /// </remarks>
+    // Liest die Auswahlliste neu ein: die passenden Vorbereiter, danach alle ELF-Dateien des
+    // aktiven Projekts und alles, was der Benutzer von Hand dazugelegt hat.
+    // Die Vorbereiter stehen oben, weil sie den Regelfall abdecken, sobald es einen gibt: wer
+    // ein SVNR-Projekt offen hat, will es debuggen und nicht eine ELF-Datei von Hand suchen.
+    // Die getroffene Auswahl bleibt stehen, solange es sie noch gibt. Sie bei jedem Einlesen
+    // zurueckzusetzen hiesse, dass ein Neubau des Projekts die Einstellung des Benutzers
+    // verwirft.
     private void RefreshExecutables()
     {
         var previous = SelectedExecutable;
@@ -403,10 +365,8 @@ public partial class DebuggerViewModel : ExtendedTool
                              ?? Executables.FirstOrDefault();
     }
 
-    /// <summary>
-    ///     <see cref="IDebugLaunchProvider.CanPrepare" /> kommt aus einem Plugin. Wirft es, faellt
-    ///     nur dieser eine Eintrag aus, statt die ganze Auswahl leer zu lassen.
-    /// </summary>
+    // IDebugLaunchProvider.CanPrepare kommt aus einem Plugin. Wirft es, faellt
+    // nur dieser eine Eintrag aus, statt die ganze Auswahl leer zu lassen.
     private bool CanPrepareSafely(IDebugLaunchProvider provider)
     {
         try
@@ -427,11 +387,9 @@ public partial class DebuggerViewModel : ExtendedTool
         return path.StartsWith(project.FullPath, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>
-    ///     Sucht die Programmdateien im aktiven Projekt. Ein Ziel wie der SVNR haelt sein Programm
-    ///     selbst und bringt gar keine mit - dann bleibt die Liste leer, und GDB haengt sich ohne
-    ///     Symbole an.
-    /// </summary>
+    // Sucht die Programmdateien im aktiven Projekt. Ein Ziel wie der SVNR haelt sein Programm
+    // selbst und bringt gar keine mit - dann bleibt die Liste leer, und GDB haengt sich ohne
+    // Symbole an.
     private IEnumerable<ExecutableOption> FindProjectExecutables()
     {
         if (_projectExplorerService.ActiveProject is not { } project) return [];
@@ -507,10 +465,8 @@ public partial class DebuggerViewModel : ExtendedTool
         return frame.Address is { } address ? $"Stopped at {address}" : "Stopped";
     }
 
-    /// <summary>
-    ///     Aktualisiert die Registeranzeige an Ort und Stelle. Die Sammlung neu aufzubauen wuerde
-    ///     bei jedem Einzelschritt die Bildlaufposition zuruecksetzen.
-    /// </summary>
+    // Aktualisiert die Registeranzeige an Ort und Stelle. Die Sammlung neu aufzubauen wuerde
+    // bei jedem Einzelschritt die Bildlaufposition zuruecksetzen.
     private void UpdateRegisters(IReadOnlyList<RegisterValue> registers)
     {
         if (registers.Count == 0) return;
@@ -557,10 +513,8 @@ public partial class DebuggerViewModel : ExtendedTool
         AppendLine($"> {command}", true);
     }
 
-    /// <summary>
-    ///     Die Session meldet sich aus ihrem Lesethread; die Sammlung haengt aber an der Ansicht
-    ///     und darf nur vom UI-Thread angefasst werden.
-    /// </summary>
+    // Die Session meldet sich aus ihrem Lesethread; die Sammlung haengt aber an der Ansicht
+    // und darf nur vom UI-Thread angefasst werden.
     private void AppendLine(string line, bool isCommand = false)
     {
         Dispatcher.UIThread.Post(() => DebuggerConsole.Add(new ConsoleLine(line, isCommand)));

@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.Helpers;
 using OneWare.Debugger.ViewModels;
-using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -12,11 +12,7 @@ namespace OneWare.Debugger;
 
 public class DebuggerModule : OneWareModuleBase
 {
-    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
-
-    /// <summary>
-    ///     Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
-    /// </summary>
+    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath"; // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
     public const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
 
     public override void RegisterServices(IServiceCollection services)
@@ -58,16 +54,10 @@ public class DebuggerModule : OneWareModuleBase
                 HoverDescription = "Address of the gdbserver or debug stub to attach to. " +
                                    "Leave empty to debug the program on this machine."
             });
-
-        // Beide Panels gehoeren ins Standardlayout, sonst kaeme nach "Reset Layout" nur das
-        // untere zurueck. Rechts genau ein angepinntes Dockable - dieselbe Konfiguration wie
-        // beim AI-Chat, der einzigen, die stabil laeuft.
+        
         dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
         dockService.RegisterLayoutExtension<DebuggerInspectorViewModel>(DockShowLocation.RightPinned);
-
-        // Ein einziger Menuepunkt oeffnet die komplette Debugger-Ansicht: Steuerung samt
-        // Registers und Debugger Console unten, Variables und Breakpoints als Reiter im rechten
-        // Panel.
+        
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemModel("Debugger")
             {
