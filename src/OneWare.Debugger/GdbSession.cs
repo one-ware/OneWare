@@ -1,9 +1,4 @@
-// Der Prozes
-
-//
-// Author:
-//   Lluis Sanchez Gual <lluis@novell.com>
-//
+// Lluis Sanchez Gual <lluis@novell.com>
 // Copyright (c) 2008 Novell, Inc (http://www.novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,6 +18,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+//
+// Substantially rewritten in 2024 by Hendrick Mennen
+// Substantially rewritten in 2026 by Daniel Pour Bakhsh
 
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -310,7 +308,8 @@ public class GdbSession : IDebugSession
         // Sowohl ^done als auch ^connected sind laut MI gueltige Antworten auf -target-select.
         if (result.Status is CommandStatus.Done or CommandStatus.Connected) return true;
 
-        _logger.Error($"GDB could not connect to '{_remoteEndpoint}': {result.ErrorMessage ?? result.Status.ToString()}");
+        _logger.Error(
+            $"GDB could not connect to '{_remoteEndpoint}': {result.ErrorMessage ?? result.Status.ToString()}");
         return false;
     }
 
@@ -379,16 +378,22 @@ public class GdbSession : IDebugSession
     {
         if (string.IsNullOrWhiteSpace(rawLine)) return;
 
-        // Aufbereitet statt roh: laut Vertrag traegt OutputReceived lesbaren Text, keine
-        // Protokollsyntax. Wer MI sehen will, sieht es an den Records, die der Formatter stehen laesst.
-        if (GdbOutputFormatter.Format(rawLine) is { } formatted) OutputReceived?.Invoke(this, formatted);
+        // Aufgabe 1: anzeigen (aufbereitet statt roh) -> 
+        // laut Vertrag traegt OutputReceived lesbaren Text, keine MI-Protokollsyntax. Wer MI sehen will, sieht es an den Records, die der Formatter stehen laesst.
+        var formatted = GdbOutputFormatter.Format(rawLine);
 
+        if (formatted != null)
+        {
+            OutputReceived?.Invoke(this, formatted);
+        }
+
+        // Aufgabe 2: Protokoll auswerten (roh)
         var line = rawLine.TrimStart();
         if (line.Length == 0) return;
 
         switch (line[0])
         {
-            case '^':
+            case '^': // für ergebnis einer konkreten GDB-Anfrage
                 lock (_syncLock)
                 {
                     _lastResult = new GdbCommandResult(line);
@@ -403,7 +408,7 @@ public class GdbSession : IDebugSession
 
                 break;
 
-            case '*':
+            case '*': // * für async events von gdb 
                 GdbEvent gdbEvent;
                 lock (_eventLock)
                 {
@@ -412,8 +417,7 @@ public class GdbSession : IDebugSession
                     Monitor.PulseAll(_eventLock);
                 }
 
-                // Nicht abwarten: dieser Aufruf laeuft auf dem Lesethread, der frei bleiben muss,
-                // damit die Antworten der Kommandos aus HandleEvent ueberhaupt ankommen.
+                // Nicht abwarten: dieser Aufruf laeuft auf dem Lesethread, der frei bleiben muss, damit die Antworten der Kommandos aus HandleEvent ueberhaupt ankommen. -> deswegen async 
                 _ = HandleEventAsync(gdbEvent);
                 break;
         }
@@ -545,7 +549,8 @@ public class GdbSession : IDebugSession
         State = state;
         StateChanged?.Invoke(this, state);
     }
-
+    
+    // Übergibt Dateipfade + Zeilennummer an in Unix-Schreibweise an GDB -> C:/Meine Projekte/Test/file.c:lineNr
     private static string Format(BreakPoint breakpoint)
     {
         return $"\"{breakpoint.File.Replace('\\', '/')}:{breakpoint.Line}\"";
