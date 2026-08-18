@@ -19,10 +19,15 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
 {
     private readonly List<IDebugAdapter> _adapters = [];
     private readonly BreakpointStore _breakpoints = BreakpointStore.Instance;
+    private readonly List<IDebugLaunchProvider> _launchProviders = [];
+
+    private IDebugLaunchProvider? _activeProvider;
 
     private IDebugSession? _session;
 
     public IReadOnlyList<IDebugAdapter> Adapters => _adapters;
+
+    public IReadOnlyList<IDebugLaunchProvider> LaunchProviders => _launchProviders;
 
     public IDebugSession? CurrentSession => _session;
 
@@ -45,10 +50,69 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
         _adapters.Add(adapter);
     }
 
+    public void RegisterLaunchProvider<T>() where T : IDebugLaunchProvider
+    {
+        var provider = serviceProvider.Resolve<T>();
+
+        if (_launchProviders.Any(x => x.GetType() == provider.GetType()))
+        {
+            logger.Warning($"A launch provider of type '{provider.GetType().Name}' is already registered - ignoring.");
+            return;
+        }
+
+        _launchProviders.Add(provider);
+    }
+
     public async Task<bool> StartAsync(DebugLaunchRequest launchRequest)
     {
         await StopAsync();
 
+        return await StartCoreAsync(launchRequest);
+    }
+
+    public async Task<bool> StartAsync(IDebugLaunchProvider provider, CancellationToken ct = default)
+    {
+        // Erst die laufende Sitzung abraeumen, dann vorbereiten: der Vorbereiter greift auf
+        // dieselben Betriebsmittel zu wie die vorige Sitzung - eine serielle Schnittstelle etwa
+        // laesst sich nicht zweimal oeffnen.
+        await StopAsync();
+
+        DebugLaunchRequest? launchRequest;
+        try
+        {
+            launchRequest = await provider.PrepareAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            launchRequest = null;
+        }
+        catch (Exception e)
+        {
+            logger.Error($"Launch provider '{provider.DisplayName}' failed to prepare: {e.Message}", e);
+            launchRequest = null;
+        }
+
+        // Auch der stille Fehlschlag muss aufraeumen: der Vorbereiter kann die halbe Kette bereits
+        // hochgefahren haben, bevor er aufgab.
+        _activeProvider = provider;
+
+        if (launchRequest == null)
+        {
+            await CleanupProviderAsync();
+            return false;
+        }
+
+        if (await StartCoreAsync(launchRequest)) return true;
+
+        // Ein Fehlschlag unterhalb ist ueber StopAsync gelaufen und hat den Vorbereiter damit
+        // schon abgeraeumt; dann ist das hier ein Leerlauf. Die Faelle, die vor dem Start
+        // aussteigen - kein Adapter, CanLaunch verneint - deckt erst dieser Aufruf ab.
+        await CleanupProviderAsync();
+        return false;
+    }
+
+    private async Task<bool> StartCoreAsync(DebugLaunchRequest launchRequest)
+    {
         var adapter = _adapters.FirstOrDefault(x => x.Id == launchRequest.AdapterId);
         if (adapter == null)
         {
@@ -103,22 +167,50 @@ public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) :
     public async Task StopAsync()
     {
         var session = _session;
-        if (session == null) return;
 
-        _breakpoints.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
-        session.StateChanged -= OnSessionStateChanged;
-        session.Exited -= OnSessionExited;
+        if (session != null)
+        {
+            _breakpoints.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
+            session.StateChanged -= OnSessionStateChanged;
+            session.Exited -= OnSessionExited;
 
-        // Frueh leeren: ein zweiter, gleichzeitiger Aufruf steigt damit sofort wieder aus.
-        _session = null;
+            // Frueh leeren: ein zweiter, gleichzeitiger Aufruf steigt damit sofort wieder aus.
+            _session = null;
 
-        // Stop wartet auf das Ende des Backends. Auf dem UI-Thread waere das ein sichtbares
-        // Einfrieren, deshalb ausgelagert.
-        await Task.Run(session.Stop);
+            // Stop wartet auf das Ende des Backends. Auf dem UI-Thread waere das ein sichtbares
+            // Einfrieren, deshalb ausgelagert.
+            await Task.Run(session.Stop);
 
-        State = DebugSessionState.Empty;
-        _breakpoints.CurrentBreakPoint = null;
-        RaiseStateChanged();
+            State = DebugSessionState.Empty;
+            _breakpoints.CurrentBreakPoint = null;
+            RaiseStateChanged();
+        }
+
+        // Nach dem Backend, nicht davor: solange sich GDB von seinem Ziel loest, muss der Stub
+        // noch stehen.
+        await CleanupProviderAsync();
+    }
+
+    /// <summary>
+    ///     Gibt frei, was der Vorbereiter der laufenden Sitzung belegt hat. Mehrfach aufrufbar -
+    ///     der zweite Aufruf findet nichts mehr vor.
+    /// </summary>
+    private async Task CleanupProviderAsync()
+    {
+        if (_activeProvider is not { } provider) return;
+
+        _activeProvider = null;
+
+        try
+        {
+            await provider.CleanupAsync();
+        }
+        catch (Exception e)
+        {
+            // Ein Vorbereiter, der beim Aufraeumen wirft, darf das Ende der Sitzung nicht
+            // aufhalten - die Sitzung ist an dieser Stelle bereits abgebaut.
+            logger.Error($"Launch provider '{provider.DisplayName}' failed to clean up: {e.Message}", e);
+        }
     }
 
     public Task ContinueAsync()

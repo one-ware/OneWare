@@ -61,6 +61,12 @@ public partial class DebuggerViewModel : ExtendedTool
 
     [ObservableProperty] private bool _isRunning;
 
+    /// <summary>
+    ///     Ein Vorbereiter arbeitet gerade. Es gibt dann noch keine Sitzung, aber starten darf man
+    ///     trotzdem nicht mehr - <see cref="IsSessionActive" /> allein wuerde den Knopf offen lassen.
+    /// </summary>
+    [ObservableProperty] private bool _isPreparing;
+
     [ObservableProperty] private bool _isSessionActive;
 
     [ObservableProperty] private int _selectedTabIndex;
@@ -68,6 +74,12 @@ public partial class DebuggerViewModel : ExtendedTool
     [ObservableProperty] private string _statusText = "No session";
 
     private IDebugSession? _attachedSession;
+
+    /// <summary>
+    ///     Laeuft nur waehrend <see cref="IDebugLaunchProvider.PrepareAsync" />. Stop hat in dieser
+    ///     Zeit keine Sitzung zum Beenden und bricht stattdessen hierueber ab.
+    /// </summary>
+    private CancellationTokenSource? _prepareCancellation;
 
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
         IProjectExplorerService projectExplorerService, IMainDockService mainDockService) : base(IconKey)
@@ -82,6 +94,10 @@ public partial class DebuggerViewModel : ExtendedTool
         Title = "Debug";
 
         _debuggerService.StateChanged += OnDebuggerStateChanged;
+
+        // Ohne dieses Abo taucht ein Vorbereiter erst nach dem ersten Startversuch in der Auswahl
+        // auf: eingelesen wurde bisher nur beim Erzeugen und unmittelbar vor dem Start.
+        _projectExplorerService.PropertyChanged += OnProjectExplorerChanged;
 
         RefreshExecutables();
     }
@@ -140,12 +156,19 @@ public partial class DebuggerViewModel : ExtendedTool
         RefreshExecutables();
 
         DebuggerConsole.Clear();
-        StatusText = "Starting GDB...";
 
         // Beim Start interessiert der Verkehr mit dem Backend - also den passenden Reiter in den
         // Vordergrund holen und das Panel selbst sichtbar machen.
         SelectedTabIndex = DebuggerConsoleTabIndex;
         _mainDockService.Show(this, DockShowLocation.Bottom);
+
+        if (SelectedExecutable is { Provider: { } provider })
+        {
+            await StartWithProviderAsync(provider);
+            return;
+        }
+
+        StatusText = "Starting GDB...";
 
         var request = BuildLaunchRequest();
 
@@ -164,9 +187,45 @@ public partial class DebuggerViewModel : ExtendedTool
                        "need one.");
     }
 
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
+    /// <summary>
+    ///     Startet ueber einen Vorbereiter: der bringt sein Ziel hoch und liefert die
+    ///     Startanforderung, gestartet wird damit im Service.
+    /// </summary>
+    /// <remarks>
+    ///     Das Vorbereiten dauert - assemblieren, eine serielle Schnittstelle suchen, ein Programm
+    ///     uebertragen. Solange gibt es keine Sitzung, weshalb der Startknopf ueber
+    ///     <see cref="IsPreparing" /> gesperrt wird und nicht ueber <see cref="IsSessionActive" />.
+    ///     Was dabei geschieht, meldet der Vorbereiter selbst; hier steht nur, dass etwas laeuft.
+    /// </remarks>
+    private async Task StartWithProviderAsync(IDebugLaunchProvider provider)
+    {
+        IsPreparing = true;
+        StatusText = $"Preparing {provider.DisplayName}...";
+
+        using var cancellation = new CancellationTokenSource();
+        _prepareCancellation = cancellation;
+
+        try
+        {
+            if (await _debuggerService.StartAsync(provider, cancellation.Token)) return;
+
+            AppendLine($"{provider.DisplayName} could not be started.");
+            StatusText = "Start failed";
+        }
+        finally
+        {
+            _prepareCancellation = null;
+            IsPreparing = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanStop))]
     private Task StopAsync()
     {
+        // Waehrend der Vorbereitung gibt es noch keine Sitzung. Stop beendet dann nicht sie,
+        // sondern bricht das Vorbereiten ab; das Aufraeumen macht danach der Vorbereiter selbst.
+        _prepareCancellation?.Cancel();
+
         StatusText = "Stopping...";
         return _debuggerService.StopAsync();
     }
@@ -306,26 +365,59 @@ public partial class DebuggerViewModel : ExtendedTool
     }
 
     /// <summary>
-    ///     Liest die Auswahlliste neu ein: alle ELF-Dateien des aktiven Projekts, dazu alles, was
-    ///     der Benutzer von Hand dazugelegt hat.
+    ///     Liest die Auswahlliste neu ein: die passenden Vorbereiter, danach alle ELF-Dateien des
+    ///     aktiven Projekts und alles, was der Benutzer von Hand dazugelegt hat.
     /// </summary>
     /// <remarks>
-    ///     Die getroffene Auswahl bleibt stehen, solange ihr Pfad noch existiert. Sie bei jedem
-    ///     Einlesen zurueckzusetzen hiesse, dass ein Neubau des Projekts die Einstellung des
-    ///     Benutzers verwirft.
+    ///     Die Vorbereiter stehen oben, weil sie den Regelfall abdecken, sobald es einen gibt: wer
+    ///     ein SVNR-Projekt offen hat, will es debuggen und nicht eine ELF-Datei von Hand suchen.
+    ///     <para>
+    ///     Die getroffene Auswahl bleibt stehen, solange es sie noch gibt. Sie bei jedem Einlesen
+    ///     zurueckzusetzen hiesse, dass ein Neubau des Projekts die Einstellung des Benutzers
+    ///     verwirft.
+    ///     </para>
     /// </remarks>
     private void RefreshExecutables()
     {
         var previous = SelectedExecutable;
-        var browsed = Executables.Where(x => !IsUnderActiveProject(x.Path)).ToList();
+
+        // Vorbereiter tragen keinen Pfad. Sie duerfen deshalb weder durch IsUnderActiveProject
+        // noch durch DistinctBy laufen - Letzteres liesse von mehreren genau einen uebrig.
+        var providers = _debuggerService.LaunchProviders
+            .Where(CanPrepareSafely)
+            .Select(x => new ExecutableOption(string.Empty, x.DisplayName, x));
+
+        var browsed = Executables
+            .Where(x => x.Provider == null && !IsUnderActiveProject(x.Path))
+            .ToList();
 
         Executables.Clear();
 
-        foreach (var option in FindProjectExecutables().Concat(browsed).DistinctBy(x => x.Path))
+        foreach (var option in providers.Concat(
+                     FindProjectExecutables().Concat(browsed).DistinctBy(x => x.Path)))
             Executables.Add(option);
 
-        SelectedExecutable = Executables.FirstOrDefault(x => x.Path == previous?.Path)
+        // Vergleich ueber den ganzen Eintrag statt ueber den Pfad: Vorbereiter haben alle denselben
+        // leeren Pfad und waeren sonst nicht auseinanderzuhalten.
+        SelectedExecutable = Executables.FirstOrDefault(x => x == previous)
                              ?? Executables.FirstOrDefault();
+    }
+
+    /// <summary>
+    ///     <see cref="IDebugLaunchProvider.CanPrepare" /> kommt aus einem Plugin. Wirft es, faellt
+    ///     nur dieser eine Eintrag aus, statt die ganze Auswahl leer zu lassen.
+    /// </summary>
+    private bool CanPrepareSafely(IDebugLaunchProvider provider)
+    {
+        try
+        {
+            return provider.CanPrepare();
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Launch provider '{provider.DisplayName}' failed in CanPrepare: {e.Message}", e);
+            return false;
+        }
     }
 
     private bool IsUnderActiveProject(string path)
@@ -476,7 +568,23 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private bool CanStart()
     {
-        return !IsSessionActive;
+        return !IsSessionActive && !IsPreparing;
+    }
+
+    private bool CanStop()
+    {
+        return IsSessionActive || IsPreparing;
+    }
+
+    partial void OnIsPreparingChanged(bool value)
+    {
+        StartCommand.NotifyCanExecuteChanged();
+        StopCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnProjectExplorerChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IProjectExplorerService.ActiveProject)) RefreshExecutables();
     }
 
     partial void OnIsSessionActiveChanged(bool value)

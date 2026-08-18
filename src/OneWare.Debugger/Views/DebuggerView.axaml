@@ -63,21 +63,23 @@
             </StackPanel>
         </Border>
 
-        <!-- Eigene Zeile ueber dem TabControl, damit die gewaehlte Programmdatei in jedem Reiter
-             sichtbar bleibt und nicht mit dem Wechsel auf Registers oder Memory verschwindet. -->
+        <!-- Eigene Zeile ueber dem TabControl, damit die getroffene Auswahl in jedem Reiter
+             sichtbar bleibt und nicht mit dem Wechsel auf Registers oder Memory verschwindet.
+             "Launch" statt "Executable", weil hier auch Vorbereiter stehen, die ihre
+             Programmdatei erst erzeugen. -->
         <Border DockPanel.Dock="Top"
                 Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
             <DockPanel Margin="4" LastChildFill="True">
                 <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Opacity="0.7"
-                           Margin="0,0,6,0" Text="Executable" />
+                           Margin="0,0,6,0" Text="Launch" />
                 <Button DockPanel.Dock="Right" Margin="4,0,0,0" Height="24" Padding="8,0"
                         Command="{Binding BrowseExecutableCommand}" Content="..."
                         ToolTip.Tip="Select an executable outside the project" />
                 <ComboBox ItemsSource="{Binding Executables}"
                           SelectedItem="{Binding SelectedExecutable}"
-                          PlaceholderText="No executable - debugging without symbols"
+                          PlaceholderText="Nothing to launch - debugging without symbols"
                           HorizontalAlignment="Stretch"
                           Height="24">
                     <ComboBox.ItemTemplate>
