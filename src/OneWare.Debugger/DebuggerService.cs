@@ -12,7 +12,7 @@ namespace OneWare.Debugger;
 // Alles, was hier nach aussen geht, ist auf den UI-Thread gebracht. Die Session meldet sich
 // aus ihrem Lesethread; das an genau einer Stelle einzusammeln ist einfacher, als es jedem
 // Panel einzeln aufzutragen.
-public class DebuggerService(IServiceProvider serviceProvider, ILogger logger) : IDebuggerService
+public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger logger) : IDebuggerService
 {
     private readonly List<IDebugAdapter> _adapters = [];
     private readonly BreakpointStore _breakpoints = BreakpointStore.Instance;
