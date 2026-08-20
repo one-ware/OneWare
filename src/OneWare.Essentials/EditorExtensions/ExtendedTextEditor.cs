@@ -3,9 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Editing;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
-using DynamicData;
 using TextMateSharp.Registry;
 
 namespace OneWare.Essentials.EditorExtensions;
@@ -87,12 +87,32 @@ public class ExtendedTextEditor : TextEditor
 
     public void SetEnableBreakpoints(bool enable, string? filePath = null)
     {
-        TextArea.LeftMargins.RemoveMany(TextArea.LeftMargins.Where(x => x is BreakPointMargin));
-        if (enable && !string.IsNullOrWhiteSpace(filePath))
+        if (TextArea.LeftMargins.Any(x => x is BreakPointLineNumberMargin))
+        {
+            // Der Toggle raeumt auch die eigene Spalte ab (AvaloniaEdit prueft "is
+            // LineNumberMargin") und legt die Standardspalte samt Farb-Bindung neu an
+            ShowLineNumbers = false;
+            ShowLineNumbers = true;
+        }
+
+        if (!enable || string.IsNullOrWhiteSpace(filePath)) return;
+
+        // Lokaler Wert schlaegt den Style-Setter -> die Zeilennummernspalte existiert danach
+        // sicher, auch wenn der Editor noch nicht am Visual Tree haengt
+        ShowLineNumbers = true;
+
+        for (var i = 0; i < TextArea.LeftMargins.Count; i++)
+        {
+            if (TextArea.LeftMargins[i] is not LineNumberMargin) continue;
+            // Entnehmen und Einfuegen statt Indexzuweisung -> das Verfahren ist mit
+            // ComparisonControl belegt, ob TextArea ein Replace sauber abhaengt, nicht.
             // Der anwendungsweite Store, nicht ein eigener je Editor: sonst landen gesetzte
             // Breakpoints in einer Instanz, die weder die Breakpoint-Liste noch die laufende
             // Session je zu sehen bekommt.
-            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, BreakpointStore.Instance));
+            TextArea.LeftMargins.RemoveAt(i);
+            TextArea.LeftMargins.Insert(i, new BreakPointLineNumberMargin(this, filePath, BreakpointStore.Instance));
+            break;
+        }
     }
 
     public void SetEnableFolding(bool enable)
