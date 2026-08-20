@@ -322,7 +322,7 @@ public class GdbSession : IDebugSession
         {
             FileName = _gdbExecutable,
             WorkingDirectory = _workingDir,
-            Arguments = _elfFile == null ? "--interpreter=mi" : $"--interpreter=mi {_elfFile}",
+            Arguments = BuildArguments(),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,
@@ -341,6 +341,38 @@ public class GdbSession : IDebugSession
             _logger.Error($"Could not start GDB at '{_gdbExecutable}': {e.Message}", e);
             return false;
         }
+    }
+
+    // Aufrufzeile fuer GDB. Dateinamen stehen in Anfuehrungszeichen, weil sie sonst an jedem
+    // Leerzeichen in mehrere Argumente zerfallen.
+    private string BuildArguments()
+    {
+        var arguments = new List<string> { "--interpreter=mi" };
+
+        if (FindInitFile() is { } initFile)
+        {
+            _logger.Log($"GDB reads the command file '{initFile}'.");
+            arguments.Add($"-x \"{initFile}\"");
+        }
+
+        if (_elfFile != null) arguments.Add($"\"{_elfFile}\"");
+
+        return string.Join(' ', arguments);
+    }
+
+    // Kommandodatei zum Programm: neben der Programmdatei, gleicher Name, Endung .gdbinit.
+    // Wer das Ziel erzeugt, legt sie dazu und bringt GDB damit bei, was aus der Programmdatei
+    // allein nicht hervorgeht - beim SVNR die Registerbeschreibung, die der Stub erwartet.
+    // Die Datei heisst bewusst nicht ".gdbinit": diesen Namen laedt GDB zwar von sich aus, aber
+    // nur aus einem Verzeichnis in auto-load safe-path, und verweigert ihn sonst mit einer
+    // Warnung. Ausdruecklich per -x uebergeben greift die Sperre nicht.
+    private string? FindInitFile()
+    {
+        if (_elfFile == null) return null;
+
+        var initFile = Path.ChangeExtension(_elfFile, ".gdbinit");
+
+        return File.Exists(Path.Combine(_workingDir, initFile)) ? initFile : null;
     }
 
     private void ReadOutput()
