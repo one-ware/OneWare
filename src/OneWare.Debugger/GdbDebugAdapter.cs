@@ -41,9 +41,17 @@ public class GdbDebugAdapter(ILogger logger, ISettingsService settingsService, I
         var gdbPath = ResolveGdbPath()
                       ?? throw new InvalidOperationException("No GDB executable configured.");
 
-        // mi-async braucht ein GDB, das Kommandos waehrend des Laufs annimmt. Unter Windows ist
-        // das nicht verlaesslich, dort wird stattdessen per Signal angehalten.
-        var asyncMode = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        // mi-async braucht ein GDB, das Kommandos waehrend des Laufs annimmt. Beim lokalen
+        // Debuggen ist das unter Windows nicht verlaesslich, dort wird per Signal angehalten.
+        //
+        // Bei einem angehaengten Ziel gilt das nicht: dort unterbricht GDB ueber ein
+        // 0x03-Byte auf der Verbindung zum Stub, nicht ueber ein Signal an einen Prozess.
+        // Das ist plattformunabhaengig und trifft immer denselben Empfaenger - anders als
+        // das Ctrl+C aus GdbHelper.SendCtrlC, das aus einer Anwendung ohne eigene Konsole
+        // heraus nur manchmal ankommt. Nebenbei nimmt die Console damit auch waehrend des
+        // Laufs Kommandos an, statt sie mit einer Meldung abzuweisen.
+        var asyncMode = !string.IsNullOrWhiteSpace(launchRequest.RemoteEndpoint)
+                        || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         return new GdbSession(gdbPath, launchRequest.ExecutablePath, launchRequest.RemoteEndpoint,
             launchRequest.WorkingDirectory, asyncMode, logger);

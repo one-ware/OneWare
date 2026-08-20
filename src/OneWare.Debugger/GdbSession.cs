@@ -172,7 +172,9 @@ public class GdbSession : IDebugSession
         }
 
         // Ohne mi-async nimmt GDB waehrend des Laufs keine Kommandos an; das Anhalten geht dann
-        // nur ueber ein Signal an den Prozess.
+        // nur ueber ein Signal an den Prozess. Hier landet seit dem angehaengten Ziel nur noch
+        // das lokale Debuggen unter Windows - ein Ctrl+C aus einer Anwendung ohne eigene
+        // Konsole kommt nicht immer an, daher die drei Versuche.
         await Task.Run(() =>
         {
             lock (_eventLock)
