@@ -148,6 +148,10 @@ public sealed class CopilotChatService(
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    private static readonly Regex SkillContextRegex = new(
+        @"<skill-context(?:\s+name=""(?<name>[^""]*)"")?[^>]*>(?<content>.*?)</skill-context>",
+        RegexOptions.Singleline | RegexOptions.Compiled);
+
     public ObservableCollection<ModelInfo> Models { get; } = [];
 
     public ObservableCollection<ModelInfo> FilteredModels { get; } = [];
@@ -1408,8 +1412,16 @@ public sealed class CopilotChatService(
             }
             case UserMessageEvent x:
             {
-                EventReceived?.Invoke(this,
-                    new ChatUserMessageEvent(x.Data.Content));
+                // The backend injects the content of loaded skills into the user message. That
+                // content is meant for the model, so report it as a skill indicator and only show
+                // what the user actually wrote.
+                var content = ExtractSkillContext(x.Data.Content, out var skills);
+
+                foreach (var skill in skills)
+                    EventReceived?.Invoke(this, new ChatSkillLoadedEvent(skill.Name, skill.Content));
+
+                if (!string.IsNullOrWhiteSpace(content))
+                    EventReceived?.Invoke(this, new ChatUserMessageEvent(content));
                 break;
             }
             case ToolExecutionStartEvent x:
@@ -1438,6 +1450,30 @@ public sealed class CopilotChatService(
                 IsRemoteSession = true;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Removes the <c>&lt;skill-context&gt;</c> blocks the backend injects into a user message when a
+    /// skill is loaded, and returns the skills that were found.
+    /// </summary>
+    private static string ExtractSkillContext(string content, out IReadOnlyList<(string Name, string Content)> skills)
+    {
+        skills = [];
+        if (string.IsNullOrEmpty(content) || !content.Contains("<skill-context", StringComparison.Ordinal))
+            return content;
+
+        var found = new List<(string Name, string Content)>();
+
+        var stripped = SkillContextRegex.Replace(content, match =>
+        {
+            var name = match.Groups["name"].Value;
+            found.Add((string.IsNullOrWhiteSpace(name) ? "Skill" : name,
+                match.Groups["content"].Value.Trim()));
+            return string.Empty;
+        });
+
+        skills = found;
+        return stripped.Trim();
     }
 
     private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
