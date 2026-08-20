@@ -1023,8 +1023,14 @@ public sealed class CopilotChatService(
                 IncludeSubAgentStreamingEvents = false,
                 SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
-                AvailableTools = tools.Select(x => x.Name).ToList(),
+                // Restrict the session to OneWare's own tools plus the session-isolated built-ins
+                // (task/skill delegation, ask_user, …) that plugin-contributed agents and skills
+                // need. Host-capable built-ins stay unavailable.
+                AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
+                CustomAgents = BuildCustomAgents(),
+                SkillDirectories = BuildSkillDirectories(),
+                EnableSkills = true,
                 ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
@@ -1044,7 +1050,11 @@ public sealed class CopilotChatService(
                 ContextTier = ResolveContextTier(),
                 IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
+                AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
+                CustomAgents = BuildCustomAgents(),
+                SkillDirectories = BuildSkillDirectories(),
+                EnableSkills = true,
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
                 Hooks = new SessionHooks
@@ -1067,8 +1077,47 @@ public sealed class CopilotChatService(
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
     }
 
-    private SystemMessageConfig BuildSystemMessageConfig()
+    /// <summary>
+    /// Allow-list for the session: every tool OneWare registers, plus the built-ins that operate
+    /// only inside the session (agent delegation via <c>task</c>, <c>skill</c> loading, …). Built-ins
+    /// with host filesystem, shell or network access stay out, because <see cref="OnPreToolUseAsync"/>
+    /// auto-approves any tool that has no OneWare confirmation check.
+    /// </summary>
+    private ToolSet BuildAvailableTools()
     {
+        return new ToolSet()
+            .AddCustom("*")
+            .AddBuiltIn(BuiltInTools.Isolated);
+    }
+
+    /// <summary>
+    /// Converts the agents contributed by modules/plugins (e.g. a dataset agent from an FPGA AI
+    /// extension) into Copilot custom agents the main agent can delegate to.
+    /// </summary>
+    private IList<CustomAgentConfig> BuildCustomAgents()
+    {
+        return toolProvider.GetAgents()
+            .Select(agent => new CustomAgentConfig
+            {
+                Name = agent.Name,
+                DisplayName = string.IsNullOrWhiteSpace(agent.DisplayName) ? agent.Name : agent.DisplayName,
+                Description = agent.Description,
+                Prompt = agent.Instructions,
+                Model = string.IsNullOrWhiteSpace(agent.Model) ? null : agent.Model,
+                ReasoningEffort = string.IsNullOrWhiteSpace(agent.ReasoningEffort) ? null : agent.ReasoningEffort,
+                Tools = agent.Tools?.ToList(),
+                Skills = agent.Skills?.ToList(),
+                Infer = agent.Infer
+            })
+            .ToList();
+    }
+
+    private IList<string> BuildSkillDirectories()
+    {
+        return toolProvider.GetSkillDirectories().ToList();
+    }
+
+    private SystemMessageConfig BuildSystemMessageConfig()    {
         var overrides = new Dictionary<SystemMessageSection, SectionOverride>
         {
             // Tell the model it is embedded in OneWare Studio IDE

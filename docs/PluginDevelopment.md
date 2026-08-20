@@ -332,6 +332,9 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
 - `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
+- `RegisterAgent(OneWareAiAgent)`: register a custom agent (see "AI agents and skills").
+- `RegisterSkill(OneWareAiSkill)`: register an on-demand skill document.
+- `RegisterSkillDirectory(string)`: register a directory of skills shipped with the plugin.
 - `GetTools()`: return the registered tools for chat or automation.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
@@ -589,3 +592,154 @@ public sealed class MyChatModule : OneWareModuleBase
     }
 }
 ```
+
+## AI agents and skills
+
+Besides tools (`RegisterFunction`) and prompt additions (`RegisterPromptAddition`), a module can
+contribute **agents** and **skills** through `IAiFunctionProvider`. They are applied when a chat
+session is created, so register them from `Initialize`.
+
+### Which one to use
+
+All four mechanisms add knowledge or capability, but they differ in what they cost and when they
+apply:
+
+| Mechanism | Loaded | Cost | Use for |
+| --- | --- | --- | --- |
+| `RegisterPromptAddition` | Always | Permanent context in every turn | One or two sentences the AI must never miss ("this project targets an FPGA") |
+| `RegisterFunction` | Always (declaration only) | Small, permanent | *Actions* — reading project state, running a toolchain |
+| `RegisterSkill` / `RegisterSkillDirectory` | On demand, when the `Description` matches | None until used | *Knowledge* — file formats, workflows, conventions, reference material |
+| `RegisterAgent` | On demand, in a separate context | None until used | *Multi-step work* that would otherwise flood the main conversation |
+
+Rules of thumb:
+
+- Prefer a **skill** over a prompt addition. Anything longer than a few lines belongs in a skill —
+  prompt additions are paid for on every single turn, even when the user is doing something
+  unrelated.
+- Reach for an **agent** when the job is a self-contained task with many steps (build a dataset,
+  migrate a project, diagnose a build). The sub-agent gets its own context window, so its
+  intermediate steps do not pollute the main conversation.
+- An agent still needs its knowledge from somewhere: keep the `Instructions` short (*how to
+  behave*) and put reference material in skills, then list them in `Skills`.
+- Don't create an agent just to add knowledge. If there is no multi-step workflow, a skill alone
+  is cheaper and more likely to be used.
+
+### Agents
+
+An agent bundles domain knowledge with an optional tool/skill selection. The main chat agent reads
+the `Description` to decide when to delegate a task to it, and then runs it with its own
+`Instructions` as system prompt.
+
+```csharp
+using OneWare.Essentials.Models;
+using OneWare.Essentials.Services;
+
+public sealed class OneAiModule : OneWareModuleBase
+{
+    public override void Initialize(IServiceProvider serviceProvider)
+    {
+        var ai = serviceProvider.Resolve<IAiFunctionProvider>();
+
+        ai.RegisterAgent(new OneWareAiAgent
+        {
+            Name = "oneai-dataset",
+            DisplayName = "OneAI Dataset",
+            Description = "Use when the user wants to create, inspect or extend a OneAI dataset " +
+                          "or work with .oneai files.",
+            Instructions = """
+                           You are an expert for OneAI datasets.
+                           - A `.oneai` file describes the model, its inputs and the dataset layout.
+                           - Always inspect the existing `.oneai` file before proposing changes.
+                           - Label folders must match the class names declared in the `.oneai` file.
+                           """,
+            Skills = ["oneai-file-format"]
+        });
+    }
+}
+```
+
+Optional members: `Tools` (restrict the agent to specific tool names), `Model` and
+`ReasoningEffort` (overrides for this agent), and `Infer = false` if the main agent must not
+delegate to it on its own.
+
+There is no agent picker in the chat UI. An agent is used either automatically — the main agent
+delegates when the request matches the `Description` — or because the user names it (*"use the
+OneAI dataset agent to …"*). Write the `Description` for the first case: state *when* to use the
+agent, not what it is.
+
+### Skills
+
+A skill is an instruction document that is loaded on demand when its `Description` matches the
+task, which keeps the base context small. Define a skill in code:
+
+```csharp
+// Written to <AppData>/AI/Skills/<name>/SKILL.md
+ai.RegisterSkill(new OneWareAiSkill
+{
+    Name = "oneai-file-format",
+    Description = "Reference for the .oneai file format: sections, keys and allowed values.",
+    Instructions = "# .oneai file format\n\n..."
+});
+```
+
+For skills that ship scripts, templates or reference documents, register a **discovery root**
+instead — a directory whose sub-directories each contain a `SKILL.md`:
+
+```
+MyPlugin/
+└── Skills/                      <- register this path
+    ├── oneai-dataset-tools/
+    │   ├── SKILL.md
+    │   └── convert.py
+    └── oneai-validation/
+        └── SKILL.md
+```
+
+```csharp
+ai.RegisterSkillDirectory(Path.Combine(AppContext.BaseDirectory, "Skills"));
+```
+
+Each `SKILL.md` starts with YAML front matter, followed by the instructions in Markdown:
+
+```markdown
+---
+name: "oneai-dataset-tools"
+description: "Scripts for converting and validating OneAI datasets. Use when the user wants to import images into a dataset."
+---
+
+# OneAI dataset tools
+
+Run `convert.py <source> <dataset>` to import a folder of images.
+...
+```
+
+Make sure the files end up next to your plugin assembly, otherwise the directory won't exist at
+runtime:
+
+```xml
+<ItemGroup>
+  <None Include="Skills\**" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+Names must be unique; registering an existing name replaces the previous agent or skill. Skill
+directories generated from `RegisterSkill` are cleaned up automatically when a skill is renamed or
+no longer registered.
+
+### Combining agents and skills
+
+`OneWareAiAgent.Skills` behaves differently from on-demand loading: the listed skills are
+**eagerly injected** into the agent's context when it starts, resolved by name across all
+registered skill directories. That makes it the right place for the material the agent always
+needs, while everything situational stays discoverable on demand.
+
+A typical plugin therefore registers:
+
+1. one or more **skills** describing its file formats and workflows,
+2. an **agent** whose `Instructions` describe the workflow and whose `Skills` preload the one
+   reference it can't work without,
+3. **tools** the agent can call, restricted via `OneWareAiAgent.Tools` if the agent should only
+   see a subset.
+
+The `Description` is what makes any of this get used — write it as *when to use this*, not *what
+this is*. Skills and agents that are never selected cost nothing, but they also do nothing.
