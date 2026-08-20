@@ -774,6 +774,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 break;
             }
+            case ChatSkillLoadedEvent x:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageSkillViewModel(x.SkillName, x.Content));
+                    NotifyContentAdded();
+                });
+                break;
+            }
             case ChatUserMessageEvent x:
             {
                 Dispatcher.UIThread.Post(() =>
@@ -1243,6 +1252,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             case ChatMessageErrorViewModel:
                 // Error chat messages are intentionally not serialized.
                 return null;
+            case ChatMessageSkillViewModel skill:
+                return new ChatMessageState(ChatMessageKind.Skill)
+                {
+                    SkillName = skill.SkillName,
+                    Content = skill.Content
+                };
             default:
                 return null;
         }
@@ -1282,6 +1297,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     IsSuccessful = state.IsSuccessful,
                     IsToolRunning = false
                 };
+                return true;
+            case ChatMessageKind.Skill:
+                if (string.IsNullOrWhiteSpace(state.SkillName))
+                {
+                    message = null!;
+                    return false;
+                }
+
+                message = new ChatMessageSkillViewModel(state.SkillName, state.Content ?? string.Empty);
                 return true;
             default:
                 message = null!;
@@ -1677,6 +1701,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         public string? Id { get; set; }
         public string? ToolName { get; set; }
         public string? ToolOutput { get; set; }
+        public string? SkillName { get; set; }
         public bool IsSuccessful { get; set; }
     }
 
@@ -1685,6 +1710,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         User,
         Assistant,
         Reasoning,
-        Tool
+        Tool,
+        Skill
     }
 }
