@@ -198,20 +198,47 @@
                         </DockPanel>
                     </Border>
 
+                    <!-- Jede Zeile ist ein eigener SelectableTextBlock, damit Kommandos farblich
+                         abgesetzt bleiben. Ueber Zeilengrenzen hinweg laesst sich damit aber nichts
+                         markieren - deshalb der Knopf, der den ganzen Verlauf in die Zwischenablage
+                         legt. Ueber das Kontextmenue erreichbar, weil das die Geste ist, die man
+                         zuerst probiert. -->
                     <Border Background="{DynamicResource ThemeBackgroundBrush}"
                             BorderThickness="1"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                        <ScrollViewer Name="DebuggerConsoleScroll" Padding="8,6">
-                            <ItemsControl ItemsSource="{Binding DebuggerConsole}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:ConsoleLine">
-                                        <SelectableTextBlock Classes="consoleLine"
-                                                             Classes.command="{Binding IsCommand}"
-                                                             Text="{Binding Text}" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                        <Border.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Copy All" Click="OnCopyConsoleClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Border.ContextMenu>
+                        <Grid>
+                            <ScrollViewer Name="DebuggerConsoleScroll" Padding="8,6">
+                                <ItemsControl ItemsSource="{Binding DebuggerConsole}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:ConsoleLine">
+                                            <SelectableTextBlock Classes="consoleLine"
+                                                                 Classes.command="{Binding IsCommand}"
+                                                                 Text="{Binding Text}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <!-- Schwebt ueber der Ausgabe statt in einer eigenen Leiste: die Konsole
+                                 ist ohnehin knapp hoch, und der Knopf soll keine Zeile kosten. -->
+                            <Button Name="CopyConsoleButton"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Margin="0,4,14,0" Width="24" Height="24"
+                                    Click="OnCopyConsoleClick"
+                                    ToolTip.Tip="Copy the whole console to the clipboard">
+                                <Image Width="14" Height="14"
+                                       Source="{DynamicResource BoxIcons.RegularCopy}" />
+                            </Button>
+                        </Grid>
                     </Border>
                 </DockPanel>
             </TabItem>
