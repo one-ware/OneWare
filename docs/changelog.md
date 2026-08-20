@@ -7,6 +7,8 @@
 
 ## 1.0.25
 
+- Add JavaScript/TypeScript language support (tsgo language server, auto-downloadable)
+- Support language servers that only provide pull diagnostics (textDocument/diagnostic)
 - Improve Copilot Terminal Handling in Windows
 - Add possibility to add default startup configuration
 

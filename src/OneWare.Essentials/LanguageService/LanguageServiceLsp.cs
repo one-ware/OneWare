@@ -26,6 +26,9 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 {
     private readonly Dictionary<ProgressToken, (ApplicationProcess, string)> _tokenRegister = new();
 
+    private readonly Dictionary<string, CancellationTokenSource> _pullDiagnosticsRequests = new();
+    private readonly Dictionary<string, string?> _pullDiagnosticsResultIds = new();
+
     private CancellationTokenSource? _cancellation;
     private IChildProcess? _process;
 
@@ -123,6 +126,14 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     public override async Task DeactivateAsync()
     {
         IsActivated = false;
+
+        lock (_pullDiagnosticsRequests)
+        {
+            foreach (var request in _pullDiagnosticsRequests.Values) request.Cancel();
+            _pullDiagnosticsRequests.Clear();
+            _pullDiagnosticsResultIds.Clear();
+        }
+
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             if (Client == null) return;
@@ -181,6 +192,11 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 options.WithCapability(new PublishDiagnosticsCapability
                 {
                     RelatedInformation = false
+                });
+                options.WithCapability(new DiagnosticClientCapabilities
+                {
+                    DynamicRegistration = false,
+                    RelatedDocumentSupport = false
                 });
                 options.WithCapability(new TypeDefinitionCapability
                 {
@@ -426,6 +442,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 Version = _version
             }
         });
+
+        RequestPullDiagnostics(fullPath);
     }
 
     public override void DidSaveTextDocument(string fullPath, string text)
@@ -438,10 +456,14 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             },
             Text = text
         });
+
+        RequestPullDiagnostics(fullPath);
     }
 
     public override void DidCloseTextDocument(string fullPath)
     {
+        CancelPullDiagnostics(fullPath);
+
         Client?.DidCloseTextDocument(new DidCloseTextDocumentParams
         {
             TextDocument = new TextDocumentIdentifier
@@ -484,6 +506,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 new OptionalVersionedTextDocumentIdentifier { Uri = fullPath, Version = _version },
             ContentChanges = changes
         });
+
+        RequestPullDiagnostics(fullPath);
     }
 
     public override void RefreshTextDocument(string fullPath, string newText)
@@ -500,6 +524,106 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 Text = newText
             })
         });
+
+        RequestPullDiagnostics(fullPath);
+    }
+
+    /// <summary>
+    ///     Requests diagnostics for a document using the pull model (textDocument/diagnostic).
+    ///     Servers that only support pull diagnostics (like tsgo) never send publishDiagnostics for
+    ///     source files, so they are requested here and forwarded to the regular diagnostics handling.
+    /// </summary>
+    private void RequestPullDiagnostics(string fullPath)
+    {
+        if (Client?.ServerSettings.Capabilities.DiagnosticProvider == null) return;
+
+        CancellationTokenSource cancellation;
+        lock (_pullDiagnosticsRequests)
+        {
+            if (_pullDiagnosticsRequests.Remove(fullPath, out var running)) running.Cancel();
+
+            cancellation = new CancellationTokenSource();
+            _pullDiagnosticsRequests[fullPath] = cancellation;
+        }
+
+        _ = PullDiagnosticsAsync(fullPath, cancellation);
+    }
+
+    private void CancelPullDiagnostics(string fullPath)
+    {
+        lock (_pullDiagnosticsRequests)
+        {
+            if (_pullDiagnosticsRequests.Remove(fullPath, out var running)) running.Cancel();
+            _pullDiagnosticsResultIds.Remove(fullPath);
+        }
+    }
+
+    private async Task PullDiagnosticsAsync(string fullPath, CancellationTokenSource cancellation)
+    {
+        try
+        {
+            //Debounce to avoid a request for every single keystroke
+            await Task.Delay(500, cancellation.Token);
+
+            string? previousResultId;
+            lock (_pullDiagnosticsRequests)
+            {
+                _pullDiagnosticsResultIds.TryGetValue(fullPath, out previousResultId);
+            }
+
+            var client = Client;
+            if (client == null) return;
+
+            var report = await client.RequestDocumentDiagnostic(new DocumentDiagnosticParams
+            {
+                TextDocument = new TextDocumentIdentifier { Uri = fullPath },
+                PreviousResultId = previousResultId
+            }, cancellation.Token);
+
+            if (cancellation.IsCancellationRequested) return;
+
+            //An unchanged report means the previously published diagnostics are still valid
+            switch (report)
+            {
+                case RelatedUnchangedDocumentDiagnosticReport unchanged:
+                    lock (_pullDiagnosticsRequests)
+                    {
+                        _pullDiagnosticsResultIds[fullPath] = unchanged.ResultId;
+                    }
+
+                    return;
+                case RelatedFullDocumentDiagnosticReport full:
+                    lock (_pullDiagnosticsRequests)
+                    {
+                        _pullDiagnosticsResultIds[fullPath] = full.ResultId;
+                    }
+
+                    PublishDiag(new PublishDiagnosticsParams
+                    {
+                        Uri = fullPath,
+                        Diagnostics = full.Items ?? new Container<Diagnostic>()
+                    });
+                    return;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            //Superseded by a newer request or the document was closed
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+        finally
+        {
+            lock (_pullDiagnosticsRequests)
+            {
+                if (_pullDiagnosticsRequests.TryGetValue(fullPath, out var current) && current == cancellation)
+                    _pullDiagnosticsRequests.Remove(fullPath);
+            }
+
+            cancellation.Dispose();
+        }
     }
 
     public override Task ExecuteCommandAsync(Command cmd)

@@ -177,6 +177,26 @@ public sealed class CopilotChatService(
         foreach (var model in source) FilteredModels.Add(model);
     }
 
+    /// <summary>
+    /// Finds a model by id. Falls back to a separator-insensitive comparison because model ids are
+    /// not spelled consistently across Copilot releases ("claude-sonnet-4-5" vs "claude-sonnet-4.5").
+    /// </summary>
+    private ModelInfo? ResolveModel(string? modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId)) return null;
+
+        var exact = Models.FirstOrDefault(x => string.Equals(x.Id, modelId, StringComparison.OrdinalIgnoreCase));
+        if (exact != null) return exact;
+
+        var normalized = NormalizeModelId(modelId);
+        return Models.FirstOrDefault(x => NormalizeModelId(x.Id) == normalized);
+    }
+
+    private static string NormalizeModelId(string modelId)
+    {
+        return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+    }
+
     public ModelInfo? SelectedModel
     {
         get;
@@ -381,14 +401,30 @@ public sealed class CopilotChatService(
             SelectedReasoningEffort =
                 !string.IsNullOrEmpty(persisted) && ReasoningEfforts.Contains(persisted)
                     ? persisted
-                    : model.DefaultReasoningEffort is { } def && ReasoningEfforts.Contains(def)
-                        ? def
-                        : ReasoningEfforts.FirstOrDefault();
+                    : ResolveDefaultReasoningEffort(model);
         }
         finally
         {
             _suppressReasoningEffortApply = false;
         }
+    }
+
+    /// <summary>
+    /// Picks the effort a fresh session should use: the model's own default, otherwise the Copilot
+    /// CLI default ("medium"). Never falls back to the first supported entry, which would silently
+    /// select "low".
+    /// </summary>
+    private string? ResolveDefaultReasoningEffort(ModelInfo model)
+    {
+        if (model.DefaultReasoningEffort is { } modelDefault && ReasoningEfforts.Contains(modelDefault))
+            return modelDefault;
+
+        var copilotDefault = ReasoningEfforts.FirstOrDefault(x =>
+            string.Equals(x, CopilotModule.DefaultReasoningEffort, StringComparison.OrdinalIgnoreCase));
+        if (copilotDefault != null) return copilotDefault;
+
+        // The model uses a non-standard scale — prefer the middle of it over the lowest entry.
+        return ReasoningEfforts.Count > 0 ? ReasoningEfforts[ReasoningEfforts.Count / 2] : null;
     }
 
     private void ApplyModelToSession()
@@ -937,7 +973,9 @@ public sealed class CopilotChatService(
 
             var selectedModelSetting =
                 settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
-            SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ?? Models.FirstOrDefault();
+            SelectedModel = ResolveModel(selectedModelSetting) ??
+                            ResolveModel(CopilotModule.DefaultModelId) ??
+                            Models.FirstOrDefault();
 
             return true;
         }
@@ -985,8 +1023,14 @@ public sealed class CopilotChatService(
                 IncludeSubAgentStreamingEvents = false,
                 SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
-                AvailableTools = tools.Select(x => x.Name).ToList(),
+                // Restrict the session to OneWare's own tools plus the session-isolated built-ins
+                // (task/skill delegation, ask_user, …) that plugin-contributed agents and skills
+                // need. Host-capable built-ins stay unavailable.
+                AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
+                CustomAgents = BuildCustomAgents(),
+                SkillDirectories = BuildSkillDirectories(),
+                EnableSkills = true,
                 ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
@@ -1006,7 +1050,11 @@ public sealed class CopilotChatService(
                 ContextTier = ResolveContextTier(),
                 IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
+                AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
+                CustomAgents = BuildCustomAgents(),
+                SkillDirectories = BuildSkillDirectories(),
+                EnableSkills = true,
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
                 Hooks = new SessionHooks
@@ -1029,8 +1077,47 @@ public sealed class CopilotChatService(
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
     }
 
-    private SystemMessageConfig BuildSystemMessageConfig()
+    /// <summary>
+    /// Allow-list for the session: every tool OneWare registers, plus the built-ins that operate
+    /// only inside the session (agent delegation via <c>task</c>, <c>skill</c> loading, …). Built-ins
+    /// with host filesystem, shell or network access stay out, because <see cref="OnPreToolUseAsync"/>
+    /// auto-approves any tool that has no OneWare confirmation check.
+    /// </summary>
+    private ToolSet BuildAvailableTools()
     {
+        return new ToolSet()
+            .AddCustom("*")
+            .AddBuiltIn(BuiltInTools.Isolated);
+    }
+
+    /// <summary>
+    /// Converts the agents contributed by modules/plugins (e.g. a dataset agent from an FPGA AI
+    /// extension) into Copilot custom agents the main agent can delegate to.
+    /// </summary>
+    private IList<CustomAgentConfig> BuildCustomAgents()
+    {
+        return toolProvider.GetAgents()
+            .Select(agent => new CustomAgentConfig
+            {
+                Name = agent.Name,
+                DisplayName = string.IsNullOrWhiteSpace(agent.DisplayName) ? agent.Name : agent.DisplayName,
+                Description = agent.Description,
+                Prompt = agent.Instructions,
+                Model = string.IsNullOrWhiteSpace(agent.Model) ? null : agent.Model,
+                ReasoningEffort = string.IsNullOrWhiteSpace(agent.ReasoningEffort) ? null : agent.ReasoningEffort,
+                Tools = agent.Tools?.ToList(),
+                Skills = agent.Skills?.ToList(),
+                Infer = agent.Infer
+            })
+            .ToList();
+    }
+
+    private IList<string> BuildSkillDirectories()
+    {
+        return toolProvider.GetSkillDirectories().ToList();
+    }
+
+    private SystemMessageConfig BuildSystemMessageConfig()    {
         var overrides = new Dictionary<SystemMessageSection, SectionOverride>
         {
             // Tell the model it is embedded in OneWare Studio IDE
