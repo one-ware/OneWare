@@ -60,6 +60,21 @@ public class NativeStrategy : IToolExecutionStrategy
         }
     }
 
+    public bool IsProcessRunning(Guid handle)
+    {
+        if (!_backgroundProcesses.TryGetValue(handle, out var process)) return false;
+
+        try
+        {
+            return !process.HasExited;
+        }
+        catch (InvalidOperationException)
+        {
+            // Process is no longer associated with an OS process.
+            return false;
+        }
+    }
+
     public string GetStrategyName()
     {
         return "Native Execution Strategy";

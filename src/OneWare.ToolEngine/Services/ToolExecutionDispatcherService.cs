@@ -79,6 +79,13 @@ public class ToolExecutionDispatcherService(IToolService service, ILogger logger
         return strategy.StopProcess(handle);
     }
 
+    public bool IsProcessRunning(Guid handle)
+    {
+        if (!_backgroundProcessStrategies.TryGetValue(handle, out var strategy)) return false;
+
+        return strategy.IsProcessRunning(handle);
+    }
+
     public IToolCommandBuilder CreateToolCommandBuilder(string toolName)
     {
         // This is just in case you want to access a different service in the Builder in the future.

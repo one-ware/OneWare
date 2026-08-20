@@ -36,6 +36,13 @@ public interface IToolExecutionStrategy
     public bool StopProcess(Guid handle);
 
     /// <summary>
+    ///     Checks whether a background process previously started with <see cref="StartProcess"/> is still running.
+    /// </summary>
+    /// <param name="handle">The handle returned by <see cref="StartProcess"/>.</param>
+    /// <returns><c>true</c> if a running process is currently tracked for the handle; otherwise <c>false</c>.</returns>
+    public bool IsProcessRunning(Guid handle);
+
+    /// <summary>
     ///     Returns the display name for a strategy.
     ///     Is used in settings vies
     /// </summary>

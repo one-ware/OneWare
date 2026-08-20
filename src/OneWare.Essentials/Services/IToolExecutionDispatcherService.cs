@@ -39,6 +39,14 @@ public interface IToolExecutionDispatcherService
     public bool StopProcess(Guid handle);
 
     /// <summary>
+    ///     Checks whether a background process previously started with <see cref="StartProcess"/> is still running.
+    ///     The handle is routed back to whichever strategy created it, regardless of the tool's current strategy setting.
+    /// </summary>
+    /// <param name="handle">The handle returned by <see cref="StartProcess"/>.</param>
+    /// <returns><c>true</c> if a running process is currently tracked for the handle; otherwise <c>false</c>.</returns>
+    public bool IsProcessRunning(Guid handle);
+
+    /// <summary>
     /// Creates a new instance of <see cref="IToolCommandBuilder"/> for a specific tool.
     /// This is the entry point for configuring a tool command with specific arguments, environment variables, and mappings.
     /// </summary>
