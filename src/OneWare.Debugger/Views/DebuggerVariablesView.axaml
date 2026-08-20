@@ -41,7 +41,7 @@
                                         Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
                     <DataGridTextColumn Header="Value" Width="*"
                                         Binding="{CompiledBinding Value, DataType=models:VariableRow}" />
-                    <DataGridTextColumn Header="Type" Width="Auto"
+                    <DataGridTextColumn Header="Type" Width="*"
                                         Binding="{CompiledBinding Type, DataType=models:VariableRow}" />
                 </DataGrid.Columns>
             </DataGrid>

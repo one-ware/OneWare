@@ -37,12 +37,12 @@
                         IsVisible="{Binding IsRunning}">
                     <Image Source="{DynamicResource VsCodeLight.Debug-Pause}" />
                 </Button>
-                <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
-                        IsVisible="{Binding !IsRunning}">
-                    <Image Source="{DynamicResource MaterialDesign.PlayArrow}" />
-                </Button>
                 <Button Width="24" Height="24" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
                     <Image Source="{DynamicResource VsCodeLight.Debug-Stop}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
+                        IsVisible="{Binding !IsRunning}">
+                    <Image Source="{DynamicResource MaterialSymbols.Resume}" />
                 </Button>
 
                 <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
@@ -128,14 +128,18 @@
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                         <DockPanel Margin="4" LastChildFill="True">
                             <Button DockPanel.Dock="Right" Margin="4,0,0,0" Width="24" Height="24"
-                                    Command="{Binding AddMemoryWatchCommand}"
-                                    ToolTip.Tip="Watch this address">
-                                <Image Width="14" Height="14"
-                                       Source="{DynamicResource MaterialDesign.EyeTracking}" />
+                                    Command="{Binding ClearMemoryWatchesCommand}" ToolTip.Tip="Clear all watches">
+                                <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
                             </Button>
                             <Button DockPanel.Dock="Right" Width="24" Height="24"
                                     Command="{Binding RemoveMemoryWatchCommand}" ToolTip.Tip="Remove address">
                                 <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                            </Button>
+                            <Button DockPanel.Dock="Right" Width="24" Height="24"
+                                    Command="{Binding AddMemoryWatchCommand}"
+                                    ToolTip.Tip="Watch this address">
+                                <Image Width="14" Height="14"
+                                       Source="{DynamicResource MaterialDesign.EyeTracking}" />
                             </Button>
                             <TextBox Text="{Binding MemoryAddressText, Mode=TwoWay}"
                                      Watermark="Address, e.g. 0x2001ff80 or &amp;buffer"
@@ -164,9 +168,9 @@
                                   HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Address" Width="Auto"
+                                <DataGridTextColumn Header="Address" Width="*"
                                                     Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
-                                <DataGridTextColumn Header="Bytes" Width="Auto"
+                                <DataGridTextColumn Header="Bytes" Width="*"
                                                     Binding="{CompiledBinding Length, DataType=models:MemoryRow}" />
                                 <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True"
                                                     Binding="{CompiledBinding Value, DataType=models:MemoryRow}" />

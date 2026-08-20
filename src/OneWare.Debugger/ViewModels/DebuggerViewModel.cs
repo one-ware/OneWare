@@ -278,6 +278,16 @@ public partial class DebuggerViewModel : ExtendedTool
         return SelectedMemoryRow is not null;
     }
 
+    // Leert die ganze Beobachtungsliste statt nur der Auswahl. Auf einer leeren Liste ein
+    // no-op, deshalb ohne eigenes CanExecute.
+    [RelayCommand]
+    private void ClearMemoryWatches()
+    {
+        foreach (var row in MemoryWatches) row.PropertyChanged -= OnMemoryRowChanged;
+        MemoryWatches.Clear();
+        SelectedMemoryRow = null;
+    }
+
     partial void OnSelectedMemoryRowChanged(MemoryRow? value)
     {
         RemoveMemoryWatchCommand.NotifyCanExecuteChanged();
