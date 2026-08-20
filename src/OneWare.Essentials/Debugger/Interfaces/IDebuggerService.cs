@@ -2,62 +2,115 @@ using OneWare.Essentials.Debugger.Entities;
 
 namespace OneWare.Essentials.Debugger.Interfaces;
 
-// The service a plugin resolves in order to take part in debugging. The dependency runs one way
-// only -> plugins depend on these contracts, the core never learns that a given plugin exists.
+/// <summary>
+/// The service a plugin resolves in order to take part in debugging. The dependency runs one
+/// way only — plugins depend on these contracts, the core never learns that a given plugin
+/// exists.
+/// </summary>
 public interface IDebuggerService
 {
-    // Registered backends, the core's own included
+    /// <summary>
+    /// Registered backends, including the core's own.
+    /// </summary>
     public IReadOnlyList<IDebugAdapter> Adapters { get; }
 
-    // preparation step: whoever fits the active project shows up in the launch selection
+    /// <summary>
+    /// Registered launch providers. Whoever fits the active project shows up in the launch
+    /// selection of the debug panel.
+    /// </summary>
     public IReadOnlyList<IDebugLaunchProvider> LaunchProviders { get; }
 
-    // The active session, or null if none is running
+    /// <summary>
+    /// The active session, or <see langword="null"/> if none is running.
+    /// </summary>
     public IDebugSession? CurrentSession { get; }
 
-    // State of the active session, or DebugSessionState.Empty if none is running
+    /// <summary>
+    /// State of the active session, or <see cref="DebugSessionState.Empty"/> if none is running.
+    /// </summary>
     public DebugSessionState State { get; }
 
-    // Whether a session is running -> this is what gates the breakpoint margin in the editor
+    /// <summary>
+    /// <see langword="true"/> while a session is running. Gates the breakpoint margin in the
+    /// editor.
+    /// </summary>
     public bool IsActive { get; }
 
-    // Fired when State, CurrentSession or IsActive changed. Always raised on the UI thread,
-    // so handlers can touch bound collections directly.
+    /// <summary>
+    /// Fired when <see cref="State"/>, <see cref="CurrentSession"/>, or <see cref="IsActive"/>
+    /// changed. Always raised on the UI thread, so handlers can touch bound collections directly.
+    /// </summary>
     public event EventHandler? StateChanged;
 
-    // Resolved from the container -> the implementation gets constructor injection like any
-    // other service
+    /// <summary>
+    /// Registers an adapter. Resolved from the container — the implementation gets constructor
+    /// injection like any other service.
+    /// </summary>
     public void RegisterAdapter<T>() where T : IDebugAdapter;
 
-    // preparation step: registration works like the adapters, resolved through the container
+    /// <summary>
+    /// Registers a launch provider. Resolved from the container like adapters.
+    /// </summary>
     public void RegisterLaunchProvider<T>() where T : IDebugLaunchProvider;
 
-    // Starts a session, arms the breakpoints currently set in the editor and runs the program
-    // -> false if no adapter accepted the request or the backend did not come up; nothing is
-    // left running in that case
+    /// <summary>
+    /// Starts a session, arms the breakpoints currently set in the editor and runs the program.
+    /// Returns <see langword="false"/> if no adapter accepted the request or the backend did not
+    /// come up; nothing is left running in that case.
+    /// </summary>
     public Task<bool> StartAsync(DebugLaunchRequest launchRequest);
 
-    // preparation step: PrepareAsync first, then start with its request;
-    // CleanupAsync runs as soon as the session ends - no matter how it ended
+    /// <summary>
+    /// Calls <see cref="IDebugLaunchProvider.PrepareAsync"/> first, then starts with the
+    /// returned request. <see cref="IDebugLaunchProvider.CleanupAsync"/> runs as soon as the
+    /// session ends, no matter how it ended.
+    /// </summary>
     public Task<bool> StartAsync(IDebugLaunchProvider provider, CancellationToken ct = default);
 
-    // Ends the active session. Does nothing if none is running.
+    /// <summary>
+    /// Ends the active session. Does nothing if none is running.
+    /// </summary>
     public Task StopAsync();
 
-    // The commands below mirror IDebugSession and forward to CurrentSession, doing nothing when
-    // there is none -> panels bind to this service alone and never have to rebind when a session
-    // starts or ends
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.ContinueAsync"/> on <see cref="CurrentSession"/>.
+    /// Does nothing when no session is active.
+    /// </summary>
     public Task ContinueAsync();
 
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.PauseAsync"/> on <see cref="CurrentSession"/>.
+    /// Does nothing when no session is active.
+    /// </summary>
     public Task PauseAsync();
 
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.StepIntoAsync"/> on <see cref="CurrentSession"/>.
+    /// Does nothing when no session is active.
+    /// </summary>
     public Task StepIntoAsync();
 
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.StepOverAsync"/> on <see cref="CurrentSession"/>.
+    /// Does nothing when no session is active.
+    /// </summary>
     public Task StepOverAsync();
 
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.StepOutAsync"/> on <see cref="CurrentSession"/>.
+    /// Does nothing when no session is active.
+    /// </summary>
     public Task StepOutAsync();
 
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.ReadMemoryAsync"/> on <see cref="CurrentSession"/>.
+    /// Returns <see langword="null"/> when no session is active.
+    /// </summary>
     public Task<string?> ReadMemoryAsync(string address, int byteCount);
 
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.SendRawCommandAsync"/> on
+    /// <see cref="CurrentSession"/>. Does nothing when no session is active.
+    /// </summary>
     public Task SendRawCommandAsync(string command);
 }

@@ -3,72 +3,112 @@ using OneWare.Essentials.EditorExtensions;
 
 namespace OneWare.Essentials.Debugger.Interfaces;
 
-// Heavyweight which capsules the debug session and exposes DebugSessionState to the UI
-// with one important rule: backend syntax does not cross this interface (no GDB/MI).
-// SendRawCommandAsync is the one deliberate exception -> it backs the console's command line.
-// The control commands return no result: what the target did afterwards arrives through
-// StateChanged, which is also how a halt nobody asked for - a breakpoint being hit - reaches
-// the panels.
+/// <summary>
+/// Encapsulates one debug session and exposes <see cref="DebugSessionState"/> to the UI.
+/// Backend syntax does not cross this interface (no GDB/MI).
+/// <see cref="SendRawCommandAsync"/> is the one deliberate exception — it backs the console's
+/// command line. Control commands return no result: what the target did afterwards arrives
+/// through <see cref="StateChanged"/>, which is also how an unsolicited halt (e.g. a breakpoint
+/// being hit) reaches the panels.
+/// </summary>
 public interface IDebugSession
 {
-    // Backend ID e.g. GDB
+    /// <summary>
+    /// Identifies the backend, e.g. <c>GDB</c>.
+    /// </summary>
     public string AdapterId { get; }
 
-    // Latest published state.
+    /// <summary>
+    /// Latest published state.
+    /// </summary>
     public DebugSessionState State { get; }
 
-    // Fired whenever a State is replaced. May arrive on any thread.
+    /// <summary>
+    /// Fired whenever <see cref="State"/> is replaced. May arrive on any thread.
+    /// </summary>
     public event EventHandler<DebugSessionState>? StateChanged;
 
-    // Output of the debugged program, and readable messages from the backend.
+    /// <summary>
+    /// Output of the debugged program, and readable messages from the backend.
+    /// </summary>
     public event EventHandler<string>? OutputReceived;
 
-    // Every command sent to the backend, so the console can echo it.
+    /// <summary>
+    /// Every command sent to the backend, so the console can echo it.
+    /// </summary>
     public event EventHandler<string>? CommandSent;
 
-    // The backend process ended, whether asked to or not.
+    /// <summary>
+    /// The backend process ended, whether asked to or not.
+    /// </summary>
     public event EventHandler? Exited;
 
-    // Brings the backend up and, for a remote request, attaches to the stub
-    // -> false means it did not come up and the session is unusable
+    /// <summary>
+    /// Brings the backend up and, for a remote request, attaches to the stub.
+    /// Returns <see langword="false"/> if it did not come up and the session is unusable.
+    /// </summary>
     public Task<bool> StartAsync();
 
-    // Starts the program. Separate from ContinueAsync -> an attached target is already loaded
-    // and only needs resuming
+    /// <summary>
+    /// Starts the program. Separate from <see cref="ContinueAsync"/> — an attached target is
+    /// already loaded and only needs resuming.
+    /// </summary>
     public Task RunAsync();
 
-    // Resumes the halted target
+    /// <summary>
+    /// Resumes the halted target.
+    /// </summary>
     public Task ContinueAsync();
 
-    // Halts the running target
+    /// <summary>
+    /// Halts the running target.
+    /// </summary>
     public Task PauseAsync();
 
-    // One source line, entering called functions
+    /// <summary>
+    /// Steps one source line, entering called functions.
+    /// </summary>
     public Task StepIntoAsync();
 
-    // One source line, stepping over called functions
+    /// <summary>
+    /// Steps one source line, stepping over called functions.
+    /// </summary>
     public Task StepOverAsync();
 
-    // Runs until the current function returns
+    /// <summary>
+    /// Runs until the current function returns.
+    /// </summary>
     public Task StepOutAsync();
 
-    // Arms a breakpoint on the target -> false if the target refused it, for instance because it
-    // ran out of hardware breakpoints
+    /// <summary>
+    /// Arms a breakpoint on the target.
+    /// Returns <see langword="false"/> if the target refused it, e.g. because it ran out of
+    /// hardware breakpoints.
+    /// </summary>
     public Task<bool> SetBreakpointAsync(BreakPoint breakpoint);
 
-    // Removes a previously armed breakpoint
+    /// <summary>
+    /// Removes a previously armed breakpoint.
+    /// </summary>
     public Task<bool> RemoveBreakpointAsync(BreakPoint breakpoint);
 
-    // address is whatever the backend accepts - a literal such as 0x2001ff80, or an expression
-    // like &buffer when symbols exist. Returns null if it could not be read; a running target
-    // cannot be read at all, so ask only while halted.
+    /// <summary>
+    /// Reads memory from the target. <paramref name="address"/> is whatever the backend accepts —
+    /// a literal such as <c>0x2001ff80</c>, or an expression like <c>&amp;buffer</c> when symbols
+    /// exist. Returns <see langword="null"/> if the memory could not be read; a running target
+    /// cannot be read, so call only while halted.
+    /// </summary>
     public Task<string?> ReadMemoryAsync(string address, int byteCount);
 
-    // Sends a command verbatim to the backend. The response arrives through OutputReceived,
-    // like any other backend output.
+    /// <summary>
+    /// Sends a command verbatim to the backend. The response arrives through
+    /// <see cref="OutputReceived"/>, like any other backend output.
+    /// </summary>
     public Task SendRawCommandAsync(string command);
 
-    // Tears the backend down. Synchronous and best effort -> it also runs on application
-    // shutdown, where there is nothing left to await on.
+    /// <summary>
+    /// Tears the backend down. Synchronous and best-effort — also runs on application shutdown,
+    /// where there is nothing left to await on.
+    /// </summary>
     public void Stop();
 }

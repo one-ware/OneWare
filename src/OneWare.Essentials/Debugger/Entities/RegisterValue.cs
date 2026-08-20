@@ -1,6 +1,10 @@
 namespace OneWare.Essentials.Debugger.Entities;
 
-// A single register as read from the target.
+/// <summary>
+/// A single register as read from the target.
+/// </summary>
+/// <param name="Name">As reported by the target, e.g. <c>sp</c> or <c>pc</c>.</param>
+/// <param name="Value">Formatted by the backend; the UI displays the string unchanged.</param>
 public sealed record RegisterValue(
-    string Name, // as the target reports it, e.g. sp or pc
-    string Value); // formatted by the backend, the UI displays the string unchanged
+    string Name,
+    string Value);

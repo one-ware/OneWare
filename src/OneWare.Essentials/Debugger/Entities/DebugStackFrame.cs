@@ -1,8 +1,20 @@
 namespace OneWare.Essentials.Debugger.Entities;
 
-// Where the target is halted.
+/// <summary>
+/// Where the target is halted.
+/// </summary>
+/// <param name="Function">Name of the function, if the backend reported one.</param>
+/// <param name="File">
+/// Absolute source path, or <see langword="null"/> if the address could not be mapped.
+/// The editor only jumps to the source location when this is set.
+/// </param>
+/// <param name="Line">One-based line number, or <c>0</c> if unknown.</param>
+/// <param name="Address">
+/// Program counter as formatted by the backend, e.g. <c>0x00000108</c>. The only location
+/// available when no debug symbols are present.
+/// </param>
 public sealed record DebugStackFrame(
-    string? Function, // name of the function, if the backend reported one
-    string? File, // absolute source path, null if the address could not be mapped -> the editor only jumps when this is set
-    int Line, // one based, 0 if unknown
-    string? Address); // program counter as the backend formatted it, e.g. 0x00000108 -> the only location without symbols
+    string? Function,
+    string? File,
+    int Line,
+    string? Address);

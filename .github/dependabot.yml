@@ -57,3 +57,8 @@ updates:
       - dependency-name: "TreeDataGrid"
         update-types:
           - "version-update:semver-major"
+      # 11.3.12.2+ crashes with "Visual is atached to visual tree but root could not be found"
+      # when recycled rows are detached. Remove once fixed upstream.
+      - dependency-name: "TreeDataGrid"
+        versions:
+          - "> 11.3.12.1"

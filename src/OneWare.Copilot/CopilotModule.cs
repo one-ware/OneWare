@@ -17,6 +17,16 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
     public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
 
+    /// <summary>
+    /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
+    /// </summary>
+    public const string DefaultModelId = "claude-sonnet-4-5";
+
+    /// <summary>
+    /// Default reasoning effort, matching the Copilot CLI <c>effortLevel</c> default.
+    /// </summary>
+    public const string DefaultReasoningEffort = "medium";
+
     public static readonly Package CopilotPackage = new()
     {
         Category = "Binaries",
@@ -202,7 +212,7 @@ public class CopilotModule : OneWareModuleBase
         //         HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
         //     });
 
-        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
+        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, DefaultModelId);
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedReasoningEffortSettingKey, "");
 
