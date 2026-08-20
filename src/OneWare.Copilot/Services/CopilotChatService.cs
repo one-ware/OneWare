@@ -177,6 +177,26 @@ public sealed class CopilotChatService(
         foreach (var model in source) FilteredModels.Add(model);
     }
 
+    /// <summary>
+    /// Finds a model by id. Falls back to a separator-insensitive comparison because model ids are
+    /// not spelled consistently across Copilot releases ("claude-sonnet-4-5" vs "claude-sonnet-4.5").
+    /// </summary>
+    private ModelInfo? ResolveModel(string? modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId)) return null;
+
+        var exact = Models.FirstOrDefault(x => string.Equals(x.Id, modelId, StringComparison.OrdinalIgnoreCase));
+        if (exact != null) return exact;
+
+        var normalized = NormalizeModelId(modelId);
+        return Models.FirstOrDefault(x => NormalizeModelId(x.Id) == normalized);
+    }
+
+    private static string NormalizeModelId(string modelId)
+    {
+        return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+    }
+
     public ModelInfo? SelectedModel
     {
         get;
@@ -381,14 +401,30 @@ public sealed class CopilotChatService(
             SelectedReasoningEffort =
                 !string.IsNullOrEmpty(persisted) && ReasoningEfforts.Contains(persisted)
                     ? persisted
-                    : model.DefaultReasoningEffort is { } def && ReasoningEfforts.Contains(def)
-                        ? def
-                        : ReasoningEfforts.FirstOrDefault();
+                    : ResolveDefaultReasoningEffort(model);
         }
         finally
         {
             _suppressReasoningEffortApply = false;
         }
+    }
+
+    /// <summary>
+    /// Picks the effort a fresh session should use: the model's own default, otherwise the Copilot
+    /// CLI default ("medium"). Never falls back to the first supported entry, which would silently
+    /// select "low".
+    /// </summary>
+    private string? ResolveDefaultReasoningEffort(ModelInfo model)
+    {
+        if (model.DefaultReasoningEffort is { } modelDefault && ReasoningEfforts.Contains(modelDefault))
+            return modelDefault;
+
+        var copilotDefault = ReasoningEfforts.FirstOrDefault(x =>
+            string.Equals(x, CopilotModule.DefaultReasoningEffort, StringComparison.OrdinalIgnoreCase));
+        if (copilotDefault != null) return copilotDefault;
+
+        // The model uses a non-standard scale — prefer the middle of it over the lowest entry.
+        return ReasoningEfforts.Count > 0 ? ReasoningEfforts[ReasoningEfforts.Count / 2] : null;
     }
 
     private void ApplyModelToSession()
@@ -937,7 +973,9 @@ public sealed class CopilotChatService(
 
             var selectedModelSetting =
                 settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
-            SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ?? Models.FirstOrDefault();
+            SelectedModel = ResolveModel(selectedModelSetting) ??
+                            ResolveModel(CopilotModule.DefaultModelId) ??
+                            Models.FirstOrDefault();
 
             return true;
         }

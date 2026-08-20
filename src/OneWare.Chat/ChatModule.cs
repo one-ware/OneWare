@@ -31,6 +31,13 @@ public class ChatModule : OneWareModuleBase
         dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.RightPinned);
         
         settingsService.RegisterSettingCategory("AI Chat", 0, "Bootstrap.ChatLeft");
+
+        settingsService.RegisterSetting("AI Chat", "History", ChatViewModel.MaxSessionHistoryKey,
+            new SliderSetting("Maximum stored chats", ChatViewModel.DefaultMaxSessionHistory, 5, 500, 5)
+            {
+                HoverDescription =
+                    "Maximum number of chats kept per AI service. Older chats are deleted automatically."
+            });
         
         dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.Right);
 
