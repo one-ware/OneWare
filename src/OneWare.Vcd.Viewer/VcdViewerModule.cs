@@ -14,7 +14,10 @@ public class VcdViewerModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IMainDockService>().RegisterDocumentView<VcdViewModel>(".vcd");
+        var mainDockService = serviceProvider.Resolve<IMainDockService>();
+        mainDockService.RegisterDocumentView<VcdViewModel>(".vcd");
+        mainDockService.RegisterDocumentView<VcdViewModel>(".ghw");
+        mainDockService.RegisterDocumentView<VcdViewModel>(".fst");
 
         serviceProvider.Resolve<ILanguageManager>().RegisterLanguageExtensionLink(".vcdconf", ".json");
 
