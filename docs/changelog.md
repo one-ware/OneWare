@@ -1,3 +1,8 @@
+## 1.0.28
+
+- Add possibility to add custom AI Agents and Skills
+- Add TypeScript / Javascript Support
+
 ## 1.0.26
 
 - Add option to the Windows Installer to remove all user data when uninstalling
