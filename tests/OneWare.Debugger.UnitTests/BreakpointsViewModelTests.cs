@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using OneWare.Debugger.ViewModels;
+using OneWare.Debugger.ViewModels.Inspector;
 using OneWare.Essentials.EditorExtensions;
 using Xunit;
 
@@ -18,11 +18,11 @@ namespace OneWare.Debugger.UnitTests;
 ///     und nach jedem Test auf. xUnit fuehrt Tests innerhalb einer Klasse sequenziell aus, die
 ///     uebrigen Testklassen der Assembly fassen den Store nicht an.
 /// </summary>
-public class DebuggerBreakpointsViewModelTests : IDisposable
+public class BreakpointsViewModelTests : IDisposable
 {
     private static readonly BreakpointStore Store = BreakpointStore.Instance;
 
-    public DebuggerBreakpointsViewModelTests()
+    public BreakpointsViewModelTests()
     {
         Store.Breakpoints.Clear();
     }
@@ -42,7 +42,7 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
     [Fact]
     public void RemoveBreakpointRemovesOnlyTheSelectedEntries()
     {
-        var vm = new DebuggerBreakpointsViewModel();
+        var vm = new BreakpointsViewModel();
         var first = Add(@"C:\proj\src\top.vhd", 10);
         var second = Add(@"C:\proj\src\top.vhd", 20);
         var third = Add(@"C:\proj\src\uart.vhd", 5);
@@ -59,7 +59,7 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
     [Fact]
     public void BreakpointsAreSortedByFileThenLine()
     {
-        var vm = new DebuggerBreakpointsViewModel();
+        var vm = new BreakpointsViewModel();
 
         // Absichtlich in der falschen Reihenfolge eingetragen: die Sicht sortiert, nicht der Store.
         var uart = Add(@"C:\proj\src\uart.vhd", 5);
@@ -74,7 +74,7 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
     [Fact]
     public void RemoveBreakpointReportsEveryEntryIndividually()
     {
-        var vm = new DebuggerBreakpointsViewModel();
+        var vm = new BreakpointsViewModel();
         var first = Add(@"C:\proj\src\top.vhd", 10);
         Add(@"C:\proj\src\top.vhd", 20);
         var third = Add(@"C:\proj\src\uart.vhd", 5);
@@ -101,7 +101,7 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
     [Fact]
     public void RemoveBreakpointIsOnlyExecutableWithASelection()
     {
-        var vm = new DebuggerBreakpointsViewModel();
+        var vm = new BreakpointsViewModel();
         var breakpoint = Add(@"C:\proj\src\top.vhd", 10);
 
         Assert.False(vm.RemoveBreakpointCommand.CanExecute(null));
@@ -116,7 +116,7 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
     [Fact]
     public void RemoveAllBreakpointsIsOnlyExecutableWhenTheListHasEntries()
     {
-        var vm = new DebuggerBreakpointsViewModel();
+        var vm = new BreakpointsViewModel();
 
         Assert.False(vm.RemoveAllBreakpointsCommand.CanExecute(null));
 
@@ -130,7 +130,7 @@ public class DebuggerBreakpointsViewModelTests : IDisposable
     [Fact]
     public void RemoveAllBreakpointsClearsStoreAndSelection()
     {
-        var vm = new DebuggerBreakpointsViewModel();
+        var vm = new BreakpointsViewModel();
         var first = Add(@"C:\proj\src\top.vhd", 10);
         Add(@"C:\proj\src\uart.vhd", 5);
         vm.SelectedBreakpoints.Add(first);

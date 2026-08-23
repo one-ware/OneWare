@@ -5,17 +5,17 @@ using OneWare.Debugger.Models;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
 
-namespace OneWare.Debugger.ViewModels;
+namespace OneWare.Debugger.ViewModels.Inspector;
 
 // Reiter "Variables" im Debugger-Panel: Variablen des aktuellen Stack-Frames,
 // benannt nach der gleichnamigen Eclipse-Ansicht.
 // Zieht sich nichts selbst, sondern zeigt an, was die Session beim letzten Halt mitgeliefert
 // hat. Damit koennen Variablen und Register nie aus verschiedenen Halts stammen.
-public partial class DebuggerVariablesViewModel : ObservableObject
+public partial class VariablesViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
 
-    public DebuggerVariablesViewModel(IDebuggerService debuggerService)
+    public VariablesViewModel(IDebuggerService debuggerService)
     {
         _debuggerService = debuggerService;
         _debuggerService.StateChanged += (_, _) => Apply(_debuggerService.State);

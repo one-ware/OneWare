@@ -4,18 +4,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.EditorExtensions;
 
-namespace OneWare.Debugger.ViewModels;
+namespace OneWare.Debugger.ViewModels.Inspector;
 
 // Reiter "Breakpoints" im Debugger-Panel: alle gesetzten Breakpoints, quer ueber alle
 // Dateien. Bezieht seine Daten direkt aus dem anwendungsweiten BreakpointStore,
 // zeigt also auch Breakpoints aus Dateien, die gerade nicht geoeffnet sind. Es ist derselbe
 // Store, den die laufende Session an GDB weiterreicht - die Liste zeigt damit genau das, was
 // am Ziel scharf ist.
-public partial class DebuggerBreakpointsViewModel : ObservableObject
+public partial class BreakpointsViewModel : ObservableObject
 {
     public ObservableCollection<BreakPoint> SelectedBreakpoints { get; } = new();
 
-    public DebuggerBreakpointsViewModel()
+    public BreakpointsViewModel()
     {
         Breakpoints = new DataGridCollectionView(BreakpointStore.Instance.Breakpoints);
         Breakpoints.SortDescriptions.Add(DataGridSortDescription.FromPath(nameof(BreakPoint.File)));

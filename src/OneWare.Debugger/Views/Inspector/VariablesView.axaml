@@ -2,11 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             xmlns:inspector="clr-namespace:OneWare.Debugger.ViewModels.Inspector"
              xmlns:models="clr-namespace:OneWare.Debugger.Models"
              mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
-             x:Class="OneWare.Debugger.Views.DebuggerVariablesView"
-             x:DataType="viewModels:DebuggerVariablesViewModel">
+             x:Class="OneWare.Debugger.Views.Inspector.VariablesView"
+             x:DataType="inspector:VariablesViewModel">
 
     <DockPanel LastChildFill="True">
         <Border DockPanel.Dock="Top"

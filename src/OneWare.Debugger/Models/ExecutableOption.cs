@@ -1,4 +1,3 @@
-using OneWare.Essentials.Debugger;
 using OneWare.Essentials.Debugger.Interfaces;
 
 namespace OneWare.Debugger.Models;

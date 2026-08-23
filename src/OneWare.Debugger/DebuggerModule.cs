@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.Helpers;
 using OneWare.Debugger.ViewModels;
+using OneWare.Debugger.ViewModels.Inspector;
+using OneWare.Debugger.ViewModels.Main;
 using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
@@ -20,9 +22,13 @@ public class DebuggerModule : OneWareModuleBase
         services.AddSingleton<IDebuggerService, DebuggerService>();
         services.AddSingleton<GdbDebugAdapter>();
         services.AddSingleton<DebuggerViewModel>();
-        services.AddSingleton<DebuggerVariablesViewModel>();
-        services.AddSingleton<DebuggerBreakpointsViewModel>();
-        services.AddSingleton<DebuggerInspectorViewModel>();
+        services.AddSingleton<MainPanelViewModel>();
+        services.AddSingleton<RegisterTabViewModel>();
+        services.AddSingleton<MemoryTabViewModel>();
+        services.AddSingleton<ConsoleTabViewModel>();
+        services.AddSingleton<VariablesViewModel>();
+        services.AddSingleton<BreakpointsViewModel>();
+        services.AddSingleton<InspectorViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -56,7 +62,7 @@ public class DebuggerModule : OneWareModuleBase
             });
         
         dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
-        dockService.RegisterLayoutExtension<DebuggerInspectorViewModel>(DockShowLocation.RightPinned);
+        dockService.RegisterLayoutExtension<InspectorViewModel>(DockShowLocation.RightPinned);
         
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemModel("Debugger")
@@ -64,7 +70,7 @@ public class DebuggerModule : OneWareModuleBase
                 Header = "Debugger",
                 Command = new RelayCommand(() =>
                 {
-                    dockService.Show(serviceProvider.Resolve<DebuggerInspectorViewModel>(),
+                    dockService.Show(serviceProvider.Resolve<InspectorViewModel>(),
                         DockShowLocation.RightPinned);
                     dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom);
                 }),

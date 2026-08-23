@@ -2,19 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
-             xmlns:views="clr-namespace:OneWare.Debugger.Views"
+             xmlns:inspector="clr-namespace:OneWare.Debugger.ViewModels.Inspector"
+             xmlns:views="clr-namespace:OneWare.Debugger.Views.Inspector"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500"
-             x:Class="OneWare.Debugger.Views.DebuggerInspectorView"
-             x:DataType="viewModels:DebuggerInspectorViewModel"
+             x:Class="OneWare.Debugger.Views.Inspector.InspectorView"
+             x:DataType="inspector:InspectorViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
     <TabControl Padding="0" Margin="0">
         <TabItem Header="Variables">
-            <views:DebuggerVariablesView DataContext="{Binding Variables}" />
+            <views:VariablesView DataContext="{Binding Variables}" />
         </TabItem>
         <TabItem Header="Breakpoints">
-            <views:DebuggerBreakpointsView DataContext="{Binding Breakpoints}" />
+            <views:BreakpointsView DataContext="{Binding Breakpoints}" />
         </TabItem>
     </TabControl>
 </UserControl>

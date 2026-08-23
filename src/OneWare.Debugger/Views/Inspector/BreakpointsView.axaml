@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             xmlns:inspector="clr-namespace:OneWare.Debugger.ViewModels.Inspector"
              xmlns:editorExtensions="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
              xmlns:converters="clr-namespace:OneWare.Debugger.Helpers"
              mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
-             x:Class="OneWare.Debugger.Views.DebuggerBreakpointsView"
-             x:DataType="viewModels:DebuggerBreakpointsViewModel">
+             x:Class="OneWare.Debugger.Views.Inspector.BreakpointsView"
+             x:DataType="inspector:BreakpointsViewModel">
 
     <DockPanel LastChildFill="True">
         <Border DockPanel.Dock="Top"
