@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:main="clr-namespace:OneWare.Debugger.ViewModels.Main"
+             xmlns:views="clr-namespace:OneWare.Debugger.Views.Main"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="220"
+             x:Class="OneWare.Debugger.Views.Main.MainPanelView"
+             x:DataType="main:MainPanelViewModel">
+
+    <!-- Die Reihenfolge hier ist die, die MainPanelViewModel.ConsoleTabIndex meint. -->
+    <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
+
+        <TabItem Header="Registers">
+            <views:RegisterTabView DataContext="{Binding Registers}" />
+        </TabItem>
+
+        <TabItem Header="Memory">
+            <views:MemoryTabView DataContext="{Binding Memory}" />
+        </TabItem>
+
+        <TabItem Header="Debugger Console">
+            <views:ConsoleTabView DataContext="{Binding Console}" />
+        </TabItem>
+
+    </TabControl>
+</UserControl>

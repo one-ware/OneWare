@@ -1,27 +1,27 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Models;
-using OneWare.Essentials.Debugger;
+using OneWare.Debugger.ViewModels.Main;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels;
 
-// Unteres Panel: Steuerleiste der Debug-Session sowie die Reiter Registers und
-// Debugger Console.
-// Bindet ausschliesslich an IDebuggerService, nie an eine Session. Damit muss
-// beim Starten und Beenden nichts umgehaengt werden, und das Panel funktioniert auch dann,
-// wenn es erst waehrend einer laufenden Session geoeffnet wird.
+// Unteres Panel: die Steuerleiste der Debug-Session und darunter der Reiterbereich.
+// Hier laeuft alles zusammen - dies ist der einzige Ort, der IDebuggerService abonniert und
+// sich an die Sitzung haengt. Die Reiter bekommen ihren Zustand von hier gereicht und muessen
+// selbst nichts abonnieren.
+// Gebunden wird ausschliesslich an IDebuggerService, nie an eine Session. Damit muss beim
+// Starten und Beenden nichts umgehaengt werden, und das Panel funktioniert auch dann, wenn es
+// erst waehrend einer laufenden Session geoeffnet wird.
 public partial class DebuggerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.BugReport";
@@ -32,22 +32,9 @@ public partial class DebuggerViewModel : ExtendedTool
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
 
-    // Reihenfolge der Reiter: 0 Registers, 1 Memory, 2 Debugger Console.
-    private const int DebuggerConsoleTabIndex = 2;
-
-    // Adresse, die der Eingabezeile im Memory-Reiter entnommen und beim Hinzufuegen zur
-    // Beobachtungsliste gemacht wird.
-    [ObservableProperty] private string _memoryAddressText = string.Empty;
-
-    [ObservableProperty] private MemoryRow? _selectedMemoryRow;
-
     // Die Programmdatei, mit der gestartet wird. null heisst: ohne Symbole, so wie es
     // ein Ziel verlangt, das sein Programm selbst haelt.
     [ObservableProperty] private ExecutableOption? _selectedExecutable;
-
-    // Eingabezeile der Debugger Console, ueber die sich Kommandos direkt an das Backend
-    // schicken lassen.
-    [ObservableProperty] private string _commandText = string.Empty;
 
     [ObservableProperty] private bool _isRunning;
 
@@ -56,8 +43,6 @@ public partial class DebuggerViewModel : ExtendedTool
     [ObservableProperty] private bool _isPreparing;
 
     [ObservableProperty] private bool _isSessionActive;
-
-    [ObservableProperty] private int _selectedTabIndex;
 
     [ObservableProperty] private string _statusText = "No session";
 
@@ -68,13 +53,17 @@ public partial class DebuggerViewModel : ExtendedTool
     private CancellationTokenSource? _prepareCancellation;
 
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
-        IProjectExplorerService projectExplorerService, IMainDockService mainDockService) : base(IconKey)
+        IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
+        MainPanelViewModel mainPanel) : base(IconKey)
     {
         _debuggerService = debuggerService;
         _logger = logger;
         _settingsService = settingsService;
         _projectExplorerService = projectExplorerService;
         _mainDockService = mainDockService;
+
+        // Vor dem Abo gesetzt -> schon der erste Zustandswechsel greift auf die Reiter zu.
+        MainPanel = mainPanel;
 
         Id = "Debug";
         Title = "Debug";
@@ -88,19 +77,12 @@ public partial class DebuggerViewModel : ExtendedTool
         RefreshExecutables();
     }
 
+    // Der Reiterbereich unter der Leiste.
+    public MainPanelViewModel MainPanel { get; }
+
     // Zur Auswahl stehende Programmdateien: die ELF-Dateien des aktiven Projekts und alles,
     // was ueber den Durchsuchen-Knopf dazugekommen ist.
     public ObservableCollection<ExecutableOption> Executables { get; } = [];
-
-    // Registerinhalte, wie sie beim letzten Halt gelesen wurden.
-    public ObservableCollection<RegisterRow> Registers { get; } = [];
-
-    // Vom Benutzer beobachtete Speicheradressen. Bleiben ueber Sessions hinweg stehen, damit
-    // man dieselben Adressen nach einem Neustart nicht wieder eintippen muss.
-    public ObservableCollection<MemoryRow> MemoryWatches { get; } = [];
-
-    // Verkehr mit dem Debugger-Backend, inklusive abgesetzter Kommandos.
-    public ObservableCollection<ConsoleLine> DebuggerConsole { get; } = [];
 
     // Laesst den Benutzer eine Programmdatei ausserhalb des Projekts waehlen und uebernimmt
     // sie in die Auswahl.
@@ -135,11 +117,9 @@ public partial class DebuggerViewModel : ExtendedTool
         // da, taucht aber erst nach einem Neustart des Studios in der Auswahl auf.
         RefreshExecutables();
 
-        DebuggerConsole.Clear();
-
         // Beim Start interessiert der Verkehr mit dem Backend - also den passenden Reiter in den
         // Vordergrund holen und das Panel selbst sichtbar machen.
-        SelectedTabIndex = DebuggerConsoleTabIndex;
+        MainPanel.ShowConsole();
         _mainDockService.Show(this, DockShowLocation.Bottom);
 
         if (SelectedExecutable is { Provider: { } provider })
@@ -154,7 +134,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!await _debuggerService.StartAsync(request))
         {
-            AppendLine("GDB could not be started.");
+            MainPanel.Console.Append("GDB could not be started.");
             StatusText = "Start failed";
             return;
         }
@@ -162,9 +142,9 @@ public partial class DebuggerViewModel : ExtendedTool
         // Erst jetzt, nicht vor dem Start: sonst stuende der Hinweis noch vor der Versionszeile von
         // GDB und laese sich wie ein Abbruch, obwohl gerade nichts fehlgeschlagen ist.
         if (request.ExecutablePath == null && request.RemoteEndpoint == null)
-            AppendLine("No executable in the active project and no remote endpoint under " +
-                       "Tools > Debugger - running without a target. Registers, memory and stepping " +
-                       "need one.");
+            MainPanel.Console.Append("No executable in the active project and no remote endpoint under " +
+                                     "Tools > Debugger - running without a target. Registers, memory and " +
+                                     "stepping need one.");
     }
 
     // Startet ueber einen Vorbereiter: der bringt sein Ziel hoch und liefert die
@@ -185,7 +165,7 @@ public partial class DebuggerViewModel : ExtendedTool
         {
             if (await _debuggerService.StartAsync(provider, cancellation.Token)) return;
 
-            AppendLine($"{provider.DisplayName} could not be started.");
+            MainPanel.Console.Append($"{provider.DisplayName} could not be started.");
             StatusText = "Start failed";
         }
         finally
@@ -234,97 +214,6 @@ public partial class DebuggerViewModel : ExtendedTool
     private Task StepOutAsync()
     {
         return _debuggerService.StepOutAsync();
-    }
-
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
-    private Task SendCommandAsync()
-    {
-        if (string.IsNullOrWhiteSpace(CommandText)) return Task.CompletedTask;
-
-        var command = CommandText;
-        CommandText = string.Empty;
-        return _debuggerService.SendRawCommandAsync(command);
-    }
-
-    // Nimmt die eingetippte Adresse in die Beobachtungsliste auf und liest sie sofort, sofern
-    // das Ziel gerade haelt. Ohne das sofortige Lesen stuende die neue Zeile bis zum naechsten
-    // Halt leer da, und man wuesste nicht, ob die Adresse ueberhaupt lesbar ist.
-    [RelayCommand]
-    private async Task AddMemoryWatchAsync()
-    {
-        if (string.IsNullOrWhiteSpace(MemoryAddressText)) return;
-
-        var row = new MemoryRow { Address = MemoryAddressText.Trim() };
-        MemoryWatches.Add(row);
-        MemoryAddressText = string.Empty;
-
-        row.PropertyChanged += OnMemoryRowChanged;
-
-        await RefreshMemoryRowAsync(row);
-    }
-
-    [RelayCommand(CanExecute = nameof(CanRemoveMemoryWatch))]
-    private void RemoveMemoryWatch()
-    {
-        if (SelectedMemoryRow is not { } row) return;
-
-        row.PropertyChanged -= OnMemoryRowChanged;
-        MemoryWatches.Remove(row);
-        SelectedMemoryRow = null;
-    }
-
-    private bool CanRemoveMemoryWatch()
-    {
-        return SelectedMemoryRow is not null;
-    }
-
-    // Leert die ganze Beobachtungsliste statt nur der Auswahl. Auf einer leeren Liste ein
-    // no-op, deshalb ohne eigenes CanExecute.
-    [RelayCommand]
-    private void ClearMemoryWatches()
-    {
-        foreach (var row in MemoryWatches) row.PropertyChanged -= OnMemoryRowChanged;
-        MemoryWatches.Clear();
-        SelectedMemoryRow = null;
-    }
-
-    partial void OnSelectedMemoryRowChanged(MemoryRow? value)
-    {
-        RemoveMemoryWatchCommand.NotifyCanExecuteChanged();
-    }
-
-    // Eine im Raster bearbeitete Adresse oder Laenge wird sofort neu gelesen. Der Wert selbst
-    // ist ausgenommen, sonst loeste das Schreiben des Ergebnisses das naechste Lesen aus.
-    private void OnMemoryRowChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (sender is not MemoryRow row) return;
-        if (e.PropertyName is not (nameof(MemoryRow.Address) or nameof(MemoryRow.Length))) return;
-
-        _ = RefreshMemoryRowAsync(row);
-    }
-
-    private async Task RefreshMemoryRowAsync(MemoryRow row)
-    {
-        if (!_debuggerService.IsActive)
-        {
-            row.Value = string.Empty;
-            return;
-        }
-
-        if (_debuggerService.State.IsRunning)
-        {
-            row.Value = "target running";
-            return;
-        }
-
-        row.Value = await _debuggerService.ReadMemoryAsync(row.Address, row.Length) ?? "unreadable";
-    }
-
-    private async Task RefreshMemoryAsync()
-    {
-        // Nacheinander: das Backend beantwortet ohnehin nur ein Kommando zur Zeit, und in der
-        // Reihenfolge der Liste zu lesen haelt die Anzeige nachvollziehbar.
-        foreach (var row in MemoryWatches.ToArray()) await RefreshMemoryRowAsync(row);
     }
 
     // Stellt zusammen, was gedebuggt werden soll: die Programmdatei aus dem aktiven Projekt und,
@@ -419,6 +308,8 @@ public partial class DebuggerViewModel : ExtendedTool
         }
     }
 
+    // Der eine Ort, an dem ein Halt ankommt. Von hier bekommen die Reiter ihren Zustand, und
+    // zwar in einem Zug -> Register und Speicher koennen nie aus verschiedenen Halts stammen.
     private void OnDebuggerStateChanged(object? sender, EventArgs e)
     {
         var wasActive = IsSessionActive;
@@ -428,20 +319,20 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!IsSessionActive)
         {
-            if (wasActive) AppendLine("GDB exited.");
+            if (wasActive) MainPanel.Console.Append("GDB exited.");
             DetachFromSession();
-            Registers.Clear();
-            foreach (var row in MemoryWatches) row.Value = string.Empty;
+            MainPanel.Registers.Clear();
+            MainPanel.Memory.ClearValues();
             StatusText = "No session";
             return;
         }
 
         if (!wasActive) AttachToSession();
 
-        UpdateRegisters(_debuggerService.State.Registers);
+        MainPanel.Registers.Apply(_debuggerService.State.Registers);
         StatusText = DescribeState(_debuggerService.State);
 
-        _ = RefreshMemoryAsync();
+        MainPanel.Memory.Refresh();
         _ = JumpToCurrentFrameAsync(_debuggerService.State);
     }
 
@@ -475,29 +366,6 @@ public partial class DebuggerViewModel : ExtendedTool
         return frame.Address is { } address ? $"Stopped at {address}" : "Stopped";
     }
 
-    // Aktualisiert die Registeranzeige an Ort und Stelle. Die Sammlung neu aufzubauen wuerde
-    // bei jedem Einzelschritt die Bildlaufposition zuruecksetzen.
-    private void UpdateRegisters(IReadOnlyList<RegisterValue> registers)
-    {
-        if (registers.Count == 0) return;
-
-        for (var i = 0; i < registers.Count; i++)
-        {
-            if (i < Registers.Count && Registers[i].Name == registers[i].Name)
-            {
-                Registers[i].Value = registers[i].Value;
-                continue;
-            }
-
-            var row = new RegisterRow { Name = registers[i].Name, Value = registers[i].Value };
-
-            if (i < Registers.Count) Registers[i] = row;
-            else Registers.Add(row);
-        }
-
-        while (Registers.Count > registers.Count) Registers.RemoveAt(Registers.Count - 1);
-    }
-
     private async Task JumpToCurrentFrameAsync(DebugSessionState state)
     {
         if (state.CurrentFrame is not { File: { } file, Line: > 0 } frame) return;
@@ -515,19 +383,12 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private void OnOutputReceived(object? sender, string line)
     {
-        AppendLine(line);
+        MainPanel.Console.Append(line);
     }
 
     private void OnCommandSent(object? sender, string command)
     {
-        AppendLine($"> {command}", true);
-    }
-
-    // Die Session meldet sich aus ihrem Lesethread; die Sammlung haengt aber an der Ansicht
-    // und darf nur vom UI-Thread angefasst werden.
-    private void AppendLine(string line, bool isCommand = false)
-    {
-        Dispatcher.UIThread.Post(() => DebuggerConsole.Add(new ConsoleLine(line, isCommand)));
+        MainPanel.Console.Append($"> {command}", true);
     }
 
     private bool CanStart()
@@ -553,6 +414,10 @@ public partial class DebuggerViewModel : ExtendedTool
 
     partial void OnIsSessionActiveChanged(bool value)
     {
+        // Die Kommandozeile der Konsole sperrt sich ueber denselben Zustand, haengt aber nicht
+        // selbst am Dienst.
+        MainPanel.Console.IsSessionActive = value;
+
         StartCommand.NotifyCanExecuteChanged();
         PauseCommand.NotifyCanExecuteChanged();
         ContinueCommand.NotifyCanExecuteChanged();
@@ -560,6 +425,5 @@ public partial class DebuggerViewModel : ExtendedTool
         StepOverCommand.NotifyCanExecuteChanged();
         StepIntoCommand.NotifyCanExecuteChanged();
         StepOutCommand.NotifyCanExecuteChanged();
-        SendCommandCommand.NotifyCanExecuteChanged();
     }
 }

@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:main="clr-namespace:OneWare.Debugger.ViewModels.Main"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="200"
+             x:Class="OneWare.Debugger.Views.Main.RegisterTabView"
+             x:DataType="main:RegisterTabViewModel">
+
+    <Border Margin="4"
+            CornerRadius="4"
+            ClipToBounds="True"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+            Background="{DynamicResource ThemeBackgroundBrush}">
+        <DataGrid ItemsSource="{Binding Rows}"
+                  GridLinesVisibility="Vertical"
+                  VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                  BorderThickness="0"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Register" Width="*"
+                                    Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
+                <DataGridTextColumn Header="Value" Width="*"
+                                    Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Border>
+</UserControl>

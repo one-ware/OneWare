@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:main="clr-namespace:OneWare.Debugger.ViewModels.Main"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="200"
+             x:Class="OneWare.Debugger.Views.Main.MemoryTabView"
+             x:DataType="main:MemoryTabViewModel">
+
+    <DockPanel LastChildFill="True">
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <DockPanel Margin="4" LastChildFill="True">
+                <Button DockPanel.Dock="Right" Margin="4,0,0,0" Width="24" Height="24"
+                        Command="{Binding ClearWatchesCommand}" ToolTip.Tip="Clear all watches">
+                    <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
+                </Button>
+                <Button DockPanel.Dock="Right" Width="24" Height="24"
+                        Command="{Binding RemoveWatchCommand}" ToolTip.Tip="Remove address">
+                    <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                </Button>
+                <Button DockPanel.Dock="Right" Width="24" Height="24"
+                        Command="{Binding AddWatchCommand}"
+                        ToolTip.Tip="Watch this address">
+                    <Image Width="14" Height="14"
+                           Source="{DynamicResource MaterialDesign.EyeTracking}" />
+                </Button>
+                <TextBox Text="{Binding AddressText, Mode=TwoWay}"
+                         Watermark="Address, e.g. 0x2001ff80 or &amp;buffer"
+                         FontFamily="{DynamicResource EditorFont}"
+                         Background="{DynamicResource ThemeControlLowBrush}"
+                         BorderThickness="0"
+                         Height="24"
+                         Padding="6,2" />
+            </DockPanel>
+        </Border>
+
+        <Border Margin="4"
+                CornerRadius="4"
+                ClipToBounds="True"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                Background="{DynamicResource ThemeBackgroundBrush}">
+            <DataGrid ItemsSource="{Binding Watches}"
+                      SelectedItem="{Binding SelectedRow}"
+                      GridLinesVisibility="Vertical"
+                      VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Address" Width="*"
+                                        Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
+                    <DataGridTextColumn Header="Bytes" Width="*"
+                                        Binding="{CompiledBinding Length, DataType=models:MemoryRow}" />
+                    <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True"
+                                        Binding="{CompiledBinding Value, DataType=models:MemoryRow}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </DockPanel>
+</UserControl>

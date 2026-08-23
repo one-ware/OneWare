@@ -4,24 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
              xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             xmlns:main="clr-namespace:OneWare.Debugger.Views.Main"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="260"
              x:Class="OneWare.Debugger.Views.DebuggerView"
              x:DataType="viewModels:DebuggerViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
-
-    <UserControl.Styles>
-        <!-- Abgesetzte Kommandos heben sich von der Antwort des Backends ab. -->
-        <Style Selector="SelectableTextBlock.consoleLine">
-            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Padding" Value="0,1" />
-        </Style>
-        <Style Selector="SelectableTextBlock.consoleLine.command">
-            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-    </UserControl.Styles>
 
     <DockPanel LastChildFill="True">
 
@@ -63,7 +50,7 @@
             </StackPanel>
         </Border>
 
-        <!-- Eigene Zeile ueber dem TabControl, damit die getroffene Auswahl in jedem Reiter
+        <!-- Eigene Zeile ueber dem Reiterbereich, damit die getroffene Auswahl in jedem Reiter
              sichtbar bleibt und nicht mit dem Wechsel auf Registers oder Memory verschwindet.
              "Launch" statt "Executable", weil hier auch Vorbereiter stehen, die ihre
              Programmdatei erst erzeugen. -->
@@ -91,158 +78,6 @@
             </DockPanel>
         </Border>
 
-        <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
-
-            <TabItem Header="Registers">
-                <Border Margin="4"
-                        CornerRadius="4"
-                        ClipToBounds="True"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                        Background="{DynamicResource ThemeBackgroundBrush}">
-                    <DataGrid ItemsSource="{Binding Registers}"
-                              GridLinesVisibility="Vertical"
-                              VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
-                              BorderThickness="0"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Auto">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Register" Width="*"
-                                                Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
-                            <DataGridTextColumn Header="Value" Width="*"
-                                                Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-            </TabItem>
-
-            <TabItem Header="Memory">
-                <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Top"
-                            Background="{DynamicResource ThemeBackgroundBrush}"
-                            BorderThickness="0,0,0,1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                        <DockPanel Margin="4" LastChildFill="True">
-                            <Button DockPanel.Dock="Right" Margin="4,0,0,0" Width="24" Height="24"
-                                    Command="{Binding ClearMemoryWatchesCommand}" ToolTip.Tip="Clear all watches">
-                                <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
-                            </Button>
-                            <Button DockPanel.Dock="Right" Width="24" Height="24"
-                                    Command="{Binding RemoveMemoryWatchCommand}" ToolTip.Tip="Remove address">
-                                <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
-                            </Button>
-                            <Button DockPanel.Dock="Right" Width="24" Height="24"
-                                    Command="{Binding AddMemoryWatchCommand}"
-                                    ToolTip.Tip="Watch this address">
-                                <Image Width="14" Height="14"
-                                       Source="{DynamicResource MaterialDesign.EyeTracking}" />
-                            </Button>
-                            <TextBox Text="{Binding MemoryAddressText, Mode=TwoWay}"
-                                     Watermark="Address, e.g. 0x2001ff80 or &amp;buffer"
-                                     FontFamily="{DynamicResource EditorFont}"
-                                     Background="{DynamicResource ThemeControlLowBrush}"
-                                     BorderThickness="0"
-                                     Height="24"
-                                     Padding="6,2" />
-                        </DockPanel>
-                    </Border>
-
-                    <Border Margin="4"
-                            CornerRadius="4"
-                            ClipToBounds="True"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            Background="{DynamicResource ThemeBackgroundBrush}">
-                        <DataGrid ItemsSource="{Binding MemoryWatches}"
-                                  SelectedItem="{Binding SelectedMemoryRow}"
-                                  GridLinesVisibility="Vertical"
-                                  VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
-                                  BorderThickness="0"
-                                  AutoGenerateColumns="False"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Stretch"
-                                  HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Address" Width="*"
-                                                    Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
-                                <DataGridTextColumn Header="Bytes" Width="*"
-                                                    Binding="{CompiledBinding Length, DataType=models:MemoryRow}" />
-                                <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True"
-                                                    Binding="{CompiledBinding Value, DataType=models:MemoryRow}" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-                </DockPanel>
-            </TabItem>
-
-            <TabItem Header="Debugger Console">
-                <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Bottom"
-                            BorderThickness="0,1,0,0"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                        <DockPanel Background="{DynamicResource ThemeBackgroundBrush}">
-                            <Button DockPanel.Dock="Right" Margin="4" Height="26" Padding="8,0"
-                                    Command="{Binding SendCommandCommand}" Content="Send" />
-                            <TextBox Name="CommandBox"
-                                     Text="{Binding CommandText, Mode=TwoWay}"
-                                     Watermark="Command for the debug backend"
-                                     FontFamily="{DynamicResource EditorFont}"
-                                     Background="{DynamicResource ThemeControlLowBrush}"
-                                     BorderThickness="0"
-                                     Padding="6,2" />
-                        </DockPanel>
-                    </Border>
-
-                    <!-- Jede Zeile ist ein eigener SelectableTextBlock, damit Kommandos farblich
-                         abgesetzt bleiben. Ueber Zeilengrenzen hinweg laesst sich damit aber nichts
-                         markieren - deshalb der Knopf, der den ganzen Verlauf in die Zwischenablage
-                         legt. Ueber das Kontextmenue erreichbar, weil das die Geste ist, die man
-                         zuerst probiert. -->
-                    <Border Background="{DynamicResource ThemeBackgroundBrush}"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                        <Border.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Copy All" Click="OnCopyConsoleClick">
-                                    <MenuItem.Icon>
-                                        <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </Border.ContextMenu>
-                        <Grid>
-                            <ScrollViewer Name="DebuggerConsoleScroll" Padding="8,6">
-                                <ItemsControl ItemsSource="{Binding DebuggerConsole}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="models:ConsoleLine">
-                                            <SelectableTextBlock Classes="consoleLine"
-                                                                 Classes.command="{Binding IsCommand}"
-                                                                 Text="{Binding Text}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-
-                            <!-- Schwebt ueber der Ausgabe statt in einer eigenen Leiste: die Konsole
-                                 ist ohnehin knapp hoch, und der Knopf soll keine Zeile kosten. -->
-                            <Button Name="CopyConsoleButton"
-                                    HorizontalAlignment="Right" VerticalAlignment="Top"
-                                    Margin="0,4,14,0" Width="24" Height="24"
-                                    Click="OnCopyConsoleClick"
-                                    ToolTip.Tip="Copy the whole console to the clipboard">
-                                <Image Width="14" Height="14"
-                                       Source="{DynamicResource BoxIcons.RegularCopy}" />
-                            </Button>
-                        </Grid>
-                    </Border>
-                </DockPanel>
-            </TabItem>
-
-        </TabControl>
+        <main:MainPanelView DataContext="{Binding MainPanel}" />
     </DockPanel>
 </UserControl>
