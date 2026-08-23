@@ -7,13 +7,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Assets\SIGINT.exe"
-                 Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="Mono.Posix" Version="7.1.0-final.1.21458.1"/>
     </ItemGroup>
 

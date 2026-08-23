@@ -261,18 +261,37 @@ public class GdbSession : IDebugSession
         await RunCommandAsync(command);
     }
 
+    // Jeder Schritt ist fuer sich abgesichert. Reisst einer ab, muessen die uebrigen trotzdem
+    // laufen -> sonst bleibt GDB als Waise stehen, haelt die Verbindung zum Ziel weiter fest,
+    // und die Anzeige meldet trotzdem "keine Sitzung".
     public void Stop()
     {
         try
         {
             if (_process is { HasExited: false })
             {
-                if (_running) GdbHelper.SendCtrlC(_process.Id);
+                TryInterrupt();
                 RunCommand("-gdb-exit", 500);
             }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
 
+        try
+        {
             _sIn?.Close();
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
 
+        try
+        {
+            // Bleibt GDB nach -gdb-exit stehen - etwa weil es ohne mi-async gerade das Ziel
+            // laufen laesst und keine Kommandos liest -, ist das hier der letzte Weg.
             if (_process is { HasExited: false }) _process.Kill();
         }
         catch (Exception e)
@@ -283,6 +302,22 @@ public class GdbSession : IDebugSession
         {
             Publish(DebugSessionState.Empty);
         }
+    }
+
+    // Haelt ein laufendes Ziel an, damit GDB -gdb-exit ueberhaupt entgegennimmt. Beim
+    // angehaengten Ziel geht das ueber die Verbindung, sonst nur ueber ein Signal - und das
+    // gibt es unter Windows nicht. Schlaegt es fehl, uebernimmt Kill.
+    private void TryInterrupt()
+    {
+        if (!_running) return; // Hält das Backend an,
+
+        if (_asyncMode)
+        {
+            RunCommand("-exec-interrupt", 500);
+            return;
+        }
+
+        if (_process != null) GdbHelper.SendCtrlC(_process.Id);
     }
 
     // Baut die Verbindung zum Stub auf. Ohne Endpunkt debuggt GDB lokal und es ist nichts zu tun.
