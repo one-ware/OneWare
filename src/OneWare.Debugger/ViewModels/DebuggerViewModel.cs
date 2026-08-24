@@ -65,8 +65,8 @@ public partial class DebuggerViewModel : ExtendedTool
         // Vor dem Abo gesetzt -> schon der erste Zustandswechsel greift auf die Reiter zu.
         MainPanel = mainPanel;
 
-        Id = "Debug";
-        Title = "Debug";
+        Id = "Debugger";
+        Title = "Debugger";
 
         _debuggerService.StateChanged += OnDebuggerStateChanged;
 
