@@ -178,6 +178,11 @@ public class ChildProcessService(
     public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments,
         string workingDirectory)
     {
+        return new WeakReference<Process>(StartProcess(path, arguments, workingDirectory));
+    }
+
+    public Process StartProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory)
+    {
         var process = new Process
         {
             StartInfo = new ProcessStartInfo(path, arguments)
@@ -191,7 +196,7 @@ public class ChildProcessService(
         process.Start();
         process.EnableRaisingEvents = true;
 
-        return new WeakReference<Process>(process);
+        return process;
     }
 
     private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory,
