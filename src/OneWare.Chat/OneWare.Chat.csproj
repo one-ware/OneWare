@@ -6,6 +6,10 @@
     <Import Project="..\..\build\props\OneWare.Module.props" />
 
     <ItemGroup>
+        <InternalsVisibleTo Include="OneWare.Chat.UnitTests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
         <ProjectReference Include="..\OneWare.Settings\OneWare.Settings.csproj" />
     </ItemGroup>
