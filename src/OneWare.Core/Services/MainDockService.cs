@@ -273,6 +273,20 @@ public class MainDockService : Factory, IMainDockService
             : null;
     }
 
+    /// <summary>
+    /// Returns the floating dock window hosting the given dockable, or null when it lives in the main window.
+    /// </summary>
+    private static Window? GetFloatingWindowOwner(IDockable? dockable)
+    {
+        while (dockable != null)
+        {
+            if (dockable is IRootDock { Window.Host: Window host }) return host;
+            dockable = dockable.Owner;
+        }
+
+        return null;
+    }
+
     public IDockable? SearchView(IDockable instance, IDockable? layout = null)
     {
         layout ??= Layout;
@@ -403,9 +417,12 @@ public class MainDockService : Factory, IMainDockService
         if (SearchView(dockable) is { } result)
         {
             SetActiveDockable(result);
+            // Only floating dock windows are raised here. Activating the main window would
+            // steal focus from whatever the user is doing whenever a dockable is shown
+            // programmatically (background tools, AI functions, ...).
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                var ownerWindow = GetWindowOwner(dockable);
+                var ownerWindow = GetFloatingWindowOwner(dockable);
                 if (ownerWindow != null) Dispatcher.UIThread.Post(ownerWindow.Activate);
             }
 
