@@ -8,43 +8,30 @@
              x:Class="OneWare.Debugger.Views.Inspector.VariablesView"
              x:DataType="inspector:VariablesViewModel">
 
-    <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="0,0,0,1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            <StackPanel Orientation="Horizontal" Margin="4" Spacing="4">
-                <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh" Width="24" Height="24">
-                    <Image Width="14" Height="14" Source="{DynamicResource Material.Sync}" />
-                </Button>
-            </StackPanel>
-        </Border>
-
-        <Border Margin="4"
-                CornerRadius="4"
-                ClipToBounds="True"
-                BorderThickness="1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                Background="{DynamicResource ThemeBackgroundBrush}">
-            <DataGrid ItemsSource="{Binding Variables}"
-                      GridLinesVisibility="Vertical"
-                      VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
-                      BorderThickness="0"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" Width="*"
-                                        Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
-                    <DataGridTextColumn Header="Value" Width="*"
-                                        Binding="{CompiledBinding Value, DataType=models:VariableRow}" />
-                    <DataGridTextColumn Header="Type" Width="*"
-                                        Binding="{CompiledBinding Type, DataType=models:VariableRow}" />
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
-    </DockPanel>
+    <Border Margin="4"
+            CornerRadius="4"
+            ClipToBounds="True"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+            Background="{DynamicResource ThemeBackgroundBrush}">
+        <DataGrid ItemsSource="{Binding Variables}"
+                  GridLinesVisibility="Vertical"
+                  VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                  BorderThickness="0"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Width="2*"
+                                    Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
+                <DataGridTextColumn Header="Value" Width="*"
+                                    Binding="{CompiledBinding Value, DataType=models:VariableRow}" />
+                <DataGridTextColumn Header="Type" Width="*"
+                                    Binding="{CompiledBinding Type, DataType=models:VariableRow}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Border>
 </UserControl>
