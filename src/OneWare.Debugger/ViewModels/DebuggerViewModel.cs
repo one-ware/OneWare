@@ -1,15 +1,10 @@
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using OneWare.Debugger.Models;
 using OneWare.Debugger.ViewModels.Main;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -31,10 +26,6 @@ public partial class DebuggerViewModel : ExtendedTool
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
-
-    // Die Programmdatei, mit der gestartet wird. null heisst: ohne Symbole, so wie es
-    // ein Ziel verlangt, das sein Programm selbst haelt.
-    [ObservableProperty] private ExecutableOption? _selectedExecutable;
 
     [ObservableProperty] private bool _isRunning;
 
@@ -69,60 +60,22 @@ public partial class DebuggerViewModel : ExtendedTool
         Title = "Debugger";
 
         _debuggerService.StateChanged += OnDebuggerStateChanged;
-
-        // Ohne dieses Abo taucht ein Vorbereiter erst nach dem ersten Startversuch in der Auswahl
-        // auf: eingelesen wurde bisher nur beim Erzeugen und unmittelbar vor dem Start.
-        _projectExplorerService.PropertyChanged += OnProjectExplorerChanged;
-
-        RefreshExecutables();
     }
 
     // Der Reiterbereich unter der Leiste.
     public MainPanelViewModel MainPanel { get; }
 
-    // Zur Auswahl stehende Programmdateien: die ELF-Dateien des aktiven Projekts und alles,
-    // was ueber den Durchsuchen-Knopf dazugekommen ist.
-    public ObservableCollection<ExecutableOption> Executables { get; } = [];
-
-    // Laesst den Benutzer eine Programmdatei ausserhalb des Projekts waehlen und uebernimmt
-    // sie in die Auswahl.
-    [RelayCommand]
-    private async Task BrowseExecutableAsync()
-    {
-        var owner = _mainDockService.GetWindowOwner(this);
-        if (owner == null) return;
-
-        var path = await StorageProviderHelper.SelectFileAsync(owner, "Select Executable",
-            _projectExplorerService.ActiveProject?.FullPath,
-            new FilePickerFileType("Executables") { Patterns = ["*.elf", "*.exe", "*.out", "*"] });
-
-        if (path == null) return;
-
-        var option = new ExecutableOption(path, Path.GetFileName(path));
-
-        if (Executables.FirstOrDefault(x => x.Path == path) is { } existing)
-        {
-            SelectedExecutable = existing;
-            return;
-        }
-
-        Executables.Add(option);
-        SelectedExecutable = option;
-    }
-
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
-        // Vor jedem Start neu einlesen: nach einem Neubau des Projekts liegt die ELF-Datei sonst
-        // da, taucht aber erst nach einem Neustart des Studios in der Auswahl auf.
-        RefreshExecutables();
-
         // Beim Start interessiert der Verkehr mit dem Backend - also den passenden Reiter in den
         // Vordergrund holen und das Panel selbst sichtbar machen.
         MainPanel.ShowConsole();
         _mainDockService.Show(this, DockShowLocation.Bottom);
 
-        if (SelectedExecutable is { Provider: { } provider })
+        // Welches Ziel gilt, steht im Projekt -> der passende Vorbereiter meldet sich selbst,
+        // statt in einer Auswahlliste der Leiste zu stehen.
+        if (_debuggerService.LaunchProviders.FirstOrDefault(CanPrepareSafely) is { } provider)
         {
             await StartWithProviderAsync(provider);
             return;
@@ -227,45 +180,12 @@ public partial class DebuggerViewModel : ExtendedTool
         var endpoint = _settingsService.GetSettingValue<string>(DebuggerModule.RemoteEndpointSetting);
         if (string.IsNullOrWhiteSpace(endpoint)) endpoint = null;
 
-        return new DebugLaunchRequest(GdbDebugAdapter.AdapterId, SelectedExecutable?.Path, endpoint,
+        return new DebugLaunchRequest(GdbDebugAdapter.AdapterId, FindProjectExecutable(), endpoint,
             _projectExplorerService.ActiveProject?.FullPath);
     }
 
-    // Liest die Auswahlliste neu ein: die passenden Vorbereiter, danach alle ELF-Dateien des
-    // aktiven Projekts und alles, was der Benutzer von Hand dazugelegt hat.
-    // Die Vorbereiter stehen oben, weil sie den Regelfall abdecken, sobald es einen gibt: wer
-    // ein SVNR-Projekt offen hat, will es debuggen und nicht eine ELF-Datei von Hand suchen.
-    // Die getroffene Auswahl bleibt stehen, solange es sie noch gibt. Sie bei jedem Einlesen
-    // zurueckzusetzen hiesse, dass ein Neubau des Projekts die Einstellung des Benutzers
-    // verwirft.
-    private void RefreshExecutables()
-    {
-        var previous = SelectedExecutable;
-
-        // Vorbereiter tragen keinen Pfad. Sie duerfen deshalb weder durch IsUnderActiveProject
-        // noch durch DistinctBy laufen - Letzteres liesse von mehreren genau einen uebrig.
-        var providers = _debuggerService.LaunchProviders
-            .Where(CanPrepareSafely)
-            .Select(x => new ExecutableOption(string.Empty, x.DisplayName, x));
-
-        var browsed = Executables
-            .Where(x => x.Provider == null && !IsUnderActiveProject(x.Path))
-            .ToList();
-
-        Executables.Clear();
-
-        foreach (var option in providers.Concat(
-                     FindProjectExecutables().Concat(browsed).DistinctBy(x => x.Path)))
-            Executables.Add(option);
-
-        // Vergleich ueber den ganzen Eintrag statt ueber den Pfad: Vorbereiter haben alle denselben
-        // leeren Pfad und waeren sonst nicht auseinanderzuhalten.
-        SelectedExecutable = Executables.FirstOrDefault(x => x == previous)
-                             ?? Executables.FirstOrDefault();
-    }
-
-    // IDebugLaunchProvider.CanPrepare kommt aus einem Plugin. Wirft es, faellt
-    // nur dieser eine Eintrag aus, statt die ganze Auswahl leer zu lassen.
+    // IDebugLaunchProvider.CanPrepare kommt aus einem Plugin. Wirft es, faellt nur dieser eine
+    // Vorbereiter aus, statt den Start zu verhindern.
     private bool CanPrepareSafely(IDebugLaunchProvider provider)
     {
         try
@@ -279,32 +199,24 @@ public partial class DebuggerViewModel : ExtendedTool
         }
     }
 
-    private bool IsUnderActiveProject(string path)
+    // Die Programmdatei des aktiven Projekts, bei jedem Start neu gesucht: nach einem Neubau
+    // liegt sie sonst da, wuerde aber erst nach einem Neustart des Studios gefunden.
+    // Ein Ziel wie der SVNR haelt sein Programm selbst und bringt gar keine mit - dann bleibt es
+    // bei null, und GDB haengt sich ohne Symbole an.
+    private string? FindProjectExecutable()
     {
-        if (_projectExplorerService.ActiveProject is not { } project) return false;
-
-        return path.StartsWith(project.FullPath, StringComparison.OrdinalIgnoreCase);
-    }
-
-    // Sucht die Programmdateien im aktiven Projekt. Ein Ziel wie der SVNR haelt sein Programm
-    // selbst und bringt gar keine mit - dann bleibt die Liste leer, und GDB haengt sich ohne
-    // Symbole an.
-    private IEnumerable<ExecutableOption> FindProjectExecutables()
-    {
-        if (_projectExplorerService.ActiveProject is not { } project) return [];
+        if (_projectExplorerService.ActiveProject is not { } project) return null;
 
         try
         {
             return Directory.EnumerateFiles(project.FullPath, "*.elf", SearchOption.AllDirectories)
                 .Order(StringComparer.OrdinalIgnoreCase)
-                .Select(path => new ExecutableOption(path,
-                    Path.GetRelativePath(project.FullPath, path)))
-                .ToList();
+                .FirstOrDefault();
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
-            return [];
+            return null;
         }
     }
 
@@ -405,11 +317,6 @@ public partial class DebuggerViewModel : ExtendedTool
     {
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
-    }
-
-    private void OnProjectExplorerChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(IProjectExplorerService.ActiveProject)) RefreshExecutables();
     }
 
     partial void OnIsSessionActiveChanged(bool value)

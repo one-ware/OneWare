@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
-             xmlns:models="clr-namespace:OneWare.Debugger.Models"
              xmlns:main="clr-namespace:OneWare.Debugger.Views.Main"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="260"
              x:Class="OneWare.Debugger.Views.DebuggerView"
@@ -48,34 +47,6 @@
 
                 <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding StatusText}" />
             </StackPanel>
-        </Border>
-
-        <!-- Eigene Zeile ueber dem Reiterbereich, damit die getroffene Auswahl in jedem Reiter
-             sichtbar bleibt und nicht mit dem Wechsel auf Registers oder Memory verschwindet.
-             "Launch" statt "Executable", weil hier auch Vorbereiter stehen, die ihre
-             Programmdatei erst erzeugen. -->
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="0,0,0,1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            <DockPanel Margin="4" LastChildFill="True">
-                <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Opacity="0.7"
-                           Margin="0,0,6,0" Text="Launch" />
-                <Button DockPanel.Dock="Right" Margin="4,0,0,0" Height="24" Padding="8,0"
-                        Command="{Binding BrowseExecutableCommand}" Content="..."
-                        ToolTip.Tip="Select an executable outside the project" />
-                <ComboBox ItemsSource="{Binding Executables}"
-                          SelectedItem="{Binding SelectedExecutable}"
-                          PlaceholderText="Nothing to launch - debugging without symbols"
-                          HorizontalAlignment="Stretch"
-                          Height="24">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:ExecutableOption">
-                            <TextBlock Text="{Binding Display}" ToolTip.Tip="{Binding Path}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </DockPanel>
         </Border>
 
         <main:MainPanelView DataContext="{Binding MainPanel}" />
