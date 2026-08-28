@@ -1,5 +1,4 @@
 using OneWare.Essentials.Debugger.Entities;
-using OneWare.Essentials.EditorExtensions;
 
 namespace OneWare.Essentials.Debugger.Interfaces;
 
@@ -16,7 +15,7 @@ public interface IDebugSession
     /// <summary>
     /// Identifies the backend, e.g. <c>GDB</c>.
     /// </summary>
-    public string AdapterId { get; }
+    public string BackendId { get; }
 
     /// <summary>
     /// Latest published state.
@@ -85,12 +84,13 @@ public interface IDebugSession
     /// Returns <see langword="false"/> if the target refused it, e.g. because it ran out of
     /// hardware breakpoints.
     /// </summary>
-    public Task<bool> SetBreakpointAsync(BreakPoint breakpoint);
+    public Task<bool> SetBreakpointAsync(DebugBreakPointFrame frame);
 
     /// <summary>
-    /// Removes a previously armed breakpoint.
+    /// Removes a previously armed breakpoint. Removing one that is not armed counts as success —
+    /// the requested state is what matters, not how it was reached.
     /// </summary>
-    public Task<bool> RemoveBreakpointAsync(BreakPoint breakpoint);
+    public Task<bool> RemoveBreakpointAsync(DebugBreakPointFrame frame);
 
     /// <summary>
     /// Reads memory from the target. <paramref name="address"/> is whatever the backend accepts —
