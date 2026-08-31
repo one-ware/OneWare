@@ -4,6 +4,7 @@ using Asmichi.ProcessManagement;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Nerdbank.Streams;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client;
@@ -11,6 +12,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.General;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Serialization;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
@@ -574,37 +576,31 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             var client = Client;
             if (client == null) return;
 
-            var report = await client.RequestDocumentDiagnostic(new DocumentDiagnosticParams
-            {
-                TextDocument = new TextDocumentIdentifier { Uri = fullPath },
-                PreviousResultId = previousResultId
-            }, cancellation.Token);
+            //The request is sent manually because the RelatedDocumentDiagnosticReport converter of
+            //OmniSharp.Extensions.LanguageServer.Protocol is not implemented and throws on deserialization
+            var report = await client
+                .SendRequest(TextDocumentNames.Diagnostics, new DocumentDiagnosticParams
+                {
+                    TextDocument = new TextDocumentIdentifier { Uri = fullPath },
+                    PreviousResultId = previousResultId
+                })
+                .Returning<JToken?>(cancellation.Token);
 
-            if (cancellation.IsCancellationRequested) return;
+            if (cancellation.IsCancellationRequested || report is not JObject reportObject) return;
 
-            //An unchanged report means the previously published diagnostics are still valid
-            switch (report)
-            {
-                case RelatedUnchangedDocumentDiagnosticReport unchanged:
-                    lock (_pullDiagnosticsRequests)
-                    {
-                        _pullDiagnosticsResultIds[fullPath] = unchanged.ResultId;
-                    }
+            HandlePullDiagnosticsReport(fullPath, reportObject);
 
-                    return;
-                case RelatedFullDocumentDiagnosticReport full:
-                    lock (_pullDiagnosticsRequests)
-                    {
-                        _pullDiagnosticsResultIds[fullPath] = full.ResultId;
-                    }
+            //Servers may report diagnostics for other documents in the same response
+            if (reportObject["relatedDocuments"] is JObject relatedDocuments)
+                foreach (var relatedDocument in relatedDocuments.Properties())
+                {
+                    if (relatedDocument.Value is not JObject relatedReport) continue;
 
-                    PublishDiag(new PublishDiagnosticsParams
-                    {
-                        Uri = fullPath,
-                        Diagnostics = full.Items ?? new Container<Diagnostic>()
-                    });
-                    return;
-            }
+                    var relatedPath = DocumentUri.From(relatedDocument.Name).GetFileSystemPath();
+                    if (relatedPath == null) continue;
+
+                    HandlePullDiagnosticsReport(relatedPath, relatedReport);
+                }
         }
         catch (OperationCanceledException)
         {
@@ -624,6 +620,30 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
             cancellation.Dispose();
         }
+    }
+
+    /// <summary>
+    ///     Parses a single document diagnostic report. An unchanged report means the previously
+    ///     published diagnostics are still valid, so only the result id is updated.
+    /// </summary>
+    private void HandlePullDiagnosticsReport(string fullPath, JObject report)
+    {
+        var resultId = report["resultId"]?.Value<string>();
+
+        lock (_pullDiagnosticsRequests)
+        {
+            _pullDiagnosticsResultIds[fullPath] = resultId;
+        }
+
+        if (report["kind"]?.Value<string>() == "unchanged") return;
+
+        var items = report["items"]?.ToObject<List<Diagnostic>>(LspSerializer.Instance.JsonSerializer);
+
+        PublishDiag(new PublishDiagnosticsParams
+        {
+            Uri = fullPath,
+            Diagnostics = new Container<Diagnostic>(items ?? [])
+        });
     }
 
     public override Task ExecuteCommandAsync(Command cmd)
