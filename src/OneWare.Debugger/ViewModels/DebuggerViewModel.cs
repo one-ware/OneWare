@@ -85,6 +85,16 @@ public partial class DebuggerViewModel : ExtendedTool
 
         var request = BuildLaunchRequest();
 
+        // Kein Vorbereiter hat sich gemeldet -> das benennen, bevor der Notweg laeuft. Ohne diese
+        // Zeile sieht ein nicht erkanntes Projekt genauso aus wie der gewollte Start, und der
+        // Unterschied zeigt sich erst Sekunden spaeter als Verbindungsfehler an einem Port, den
+        // niemand hochgefahren hat. Die Zahl trennt die beiden Faelle: 0 heisst, es ist gar kein
+        // Plugin geladen, sonst war keines fuer dieses Projekt zustaendig.
+        MainPanel.Console.Append(
+            $"No launch provider is responsible for the active project " +
+            $"({_debuggerService.LaunchProviders.Count} registered). Using the endpoint from " +
+            $"Tools > Debugger: {request.RemoteEndpoint ?? "none"}.");
+
         if (!await _debuggerService.StartAsync(request))
         {
             MainPanel.Console.Append("GDB could not be started.");
