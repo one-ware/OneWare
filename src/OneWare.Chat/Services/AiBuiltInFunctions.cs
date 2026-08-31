@@ -3,6 +3,7 @@ using System.Text.Json;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 
@@ -123,6 +124,30 @@ internal static class AiBuiltInFunctions
 
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
+            Name = "openFile",
+            FriendlyName = "Open File",
+            RunOnUiThread = true,
+            Description = """
+                          Opens the specified file in the IDE editor and focuses it.
+                          If the file is already open, its existing tab is focused instead.
+                          Optionally jumps to a specific line. Always pass an absolute path.
+                          """,
+            Handler = ([Description("absolute path of the file to open")] string path,
+                    [Description("1-based line number to jump to (omit to keep the current position)")] int? line =
+                        null) =>
+                OpenFileAsync(projectExplorerService, dockService, path, line),
+            DetailExtractor = args => GetRelativePath(projectExplorerService, TryGetStringArgument(args, "path")),
+            ConfirmationCheck = args =>
+            {
+                var rawPath = TryGetStringArgument(args, "path");
+                var resolved = ResolvePath(projectExplorerService, rawPath);
+                if (IsInsideWorkspace(projectExplorerService, resolved)) return null;
+                return $"**Copilot wants to open a file outside the workspace.**\n\n`{resolved ?? rawPath ?? "?"}`";
+            }
+        });
+
+        functionProvider.RegisterFunction(new OneWareAiFunction
+        {
             Name = "getErrorsForFile",
             FriendlyName = "Get Errors for File",
             RunOnUiThread = true,
@@ -232,6 +257,38 @@ internal static class AiBuiltInFunctions
             result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount),
             error = (string?)null
         };
+    }
+
+    private static async Task<object> OpenFileAsync(
+        IProjectExplorerService projectExplorerService,
+        IMainDockService dockService,
+        string path,
+        int? line)
+    {
+        var resolvedPath = ResolvePath(projectExplorerService, path);
+        if (string.IsNullOrWhiteSpace(resolvedPath))
+            return new { result = false, error = (string?)"No active project and no path provided." };
+
+        if (!File.Exists(resolvedPath))
+            return new { result = false, error = (string?)$"File does not exist: {resolvedPath}" };
+
+        var document = await dockService.OpenFileAsync(resolvedPath);
+        if (document == null)
+            return new
+            {
+                result = true,
+                path = resolvedPath,
+                error = (string?)null,
+                note = (string?)"The file was handled by an external program and is not open in an IDE editor."
+            };
+
+        if (line is > 0 && document is IEditor editor)
+        {
+            var lineCount = editor.CurrentDocument.LineCount;
+            editor.JumpToLine(Math.Min(line.Value, lineCount));
+        }
+
+        return new { result = true, path = resolvedPath, error = (string?)null, note = (string?)null };
     }
 
     private static object GetErrorsForFile(

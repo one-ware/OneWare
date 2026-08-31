@@ -22,7 +22,7 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 {
     public const string IconKey = "MaterialDesign.ErrorOutline";
 
-    private readonly ObservableCollection<ErrorListItem> _items = new();
+    private readonly BatchObservableCollection<ErrorListItem> _items = new();
 
     private readonly IMainDockService _mainDockService;
     private readonly IProjectExplorerService _projectExplorerExplorerViewModel;
@@ -194,7 +194,11 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     public void ClearFile(string filePath)
     {
-        ListEx.RemoveMany(_items, _items.Where(x => x.FilePath.EqualPaths(filePath)));
+        using (_items.BeginBatch())
+        {
+            ListEx.RemoveMany(_items, _items.Where(x => x.FilePath.EqualPaths(filePath)));
+        }
+
         ErrorRefresh?.Invoke(this, filePath);
         RefreshCountToggle();
     }
@@ -204,7 +208,10 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
         var errors = _items.Where(x => x.Source == source).ToList();
         var files = errors.Select(x => x.FilePath).Distinct();
 
-        ListEx.RemoveMany(_items, errors);
+        using (_items.BeginBatch())
+        {
+            ListEx.RemoveMany(_items, errors);
+        }
 
         foreach (var file in files) ErrorRefresh?.Invoke(this, file);
 
@@ -231,10 +238,13 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
     /// </summary>
     public void RefreshErrors(IList<ErrorListItem> errors, string source, string filePath)
     {
-        ListEx.RemoveMany(_items,
-            _items.Where(x => x.FilePath.EqualPaths(filePath) && x.Source == source && !errors.Contains(x)));
+        using (_items.BeginBatch())
+        {
+            ListEx.RemoveMany(_items,
+                _items.Where(x => x.FilePath.EqualPaths(filePath) && x.Source == source && !errors.Contains(x)));
 
-        foreach (var e in errors) Add(e);
+            foreach (var e in errors) Add(e);
+        }
 
         ErrorRefresh?.Invoke(this, filePath);
         RefreshCountToggle();
@@ -328,15 +338,23 @@ public class ErrorListViewModel : ExtendedTool, IErrorService
 
     public void Clear(IProjectRoot project)
     {
-        ListEx.RemoveMany(_items, _items.Where(x => x.Root == project));
+        using (_items.BeginBatch())
+        {
+            ListEx.RemoveMany(_items, _items.Where(x => x.Root == project));
+        }
+
         ErrorRefresh?.Invoke(this, project);
         RefreshCountToggle();
     }
 
     public void Clear(IProjectRoot project, string source)
     {
-        ListEx.RemoveMany(_items,
-            _items.Where(x => x.Root == project && x.Source == source));
+        using (_items.BeginBatch())
+        {
+            ListEx.RemoveMany(_items,
+                _items.Where(x => x.Root == project && x.Source == source));
+        }
+
         ErrorRefresh?.Invoke(this, project);
         RefreshCountToggle();
     }
