@@ -53,7 +53,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         if (_launchProviders.Any(x => x.GetType() == provider.GetType()))
         {
-            logger.Warning($"A launch provider of type '{provider.GetType().Name}' is already registered - ignoring.");
+            logger.Warning($"A target preparer of type '{provider.GetType().Name}' is already registered - ignoring.");
             return;
         }
 
@@ -85,7 +85,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         }
         catch (Exception e)
         {
-            logger.Error($"Launch provider '{provider.DisplayName}' failed to prepare: {e.Message}", e);
+            logger.Error($"Target preparer '{provider.DisplayName}' failed to prepare: {e.Message}", e);
             launchRequest = null;
         }
 
@@ -204,7 +204,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         {
             // Ein Vorbereiter, der beim Aufraeumen wirft, darf das Ende der Sitzung nicht
             // aufhalten - die Sitzung ist an dieser Stelle bereits abgebaut.
-            logger.Error($"Launch provider '{provider.DisplayName}' failed to clean up: {e.Message}", e);
+            logger.Error($"Target preparer '{provider.DisplayName}' failed to clean up: {e.Message}", e);
         }
     }
 
