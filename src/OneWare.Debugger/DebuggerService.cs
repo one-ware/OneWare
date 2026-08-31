@@ -114,8 +114,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
                 MemoryProfile = new DebugMemoryProfile
                 {
                     AddressableUnitBytes = 2,
-                    DefaultLength = 8,
-                    AddressWatermark = "Wortadresse, z. B. 0x052"
+                    DefaultLength = 2,
+                    AddressWatermark = "Wortadresse im SVNR-RAM, z. B. 0x0 - 0x3FF"
                 }
             };
 
