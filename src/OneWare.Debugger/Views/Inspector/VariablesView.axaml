@@ -25,7 +25,7 @@
                   HorizontalScrollBarVisibility="Auto"
                   VerticalScrollBarVisibility="Auto">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" Width="2*"
+                <DataGridTextColumn Header="Name" Width="1.75*"
                                     Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
                 <DataGridTextColumn Header="Value" Width="*"
                                     Binding="{CompiledBinding Value, DataType=models:VariableRow}" />

@@ -34,7 +34,7 @@ public partial class VariablesViewModel : ObservableObject
         {
             var displayName = FormatTypeName(locals[i].Name);
 
-            // TODO: Datentyp aus der SVD-Extension beziehen, sobald die Hardware-Info dort verfuegbar ist.
+            // TODO: Datentyp aus der SVNR-Extension beziehen, sobald die Hardware-Info dort verfuegbar ist.
             var displayType = ResolveDataType(locals[i]);
 
             if (i < Variables.Count && Variables[i].Name == displayName)
@@ -58,9 +58,9 @@ public partial class VariablesViewModel : ObservableObject
         while (Variables.Count > locals.Count) Variables.RemoveAt(Variables.Count - 1);
     }
     
-    // Stub, bis die SVD-Extension den echten Datentyp pro Symbol liefert. Bis dahin bekommen
+    // Stub, bis die SVNR-Extension den echten Datentyp pro Symbol liefert. Bis dahin bekommen
     // alle Zeilen "integer", damit die Spalte nicht leer bleibt.
-    private static string ResolveDataType(DebugVariable _) => "integer";
+    private static string ResolveDataType(DebugVariable _) => "int16";
 
     private static readonly Regex AddressPattern =
         new(@"_at_?(?<address>0x[0-9a-fA-F]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -76,13 +76,13 @@ public partial class VariablesViewModel : ObservableObject
         var isConst = normalized.Contains("read_only");
         var isPointer = normalized.Contains("pointer");
 
-        var adress = match.Groups["address"].Value;
+        var address = match.Groups["address"].Value;
         return (isConst, isPointer) switch
         {
-            (true, true) =>   "Read Only Pointer @ " + adress,
-            (true, false) =>  "Constant @ " + adress,
-            (false, true) =>  "Pointer @ " + adress,
-            (false, false) => "Variable @ " + adress
+            (true, true) =>   "Read Only Pointer @ " + address,
+            (true, false) =>  "Constant @ " + address,
+            (false, true) =>  "Pointer @ " + address,
+            (false, false) => "Variable @ " + address
         };
     }
 }
