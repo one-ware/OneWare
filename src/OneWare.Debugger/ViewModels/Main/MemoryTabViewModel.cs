@@ -23,7 +23,16 @@ public partial class MemoryTabViewModel : ObservableObject
     public MemoryTabViewModel(IDebuggerService debuggerService)
     {
         _debuggerService = debuggerService;
+
+        // Das einzige Abo dieses Reiters, und es geht nicht ums Lesen: das Wasserzeichen gehoert
+        // zum Ziel und steht erst mit der Sitzung fest. Wann gelesen wird, sagt weiterhin
+        // DebuggerViewModel.
+        _debuggerService.StateChanged += (_, _) => OnPropertyChanged(nameof(AddressWatermark));
     }
+
+    // Beispieladresse im leeren Eingabefeld. Kommt vom Ziel -> im Kern steht keine Adresse einer
+    // bestimmten Maschine mehr.
+    public string AddressWatermark => _debuggerService.MemoryProfile.AddressWatermark;
 
     // Bleiben ueber Sessions hinweg stehen, damit man dieselben Adressen nach einem Neustart
     // nicht wieder eintippen muss.
@@ -52,7 +61,11 @@ public partial class MemoryTabViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(AddressText)) return;
 
-        var row = new MemoryRow { Address = AddressText.Trim() };
+        var row = new MemoryRow
+        {
+            Address = AddressText.Trim(),
+            Length = _debuggerService.MemoryProfile.DefaultLength
+        };
         Watches.Add(row);
         AddressText = string.Empty;
 
@@ -115,7 +128,38 @@ public partial class MemoryTabViewModel : ObservableObject
             return;
         }
 
-        row.Value = await _debuggerService.ReadMemoryAsync(row.Address, row.Length) ?? "unreadable";
+        var unitBytes = _debuggerService.MemoryProfile.AddressableUnitBytes;
+
+        var value = await _debuggerService.ReadMemoryAsync(
+            ToBackendAddress(row.Address, unitBytes),
+            row.Length * unitBytes);
+
+        row.Value = value == null ? "unreadable" : GroupIntoUnits(value, unitBytes);
+    }
+
+    // Rechnet die eingetippte Adresse von Zieleinheiten in Bytes um, indem das Backend sie rechnen
+    // laesst -> im Kern steht kein Adressparser, und ein Symbol oder ein &-Ausdruck bleibt gueltig.
+    // Der Cast ist noetig, weil sich ein Zeiger nicht multiplizieren laesst: "(x)*2" lehnt GDB mit
+    // "Argument to arithmetic operation not a number" ab, "((long)(x))*2" nicht.
+    private static string ToBackendAddress(string address, int unitBytes)
+    {
+        return unitBytes <= 1 ? address : $"((long)({address}))*{unitBytes}";
+    }
+
+    // Fasst die einzelnen Bytes zu Einheiten des Ziels zusammen. Innerhalb einer Einheit kommt das
+    // niederwertige Byte zuerst -> zum Anzeigen umdrehen, damit die Zahl so dasteht, wie man sie
+    // schreibt.
+    private static string GroupIntoUnits(string spacedBytes, int unitBytes)
+    {
+        if (unitBytes <= 1) return spacedBytes;
+
+        var bytes = spacedBytes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var units = new List<string>();
+
+        for (var i = 0; i < bytes.Length; i += unitBytes)
+            units.Add(string.Concat(bytes.Skip(i).Take(Math.Min(unitBytes, bytes.Length - i)).Reverse()));
+
+        return string.Join(' ', units);
     }
 
     private async Task RefreshAllAsync()

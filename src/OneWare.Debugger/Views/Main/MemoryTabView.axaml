@@ -29,7 +29,7 @@
                            Source="{DynamicResource MaterialDesign.EyeTracking}" />
                 </Button>
                 <TextBox Text="{Binding AddressText, Mode=TwoWay}"
-                         Watermark="Address, e.g. 0x2001ff80 or &amp;buffer"
+                         Watermark="{Binding AddressWatermark}"
                          FontFamily="{DynamicResource EditorFont}"
                          Background="{DynamicResource ThemeControlLowBrush}"
                          BorderThickness="0"

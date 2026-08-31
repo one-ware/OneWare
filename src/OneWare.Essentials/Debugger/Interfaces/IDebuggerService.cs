@@ -37,6 +37,13 @@ public interface IDebuggerService
     public bool IsActive { get; }
 
     /// <summary>
+    /// Memory geometry of the target of the active session, or
+    /// <see cref="DebugMemoryProfile.Default"/> when none is running. Taken from the request the
+    /// session was started with. Implemented by default so that adding it breaks no implementer.
+    /// </summary>
+    public DebugMemoryProfile MemoryProfile => DebugMemoryProfile.Default;
+
+    /// <summary>
     /// Fired when <see cref="State"/>, <see cref="CurrentSession"/>, or <see cref="IsActive"/>
     /// changed. Always raised on the UI thread, so handlers can touch bound collections directly.
     /// </summary>

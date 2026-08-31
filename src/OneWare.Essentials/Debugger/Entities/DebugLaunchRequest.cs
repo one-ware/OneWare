@@ -13,8 +13,15 @@ namespace OneWare.Essentials.Debugger.Entities;
 /// </param>
 /// <param name="RemoteEndpoint">Remote stub address, e.g. <c>localhost:1234</c>.</param>
 /// <param name="WorkingDirectory">Working directory for the debug session.</param>
+/// <param name="MemoryProfile">
+/// How the memory panel should read and present this target's memory, or
+/// <see langword="null"/> for <see cref="DebugMemoryProfile.Default"/> — a byte-addressed
+/// machine. Whoever brings the target up is the only party that knows its memory geometry; the
+/// panel would otherwise have to guess it or be told by the user.
+/// </param>
 public sealed record DebugLaunchRequest(
     string AdapterId,
     string? ExecutablePath = null,
     string? RemoteEndpoint = null,
-    string? WorkingDirectory = null);
+    string? WorkingDirectory = null,
+    DebugMemoryProfile? MemoryProfile = null);

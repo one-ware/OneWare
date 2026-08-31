@@ -9,12 +9,14 @@ namespace OneWare.Debugger.Models;
 // sobald sie sich aendern.
 public partial class MemoryRow : ObservableObject
 {
-    // Adresse oder Ausdruck, in der Schreibweise, die das Backend versteht - etwa
-    // 0x2001ff80 oder, wenn es Symbole gibt, &buffer.
+    // Adresse oder Ausdruck in der Schreibweise, die das Backend versteht - eine Zahl, oder ein
+    // Symbol wie &buffer. Gezaehlt wird in adressierbaren Einheiten des Ziels, nicht in Bytes;
+    // die Umrechnung macht der Reiter anhand des Profils.
     [ObservableProperty] private string _address = string.Empty;
 
-    // Anzahl der zu lesenden Bytes. Vier ist ein Maschinenwort auf dem SVNR und damit die
-    // Groesse, die man am haeufigsten sehen will.
+    // Anzahl der zu lesenden adressierbaren Einheiten - Bytes auf einer byteadressierten
+    // Maschine, sonst deren Wortbreite. Den Anfangswert einer neuen Zeile setzt der Reiter aus
+    // dem Profil des Ziels; die Vier hier gilt nur, wenn keines vorliegt.
     [ObservableProperty] private int _length = 4;
 
     // Die gelesenen Bytes, oder ein Hinweis, warum nichts gelesen werden konnte.

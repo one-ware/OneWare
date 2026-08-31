@@ -32,6 +32,10 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     public bool IsActive => _session != null;
 
+    // Kommt mit der Startanforderung und gilt fuer die Dauer der Sitzung. Ohne Sitzung steht hier
+    // das byteadressierte Standardprofil -> der Memory-Reiter rechnet dann wie bisher mit 1.
+    public DebugMemoryProfile MemoryProfile { get; private set; } = DebugMemoryProfile.Default;
+
     public event EventHandler? StateChanged;
 
     public void RegisterAdapter<T>() where T : IDebugAdapter
@@ -139,6 +143,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         _session = session;
         State = DebugSessionState.Empty;
+        MemoryProfile = launchRequest.MemoryProfile ?? DebugMemoryProfile.Default;
         RaiseStateChanged();
 
         if (!await session.StartAsync())
@@ -179,6 +184,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             await Task.Run(session.Stop);
 
             State = DebugSessionState.Empty;
+            MemoryProfile = DebugMemoryProfile.Default;
             _breakpoints.CurrentBreakPoint = null;
             RaiseStateChanged();
         }
