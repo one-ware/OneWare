@@ -24,4 +24,16 @@ public sealed record DebugLaunchRequest(
     string? ExecutablePath = null,
     string? RemoteEndpoint = null,
     string? WorkingDirectory = null,
-    DebugMemoryProfile? MemoryProfile = null);
+    DebugMemoryProfile? MemoryProfile = null)
+{
+    /// <summary>
+    /// Only for plugins compiled against the four-parameter form. An added record parameter
+    /// changes the primary constructor's signature, so their compiled call no longer resolves —
+    /// remove this once they are rebuilt.
+    /// </summary>
+    public DebugLaunchRequest(string adapterId, string? executablePath, string? remoteEndpoint,
+        string? workingDirectory)
+        : this(adapterId, executablePath, remoteEndpoint, workingDirectory, null)
+    {
+    }
+}

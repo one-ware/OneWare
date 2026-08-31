@@ -103,6 +103,22 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             return false;
         }
 
+        // Uebergangsgeruest, Gegenstueck zum Vier-Argument-Konstruktor am DebugLaunchRequest:
+        // das einzige existierende Plugin baut gegen das veroeffentlichte Paket und kann noch
+        // kein Profil mitgeben. Solange traegt der Kern hier die Geometrie dieses einen Ziels
+        // nach - nur auf dem Vorbereiter-Weg, der Start ueber Tools > Debugger bleibt
+        // byteadressiert. Faellt weg, sobald die erste Anforderung ein eigenes Profil bringt.
+        if (launchRequest.MemoryProfile == null)
+            launchRequest = launchRequest with
+            {
+                MemoryProfile = new DebugMemoryProfile
+                {
+                    AddressableUnitBytes = 2,
+                    DefaultLength = 8,
+                    AddressWatermark = "Wortadresse, z. B. 0x052"
+                }
+            };
+
         if (await StartCoreAsync(launchRequest)) return true;
 
         // Ein Fehlschlag unterhalb ist ueber StopAsync gelaufen und hat den Vorbereiter damit
