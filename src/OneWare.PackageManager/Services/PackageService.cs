@@ -610,8 +610,8 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
             state.InstalledVersion = version;
             state.InstalledVersionWarningText = result.InstalledVersionWarningText;
-            state.Status = result.Status;
             state.Progress = 0;
+            UpdateStatus(state);
 
             await SaveInstalledPackagesAsync();
 
