@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Debugger.Entities;
@@ -173,7 +174,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         // Erst die Breakpoints scharf machen, dann laufen lassen - andersherum rennt das Programm
         // an genau den Stellen vorbei, an denen der Nutzer halten wollte.
         foreach (var breakpoint in _breakpoints.Breakpoints.ToArray())
-            await session.SetBreakpointAsync(breakpoint);
+            PublishVerification(breakpoint, await session.SetBreakpointAsync(breakpoint));
 
         _breakpoints.Breakpoints.CollectionChanged += OnBreakpointsChanged;
 
@@ -202,6 +203,11 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             State = DebugSessionState.Empty;
             MemoryProfile = DebugMemoryProfile.Default;
             _breakpoints.CurrentBreakPoint = null;
+
+            // Ohne Ziel sagt niemand mehr etwas ueber die Breakpoints aus -> ein hohler Punkt
+            // waere ab hier eine Behauptung ohne Grundlage.
+            _breakpoints.ResetVerification();
+
             RaiseStateChanged();
         }
 
@@ -286,13 +292,65 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         if (e.NewItems != null)
             foreach (BreakPoint breakpoint in e.NewItems)
-                _ = session.SetBreakpointAsync(breakpoint);
+                _ = ArmAsync(session, breakpoint);
 
         if (e.OldItems == null) return;
         {
             foreach (BreakPoint breakpoint in e.OldItems)
                 _ = session.RemoveBreakpointAsync(breakpoint);
         }
+    }
+
+    // Macht einen waehrend der Sitzung gesetzten Breakpoint am Ziel scharf und haelt fest, ob
+    // das Ziel ihn angenommen hat. Der Rueckgabewert wurde bisher verworfen - damit blieb der
+    // Punkt rot, auch wenn das Ziel ihn abgelehnt hatte.
+    private async Task ArmAsync(IDebugSession session, BreakPoint breakpoint)
+    {
+        try
+        {
+            PublishVerification(breakpoint, await session.SetBreakpointAsync(breakpoint));
+        }
+        catch (Exception e)
+        {
+            // Der Aufruf laeuft ohne Erwartenden -> eine Ausnahme ginge sonst still verloren.
+            logger.Error($"Could not arm the breakpoint at {breakpoint.File}:{breakpoint.Line}: {e.Message}", e);
+        }
+    }
+
+    // Auf den UI-Thread gebracht: das Ergebnis kommt vom Lesethread der Sitzung, und daran
+    // haengt das Neuzeichnen der Randspalte in jedem offenen Editor.
+    private void PublishVerification(BreakPoint breakpoint, bool verified)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Vor dem Setzen vergleichen -> gemeldet wird nur der Wechsel. Beim
+            // Scharfmachen zum Sitzungsstart liefe sonst fuer jeden bereits bekannten
+            // abgelehnten Haltepunkt erneut eine Meldung auf.
+            var rejectedNow = breakpoint.IsVerified && !verified;
+
+            _breakpoints.SetVerified(breakpoint, verified);
+
+            if (rejectedNow) NotifyRejected(breakpoint);
+        });
+    }
+
+    // Der hohle Punkt in der Randspalte sagt nur etwas, wenn man die Schreibweise kennt.
+    // Deshalb zusaetzlich eine Kurzmeldung.
+    // Warnung, nicht Fehler: die Sitzung laeuft weiter und der Haltepunkt bleibt stehen -
+    // es ist eine Einschraenkung, kein Abbruch. Ueber die Einstufung kommt zugleich die
+    // Farbe aus dem Benachrichtigungsthema der Host-Anwendung, statt hier festgelegt zu
+    // werden.
+    // Der Grund steht bewusst im Konjunktiv: das Protokoll meldet das Scheitern, nicht
+    // dessen Ursache.
+    private void NotifyRejected(BreakPoint breakpoint)
+    {
+        var file = string.IsNullOrEmpty(breakpoint.File) ? "?" : Path.GetFileName(breakpoint.File);
+
+        serviceProvider.Resolve<IWindowService>().ShowNotification(
+            "Breakpoint not set",
+            $"The target did not accept the breakpoint at {file}:{breakpoint.Line}. " +
+            "It may have run out of breakpoint slots.",
+            NotificationType.Warning);
     }
 
     private void OnSessionStateChanged(object? sender, DebugSessionState state)

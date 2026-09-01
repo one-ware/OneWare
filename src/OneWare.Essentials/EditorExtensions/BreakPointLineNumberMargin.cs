@@ -19,6 +19,10 @@ public class BreakPointLineNumberMargin : LineNumberMargin
     private static readonly IBrush BreakPointBrush = new SolidColorBrush(Color.Parse("#FF3737"));
     private static readonly IBrush PreviewBrush = new SolidColorBrush(Color.Parse("#E67466"));
 
+    // Vom Ziel abgelehnt: grau und hohl. Zwei Unterschiede statt einem -> auch wer Farben
+    // schlecht unterscheidet, sieht am Ring, dass dieser Haltepunkt nicht scharf ist.
+    private static readonly IBrush UnverifiedBrush = new SolidColorBrush(Color.Parse("#9E9E9E"));
+
     private readonly TextEditor _editor;
     private readonly string _filePath;
     private readonly BreakpointStore _store;
@@ -47,7 +51,9 @@ public class BreakPointLineNumberMargin : LineNumberMargin
         {
             var lineNumber = line.FirstDocumentLine.LineNumber;
 
-            var brush = HasBreakPoint(lineNumber) ? BreakPointBrush
+            var breakPoint = FindBreakPoint(lineNumber);
+
+            var brush = breakPoint != null ? BreakPointBrush
                 : lineNumber == _previewLine ? PreviewBrush
                 : null;
 
@@ -58,7 +64,23 @@ public class BreakPointLineNumberMargin : LineNumberMargin
                 var diameter = Math.Min(Bounds.Width, line.Height * 0.75);
                 var centerY = line.GetTextLineVisualYPosition(line.TextLines[0], VisualYPosition.LineMiddle) -
                               textView.VerticalOffset;
-                context.DrawEllipse(brush, null, new Point(Bounds.Width / 2, centerY), diameter / 2, diameter / 2);
+                var center = new Point(Bounds.Width / 2, centerY);
+                var radius = diameter / 2;
+
+                if (breakPoint is { IsVerified: false })
+                {
+                    // Vom Ziel abgelehnt -> grauer Ring. Er liegt innerhalb desselben
+                    // Durchmessers wie der gefuellte Punkt, damit die Spalte gleich breit
+                    // bleibt und die Zeilen nicht springen.
+                    var thickness = Math.Max(1.0, radius * 0.4);
+                    var inner = radius - thickness / 2;
+
+                    context.DrawEllipse(null, new Pen(UnverifiedBrush, thickness), center, inner, inner);
+                }
+                else
+                {
+                    context.DrawEllipse(brush, null, center, radius, radius);
+                }
             }
             else
             {
@@ -107,9 +129,19 @@ public class BreakPointLineNumberMargin : LineNumberMargin
     {
         // An- und Abmelden hier statt im Konstruktor -> der anwendungsweite Store lebt bis
         // zum Programmende und hielte sonst jeden geschlossenen Editor samt Dokument fest
-        if (oldTextView != null) _store.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
+        if (oldTextView != null)
+        {
+            _store.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
+            _store.VerificationChanged -= OnVerificationChanged;
+        }
+
         base.OnTextViewChanged(oldTextView, newTextView);
-        if (newTextView != null) _store.Breakpoints.CollectionChanged += OnBreakpointsChanged;
+
+        if (newTextView != null)
+        {
+            _store.Breakpoints.CollectionChanged += OnBreakpointsChanged;
+            _store.VerificationChanged += OnVerificationChanged;
+        }
     }
 
     private void OnBreakpointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -117,9 +149,16 @@ public class BreakPointLineNumberMargin : LineNumberMargin
         InvalidateVisual();
     }
 
-    private bool HasBreakPoint(int lineNumber)
+    private void OnVerificationChanged(object? sender, EventArgs e)
     {
-        return _store.Breakpoints.Any(bp => bp.File == _filePath && bp.Line == lineNumber);
+        InvalidateVisual();
+    }
+
+    // Liefert den Breakpoint statt nur "ja/nein" -> Render braucht seinen Zustand, um zwischen
+    // bestaetigt und abgelehnt zu unterscheiden.
+    private BreakPoint? FindBreakPoint(int lineNumber)
+    {
+        return _store.Breakpoints.FirstOrDefault(bp => bp.File == _filePath && bp.Line == lineNumber);
     }
 
     // Zeile ueber die Textansicht bestimmen statt ueber Editor-Koordinaten -> haengt nicht

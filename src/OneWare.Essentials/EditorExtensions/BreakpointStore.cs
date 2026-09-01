@@ -21,6 +21,11 @@ public class BreakpointStore : ObservableObject
         set => SetProperty(ref _currentBreakPoint, value);
     }
 
+    // Ein Breakpoint hat seinen Zustand gewechselt, ohne dass sich die Sammlung geaendert hat.
+    // Braucht es, weil die Randspalte sonst nur an CollectionChanged haengt und eine Ablehnung
+    // durch das Ziel damit nie zu sehen waere.
+    public event EventHandler? VerificationChanged;
+
     public void Add(BreakPoint bp)
     {
         Breakpoints.Add(bp);
@@ -29,5 +34,32 @@ public class BreakpointStore : ObservableObject
     public void Remove(BreakPoint bp)
     {
         Breakpoints.Remove(bp);
+    }
+
+    // Nur melden, wenn sich wirklich etwas geaendert hat -> das Neuzeichnen der Randspalte
+    // haengt an jedem Editor, der gerade offen ist.
+    public void SetVerified(BreakPoint bp, bool verified)
+    {
+        if (bp.IsVerified == verified) return;
+
+        bp.IsVerified = verified;
+        VerificationChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    // Nach dem Ende einer Sitzung sagt kein Ziel mehr etwas ueber die Breakpoints aus. Sie
+    // bleiben stehen, aber ein hohler Punkt waere ab hier eine Behauptung ohne Grundlage.
+    public void ResetVerification()
+    {
+        var changed = false;
+
+        foreach (var bp in Breakpoints)
+        {
+            if (bp.IsVerified) continue;
+
+            bp.IsVerified = true;
+            changed = true;
+        }
+
+        if (changed) VerificationChanged?.Invoke(this, EventArgs.Empty);
     }
 }
