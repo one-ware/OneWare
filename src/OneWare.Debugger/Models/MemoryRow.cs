@@ -21,4 +21,9 @@ public partial class MemoryRow : ObservableObject
 
     // Die gelesenen Bytes, oder ein Hinweis, warum nichts gelesen werden konnte.
     [ObservableProperty] private string _value = string.Empty;
+
+    // Dasselbe wie Value, aber in der Form, in der es vom Backend kam: Einheiten in Hex.
+    // Bleibt stehen, damit ein Wechsel des Zahlensystems die Zeile nur neu beschriftet, statt
+    // dafuer das Ziel noch einmal lesen zu muessen -> das ginge waehrend eines Laufs gar nicht.
+    public string Raw { get; set; } = string.Empty;
 }

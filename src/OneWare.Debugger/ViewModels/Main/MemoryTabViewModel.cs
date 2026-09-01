@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.Debugger.Helpers;
 using OneWare.Debugger.Models;
 using OneWare.Essentials.Debugger.Interfaces;
 
@@ -20,15 +21,23 @@ public partial class MemoryTabViewModel : ObservableObject
 
     [ObservableProperty] private MemoryRow? _selectedRow;
 
-    public MemoryTabViewModel(IDebuggerService debuggerService)
+    public MemoryTabViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat)
     {
         _debuggerService = debuggerService;
+        ValueFormat = valueFormat;
 
         // Das einzige Abo dieses Reiters, und es geht nicht ums Lesen: das Wasserzeichen gehoert
         // zum Ziel und steht erst mit der Sitzung fest. Wann gelesen wird, sagt weiterhin
         // DebuggerViewModel.
         _debuggerService.StateChanged += (_, _) => OnPropertyChanged(nameof(AddressWatermark));
+
+        // Ein anderes Zahlensystem beschriftet nur neu, was schon gelesen ist.
+        valueFormat.Changed += (_, _) => RenderAll();
     }
+
+    // Zahlensystem und Vorzeichen der Anzeige. Dasselbe Objekt bedienen auch Registers und
+    // Variables -> die Leiste ueber der Tabelle schaltet alle drei zugleich um.
+    public ValueFormatViewModel ValueFormat { get; }
 
     // Beispieladresse im leeren Eingabefeld. Kommt vom Ziel -> im Kern steht keine Adresse einer
     // bestimmten Maschine mehr.
@@ -50,7 +59,11 @@ public partial class MemoryTabViewModel : ObservableObject
     // mehr wert.
     public void ClearValues()
     {
-        foreach (var row in Watches) row.Value = string.Empty;
+        foreach (var row in Watches)
+        {
+            row.Raw = string.Empty;
+            row.Value = string.Empty;
+        }
     }
 
     // Nimmt die eingetippte Adresse in die Beobachtungsliste auf und liest sie sofort, sofern
@@ -118,26 +131,42 @@ public partial class MemoryTabViewModel : ObservableObject
     {
         if (!_debuggerService.IsActive)
         {
-            row.Value = string.Empty;
+            Show(row, string.Empty);
             return;
         }
 
         if (_debuggerService.State.IsRunning)
         {
-            row.Value = "target running";
+            Show(row, "target running");
             return;
         }
 
-        var unitBytes = _debuggerService.MemoryProfile.AddressableUnitBytes;
+        var profile = _debuggerService.MemoryProfile;
+        var unitBytes = profile.AddressableUnitBytes;
 
         var value = await _debuggerService.ReadMemoryAsync(
             ToBackendAddress(row.Address, unitBytes),
             row.Length * unitBytes);
 
-        row.Value = value == null ? "unreadable" : GroupIntoUnits(value, unitBytes);
+        Show(row, value == null ? "unreadable" : GroupIntoUnits(value, unitBytes, profile.IsLittleEndian));
     }
 
-    // Rechnet die eingetippte Adresse von Zieleinheiten in Bytes um, indem das Backend sie rechnen
+    // Haelt Rohwert und Anzeige beisammen. Ein Hinweis wie "unreadable" geht unveraendert durch
+    // den Formatierer und steht danach genauso da wie zuvor.
+    private void Show(MemoryRow row, string raw)
+    {
+        row.Raw = raw;
+        row.Value = ValueFormatter.FormatHexUnits(raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+    }
+
+    private void RenderAll()
+    {
+        foreach (var row in Watches)
+            row.Value = ValueFormatter.FormatHexUnits(row.Raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+    }
+
+    // Rechnet die eingetippte
+    // Adresse von Zieleinheiten in Bytes um, indem das Backend sie rechnen
     // laesst -> im Kern steht kein Adressparser, und ein Symbol oder ein &-Ausdruck bleibt gueltig.
     // Der Cast ist noetig, weil sich ein Zeiger nicht multiplizieren laesst: "(x)*2" lehnt GDB mit
     // "Argument to arithmetic operation not a number" ab, "((long)(x))*2" nicht.
@@ -146,10 +175,11 @@ public partial class MemoryTabViewModel : ObservableObject
         return unitBytes <= 1 ? address : $"((long)({address}))*{unitBytes}";
     }
 
-    // Fasst die einzelnen Bytes zu Einheiten des Ziels zusammen. Innerhalb einer Einheit kommt das
+    // Fasst die einzelnen Bytes zu Einheiten des Ziels zusammen. Bei Little Endian kommt das
     // niederwertige Byte zuerst -> zum Anzeigen umdrehen, damit die Zahl so dasteht, wie man sie
-    // schreibt.
-    private static string GroupIntoUnits(string spacedBytes, int unitBytes)
+    // schreibt. Welche Reihenfolge gilt, sagt das Ziel ueber das Profil; frueher stand hier
+    // Little Endian fest, und ein Big-Endian-Ziel haette jedes Wort byteverdreht angezeigt.
+    private static string GroupIntoUnits(string spacedBytes, int unitBytes, bool littleEndian)
     {
         if (unitBytes <= 1) return spacedBytes;
 
@@ -157,7 +187,11 @@ public partial class MemoryTabViewModel : ObservableObject
         var units = new List<string>();
 
         for (var i = 0; i < bytes.Length; i += unitBytes)
-            units.Add(string.Concat(bytes.Skip(i).Take(Math.Min(unitBytes, bytes.Length - i)).Reverse()));
+        {
+            var unit = bytes.Skip(i).Take(Math.Min(unitBytes, bytes.Length - i));
+
+            units.Add(string.Concat(littleEndian ? unit.Reverse() : unit));
+        }
 
         return string.Join(' ', units);
     }

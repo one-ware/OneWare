@@ -4,9 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:inspector="clr-namespace:OneWare.Debugger.ViewModels.Inspector"
              xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             xmlns:views="clr-namespace:OneWare.Debugger.Views"
              mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
              x:Class="OneWare.Debugger.Views.Inspector.VariablesView"
              x:DataType="inspector:VariablesViewModel">
+
+    <DockPanel LastChildFill="True">
+    <views:ValueFormatBar DockPanel.Dock="Top" DataContext="{Binding ValueFormat}" />
 
     <Border Margin="4"
             CornerRadius="4"
@@ -34,4 +38,5 @@
             </DataGrid.Columns>
         </DataGrid>
     </Border>
+    </DockPanel>
 </UserControl>

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.Helpers;
+using OneWare.Debugger.Models;
 using OneWare.Debugger.ViewModels;
 using OneWare.Debugger.ViewModels.Inspector;
 using OneWare.Debugger.ViewModels.Main;
@@ -29,6 +30,10 @@ public class DebuggerModule : OneWareModuleBase
         services.AddSingleton<VariablesViewModel>();
         services.AddSingleton<BreakpointsViewModel>();
         services.AddSingleton<InspectorViewModel>();
+
+        // Einer fuer alle drei Wertetabellen -> Memory, Registers und Variables zeigen nie
+        // verschiedene Zahlensysteme, und die Leiste ueber ihnen schaltet alle zugleich um.
+        services.AddSingleton<ValueFormatViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -36,6 +41,14 @@ public class DebuggerModule : OneWareModuleBase
         var dockService = serviceProvider.Resolve<IMainDockService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         var paths = serviceProvider.Resolve<IPaths>();
+
+        // Vor allem anderen: die Ansichtsmodelle lesen diese Werte im Konstruktor, und der
+        // faellt spaetestens beim Registrieren der Panels weiter unten.
+        // Register statt RegisterSetting -> gespeichert und damit ueber Neustarts hinweg
+        // stabil, aber ohne Eintrag auf der Einstellungsseite: bedient wird die Anzeige in der
+        // Leiste ueber der jeweiligen Tabelle.
+        settingsService.Register(ValueFormatViewModel.BaseSetting, nameof(NumberBase.Hex));
+        settingsService.Register(ValueFormatViewModel.SignedSetting, true);
 
         // Der GDB-Adapter ist das Backend des Kerns. Er deckt lokale Programme und, ueber
         // RemoteEndpoint, auch angehaengte Ziele ab; ein Plugin braucht nur dann einen eigenen
@@ -51,13 +64,13 @@ public class DebuggerModule : OneWareModuleBase
                 PlatformHelper.ExistsOnPath,
                 PlatformHelper.ExeFile)
             {
-                HoverDescription = "Path to the GDB executable for remote debugging via gdbserver."
+                HoverDescription = "Path to the GDB executable for debugging via gdbserver."
             });
 
         settingsService.RegisterSetting("Tools", "Debugger", RemoteEndpointSetting,
-            new TextBoxSetting("Remote Endpoint", string.Empty, "host:port, e.g. localhost:3333")
+            new TextBoxSetting("Remote Endpoint", string.Empty, "host:port, e.g. localhost:1234")
             {
-                HoverDescription = "Address of the gdbserver or debug stub to attach to. " +
+                HoverDescription = "Address of remote machine or debug stub to attach to. " +
                                    "Leave empty to debug the program on this machine."
             });
         

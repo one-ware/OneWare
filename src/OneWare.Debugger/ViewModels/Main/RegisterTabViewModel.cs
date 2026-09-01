@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using OneWare.Debugger.Helpers;
 using OneWare.Debugger.Models;
 using OneWare.Essentials.Debugger.Entities;
 
@@ -9,6 +10,18 @@ namespace OneWare.Debugger.ViewModels.Main;
 // -> zum Pruefen genuegt eine Liste von RegisterValue, kein laufender Debugger.
 public class RegisterTabViewModel
 {
+    public RegisterTabViewModel(ValueFormatViewModel valueFormat)
+    {
+        ValueFormat = valueFormat;
+
+        // Ein anderes Zahlensystem beschriftet nur neu, was schon gelesen ist.
+        valueFormat.Changed += (_, _) => RenderAll();
+    }
+
+    // Zahlensystem und Vorzeichen der Anzeige. Dasselbe Objekt bedienen auch Memory und
+    // Variables -> die Leiste ueber der Tabelle schaltet alle drei zugleich um.
+    public ValueFormatViewModel ValueFormat { get; }
+
     // Registerinhalte, wie sie beim letzten Halt gelesen wurden.
     public ObservableCollection<RegisterRow> Rows { get; } = [];
 
@@ -22,11 +35,12 @@ public class RegisterTabViewModel
         {
             if (i < Rows.Count && Rows[i].Name == registers[i].Name)
             {
-                Rows[i].Value = registers[i].Value;
+                Show(Rows[i], registers[i].Value);
                 continue;
             }
 
-            var row = new RegisterRow { Name = registers[i].Name, Value = registers[i].Value };
+            var row = new RegisterRow { Name = registers[i].Name };
+            Show(row, registers[i].Value);
 
             if (i < Rows.Count) Rows[i] = row;
             else Rows.Add(row);
@@ -38,5 +52,20 @@ public class RegisterTabViewModel
     public void Clear()
     {
         Rows.Clear();
+    }
+
+    // Haelt Rohwert und Anzeige beisammen. Die Wortbreite steht im Hexwert selbst, den GDB auf
+    // die Registerbreite auffuellt -> ein 32-Bit-Register wird nicht wie ein 16-Bit-Wort
+    // vorzeichenbehaftet gelesen.
+    private void Show(RegisterRow row, string raw)
+    {
+        row.Raw = raw;
+        row.Value = ValueFormatter.FormatHexValue(raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+    }
+
+    private void RenderAll()
+    {
+        foreach (var row in Rows)
+            row.Value = ValueFormatter.FormatHexValue(row.Raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
     }
 }

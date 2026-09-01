@@ -33,6 +33,28 @@ public sealed record DebugMemoryProfile
     public int DefaultLength { get; init; } = 4;
 
     /// <summary>
+    /// Width of one target word in bits, used when a raw value is re-based or read as a signed
+    /// number. Distinct from <see cref="AddressableUnitBytes"/>: a byte-addressed 32-bit machine
+    /// states <c>1</c> there and <c>32</c> here. Left unset it follows the addressable unit, which
+    /// is what a panel would otherwise have had to assume.
+    /// </summary>
+    public int WordBits
+    {
+        get => _wordBits ?? AddressableUnitBytes * 8;
+        init => _wordBits = value;
+    }
+
+    private readonly int? _wordBits;
+
+    /// <summary>
+    /// Byte order within one addressable unit. <see langword="true"/> — the default — means the
+    /// least significant byte comes first, which is how the backend hands the bytes over for
+    /// nearly every target. A big-endian target that says nothing here would have every word
+    /// displayed byte-swapped, and nothing in the panel could notice.
+    /// </summary>
+    public bool IsLittleEndian { get; init; } = true;
+
+    /// <summary>
     /// Example shown in the empty address box. A target whose addresses look nothing like the
     /// generic example is markedly easier to use with one of its own.
     /// </summary>

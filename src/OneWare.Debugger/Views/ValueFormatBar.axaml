@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="32"
+             x:Class="OneWare.Debugger.Views.ValueFormatBar"
+             x:DataType="viewModels:ValueFormatViewModel">
+
+    <!-- Bewusst ohne GroupName: Avalonia gruppiert Radioknoepfe ohne Namen nach ihrem
+         Elternelement. Die Leiste steht ueber drei Tabellen, und ein gemeinsamer Name wuerde
+         die drei Vorkommen gegenseitig abwaehlen lassen. Denselben Zustand zeigen sie ohnehin,
+         weil alle drei an dasselbe Ansichtsmodell gebunden sind. -->
+    <Border Background="{DynamicResource ThemeBackgroundBrush}"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <StackPanel Orientation="Horizontal" Margin="6,3" Spacing="8">
+            <TextBlock Text="Base"
+                       VerticalAlignment="Center"
+                       Margin="0,0,2,0"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+
+            <RadioButton Content="Hex" IsChecked="{Binding IsHex, Mode=TwoWay}"
+                         ToolTip.Tip="Raw bit pattern, as the backend delivers it" />
+            <RadioButton Content="Dec" IsChecked="{Binding IsDec, Mode=TwoWay}"
+                         ToolTip.Tip="Decimal - the only base where the sign matters" />
+            <RadioButton Content="Oct" IsChecked="{Binding IsOct, Mode=TwoWay}" />
+            <RadioButton Content="Bin" IsChecked="{Binding IsBin, Mode=TwoWay}" />
+
+            <Border Width="1" Margin="4,2"
+                    Background="{DynamicResource ThemeBorderLowBrush}" />
+
+            <CheckBox Content="Signed"
+                      IsChecked="{Binding IsSigned, Mode=TwoWay}"
+                      IsEnabled="{Binding IsSignedEnabled}"
+                      ToolTip.Tip="Two's complement, the way the target's ALU computes. Decimal only - hex, octal and binary show the raw bit pattern, in which the same bits stand whether you read them as -1 or as 65535." />
+        </StackPanel>
+    </Border>
+</UserControl>

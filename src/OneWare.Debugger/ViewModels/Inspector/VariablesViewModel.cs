@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OneWare.Debugger.Helpers;
 using OneWare.Debugger.Models;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
@@ -15,11 +16,20 @@ public partial class VariablesViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
 
-    public VariablesViewModel(IDebuggerService debuggerService)
+    public VariablesViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat)
     {
         _debuggerService = debuggerService;
+        ValueFormat = valueFormat;
+
         _debuggerService.StateChanged += (_, _) => Apply(_debuggerService.State);
+
+        // Ein anderes Zahlensystem beschriftet nur neu, was schon gelesen ist.
+        valueFormat.Changed += (_, _) => RenderAll();
     }
+
+    // Zahlensystem und Vorzeichen der Anzeige. Dasselbe Objekt bedienen auch Memory und
+    // Registers -> die Leiste ueber der Tabelle schaltet alle drei zugleich um.
+    public ValueFormatViewModel ValueFormat { get; }
 
     public ObservableCollection<VariableRow> Variables { get; } = [];
 
@@ -34,12 +44,11 @@ public partial class VariablesViewModel : ObservableObject
         {
             var displayName = FormatTypeName(locals[i].Name);
 
-            // TODO: Datentyp aus der SVNR-Extension beziehen, sobald die Hardware-Info dort verfuegbar ist.
             var displayType = ResolveDataType(locals[i]);
 
             if (i < Variables.Count && Variables[i].Name == displayName)
             {
-                Variables[i].Value = locals[i].Value;
+                Show(Variables[i], locals[i].Value);
                 Variables[i].Type = displayType;
                 continue;
             }
@@ -47,9 +56,9 @@ public partial class VariablesViewModel : ObservableObject
             var row = new VariableRow
             {
                 Name = displayName,
-                Value = locals[i].Value,
                 Type = displayType
             };
+            Show(row, locals[i].Value);
 
             if (i < Variables.Count) Variables[i] = row;
             else Variables.Add(row);
@@ -57,10 +66,52 @@ public partial class VariablesViewModel : ObservableObject
 
         while (Variables.Count > locals.Count) Variables.RemoveAt(Variables.Count - 1);
     }
-    
-    // Stub, bis die SVNR-Extension den echten Datentyp pro Symbol liefert. Bis dahin bekommen
-    // alle Zeilen "integer", damit die Spalte nicht leer bleibt.
-    private static string ResolveDataType(DebugVariable _) => "int16";
+
+    // Haelt Rohwert und Anzeige beisammen. Anders als bei Memory und Registers kommt der Wert
+    // hier nicht roh an: GDB hat ihn schon anhand des DWARF-Typs gerendert, in aller Regel als
+    // vorzeichenbehaftete Dezimalzahl. Aus der laesst sich das Bitmuster verlustfrei
+    // zurueckrechnen -> kein zusaetzliches Kommando ans Backend noetig. Was keine Zahl ist,
+    // etwa eine Struktur oder ein Zeiger mit Symbolnamen, bleibt stehen.
+    private void Show(VariableRow row, string raw)
+    {
+        row.Raw = raw;
+        row.Value = ValueFormatter.FormatDecimalValue(raw, BitsFor(raw), ValueFormat.SelectedBase,
+            ValueFormat.IsSigned);
+    }
+
+    private void RenderAll()
+    {
+        foreach (var row in Variables)
+            row.Value = ValueFormatter.FormatDecimalValue(row.Raw, BitsFor(row.Raw), ValueFormat.SelectedBase,
+                ValueFormat.IsSigned);
+    }
+
+    // Wortbreite fuer die Umrechnung. Sie kommt als Angabe des Ziels aus dem Profil -> im Kern
+    // steht keine Breite einer bestimmten Maschine. Passt der Wert nicht hinein, wird verdoppelt:
+    // ein 32-Bit-Wert auf einer byteadressierten Maschine wuerde sonst abgeschnitten.
+    private int BitsFor(string raw)
+    {
+        var bits = Math.Max(8, _debuggerService.MemoryProfile.WordBits);
+
+        if (!long.TryParse(raw.Trim(), out var value)) return bits;
+
+        while (bits < 64 && !FitsIn(value, bits)) bits *= 2;
+
+        return bits;
+    }
+
+    // Grosszuegig gegenueber beiden Deutungen: -1 und 65535 sollen beide als 16-Bit-Wort
+    // gelten, weil GDB je nach DWARF-Typ das eine oder das andere liefert.
+    private static bool FitsIn(long value, int bits)
+    {
+        return value >= -(1L << (bits - 1)) && value <= (1L << bits) - 1;
+    }
+
+
+    // Der Typ, den das Backend gemeldet hat. Frueher stand hier fest "int16" - der Typ genau
+    // eines Ziels, jeder Variablen jedes Ziels untergeschoben. Meldet das Backend keinen, bleibt
+    // die Spalte leer: ein erfundener Typ ist schlechter als ein sichtbar unbekannter.
+    private static string ResolveDataType(DebugVariable variable) => variable.TypeName ?? string.Empty;
 
     private static readonly Regex AddressPattern =
         new(@"_at_?(?<address>0x[0-9a-fA-F]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

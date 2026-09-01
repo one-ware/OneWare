@@ -8,4 +8,7 @@ public partial class RegisterRow : ObservableObject
     [ObservableProperty] private string _name = string.Empty;
 
     [ObservableProperty] private string _value = string.Empty;
+
+    // Der Wert, wie GDB ihn geliefert hat (Hex). Siehe MemoryRow.Raw.
+    public string Raw { get; set; } = string.Empty;
 }

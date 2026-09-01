@@ -11,4 +11,7 @@ public partial class VariableRow : ObservableObject
     [ObservableProperty] private string _type = string.Empty;
 
     [ObservableProperty] private string _value = string.Empty;
+
+    // Der Wert, wie GDB ihn aus dem DWARF-Typ gerendert hat. Siehe MemoryRow.Raw.
+    public string Raw { get; set; } = string.Empty;
 }
