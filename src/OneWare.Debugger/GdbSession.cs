@@ -147,15 +147,22 @@ public class GdbSession : IDebugSession
         }
     }
 
-    public async Task RunAsync()
+    public Task RunAsync()
     {
+        // Ein angehaengtes Ziel haelt sein Programm bereits und steht an seinem Einsprungpunkt;
+        // GDB hat das beim Verbinden erfahren und die Oberflaeche zeigt es an. Hier zusaetzlich
+        // loszulaufen nimmt dem Benutzer genau den Zustand, den er nach dem Start sehen will -
+        // Register, Speicher, aktuelle Zeile -, und ohne gesetzten Breakpoint rennt das Programm
+        // sofort bis zum Ende durch. Gestartet wird deshalb erst auf Continue.
+        // -exec-run waere hier ohnehin falsch: es verlangt einen Neustart, den die Hardware
+        // nicht anbietet.
+        if (_remoteEndpoint != null) return Task.CompletedTask;
+
         // Ohne Programm und ohne Ziel gibt es nichts zu starten. -exec-run wuerde hier nur einen
         // Fehler in die Console schreiben und den Eindruck erwecken, der Start sei fehlgeschlagen.
-        if (_elfFile == null && _remoteEndpoint == null) return;
+        if (_elfFile == null) return Task.CompletedTask;
 
-        // Ein angehaengtes Ziel haelt sein Programm schon und laeuft nur noch nicht - dort ist
-        // -exec-run falsch, weil es einen Neustart verlangt, den die Hardware nicht anbietet.
-        await RunCommandAsync(_remoteEndpoint == null ? "-exec-run" : "-exec-continue");
+        return RunCommandAsync("-exec-run");
     }
 
     public Task ContinueAsync()
@@ -547,7 +554,9 @@ public class GdbSession : IDebugSession
     // dann bleibt das Panel leer, und die Register sind alles, was es zu sehen gibt.
     private async Task<IReadOnlyList<DebugVariable>> ReadLocalsAsync()
     {
-        // Das Argument 1 heisst "mit Werten", nicht nur mit Namen.
+        // Das Argument 1 heisst "mit Werten", nicht nur mit Namen. Die 2 lieferte zusaetzlich den
+        // Typnamen, aber fuer Verbundtypen keinen Wert mehr -> zurueckgenommen, solange das nicht
+        // an einem Ziel mit Strukturen geprueft ist. DebugVariable.TypeName bleibt damit leer.
         var result = await RunCommandAsync("-stack-list-locals", "1");
         if (result.Status != CommandStatus.Done) return [];
 

@@ -50,8 +50,10 @@ public interface IDebugSession
     public Task<bool> StartAsync();
 
     /// <summary>
-    /// Starts the program. Separate from <see cref="ContinueAsync"/> — an attached target is
-    /// already loaded and only needs resuming.
+    /// Starts the program, for a backend that has to launch one. Separate from
+    /// <see cref="ContinueAsync"/> — an attached target is already loaded and halted at its
+    /// entry point, so there is nothing to start and an implementation may do nothing at all.
+    /// Resuming such a target is the user's decision and goes through <see cref="ContinueAsync"/>.
     /// </summary>
     public Task RunAsync();
 
