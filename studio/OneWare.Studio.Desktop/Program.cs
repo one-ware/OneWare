@@ -239,7 +239,6 @@ internal abstract class Program
             }
             else if (target.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
             {
-                Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", target);
                 logger?.Log($"Opening URL: {target}");
                 ContainerLocator.Container?.Resolve<IApplicationStateService>()
                     .ExecuteUrlLaunchActions(new Uri(target));
