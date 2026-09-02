@@ -37,6 +37,9 @@ public sealed class OneWareCloudLoginService
     private string? _offlineCodeVerifier;
     private string? _offlineState;
 
+    private string? _authProviderCacheHost;
+    private string? _authProviderCacheUrl;
+
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
     {
@@ -50,6 +53,9 @@ public sealed class OneWareCloudLoginService
             .Skip(1)
             .Subscribe(x =>
             {
+                _authProviderCacheHost = null;
+                _authProviderCacheUrl = null;
+
                 Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule
                     .OneWareAccountUserIdKey));
             });
@@ -269,15 +275,24 @@ public sealed class OneWareCloudLoginService
 
     private async Task<string?> GetAuthProviderUrlAsync()
     {
+        var host = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
+
+        if (_authProviderCacheUrl != null && _authProviderCacheHost != null && _authProviderCacheHost.EqualUrls(host))
+            return _authProviderCacheUrl;
+
         try
         {
             var request = new RestRequest("/api/auth/auth-provider");
             var response = await GetRestClient().ExecuteGetAsync(request);
 
             if (response.IsSuccessful && !string.IsNullOrWhiteSpace(response.Content))
-                return response.Content.Trim('"'); 
+            {
+                _authProviderCacheHost = host;
+                _authProviderCacheUrl = response.Content.Trim('"');
+                return _authProviderCacheUrl;
+            }
 
-            _logger.Error("Failed to get auth provider URL.", showOutput: false);
+            _logger.Warning("Failed to get auth provider URL.", null, false);
 
             return null;
         }
