@@ -40,6 +40,8 @@ public sealed class OneWareCloudLoginService
     private string? _authProviderCacheHost;
     private string? _authProviderCacheUrl;
 
+    private CancellationTokenSource? _pendingLoginCts;
+
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
         IPaths paths)
     {
@@ -55,6 +57,7 @@ public sealed class OneWareCloudLoginService
             {
                 _authProviderCacheHost = null;
                 _authProviderCacheUrl = null;
+                CancelPendingLogin();
 
                 Logout(settingService.GetSettingValue<string>(OneWareCloudIntegrationModule
                     .OneWareAccountUserIdKey));
@@ -273,6 +276,31 @@ public sealed class OneWareCloudLoginService
         _settingService.Save(_paths.SettingsPath);
     }
 
+    /// <summary>
+    ///     Cancels a browser login that is still waiting for the callback, so a new login can be started.
+    /// </summary>
+    public void CancelPendingLogin()
+    {
+        var cts = _pendingLoginCts;
+        _pendingLoginCts = null;
+        _port = null;
+        _codeVerifier = null;
+        _state = null;
+        _offlineCodeVerifier = null;
+        _offlineState = null;
+
+        if (cts == null) return;
+
+        try
+        {
+            cts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Login already finished
+        }
+    }
+
     private async Task<string?> GetAuthProviderUrlAsync()
     {
         var host = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
@@ -350,15 +378,25 @@ public sealed class OneWareCloudLoginService
     
     public async Task<bool> LoginAsync(CancellationToken cancellationToken = default)
     {
-        var startNewListener = false;
-        if (_port == null) startNewListener = true;
+        var startNewListener = _port == null;
         _port ??= PlatformHelper.GetAvailablePort();
         var redirectUri = $"http://localhost:{_port}/callback";
         using HttpListener listener = new();
 
         var authProviderBaseUrl = await GetAuthProviderUrlAsync();
         if (string.IsNullOrWhiteSpace(authProviderBaseUrl))
+        {
+            if (startNewListener) _port = null;
             return false;
+        }
+
+        using var pendingLoginCts = startNewListener ? new CancellationTokenSource() : null;
+        if (startNewListener) _pendingLoginCts = pendingLoginCts;
+
+        using var linkedCts = pendingLoginCts != null
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, pendingLoginCts.Token)
+            : null;
+        var loginToken = linkedCts?.Token ?? cancellationToken;
         
         _codeVerifier = GenerateCodeVerifier();
         string codeChallenge = GenerateCodeChallenge(_codeVerifier);
@@ -376,8 +414,18 @@ public sealed class OneWareCloudLoginService
 
         if (startNewListener)
         {
-            listener.Prefixes.Add($"http://localhost:{_port}/");
-            listener.Start();
+            try
+            {
+                listener.Prefixes.Add($"http://localhost:{_port}/");
+                listener.Start();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e.Message, e);
+                _port = null;
+                _pendingLoginCts = null;
+                return false;
+            }
         }
 
         PlatformHelper.OpenHyperLink(authUrl);
@@ -385,10 +433,10 @@ public sealed class OneWareCloudLoginService
         if (startNewListener)
             try
             {
-                using var registration = cancellationToken.Register(() => listener.Stop());
+                using var registration = loginToken.Register(() => listener.Stop());
 
                 var context1 = await listener.GetContextAsync();
-                cancellationToken.ThrowIfCancellationRequested();
+                loginToken.ThrowIfCancellationRequested();
 
                 var step1Response = context1.Response;
 
@@ -436,7 +484,7 @@ public sealed class OneWareCloudLoginService
                 step1Response.Close();
                 
                 var context2 = await listener.GetContextAsync();
-                cancellationToken.ThrowIfCancellationRequested();
+                loginToken.ThrowIfCancellationRequested();
 
                 var step2Response = context2.Response;
 
@@ -472,22 +520,31 @@ public sealed class OneWareCloudLoginService
                 
                 return true;
             }
-            catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
+            catch (HttpListenerException) when (loginToken.IsCancellationRequested)
             {
                 // Listener was stopped due to cancellation, ignore
             }
-            catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+            catch (ObjectDisposedException) when (loginToken.IsCancellationRequested)
             {
                 // Listener was stopped due to cancellation, ignore
+            }
+            catch (OperationCanceledException) when (loginToken.IsCancellationRequested)
+            {
+                // Login was cancelled, ignore
             }
             finally
             {
                 listener.Stop();
-                _port = null;
-                _codeVerifier = null;
-                _state = null;
-                _offlineCodeVerifier = null;
-                _offlineState = null;
+
+                if (ReferenceEquals(_pendingLoginCts, pendingLoginCts))
+                {
+                    _pendingLoginCts = null;
+                    _port = null;
+                    _codeVerifier = null;
+                    _state = null;
+                    _offlineCodeVerifier = null;
+                    _offlineState = null;
+                }
             }
 
         return startNewListener;
