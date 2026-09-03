@@ -70,6 +70,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         toolService.Register(new ToolContext("gtkwave", "Visualisation", "gtkwave"), new NativeStrategy());
         toolService.Register(new ToolContext("iverilog", "Simulation", "iverilog"), new NativeStrategy());
         toolService.Register(new ToolContext("vvp", "Simulation", "vvp"), new NativeStrategy());
+        toolService.Register(new ToolContext("verilator", "Simulation", "verilator"), new NativeStrategy());
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadSuiteHelper.OssCadPackage);
@@ -198,6 +199,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
         serviceProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         serviceProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
+        serviceProvider.Resolve<FpgaService>().RegisterSimulator<VerilatorSimulator>();
         
         settingsService.RegisterSetting(
             "Tools", 
@@ -240,8 +242,9 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 Path.Combine(x, "share", "openFPGALoader"));
             environmentService.SetEnvironmentVariable("PYTHON_EXECUTABLE",
                 Path.Combine(x, "lib", $"python3{PlatformHelper.ExecutableExtension}"));
-            //environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
-            //    Path.Combine(x, "share", $"verilator"));
+            var verilatorRoot = Path.Combine(x, "share", "verilator");
+            if (Directory.Exists(verilatorRoot))
+                environmentService.SetEnvironmentVariable("VERILATOR_ROOT", verilatorRoot);
             // GHDL is not provided in the Windows version
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

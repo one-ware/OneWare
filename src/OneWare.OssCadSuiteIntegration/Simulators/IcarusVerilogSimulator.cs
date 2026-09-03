@@ -56,15 +56,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         
         var vvpPath = Path.Combine(relativeFolderPath, Path.GetFileNameWithoutExtension(fullPath) + ".vvp").ToUnixPath();
         
-        var activeTestBenchRelative = Path.GetRelativePath(root.FullPath, fullPath).ToUnixPath();
-
-        var verilogFiles = root.GetFiles("*.v").Concat(root.GetFiles("*.sv"))
-            .Where(x => !root.IsCompileExcluded(x))
-            .Where(x => !root.IsTestBench(x) || x.EqualPaths(activeTestBenchRelative))
-            .Select(x => x.ToUnixPath())
-            .ToList();
-        var hasSystemVerilog = verilogFiles.Any(x =>
-            Path.GetExtension(x).Equals(".sv", StringComparison.OrdinalIgnoreCase));
+        var verilogFiles = HdlSimulationSourceHelper.GetOrderedSources(root, fullPath);
 
         _mainDockService.Show<IOutputService>();
         
@@ -76,7 +68,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             .WithStatus("Running IVerilog..", AppState.Loading)
             .WithTimer(true)
             .AddPathOption("-o", vvpPath)
-            .AddIf(hasSystemVerilog, "-g2012")
+            .Add("-g2012")
             .AddRawArguments(settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.IcarusVerilogArguments)))
             .AddPaths(verilogFiles)
             .Build();
@@ -93,9 +85,10 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         var vvpCommand = _toolExecutionDispatcherService.CreateToolCommandBuilder("vvp").WithWorkingDirectory(root.FullPath)
             .WithStatus("Running VPP Simulation", AppState.Loading)
             .WithTimer(true)
-            .Add(vvpPath)
             .AddIf(waveOutput == "LXT2", "-lxt2")
-            .AddIf(waveOutput == "FST", "-fst").Build();
+            .AddIf(waveOutput == "FST", "-fst")
+            .AddPath(vvpPath)
+            .Build();
         
         var (resultVvp, outputVvp) = await _toolExecutionDispatcherService.ExecuteAsync(vvpCommand);
         
