@@ -36,19 +36,19 @@ public partial class VariablesViewModel : ObservableObject
     // Aktualisiert die Zeilen an Ort und Stelle, solange Name und Reihenfolge gleich bleiben.
     // Die Sammlung bei jedem Einzelschritt neu aufzubauen wuerde Auswahl und Bildlaufposition
     // verlieren.
-    private void Apply(DebugSessionState state)
+    private void Apply(DebugSessionState sessionState)
     {
-        var locals = state.Locals;
+        var variables = sessionState.Locals;
 
-        for (var i = 0; i < locals.Count; i++)
+        for (var i = 0; i < variables.Count; i++)
         {
-            var displayName = FormatTypeName(locals[i].Name);
+            var displayName = variables[i].Name;
 
-            var displayType = ResolveDataType(locals[i]);
+            var displayType = ResolveDataType(variables[i]);
 
             if (i < Variables.Count && Variables[i].Name == displayName)
             {
-                Show(Variables[i], locals[i].Value);
+                Show(Variables[i], variables[i].Value);
                 Variables[i].Type = displayType;
                 continue;
             }
@@ -58,13 +58,13 @@ public partial class VariablesViewModel : ObservableObject
                 Name = displayName,
                 Type = displayType
             };
-            Show(row, locals[i].Value);
+            Show(row, variables[i].Value);
 
             if (i < Variables.Count) Variables[i] = row;
             else Variables.Add(row);
         }
 
-        while (Variables.Count > locals.Count) Variables.RemoveAt(Variables.Count - 1);
+        while (Variables.Count > variables.Count) Variables.RemoveAt(Variables.Count - 1);
     }
 
     // Haelt Rohwert und Anzeige beisammen. Anders als bei Memory und Registers kommt der Wert
@@ -112,28 +112,6 @@ public partial class VariablesViewModel : ObservableObject
     // eines Ziels, jeder Variablen jedes Ziels untergeschoben. Meldet das Backend keinen, bleibt
     // die Spalte leer: ein erfundener Typ ist schlechter als ein sichtbar unbekannter.
     private static string ResolveDataType(DebugVariable variable) => variable.TypeName ?? string.Empty;
-
-    private static readonly Regex AddressPattern =
-        new(@"_at_?(?<address>0x[0-9a-fA-F]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static string FormatTypeName(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-
-        var match = AddressPattern.Match(raw);
-        if (!match.Success) return raw;
-
-        var normalized = raw.ToLowerInvariant();
-        var isConst = normalized.Contains("read_only");
-        var isPointer = normalized.Contains("pointer");
-
-        var address = match.Groups["address"].Value;
-        return (isConst, isPointer) switch
-        {
-            (true, true) =>   "Read Only Pointer @ " + address,
-            (true, false) =>  "Constant @ " + address,
-            (false, true) =>  "Pointer @ " + address,
-            (false, false) => "Variable @ " + address
-        };
-    }
+    
+    
 }
