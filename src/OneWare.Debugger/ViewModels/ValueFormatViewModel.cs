@@ -12,8 +12,8 @@ namespace OneWare.Debugger.ViewModels;
 // wird er im Panel, und dieselbe Sache an zwei Orten anzubieten stiftet nur Verwirrung.
 public partial class ValueFormatViewModel : ObservableObject
 {
-    public const string BaseSetting = "FEntwumS_Debugger_ValueBase";
-    public const string SignedSetting = "FEntwumS_Debugger_ValueSigned";
+    public const string BaseSetting = "Debugger_ValueBase";
+    public const string SignedSetting = "Debugger_ValueSigned";
 
     private readonly ISettingsService _settingsService;
 

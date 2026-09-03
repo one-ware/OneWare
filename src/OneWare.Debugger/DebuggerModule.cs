@@ -15,8 +15,8 @@ namespace OneWare.Debugger;
 
 public class DebuggerModule : OneWareModuleBase
 {
-    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath"; // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
-    public const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
+    public const string GdbPathSetting = "Debugger_GdbPath"; // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
+    public const string RemoteEndpointSetting = "Debugger_RemoteEndpoint";
 
     public override void RegisterServices(IServiceCollection services)
     {
