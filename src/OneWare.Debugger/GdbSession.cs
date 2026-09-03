@@ -554,10 +554,7 @@ public class GdbSession : IDebugSession
     // dann bleibt das Panel leer, und die Register sind alles, was es zu sehen gibt.
     private async Task<IReadOnlyList<DebugVariable>> ReadLocalsAsync()
     {
-        // Das Argument 1 heisst "mit Werten", nicht nur mit Namen. Die 2 lieferte zusaetzlich den
-        // Typnamen, aber fuer Verbundtypen keinen Wert mehr -> zurueckgenommen, solange das nicht
-        // an einem Ziel mit Strukturen geprueft ist. DebugVariable.TypeName bleibt damit leer.
-        var result = await RunCommandAsync("-stack-list-locals", "1");
+        var result = await RunCommandAsync("-stack-list-locals", "2");
         if (result.Status != CommandStatus.Done) return [];
 
         var locals = result.GetObject("locals");
