@@ -30,10 +30,11 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
         _isSystemVerilog = VerilogModule.SystemVerilogExtensions.Contains(Path.GetExtension(editor.FullPath),
             StringComparer.OrdinalIgnoreCase);
 
-        _verilogSnippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/verilog.json");
-        if (_isSystemVerilog)
-            _systemVerilogSnippets ??=
-                TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/systemverilog.json");
+        // We dont use snippets since switching to lazyverilog, since it provides them
+        // _verilogSnippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/verilog.json");
+        // if (_isSystemVerilog)
+        //     _systemVerilogSnippets ??=
+        //         TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/systemverilog.json");
     }
 
     protected override Task<List<CompletionData>> GetCustomCompletionItemsAsync()
