@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Verilog.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Verilog.Models"
+             x:Class="OneWare.Verilog.Views.VerilogOutlineView"
+             x:DataType="viewModels:VerilogOutlineViewModel"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500">
+    <Grid RowDefinitions="Auto,*">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="4">
+            <Button HorizontalAlignment="Right" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh outline">
+                <TextBlock Text="Refresh" />
+            </Button>
+        </Border>
+        <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}" SelectedItem="{Binding SelectedNode}"
+                  DoubleTapped="TreeView_OnDoubleTapped">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="models:VerilogSymbolNode" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Kind}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+    </Grid>
+</UserControl>

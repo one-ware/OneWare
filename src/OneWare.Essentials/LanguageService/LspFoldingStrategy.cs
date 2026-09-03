@@ -1,6 +1,8 @@
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.EditorExtensions;
+using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.LanguageService;
 
@@ -36,8 +38,9 @@ public class LspFoldingStrategy : IFoldingStrategy
 
             //ContainerLocator.Container.Resolve<ILogger>()?.Log("Updated foldings after: " + (DateTime.Now.TimeOfDay - beforeFolding).Milliseconds + "ms", ConsoleColor.DarkGray);
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
         }
     }
 
@@ -49,8 +52,8 @@ public class LspFoldingStrategy : IFoldingStrategy
         if (f is not null)
             foreach (var folding in f)
             {
-                if (folding.StartLine + 1 >= document.LineCount ||
-                    folding.EndLine + 1 >= document.LineCount) continue;
+                if (folding.StartLine + 1 > document.LineCount ||
+                    folding.EndLine + 1 > document.LineCount) continue;
                 var sLine = document.GetLineByNumber(folding.StartLine + 1);
                 var eLine = document.GetLineByNumber(folding.EndLine + 1);
                 //var sChar = folding.StartCharacter + 1 > sLine.L

@@ -5,14 +5,15 @@ using OneWare.Essentials.Helpers;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.Verilog.Folding;
 using OneWare.Verilog.Indentation;
 
 namespace OneWare.Verilog;
 
 internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
 {
-    private static List<TextMateSnippet>? _snippets;
+    private static List<TextMateSnippet>? _verilogSnippets;
+    private static List<TextMateSnippet>? _systemVerilogSnippets;
+    private readonly bool _isSystemVerilog;
     private readonly ISettingsService _settingsService;
 
     public TypeAssistanceVerilog(IEditor editor, LanguageServiceVerilog ls, ISettingsService settingsService) :
@@ -22,11 +23,17 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
 
         CodeBox.TextArea.IndentationStrategy =
             IndentationStrategy = new VerilogIndentationStrategy(CodeBox.Options);
-        FoldingStrategy = new RegexFoldingStrategy(FoldingRegexVerilog.FoldingStart, FoldingRegexVerilog.FoldingEnd);
+        FormattingStrategy = new LspFormattingStrategy(ls, editor.FullPath);
+        FoldingStrategy = new LspFoldingStrategy(ls, editor.FullPath);
 
         LineCommentSequence = "//";
+        _isSystemVerilog = VerilogModule.SystemVerilogExtensions.Contains(Path.GetExtension(editor.FullPath),
+            StringComparer.OrdinalIgnoreCase);
 
-        _snippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/verilog.json");
+        _verilogSnippets ??= TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/verilog.json");
+        if (_isSystemVerilog)
+            _systemVerilogSnippets ??=
+                TextMateSnippetHelper.ParseVsCodeSnippets("avares://OneWare.Verilog/Assets/systemverilog.json");
     }
 
     protected override Task<List<CompletionData>> GetCustomCompletionItemsAsync()
@@ -35,9 +42,15 @@ internal class TypeAssistanceVerilog : TypeAssistanceLanguageService
 
         if (IsInComment(CodeBox.CaretOffset)) return Task.FromResult(items);
 
-        if (_settingsService.GetSettingValue<bool>(VerilogModule.EnableSnippetsSetting) && _snippets != null)
-            items.AddRange(_snippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
+        if (_settingsService.GetSettingValue<bool>(VerilogModule.EnableSnippetsSetting) && _verilogSnippets != null)
+            items.AddRange(_verilogSnippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label, null,
                 snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
+                CodeBox.CaretOffset, CurrentFilePath)));
+
+        if (_settingsService.GetSettingValue<bool>(VerilogModule.EnableSnippetsSetting) && _isSystemVerilog &&
+            _systemVerilogSnippets != null)
+            items.AddRange(_systemVerilogSnippets.Select(snippet => new CompletionData(snippet.Content, snippet.Label,
+                null, snippet.Description, TypeAssistanceIconStore.Instance.Icons[CompletionItemKind.Snippet], 0,
                 CodeBox.CaretOffset, CurrentFilePath)));
 
         return Task.FromResult(items);

@@ -58,10 +58,13 @@ public class IcarusVerilogSimulator : IFpgaSimulator
         
         var activeTestBenchRelative = Path.GetRelativePath(root.FullPath, fullPath).ToUnixPath();
 
-        var verilogFiles = root.GetFiles("*.v")
+        var verilogFiles = root.GetFiles("*.v").Concat(root.GetFiles("*.sv"))
             .Where(x => !root.IsCompileExcluded(x))
             .Where(x => !root.IsTestBench(x) || x.EqualPaths(activeTestBenchRelative))
-            .Select(x => x.ToUnixPath());
+            .Select(x => x.ToUnixPath())
+            .ToList();
+        var hasSystemVerilog = verilogFiles.Any(x =>
+            Path.GetExtension(x).Equals(".sv", StringComparison.OrdinalIgnoreCase));
 
         _mainDockService.Show<IOutputService>();
         
@@ -73,6 +76,7 @@ public class IcarusVerilogSimulator : IFpgaSimulator
             .WithStatus("Running IVerilog..", AppState.Loading)
             .WithTimer(true)
             .AddPathOption("-o", vvpPath)
+            .AddIf(hasSystemVerilog, "-g2012")
             .AddRawArguments(settings.GetBenchProperty(nameof(IcarusVerilogSimulatorToolbarViewModel.IcarusVerilogArguments)))
             .AddPaths(verilogFiles)
             .Build();
