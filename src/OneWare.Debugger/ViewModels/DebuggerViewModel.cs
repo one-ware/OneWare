@@ -251,7 +251,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!wasActive) AttachToSession();
 
-        MainPanel.Registers.Apply(_debuggerService.State.Registers);
+        MainPanel.Registers.Apply(_debuggerService.State.Registers, IsRunning);
         StatusText = DescribeState(_debuggerService.State);
 
         MainPanel.Memory.Refresh();

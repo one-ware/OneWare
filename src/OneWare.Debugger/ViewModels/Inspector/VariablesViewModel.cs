@@ -37,6 +37,14 @@ public partial class VariablesViewModel : ObservableObject
     // verlieren.
     private void Apply(DebugSessionState sessionState)
     {
+        // Waehrend das Ziel laeuft, meldet der Vertrag keine Locals ("Empty while the target
+        // runs"). Das zu uebernehmen hiesse, die Tabelle bei jedem Continue zu leeren und beim
+        // naechsten Halt neu zu fuellen -> stattdessen bleibt der letzte Halt stehen, bis ein
+        // neuer etwas anderes liefert.
+        // Bewusst an IsRunning und nicht an der Anzahl: ein Halt ohne Locals - Frame ohne
+        // Variablen, Programm ohne Symbole - ist eine echte Aussage und muss raeumen.
+        if (sessionState.IsRunning) return;
+
         var variables = sessionState.Locals;
 
         for (var i = 0; i < variables.Count; i++)

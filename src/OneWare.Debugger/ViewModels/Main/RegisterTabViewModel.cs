@@ -7,7 +7,7 @@ namespace OneWare.Debugger.ViewModels.Main;
 
 // Reiter "Registers": die Registerinhalte des letzten Halts.
 // Bekommt seinen Zustand von DebuggerViewModel gereicht und kennt weder Sitzung noch Dienst
-// -> zum Pruefen genuegt eine Liste von RegisterValue, kein laufender Debugger.
+// -> zum Pruefen genuegen eine Liste von RegisterValue und ein Schalter, kein laufender Debugger.
 public class RegisterTabViewModel
 {
     public RegisterTabViewModel(ValueFormatViewModel valueFormat)
@@ -27,9 +27,15 @@ public class RegisterTabViewModel
 
     // Aktualisiert die Registeranzeige an Ort und Stelle. Damit die Scrollbar sich nicht bei
     // jedem F10 bzw. Continue hoch springt
-    public void Apply(IReadOnlyList<RegisterValue> registers)
+    public void Apply(IReadOnlyList<RegisterValue> registers, bool isRunning)
     {
-        if (registers.Count == 0) return;
+        // Waehrend das Ziel laeuft, ist die Liste leer (DebugSessionState.Registers) -> die
+        // Zeilen des letzten Halts bleiben stehen, statt bei jedem Continue zu verschwinden.
+        // Frueher stand hier eine Pruefung auf die Anzahl. Die traf denselben Fall, aber auch
+        // einen zweiten: ein Backend, das ueberhaupt keine Register lesen kann, meldet an einem
+        // echten Halt ebenfalls nichts - und dann blieben die Zeilen des vorigen Halts als
+        // Behauptung stehen. Ueber IsRunning sind beide Faelle getrennt.
+        if (isRunning) return;
 
         for (var i = 0; i < registers.Count; i++)
         {
