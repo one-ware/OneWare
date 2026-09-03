@@ -41,8 +41,28 @@ The full GPL v2 text accompanies the libgit2 distribution in the
 LibGit2Sharp.NativeBinaries package (libgit2/libgit2.license.txt).
 
 ================================================================================
+SYNTAX HIGHLIGHTING GRAMMARS
+================================================================================
+The Verilog, SystemVerilog, and Verilog filelist grammars were imported from
+https://github.com/mshr-h/vscode-verilog-hdl-support at revision
+e6a5a2b76055dd7acbdc7420060e0314cb86e8dd.
+
+The SystemVerilog grammar is derived from VSCode-SystemVerilog:
+Copyright (c) 2018 Eirik Prestegårdshus. It is licensed under the MIT License
+reproduced below.
+
+The Verilog grammar is derived from the TextMate Verilog Bundle:
+
+Permission to copy, use, modify, sell and distribute this software is granted.
+This software is provided "as is" without express or implied warranty, and
+with no claim as to its suitability for any purpose.
+
+================================================================================
 COMPONENTS UNDER THE MIT LICENSE
 ================================================================================
+  - VSCode-SystemVerilog syntax grammar (revision e6a5a2b76055dd7acbdc7420060e0314cb86e8dd)
+    Copyright (c) 2018 Eirik Prestegårdshus
+    Source: https://github.com/mshr-h/vscode-verilog-hdl-support
   - Asmichi.ChildProcess 0.18.0
   - Avalonia 11.3.11
   - Avalonia 11.3.12
