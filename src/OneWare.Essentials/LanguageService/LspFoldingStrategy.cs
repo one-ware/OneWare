@@ -56,13 +56,23 @@ public class LspFoldingStrategy : IFoldingStrategy
                     folding.EndLine + 1 > document.LineCount) continue;
                 var sLine = document.GetLineByNumber(folding.StartLine + 1);
                 var eLine = document.GetLineByNumber(folding.EndLine + 1);
-                //var sChar = folding.StartCharacter + 1 > sLine.L
+
                 var sOff = sLine.Offset +
-                           (folding.StartCharacter.HasValue ? folding.StartCharacter.Value : sLine.Length);
+                           Math.Clamp(folding.StartCharacter ?? sLine.Length, 0, sLine.Length);
                 var eOff = eLine.Offset +
-                           (folding.EndCharacter.HasValue ? folding.EndCharacter.Value : eLine.Length);
+                           Math.Clamp(folding.EndCharacter ?? eLine.Length, 0, eLine.Length);
+
+                if (eOff <= sOff) continue;
+
                 l.Add(new NewFolding(sOff, eOff));
             }
+
+        // AvaloniaEdit requires foldings sorted by start offset, the language server does not guarantee any order
+        l.Sort((a, b) =>
+        {
+            var startComparison = a.StartOffset.CompareTo(b.StartOffset);
+            return startComparison != 0 ? startComparison : b.EndOffset.CompareTo(a.EndOffset);
+        });
 
         return l;
     }
