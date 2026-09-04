@@ -12,13 +12,13 @@ public interface IDebuggerService
     /// <summary>
     /// Registered backends, including the core's own.
     /// </summary>
-    public IReadOnlyList<IDebugAdapter> Adapters { get; }
+    public IReadOnlyList<IDebugSessionLauncher> SessionLaunchers { get; }
 
     /// <summary>
-    /// Registered launch providers. Whoever fits the active project shows up in the launch
-    /// selection of the debug panel.
+    /// Registered target preparers. Starting the debugger picks the first one whose
+    /// <see cref="IDebugTargetPreparer.CanPrepare"/> accepts the active project.
     /// </summary>
-    public IReadOnlyList<IDebugLaunchProvider> LaunchProviders { get; }
+    public IReadOnlyList<IDebugTargetPreparer> TargetPreparers { get; }
 
     /// <summary>
     /// The active session, or <see langword="null"/> if none is running.
@@ -37,11 +37,11 @@ public interface IDebuggerService
     public bool IsActive { get; }
 
     /// <summary>
-    /// Memory geometry of the target of the active session, or
-    /// <see cref="DebugMemoryProfile.Default"/> when none is running. Taken from the request the
+    /// Profile of the target of the active session, or
+    /// <see cref="DebugTargetProfile.Default"/> when none is running. Taken from the request the
     /// session was started with. Implemented by default so that adding it breaks no implementer.
     /// </summary>
-    public DebugMemoryProfile MemoryProfile => DebugMemoryProfile.Default;
+    public DebugTargetProfile TargetProfile => DebugTargetProfile.Default;
 
     /// <summary>
     /// Fired when <see cref="State"/>, <see cref="CurrentSession"/>, or <see cref="IsActive"/>
@@ -50,29 +50,29 @@ public interface IDebuggerService
     public event EventHandler? StateChanged;
 
     /// <summary>
-    /// Registers an adapter. Resolved from the container — the implementation gets constructor
+    /// Registers a launcher. Resolved from the container — the implementation gets constructor
     /// injection like any other service.
     /// </summary>
-    public void RegisterAdapter<T>() where T : IDebugAdapter;
+    public void RegisterSessionLauncher<T>() where T : IDebugSessionLauncher;
 
     /// <summary>
-    /// Registers a launch provider. Resolved from the container like adapters.
+    /// Registers a target preparer. Resolved from the container like session launchers.
     /// </summary>
-    public void RegisterLaunchProvider<T>() where T : IDebugLaunchProvider;
+    public void RegisterTargetPreparer<T>() where T : IDebugTargetPreparer;
 
     /// <summary>
     /// Starts a session, arms the breakpoints currently set in the editor and runs the program.
-    /// Returns <see langword="false"/> if no adapter accepted the request or the backend did not
+    /// Returns <see langword="false"/> if no launcher accepted the request or the backend did not
     /// come up; nothing is left running in that case.
     /// </summary>
     public Task<bool> StartAsync(DebugLaunchRequest launchRequest);
 
     /// <summary>
-    /// Calls <see cref="IDebugLaunchProvider.PrepareAsync"/> first, then starts with the
-    /// returned request. <see cref="IDebugLaunchProvider.CleanupAsync"/> runs as soon as the
+    /// Calls <see cref="IDebugTargetPreparer.PrepareAsync"/> first, then starts with the
+    /// returned request. <see cref="IDebugTargetPreparer.CleanupAsync"/> runs as soon as the
     /// session ends, no matter how it ended.
     /// </summary>
-    public Task<bool> StartAsync(IDebugLaunchProvider provider, CancellationToken ct = default);
+    public Task<bool> StartAsync(IDebugTargetPreparer preparer);
 
     /// <summary>
     /// Ends the active session. Does nothing if none is running.

@@ -17,11 +17,12 @@ public class DebuggerModule : OneWareModuleBase
 {
     public const string GdbPathSetting = "Debugger_GdbPath"; // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
     public const string RemoteEndpointSetting = "Debugger_RemoteEndpoint";
+    public const string ExecutableProperty = "Debugger/Executable";
 
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<IDebuggerService, DebuggerService>();
-        services.AddSingleton<GdbDebugAdapter>();
+        services.AddSingleton<GdbSessionLauncher>();
         services.AddSingleton<DebuggerViewModel>();
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<RegisterTabViewModel>();
@@ -53,7 +54,7 @@ public class DebuggerModule : OneWareModuleBase
         // Der GDB-Adapter ist das Backend des Kerns. Er deckt lokale Programme und, ueber
         // RemoteEndpoint, auch angehaengte Ziele ab; ein Plugin braucht nur dann einen eigenen
         // Adapter, wenn GDB sein Ziel gar nicht bedienen kann.
-        serviceProvider.Resolve<IDebuggerService>().RegisterAdapter<GdbDebugAdapter>();
+        serviceProvider.Resolve<IDebuggerService>().RegisterSessionLauncher<GdbSessionLauncher>();
 
         settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
             new FilePathSetting(

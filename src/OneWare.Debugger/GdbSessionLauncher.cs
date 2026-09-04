@@ -10,14 +10,12 @@ namespace OneWare.Debugger;
 
 // Das GDB-Backend des Kerns. Deckt lokales Debuggen und, ueber
 // RemoteEndpoint, auch angehaengte Ziele wie den SVNR ab.
-public class GdbDebugAdapter(ILogger logger, ISettingsService settingsService, IPaths paths) : IDebugAdapter
+public class GdbSessionLauncher(ILogger logger, ISettingsService settingsService, IPaths paths) : IDebugSessionLauncher
 {
-    public const string AdapterId = "gdb";
+    public const string BackendId = "gdb_server";
 
-    public string Id => AdapterId;
-
-    public string DisplayName => "GNU Debugger";
-
+    public string Id => BackendId;
+    
     public bool CanLaunch(DebugLaunchRequest launchRequest)
     {
         if (ResolveGdbPath() == null)
@@ -54,7 +52,7 @@ public class GdbDebugAdapter(ILogger logger, ISettingsService settingsService, I
                         || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         return new GdbSession(gdbPath, launchRequest.ExecutablePath, launchRequest.RemoteEndpoint,
-            launchRequest.WorkingDirectory, asyncMode, logger);
+            launchRequest.WorkingDirectory, launchRequest.InitCommands, asyncMode, logger);
     }
 
     // Ermittelt den zu verwendenden GDB-Pfad.

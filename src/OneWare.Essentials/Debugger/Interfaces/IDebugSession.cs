@@ -16,7 +16,7 @@ public interface IDebugSession
     /// <summary>
     /// Identifies the backend, e.g. <c>GDB</c>.
     /// </summary>
-    public string AdapterId { get; }
+    public string BackendId { get; }
 
     /// <summary>
     /// Latest published state.
@@ -50,10 +50,8 @@ public interface IDebugSession
     public Task<bool> StartAsync();
 
     /// <summary>
-    /// Starts the program, for a backend that has to launch one. Separate from
-    /// <see cref="ContinueAsync"/> — an attached target is already loaded and halted at its
-    /// entry point, so there is nothing to start and an implementation may do nothing at all.
-    /// Resuming such a target is the user's decision and goes through <see cref="ContinueAsync"/>.
+    /// Starts the program. Separate from <see cref="ContinueAsync"/> — an attached target is
+    /// already loaded and only needs resuming.
     /// </summary>
     public Task RunAsync();
 
@@ -90,7 +88,8 @@ public interface IDebugSession
     public Task<bool> SetBreakpointAsync(BreakPoint breakpoint);
 
     /// <summary>
-    /// Removes a previously armed breakpoint.
+    /// Removes a previously armed breakpoint. Removing one that is not armed counts as success —
+    /// the requested state is what matters, not how it was reached.
     /// </summary>
     public Task<bool> RemoveBreakpointAsync(BreakPoint breakpoint);
 

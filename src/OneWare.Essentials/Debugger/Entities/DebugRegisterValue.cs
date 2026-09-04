@@ -5,6 +5,6 @@ namespace OneWare.Essentials.Debugger.Entities;
 /// </summary>
 /// <param name="Name">As reported by the target, e.g. <c>sp</c> or <c>pc</c>.</param>
 /// <param name="Value">Formatted by the backend; the UI displays the string unchanged.</param>
-public sealed record RegisterValue(
+public sealed record DebugRegisterValue(
     string Name,
     string Value);

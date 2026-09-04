@@ -29,7 +29,7 @@ public sealed record DebugSessionState
     /// backend that cannot read registers — the panel then simply shows nothing, which is what a
     /// separate capability flag would have told it to do anyway.
     /// </summary>
-    public IReadOnlyList<RegisterValue> Registers { get; init; } = [];
+    public IReadOnlyList<DebugRegisterValue> Registers { get; init; } = [];
 
     /// <summary>
     /// Locals of <see cref="CurrentFrame"/> as of the last halt. Empty while the target runs,
