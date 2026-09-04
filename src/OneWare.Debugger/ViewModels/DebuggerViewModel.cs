@@ -5,6 +5,7 @@ using OneWare.Debugger.ViewModels.Main;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -39,10 +40,6 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private IDebugSession? _attachedSession;
 
-    // Laeuft nur waehrend IDebugLaunchProvider.PrepareAsync. Stop hat in dieser
-    // Zeit keine Sitzung zum Beenden und bricht stattdessen hierueber ab.
-    private CancellationTokenSource? _prepareCancellation;
-
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
         IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
         MainPanelViewModel mainPanel) : base(IconKey)
@@ -75,9 +72,9 @@ public partial class DebuggerViewModel : ExtendedTool
 
         // Welches Ziel gilt, steht im Projekt -> der passende Vorbereiter meldet sich selbst,
         // statt in einer Auswahlliste der Leiste zu stehen.
-        if (_debuggerService.LaunchProviders.FirstOrDefault(CanPrepareSafely) is { } provider)
+        if (_debuggerService.TargetPreparers.FirstOrDefault(CanPrepareSafely) is { } preparer)
         {
-            await StartWithProviderAsync(provider);
+            await StartWithPreparerAsync(preparer);
             return;
         }
 
@@ -92,7 +89,7 @@ public partial class DebuggerViewModel : ExtendedTool
         // Plugin geladen, sonst war keines fuer dieses Projekt zustaendig.
         MainPanel.Console.Append(
             $"No target preparer is responsible for the active project " +
-            $"({_debuggerService.LaunchProviders.Count} registered). Using the endpoint from " +
+            $"({_debuggerService.TargetPreparers.Count} registered). Using the endpoint from " +
             $"Tools > Debugger: {request.RemoteEndpoint ?? "none"}.");
 
         if (!await _debuggerService.StartAsync(request))
@@ -116,64 +113,56 @@ public partial class DebuggerViewModel : ExtendedTool
     // uebertragen. Solange gibt es keine Sitzung, weshalb der Startknopf ueber
     // IsPreparing gesperrt wird und nicht ueber IsSessionActive.
     // Was dabei geschieht, meldet der Vorbereiter selbst; hier steht nur, dass etwas laeuft.
-    private async Task StartWithProviderAsync(IDebugLaunchProvider provider)
+    private async Task StartWithPreparerAsync(IDebugTargetPreparer preparer)
     {
         IsPreparing = true;
-        StatusText = $"Preparing {provider.DisplayName}...";
-
-        using var cancellation = new CancellationTokenSource();
-        _prepareCancellation = cancellation;
+        StatusText = $"Preparing {preparer.DisplayName}...";
 
         try
         {
-            if (await _debuggerService.StartAsync(provider, cancellation.Token)) return;
+            if (await _debuggerService.StartAsync(preparer)) return;
 
-            MainPanel.Console.Append($"{provider.DisplayName} could not be started.");
+            MainPanel.Console.Append($"{preparer.DisplayName} could not be started.");
             StatusText = "Start failed";
         }
         finally
         {
-            _prepareCancellation = null;
             IsPreparing = false;
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanStop))]
+    [RelayCommand(CanExecute = nameof(IsSessionEstablished))]
     private Task StopAsync()
     {
-        // Waehrend der Vorbereitung gibt es noch keine Sitzung. Stop beendet dann nicht sie,
-        // sondern bricht das Vorbereiten ab; das Aufraeumen macht danach der Vorbereiter selbst.
-        _prepareCancellation?.Cancel();
-
         StatusText = "Stopping...";
         return _debuggerService.StopAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
+    [RelayCommand(CanExecute = nameof(CanPause))]
     private Task PauseAsync()
     {
         return _debuggerService.PauseAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
+    [RelayCommand(CanExecute = nameof(CanResume))]
     private Task ContinueAsync()
     {
         return _debuggerService.ContinueAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
+    [RelayCommand(CanExecute = nameof(CanResume))]
     private Task StepOverAsync()
     {
         return _debuggerService.StepOverAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
+    [RelayCommand(CanExecute = nameof(CanResume))]
     private Task StepIntoAsync()
     {
         return _debuggerService.StepIntoAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(IsSessionActive))]
+    [RelayCommand(CanExecute = nameof(CanStepOut))]
     private Task StepOutAsync()
     {
         return _debuggerService.StepOutAsync();
@@ -190,21 +179,21 @@ public partial class DebuggerViewModel : ExtendedTool
         var endpoint = _settingsService.GetSettingValue<string>(DebuggerModule.RemoteEndpointSetting);
         if (string.IsNullOrWhiteSpace(endpoint)) endpoint = null;
 
-        return new DebugLaunchRequest(GdbDebugAdapter.AdapterId, FindProjectExecutable(), endpoint,
+        return new DebugLaunchRequest(GdbSessionLauncher.BackendId, FindProjectExecutable(), endpoint,
             _projectExplorerService.ActiveProject?.FullPath);
     }
 
-    // IDebugLaunchProvider.CanPrepare kommt aus einem Plugin. Wirft es, faellt nur dieser eine
+    // IDebugTargetPreparer.CanPrepare kommt aus einem Plugin. Wirft es, faellt nur dieser eine
     // Vorbereiter aus, statt den Start zu verhindern.
-    private bool CanPrepareSafely(IDebugLaunchProvider provider)
+    private bool CanPrepareSafely(IDebugTargetPreparer preparer)
     {
         try
         {
-            return provider.CanPrepare();
+            return preparer.CanPrepare();
         }
         catch (Exception e)
         {
-            _logger.Error($"Target preparer '{provider.DisplayName}' failed in CanPrepare: {e.Message}", e);
+            _logger.Error($"Target preparer '{preparer.DisplayName}' failed in CanPrepare: {e.Message}", e);
             return false;
         }
     }
@@ -219,6 +208,8 @@ public partial class DebuggerViewModel : ExtendedTool
 
         try
         {
+            if (DeclaredExecutable(project) is { } declared) return declared;
+
             return Directory.EnumerateFiles(project.FullPath, "*.elf", SearchOption.AllDirectories)
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault();
@@ -228,6 +219,22 @@ public partial class DebuggerViewModel : ExtendedTool
             _logger.Error(e.Message, e);
             return null;
         }
+    }
+
+    private string? DeclaredExecutable(IProjectRoot project)
+    {
+        if (project is not IProjectRootWithFile declaring) return null;
+        if (declaring.Properties.GetString(DebuggerModule.ExecutableProperty) is not { Length: > 0 } relative)
+            return null;
+
+        var path = Path.Combine(project.FullPath,
+            relative.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar));
+
+        if (File.Exists(path)) return path;
+
+        _logger.Warning($"The project declares '{relative}' as its debug executable, but no file exists at " +
+                        $"{path} - searching the project folder for a *.elf instead.");
+        return null;
     }
 
     // Der eine Ort, an dem ein Halt ankommt. Von hier bekommen die Reiter ihren Zustand, und
@@ -251,7 +258,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!wasActive) AttachToSession();
 
-        MainPanel.Registers.Apply(_debuggerService.State.Registers, IsRunning);
+        MainPanel.Registers.Apply(FilterRegisters(_debuggerService.State.Registers), IsRunning);
         StatusText = DescribeState(_debuggerService.State);
 
         MainPanel.Memory.Refresh();
@@ -308,6 +315,17 @@ public partial class DebuggerViewModel : ExtendedTool
         MainPanel.Console.Append(line);
     }
 
+
+    private IReadOnlyList<DebugRegisterValue> FilterRegisters(IReadOnlyList<DebugRegisterValue> registers)
+    {
+        if (_debuggerService.TargetProfile.Registers is not { Count: > 0 } wanted) return registers;
+
+        return wanted
+            .Select(name => registers.FirstOrDefault(x => x.Name == name))
+            .OfType<DebugRegisterValue>()
+            .ToList();
+    }
+
     private void OnCommandSent(object? sender, string command)
     {
         MainPanel.Console.Append($"> {command}", true);
@@ -318,15 +336,34 @@ public partial class DebuggerViewModel : ExtendedTool
         return !IsSessionActive && !IsPreparing;
     }
 
-    private bool CanStop()
+    private bool IsSessionEstablished()
     {
-        return IsSessionActive || IsPreparing;
+        return IsSessionActive && !IsPreparing;
+    }
+
+    private bool CanPause()
+    {
+        return IsSessionEstablished() && IsRunning;
+    }
+
+    private bool CanResume()
+    {
+        return IsSessionEstablished() && !IsRunning;
+    }
+
+    private bool CanStepOut()
+    {
+        return CanResume() && _debuggerService.TargetProfile.HasCallStack;
     }
 
     partial void OnIsPreparingChanged(bool value)
     {
-        StartCommand.NotifyCanExecuteChanged();
-        StopCommand.NotifyCanExecuteChanged();
+        NotifyCommandStates();
+    }
+
+    partial void OnIsRunningChanged(bool value)
+    {
+        NotifyCommandStates();
     }
 
     partial void OnIsSessionActiveChanged(bool value)
@@ -335,10 +372,15 @@ public partial class DebuggerViewModel : ExtendedTool
         // selbst am Dienst.
         MainPanel.Console.IsSessionActive = value;
 
+        NotifyCommandStates();
+    }
+
+    private void NotifyCommandStates()
+    {
         StartCommand.NotifyCanExecuteChanged();
+        StopCommand.NotifyCanExecuteChanged();
         PauseCommand.NotifyCanExecuteChanged();
         ContinueCommand.NotifyCanExecuteChanged();
-        StopCommand.NotifyCanExecuteChanged();
         StepOverCommand.NotifyCanExecuteChanged();
         StepIntoCommand.NotifyCanExecuteChanged();
         StepOutCommand.NotifyCanExecuteChanged();
