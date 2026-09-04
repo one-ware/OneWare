@@ -11,7 +11,7 @@ namespace OneWare.Debugger.ViewModels.Inspector;
 // benannt nach der gleichnamigen Eclipse-Ansicht.
 // Zieht sich nichts selbst, sondern zeigt an, was die Session beim letzten Halt mitgeliefert
 // hat. Damit koennen Variablen und Register nie aus verschiedenen Halts stammen.
-public partial class VariablesViewModel : ObservableObject
+public class VariablesViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
 
@@ -93,12 +93,12 @@ public partial class VariablesViewModel : ObservableObject
                 ValueFormat.IsSigned);
     }
 
-    // Wortbreite fuer die Umrechnung. Sie kommt als Angabe des Ziels aus dem Profil -> im Kern
+    // Wortbreite fuer die Umrechnung. Sie folgt der Adresseinheit des Ziels aus dem Profil -> im Kern
     // steht keine Breite einer bestimmten Maschine. Passt der Wert nicht hinein, wird verdoppelt:
     // ein 32-Bit-Wert auf einer byteadressierten Maschine wuerde sonst abgeschnitten.
     private int BitsFor(string raw)
     {
-        var bits = Math.Max(8, _debuggerService.MemoryProfile.WordBits);
+        var bits = Math.Max(8, _debuggerService.TargetProfile.AddressableUnitBytes * 8);
 
         if (!long.TryParse(raw.Trim(), out var value)) return bits;
 

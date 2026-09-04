@@ -4,9 +4,7 @@ namespace OneWare.Debugger.Models;
 
 // Eine Zeile im Memory-Reiter: eine vom Benutzer eingetragene Adresse und die zuletzt
 // dort gelesenen Bytes.
-// Address und Length sind bearbeitbar, weil man beim Suchen
-// eines Speicherbereichs die Adresse laufend anpasst. Beide loesen ein erneutes Lesen aus,
-// sobald sie sich aendern.
+// Die Tabelle zeigt nur an; Zeilen entstehen und verschwinden ueber die Knoepfe der Leiste.
 public partial class MemoryRow : ObservableObject
 {
     // Adresse oder Ausdruck in der Schreibweise, die das Backend versteht - eine Zahl, oder ein
@@ -15,9 +13,12 @@ public partial class MemoryRow : ObservableObject
     [ObservableProperty] private string _address = string.Empty;
 
     // Anzahl der zu lesenden adressierbaren Einheiten - Bytes auf einer byteadressierten
-    // Maschine, sonst deren Wortbreite. Den Anfangswert einer neuen Zeile setzt der Reiter aus
-    // dem Profil des Ziels; die Vier hier gilt nur, wenn keines vorliegt.
-    [ObservableProperty] private int _length = 4;
+    // Maschine, sonst deren Wortbreite. Eine neue Zeile liest zunaechst eine Einheit.
+    [ObservableProperty] private int _length = 1;
+
+    // Wie viele Bytes die Zeile umfasst - Length mal der Breite einer Einheit. Nur zur Anzeige;
+    // gelesen wird weiterhin ueber Length.
+    [ObservableProperty] private int _bytes = 1;
 
     // Die gelesenen Bytes, oder ein Hinweis, warum nichts gelesen werden konnte.
     [ObservableProperty] private string _value = string.Empty;

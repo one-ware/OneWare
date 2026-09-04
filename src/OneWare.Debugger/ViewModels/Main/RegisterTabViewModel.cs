@@ -7,7 +7,7 @@ namespace OneWare.Debugger.ViewModels.Main;
 
 // Reiter "Registers": die Registerinhalte des letzten Halts.
 // Bekommt seinen Zustand von DebuggerViewModel gereicht und kennt weder Sitzung noch Dienst
-// -> zum Pruefen genuegen eine Liste von RegisterValue und ein Schalter, kein laufender Debugger.
+// -> zum Pruefen genuegen eine Liste von DebugRegisterValue und ein Schalter, kein laufender Debugger.
 public class RegisterTabViewModel
 {
     public RegisterTabViewModel(ValueFormatViewModel valueFormat)
@@ -27,7 +27,7 @@ public class RegisterTabViewModel
 
     // Aktualisiert die Registeranzeige an Ort und Stelle. Damit die Scrollbar sich nicht bei
     // jedem F10 bzw. Continue hoch springt
-    public void Apply(IReadOnlyList<RegisterValue> registers, bool isRunning)
+    public void Apply(IReadOnlyList<DebugRegisterValue> registers, bool isRunning)
     {
         // Waehrend das Ziel laeuft, ist die Liste leer (DebugSessionState.Registers) -> die
         // Zeilen des letzten Halts bleiben stehen, statt bei jedem Continue zu verschwinden.

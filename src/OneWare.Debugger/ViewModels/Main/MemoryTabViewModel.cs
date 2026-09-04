@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Debugger.Helpers;
@@ -41,7 +40,7 @@ public partial class MemoryTabViewModel : ObservableObject
 
     // Beispieladresse im leeren Eingabefeld. Kommt vom Ziel -> im Kern steht keine Adresse einer
     // bestimmten Maschine mehr.
-    public string AddressWatermark => _debuggerService.MemoryProfile.AddressWatermark;
+    public string AddressWatermark => _debuggerService.TargetProfile.AddressWatermark;
 
     // Bleiben ueber Sessions hinweg stehen, damit man dieselben Adressen nach einem Neustart
     // nicht wieder eintippen muss.
@@ -74,15 +73,10 @@ public partial class MemoryTabViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(AddressText)) return;
 
-        var row = new MemoryRow
-        {
-            Address = AddressText.Trim(),
-            Length = _debuggerService.MemoryProfile.DefaultLength
-        };
+        var row = new MemoryRow { Address = AddressText.Trim() };
         Watches.Add(row);
         AddressText = string.Empty;
 
-        row.PropertyChanged += OnRowChanged;
 
         await RefreshRowAsync(row);
     }
@@ -92,7 +86,6 @@ public partial class MemoryTabViewModel : ObservableObject
     {
         if (SelectedRow is not { } row) return;
 
-        row.PropertyChanged -= OnRowChanged;
         Watches.Remove(row);
         SelectedRow = null;
     }
@@ -107,7 +100,6 @@ public partial class MemoryTabViewModel : ObservableObject
     [RelayCommand]
     private void ClearWatches()
     {
-        foreach (var row in Watches) row.PropertyChanged -= OnRowChanged;
         Watches.Clear();
         SelectedRow = null;
     }
@@ -119,14 +111,6 @@ public partial class MemoryTabViewModel : ObservableObject
 
     // Eine im Raster bearbeitete Adresse oder Laenge wird sofort neu gelesen. Der Wert selbst
     // ist ausgenommen, sonst loeste das Schreiben des Ergebnisses das naechste Lesen aus.
-    private void OnRowChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (sender is not MemoryRow row) return;
-        if (e.PropertyName is not (nameof(MemoryRow.Address) or nameof(MemoryRow.Length))) return;
-
-        _ = RefreshRowAsync(row);
-    }
-
     private async Task RefreshRowAsync(MemoryRow row)
     {
         if (!_debuggerService.IsActive)
@@ -141,8 +125,10 @@ public partial class MemoryTabViewModel : ObservableObject
             return;
         }
 
-        var profile = _debuggerService.MemoryProfile;
+        var profile = _debuggerService.TargetProfile;
         var unitBytes = profile.AddressableUnitBytes;
+
+        row.Bytes = row.Length * unitBytes;
 
         var value = await _debuggerService.ReadMemoryAsync(
             ToBackendAddress(row.Address, unitBytes),

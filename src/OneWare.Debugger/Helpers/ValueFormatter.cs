@@ -87,20 +87,38 @@ public static class ValueFormatter
 
     private static string Format(ulong value, int bits, NumberBase numberBase, bool signed)
     {
-        // Convert.ToString beherrscht genau die Basen 2, 8, 10 und 16 - also genau die vier, die
-        // hier zur Wahl stehen. Der Wert ist bereits auf bits maskiert, der Cast nach long traegt
-        // damit dasselbe Bitmuster; nur bei 64 Bit mit gesetztem obersten Bit wird er negativ, und
-        // dann schreibt Convert dessen Zweierkomplement - was hier gerade das Gewuenschte ist.
-        // Fuehrende Nullen liefert Convert nicht, die gehoeren aber bei Binaer zum Wort.
         var pattern = unchecked((long)value);
 
         return numberBase switch
         {
-            NumberBase.Dec => signed ? SignedDecimal(value, bits) : value.ToString(CultureInfo.InvariantCulture),
-            NumberBase.Oct => Convert.ToString(pattern, 8),
-            NumberBase.Bin => Convert.ToString(pattern, 2).PadLeft(bits, '0'),
-            _ => value.ToString("X" + (bits + 3) / 4, CultureInfo.InvariantCulture)
+            NumberBase.Dec => signed
+                ? SignedDecimal(value, bits)
+                : value.ToString(CultureInfo.InvariantCulture),
+
+            NumberBase.Oct => Convert.ToString(pattern, 8).PadLeft(OctalDigits(bits), '0'),
+
+            NumberBase.Bin => GroupNibbles(Convert.ToString(pattern, 2).PadLeft(bits, '0')),
+
+            _ => value.ToString("X" + HexDigits(bits), CultureInfo.InvariantCulture)
         };
+    }
+
+    private static int HexDigits(int bits)
+    {
+        return (bits + 3) / 4;
+    }
+
+    private static int OctalDigits(int bits)
+    {
+        return (bits + 2) / 3;
+    }
+
+    private static string GroupNibbles(string digits)
+    {
+        var groups = Enumerable.Range(0, (digits.Length + 3) / 4)
+            .Select(i => digits.Substring(i * 4, Math.Min(4, digits.Length - i * 4)));
+
+        return string.Join(' ', groups);
     }
 
     // Zweierkomplement: ist das oberste Bit gesetzt, liegt der Wert unter null, und sein Betrag
