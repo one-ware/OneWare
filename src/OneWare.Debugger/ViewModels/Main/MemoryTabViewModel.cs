@@ -109,8 +109,6 @@ public partial class MemoryTabViewModel : ObservableObject
         RemoveWatchCommand.NotifyCanExecuteChanged();
     }
 
-    // Eine im Raster bearbeitete Adresse oder Laenge wird sofort neu gelesen. Der Wert selbst
-    // ist ausgenommen, sonst loeste das Schreiben des Ergebnisses das naechste Lesen aus.
     private async Task RefreshRowAsync(MemoryRow row)
     {
         if (!_debuggerService.IsActive)
