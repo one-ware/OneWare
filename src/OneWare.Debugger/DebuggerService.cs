@@ -15,17 +15,19 @@ namespace OneWare.Debugger;
 // Panel einzeln aufzutragen.
 public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger logger) : IDebuggerService
 {
-    private readonly List<IDebugAdapter> _adapters = [];
+    private readonly List<IDebugSessionLauncher> _sessionLaunchers = [];
+    private readonly HashSet<BreakPoint> _armed = [];
+    private readonly HashSet<BreakPoint> _refused = [];
     private readonly BreakpointStore _breakpoints = BreakpointStore.Instance;
-    private readonly List<IDebugLaunchProvider> _launchProviders = [];
+    private readonly List<IDebugTargetPreparer> _targetPreparers = [];
 
-    private IDebugLaunchProvider? _activeProvider;
+    private IDebugTargetPreparer? _activePreparer;
 
     private IDebugSession? _session;
 
-    public IReadOnlyList<IDebugAdapter> Adapters => _adapters;
+    public IReadOnlyList<IDebugSessionLauncher> SessionLaunchers => _sessionLaunchers;
 
-    public IReadOnlyList<IDebugLaunchProvider> LaunchProviders => _launchProviders;
+    public IReadOnlyList<IDebugTargetPreparer> TargetPreparers => _targetPreparers;
 
     public IDebugSession? CurrentSession => _session;
 
@@ -35,34 +37,34 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     // Kommt mit der Startanforderung und gilt fuer die Dauer der Sitzung. Ohne Sitzung steht hier
     // das byteadressierte Standardprofil -> der Memory-Reiter rechnet dann wie bisher mit 1.
-    public DebugMemoryProfile MemoryProfile { get; private set; } = DebugMemoryProfile.Default;
+    public DebugTargetProfile TargetProfile { get; private set; } = DebugTargetProfile.Default;
 
     public event EventHandler? StateChanged;
 
-    public void RegisterAdapter<T>() where T : IDebugAdapter
+    public void RegisterSessionLauncher<T>() where T : IDebugSessionLauncher
     {
-        var adapter = serviceProvider.Resolve<T>();
+        var launcher = serviceProvider.Resolve<T>();
 
-        if (_adapters.Any(x => x.Id == adapter.Id))
+        if (_sessionLaunchers.Any(x => x.Id == launcher.Id))
         {
-            logger.Warning($"A debug adapter with id '{adapter.Id}' is already registered - ignoring.");
+            logger.Warning($"A session launcher with id '{launcher.Id}' is already registered - ignoring.");
             return;
         }
 
-        _adapters.Add(adapter);
+        _sessionLaunchers.Add(launcher);
     }
 
-    public void RegisterLaunchProvider<T>() where T : IDebugLaunchProvider
+    public void RegisterTargetPreparer<T>() where T : IDebugTargetPreparer
     {
-        var provider = serviceProvider.Resolve<T>();
+        var preparer = serviceProvider.Resolve<T>();
 
-        if (_launchProviders.Any(x => x.GetType() == provider.GetType()))
+        if (_targetPreparers.Any(x => x.GetType() == preparer.GetType()))
         {
-            logger.Warning($"A target preparer of type '{provider.GetType().Name}' is already registered - ignoring.");
+            logger.Warning($"A target preparer of type '{preparer.GetType().Name}' is already registered - ignoring.");
             return;
         }
 
-        _launchProviders.Add(provider);
+        _targetPreparers.Add(preparer);
     }
 
     public async Task<bool> StartAsync(DebugLaunchRequest launchRequest)
@@ -72,7 +74,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         return await StartCoreAsync(launchRequest);
     }
 
-    public async Task<bool> StartAsync(IDebugLaunchProvider provider, CancellationToken ct = default)
+    public async Task<bool> StartAsync(IDebugTargetPreparer preparer)
     {
         // Erst die laufende Sitzung abraeumen, dann vorbereiten: der Vorbereiter greift auf
         // dieselben Betriebsmittel zu wie die vorige Sitzung - eine serielle Schnittstelle etwa
@@ -82,7 +84,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         DebugLaunchRequest? launchRequest;
         try
         {
-            launchRequest = await provider.PrepareAsync(ct);
+            launchRequest = await preparer.PrepareAsync();
         }
         catch (OperationCanceledException)
         {
@@ -90,68 +92,52 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         }
         catch (Exception e)
         {
-            logger.Error($"Target preparer '{provider.DisplayName}' failed to prepare: {e.Message}", e);
+            logger.Error($"Target preparer '{preparer.DisplayName}' failed to prepare: {e.Message}", e);
             launchRequest = null;
         }
 
         // Auch der stille Fehlschlag muss aufraeumen: der Vorbereiter kann die halbe Kette bereits
         // hochgefahren haben, bevor er aufgab.
-        _activeProvider = provider;
+        _activePreparer = preparer;
 
         if (launchRequest == null)
         {
-            await CleanupProviderAsync();
+            await CleanupPreparerAsync();
             return false;
         }
-
-        // Uebergangsgeruest, Gegenstueck zum Vier-Argument-Konstruktor am DebugLaunchRequest:
-        // das einzige existierende Plugin baut gegen das veroeffentlichte Paket und kann noch
-        // kein Profil mitgeben. Solange traegt der Kern hier die Geometrie dieses einen Ziels
-        // nach - nur auf dem Vorbereiter-Weg, der Start ueber Tools > Debugger bleibt
-        // byteadressiert. Faellt weg, sobald die erste Anforderung ein eigenes Profil bringt.
-        if (launchRequest.MemoryProfile == null)
-            launchRequest = launchRequest with
-            {
-                MemoryProfile = new DebugMemoryProfile
-                {
-                    AddressableUnitBytes = 2,
-                    DefaultLength = 2,
-                    AddressWatermark = "Wortadresse im SVNR-RAM, z. B. 0x0 - 0x3FF"
-                }
-            };
 
         if (await StartCoreAsync(launchRequest)) return true;
 
         // Ein Fehlschlag unterhalb ist ueber StopAsync gelaufen und hat den Vorbereiter damit
         // schon abgeraeumt; dann ist das hier ein Leerlauf. Die Faelle, die vor dem Start
         // aussteigen - kein Adapter, CanLaunch verneint - deckt erst dieser Aufruf ab.
-        await CleanupProviderAsync();
+        await CleanupPreparerAsync();
         return false;
     }
 
     private async Task<bool> StartCoreAsync(DebugLaunchRequest launchRequest)
     {
-        var adapter = _adapters.FirstOrDefault(x => x.Id == launchRequest.AdapterId);
-        if (adapter == null)
+        var launcher = _sessionLaunchers.FirstOrDefault(x => x.Id == launchRequest.BackendId);
+        if (launcher == null)
         {
-            logger.Error($"No debug adapter with id '{launchRequest.AdapterId}' is registered.");
+            logger.Error($"No session launcher with id '{launchRequest.BackendId}' is registered.");
             return false;
         }
 
-        if (!adapter.CanLaunch(launchRequest))
+        if (!launcher.CanLaunch(launchRequest))
         {
-            logger.Error($"Debug adapter '{adapter.Id}' cannot launch this request.");
+            logger.Error($"Session launcher '{launcher.Id}' cannot launch this request.");
             return false;
         }
 
         IDebugSession session;
         try
         {
-            session = adapter.CreateSession(launchRequest);
+            session = launcher.CreateSession(launchRequest);
         }
         catch (Exception e)
         {
-            logger.Error($"Debug adapter '{adapter.Id}' could not create a session: {e.Message}", e);
+            logger.Error($"Session launcher '{launcher.Id}' could not create a session: {e.Message}", e);
             return false;
         }
 
@@ -160,7 +146,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         _session = session;
         State = DebugSessionState.Empty;
-        MemoryProfile = launchRequest.MemoryProfile ?? DebugMemoryProfile.Default;
+        TargetProfile = launchRequest.TargetProfile ?? DebugTargetProfile.Default;
         RaiseStateChanged();
 
         if (!await session.StartAsync())
@@ -173,8 +159,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         // Erst die Breakpoints scharf machen, dann laufen lassen - andersherum rennt das Programm
         // an genau den Stellen vorbei, an denen der Nutzer halten wollte.
-        foreach (var breakpoint in _breakpoints.Breakpoints.ToArray())
-            PublishVerification(breakpoint, await session.SetBreakpointAsync(breakpoint));
+        await ResyncBreakpointsAsync();
 
         _breakpoints.Breakpoints.CollectionChanged += OnBreakpointsChanged;
 
@@ -201,7 +186,10 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             await Task.Run(session.Stop);
 
             State = DebugSessionState.Empty;
-            MemoryProfile = DebugMemoryProfile.Default;
+            TargetProfile = DebugTargetProfile.Default;
+            _armed.Clear();
+            _refused.Clear();
+            _breakpoints.IsTargetRunning = false;
             _breakpoints.CurrentBreakPoint = null;
 
             // Ohne Ziel sagt niemand mehr etwas ueber die Breakpoints aus -> ein hohler Punkt
@@ -213,26 +201,26 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         // Nach dem Backend, nicht davor: solange sich GDB von seinem Ziel loest, muss der Stub
         // noch stehen.
-        await CleanupProviderAsync();
+        await CleanupPreparerAsync();
     }
 
     // Gibt frei, was der Vorbereiter der laufenden Sitzung belegt hat. Mehrfach aufrufbar -
     // der zweite Aufruf findet nichts mehr vor.
-    private async Task CleanupProviderAsync()
+    private async Task CleanupPreparerAsync()
     {
-        if (_activeProvider is not { } provider) return;
+        if (_activePreparer is not { } preparer) return;
 
-        _activeProvider = null;
+        _activePreparer = null;
 
         try
         {
-            await provider.CleanupAsync();
+            await preparer.CleanupAsync();
         }
         catch (Exception e)
         {
             // Ein Vorbereiter, der beim Aufraeumen wirft, darf das Ende der Sitzung nicht
             // aufhalten - die Sitzung ist an dieser Stelle bereits abgebaut.
-            logger.Error($"Target preparer '{provider.DisplayName}' failed to clean up: {e.Message}", e);
+            logger.Error($"Target preparer '{preparer.DisplayName}' failed to clean up: {e.Message}", e);
         }
     }
 
@@ -287,51 +275,87 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     // waehrend der Sitzung gesetzter roter Punkt sofort greift.
     private void OnBreakpointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        if (_session == null) return;
+
+        _ = SyncBreakpointsAsync(e.OldItems?.Cast<BreakPoint>().ToArray() ?? []);
+    }
+
+    private async Task SyncBreakpointsAsync(IReadOnlyList<BreakPoint> removed)
+    {
         var session = _session;
         if (session == null) return;
 
-        if (e.NewItems != null)
-            foreach (BreakPoint breakpoint in e.NewItems)
-                _ = ArmAsync(session, breakpoint);
-
-        if (e.OldItems == null) return;
-        {
-            foreach (BreakPoint breakpoint in e.OldItems)
-                _ = session.RemoveBreakpointAsync(breakpoint);
-        }
-    }
-
-    // Macht einen waehrend der Sitzung gesetzten Breakpoint am Ziel scharf und haelt fest, ob
-    // das Ziel ihn angenommen hat. Der Rueckgabewert wurde bisher verworfen - damit blieb der
-    // Punkt rot, auch wenn das Ziel ihn abgelehnt hatte.
-    private async Task ArmAsync(IDebugSession session, BreakPoint breakpoint)
-    {
         try
         {
-            PublishVerification(breakpoint, await session.SetBreakpointAsync(breakpoint));
+            foreach (var breakpoint in removed)
+            {
+                _armed.Remove(breakpoint);
+                _refused.Remove(breakpoint);
+                await session.RemoveBreakpointAsync(breakpoint);
+            }
+
+            await ResyncBreakpointsAsync();
         }
         catch (Exception e)
         {
             // Der Aufruf laeuft ohne Erwartenden -> eine Ausnahme ginge sonst still verloren.
-            logger.Error($"Could not arm the breakpoint at {breakpoint.File}:{breakpoint.Line}: {e.Message}", e);
+            logger.Error($"Could not synchronise the breakpoints with the target: {e.Message}", e);
         }
+    }
+
+    private bool HasFreeSlot()
+    {
+        if (TargetProfile.MaxBreakpoints is not { } limit) return true;
+
+        return _armed.Count < limit;
+    }
+
+    private async Task ResyncBreakpointsAsync()
+    {
+        var session = _session;
+        if (session == null || State.IsRunning) return;
+
+        var waiting = 0;
+        var rejected = 0;
+
+        foreach (var breakpoint in _breakpoints.Breakpoints.ToArray())
+        {
+            if (_armed.Contains(breakpoint) || _refused.Contains(breakpoint)) continue;
+
+            var wasVerified = breakpoint.IsVerified;
+
+            if (!HasFreeSlot())
+            {
+                PublishVerification(breakpoint, false);
+                if (wasVerified) waiting++;
+                continue;
+            }
+
+            if (await TryArmAsync(session, breakpoint)) continue;
+
+            _refused.Add(breakpoint);
+            if (wasVerified) rejected++;
+        }
+
+        if (waiting > 0) NotifyWaiting(waiting);
+        if (rejected > 0) NotifyRejected(rejected);
+    }
+
+    private async Task<bool> TryArmAsync(IDebugSession session, BreakPoint breakpoint)
+    {
+        var verified = await session.SetBreakpointAsync(breakpoint);
+
+        if (verified) _armed.Add(breakpoint);
+
+        PublishVerification(breakpoint, verified);
+        return verified;
     }
 
     // Auf den UI-Thread gebracht: das Ergebnis kommt vom Lesethread der Sitzung, und daran
     // haengt das Neuzeichnen der Randspalte in jedem offenen Editor.
     private void PublishVerification(BreakPoint breakpoint, bool verified)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            // Vor dem Setzen vergleichen -> gemeldet wird nur der Wechsel. Beim
-            // Scharfmachen zum Sitzungsstart liefe sonst fuer jeden bereits bekannten
-            // abgelehnten Haltepunkt erneut eine Meldung auf.
-            var rejectedNow = breakpoint.IsVerified && !verified;
-
-            _breakpoints.SetVerified(breakpoint, verified);
-
-            if (rejectedNow) NotifyRejected(breakpoint);
-        });
+        Dispatcher.UIThread.Post(() => _breakpoints.SetVerified(breakpoint, verified));
     }
 
     // Der hohle Punkt in der Randspalte sagt nur etwas, wenn man die Schreibweise kennt.
@@ -342,14 +366,24 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     // werden.
     // Der Grund steht bewusst im Konjunktiv: das Protokoll meldet das Scheitern, nicht
     // dessen Ursache.
-    private void NotifyRejected(BreakPoint breakpoint)
+    private void NotifyWaiting(int waiting)
     {
-        var file = string.IsNullOrEmpty(breakpoint.File) ? "?" : Path.GetFileName(breakpoint.File);
+        var more = waiting == 1 ? "one more is" : $"{waiting} more are";
+
+        serviceProvider.Resolve<IWindowService>().ShowNotification(
+            "Breakpoint limit reached",
+            $"The target holds {TargetProfile.MaxBreakpoints} breakpoints at once, {more} waiting for a " +
+            "free slot and shown as a grey ring. Remove one and the next takes its place.",
+            NotificationType.Warning);
+    }
+
+    private void NotifyRejected(int rejected)
+    {
+        var what = rejected == 1 ? "a breakpoint" : $"{rejected} breakpoints";
 
         serviceProvider.Resolve<IWindowService>().ShowNotification(
             "Breakpoint not set",
-            $"The target did not accept the breakpoint at {file}:{breakpoint.Line}. " +
-            "It may have run out of breakpoint slots.",
+            $"The target did not accept {what}, now shown as a grey ring.",
             NotificationType.Warning);
     }
 
@@ -362,8 +396,11 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             if (!ReferenceEquals(sender, _session)) return;
 
             State = state;
+            _breakpoints.IsTargetRunning = state.IsRunning;
             _breakpoints.CurrentBreakPoint = FindCurrentBreakpoint(state);
             RaiseStateChanged();
+
+            if (!state.IsRunning) _ = SyncBreakpointsAsync([]);
         });
     }
 

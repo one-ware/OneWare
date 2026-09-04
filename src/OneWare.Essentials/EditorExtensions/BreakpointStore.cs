@@ -13,12 +13,19 @@ public class BreakpointStore : ObservableObject
     public static BreakpointStore Instance { get; } = new();
 
     private BreakPoint? _currentBreakPoint;
+    private bool _isTargetRunning;
     public ObservableCollection<BreakPoint> Breakpoints { get; } = new();
 
     public BreakPoint? CurrentBreakPoint
     {
         get => _currentBreakPoint;
         set => SetProperty(ref _currentBreakPoint, value);
+    }
+
+    public bool IsTargetRunning
+    {
+        get => _isTargetRunning;
+        set => SetProperty(ref _isTargetRunning, value);
     }
 
     // Ein Breakpoint hat seinen Zustand gewechselt, ohne dass sich die Sammlung geaendert hat.
