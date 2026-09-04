@@ -45,32 +45,33 @@ public class GdbSession : IDebugSession
 
     private readonly bool _asyncMode;
     private readonly string? _elfFile;
-    private readonly object _eventLock = new();
     private readonly string _gdbExecutable;
-    private readonly object _gdbLock = new();
     private readonly ILogger _logger;
+    private readonly GdbOutputFormatter _consoleFormatter = new();
+    private readonly IReadOnlyList<string> _initCommands;
     private readonly string? _remoteEndpoint;
-    private readonly object _syncLock = new();
+    private readonly SemaphoreSlim _commandGate = new(1, 1);
     private readonly GdbCommandResult _timeout = new("") { Status = CommandStatus.Timeout };
     private readonly string _workingDir;
 
     private bool _clientReady;
-    private GdbCommandResult? _lastResult;
     private Process? _process;
 
     // Registernamen aendern sich waehrend einer Session nicht, also einmal lesen und behalten.
     // Bei jedem Halt nur noch die Werte zu holen spart pro Schritt ein Kommando.
     private IReadOnlyList<string>? _registerNames;
 
-    private bool _running;
+    private volatile TaskCompletionSource<GdbCommandResult>? _pendingCommand;
+    private volatile bool _targetRunning;
     private StreamWriter? _sIn;
     private StreamReader? _sOut;
 
     public GdbSession(string gdbExecutable, string? executablePath, string? remoteEndpoint,
-        string? workingDirectory, bool asyncMode, ILogger logger)
+        string? workingDirectory, IReadOnlyList<string>? initCommands, bool asyncMode, ILogger logger)
     {
         _gdbExecutable = gdbExecutable;
         _remoteEndpoint = remoteEndpoint;
+        _initCommands = initCommands ?? [];
         _asyncMode = asyncMode;
         _logger = logger;
 
@@ -95,7 +96,7 @@ public class GdbSession : IDebugSession
         return Directory.GetCurrentDirectory();
     }
 
-    public string AdapterId => GdbDebugAdapter.AdapterId;
+    public string BackendId => GdbSessionLauncher.BackendId;
 
     public DebugSessionState State { get; private set; } = DebugSessionState.Empty;
 
@@ -124,7 +125,11 @@ public class GdbSession : IDebugSession
             _process.ErrorDataReceived += (_, args) => ProcessLine(args.Data);
             _process.Exited += (_, _) =>
             {
+                foreach (var text in _consoleFormatter.Flush()) OutputReceived?.Invoke(this, text);
+
                 _clientReady = false;
+                _targetRunning = false;
+                CompletePending(_timeout);
                 Publish(DebugSessionState.Empty);
                 Exited?.Invoke(this, EventArgs.Empty);
             };
@@ -137,6 +142,8 @@ public class GdbSession : IDebugSession
 
             await RunCommandAsync("-gdb-set", "pagination", "off");
             if (_asyncMode) await RunCommandAsync("-gdb-set", "mi-async", "on");
+
+            await ApplyInitCommandsAsync();
 
             return await ConnectRemoteAsync();
         }
@@ -182,20 +189,28 @@ public class GdbSession : IDebugSession
         // nur ueber ein Signal an den Prozess. Hier landet seit dem angehaengten Ziel nur noch
         // das lokale Debuggen unter Windows - ein Ctrl+C aus einer Anwendung ohne eigene
         // Konsole kommt nicht immer an, daher die drei Versuche.
-        await Task.Run(() =>
+        for (var attempt = 0; attempt < 3; attempt++)
         {
-            lock (_eventLock)
-            {
-                for (var attempt = 0; attempt < 3; attempt++)
-                {
-                    if (_process == null) return;
-                    if (!_running) return;
+            if (_process is not { } process || !_targetRunning) return;
 
-                    GdbHelper.SendCtrlC(_process.Id);
-                    if (Monitor.Wait(_eventLock, 500)) return;
-                }
-            }
-        });
+            GdbHelper.SendCtrlC(process.Id);
+
+            if (await WaitUntilStoppedAsync(TimeSpan.FromMilliseconds(500))) return;
+        }
+    }
+
+    private async Task<bool> WaitUntilStoppedAsync(TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            if (!_targetRunning) return true;
+
+            await Task.Delay(25);
+        }
+
+        return !_targetRunning;
     }
 
     // Ohne Symboldatei gibt es keine Quellzeilen. -exec-step scheitert dort mit
@@ -278,7 +293,9 @@ public class GdbSession : IDebugSession
             if (_process is { HasExited: false })
             {
                 TryInterrupt();
-                RunCommand("-gdb-exit", 500);
+
+                _ = RunCommandAsync("-gdb-exit", 500);
+                _process.WaitForExit(1000);
             }
         }
         catch (Exception e)
@@ -316,11 +333,11 @@ public class GdbSession : IDebugSession
     // gibt es unter Windows nicht. Schlaegt es fehl, uebernimmt Kill.
     private void TryInterrupt()
     {
-        if (!_running) return; // Hält das Backend an,
+        if (!_targetRunning) return;
 
         if (_asyncMode)
         {
-            RunCommand("-exec-interrupt", 500);
+            _ = RunCommandAsync("-exec-interrupt", 500);
             return;
         }
 
@@ -328,6 +345,21 @@ public class GdbSession : IDebugSession
     }
 
     // Baut die Verbindung zum Stub auf. Ohne Endpunkt debuggt GDB lokal und es ist nichts zu tun.
+    private async Task ApplyInitCommandsAsync()
+    {
+        foreach (var command in _initCommands)
+        {
+            if (string.IsNullOrWhiteSpace(command)) continue;
+
+            var result = await RunCommandAsync(command);
+
+            if (result.Status is CommandStatus.Done or CommandStatus.Connected) continue;
+
+            _logger.Error(
+                $"GDB rejected the init command '{command}': {result.ErrorMessage ?? result.Status.ToString()}");
+        }
+    }
+
     private async Task<bool> ConnectRemoteAsync()
     {
         if (_remoteEndpoint == null) return true;
@@ -393,30 +425,9 @@ public class GdbSession : IDebugSession
     {
         var arguments = new List<string> { "--interpreter=mi" };
 
-        if (FindInitFile() is { } initFile)
-        {
-            _logger.Log($"GDB reads the command file '{initFile}'.");
-            arguments.Add($"-x \"{initFile}\"");
-        }
-
         if (_elfFile != null) arguments.Add($"\"{_elfFile}\"");
 
         return string.Join(' ', arguments);
-    }
-
-    // Kommandodatei zum Programm: neben der Programmdatei, gleicher Name, Endung .gdbinit.
-    // Wer das Ziel erzeugt, legt sie dazu und bringt GDB damit bei, was aus der Programmdatei
-    // allein nicht hervorgeht - beim SVNR die Registerbeschreibung, die der Stub erwartet.
-    // Die Datei heisst bewusst nicht ".gdbinit": diesen Namen laedt GDB zwar von sich aus, aber
-    // nur aus einem Verzeichnis in auto-load safe-path, und verweigert ihn sonst mit einer
-    // Warnung. Ausdruecklich per -x uebergeben greift die Sperre nicht.
-    private string? FindInitFile()
-    {
-        if (_elfFile == null) return null;
-
-        var initFile = Path.ChangeExtension(_elfFile, ".gdbinit");
-
-        return File.Exists(Path.Combine(_workingDir, initFile)) ? initFile : null;
     }
 
     private void ReadOutput()
@@ -442,46 +453,35 @@ public class GdbSession : IDebugSession
         // Aufgabe 1: anzeigen (aufbereitet statt roh) -> 
         // laut Vertrag traegt OutputReceived lesbaren Text, keine MI-Protokollsyntax. Wer MI sehen will,
         // sieht es an den Records, die der Formatter stehen laesst.
-        var formatted = GdbOutputFormatter.Format(rawLine);
-
-        if (formatted != null)
-        {
-            OutputReceived?.Invoke(this, formatted);
-        }
+        Echo(rawLine);
 
         // Aufgabe 2: Protokoll auswerten (roh)
-        var line = rawLine.TrimStart();
+        Dispatch(rawLine.TrimStart());
+    }
+
+    private void Echo(string rawLine)
+    {
+        foreach (var text in _consoleFormatter.Accept(rawLine)) OutputReceived?.Invoke(this, text);
+    }
+
+    private void Dispatch(string line)
+    {
         if (line.Length == 0) return;
 
         switch (line[0])
         {
             case '^': // für ergebnis einer konkreten GDB-Anfrage
-                lock (_syncLock)
-                {
-                    _lastResult = new GdbCommandResult(line);
-
-                    lock (_eventLock)
-                    {
-                        _running = _lastResult.Status == CommandStatus.Running;
-                    }
-
-                    Monitor.PulseAll(_syncLock);
-                }
-
+                var result = new GdbCommandResult(line);
+                _targetRunning = result.Status == CommandStatus.Running;
+                CompletePending(result);
                 break;
 
             case '*': // * für async events von gdb 
-                GdbEvent gdbEvent;
-                lock (_eventLock)
-                {
-                    _running = line.StartsWith("*running", StringComparison.Ordinal);
-                    gdbEvent = new GdbEvent(line);
-                    Monitor.PulseAll(_eventLock);
-                }
+                _targetRunning = line.StartsWith("*running", StringComparison.Ordinal);
 
                 // Nicht abwarten: dieser Aufruf laeuft auf dem Lesethread, der frei bleiben muss, damit die
                 // Antworten der Kommandos aus HandleEvent ueberhaupt ankommen. -> deswegen async 
-                _ = HandleEventAsync(gdbEvent);
+                _ = HandleEventAsync(new GdbEvent(line));
                 break;
         }
     }
@@ -516,7 +516,7 @@ public class GdbSession : IDebugSession
         }
     }
 
-    private async Task<IReadOnlyList<RegisterValue>> ReadRegistersAsync()
+    private async Task<IReadOnlyList<DebugRegisterValue>> ReadRegistersAsync()
     {
         var names = _registerNames ?? await ReadRegisterNamesAsync();
         if (names.Count == 0) return [];
@@ -524,13 +524,12 @@ public class GdbSession : IDebugSession
         // Erst merken, wenn wirklich etwas kam - ein fehlgeschlagener erster Versuch darf nicht
         // dazu fuehren, dass fuer den Rest der Session nie wieder Register gelesen werden.
         _registerNames = names;
-
-        // x = hexadezimal. Register sind Bitmuster; dezimal gelesen sagen sie fast nie etwas.
-        var result = await RunCommandAsync("-data-list-register-values", "x");
+        
+        var result = await RunCommandAsync("-data-list-register-values", "x"); // x = hexadezimal
         if (result.Status != CommandStatus.Done) return [];
 
         var values = result.GetObject("register-values");
-        var registers = new List<RegisterValue>(values.Count);
+        var registers = new List<DebugRegisterValue>(values.Count);
 
         for (var i = 0; i < values.Count; i++)
         {
@@ -544,7 +543,7 @@ public class GdbSession : IDebugSession
             var name = names[number];
             if (string.IsNullOrEmpty(name)) continue;
 
-            registers.Add(new RegisterValue(name, entry.GetValue("value")));
+            registers.Add(new DebugRegisterValue(name, entry.GetValue("value")));
         }
 
         return registers;
@@ -610,64 +609,77 @@ public class GdbSession : IDebugSession
         StateChanged?.Invoke(this, state);
     }
     
-    // Übergibt Dateipfade + Zeilennummer an in Unix-Schreibweise an GDB -> C:/Meine
-    // Projekte/Test/file.c:lineNr
+
+    private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
+    {
+        return RunCommandAsync(command, CommandTimeout, args);
+    }
+
+    private async Task<GdbCommandResult> RunCommandAsync(string command, int timeout, params string[] args)
+    {
+        await _commandGate.WaitAsync();
+
+        try
+        {
+            return await SendAndAwaitAsync(command, timeout, args);
+        }
+        finally
+        {
+            _commandGate.Release();
+        }
+    }
+
+    private async Task<GdbCommandResult> SendAndAwaitAsync(string command, int timeout, string[] args)
+    {
+        if (_sIn == null) return _timeout;
+
+        if (!_asyncMode && _targetRunning)
+        {
+            OutputReceived?.Invoke(this, "Not possible to run commands while the target is running!");
+            return new GdbCommandResult("") { Status = CommandStatus.Running };
+        }
+
+        var pending = new TaskCompletionSource<GdbCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _pendingCommand = pending;
+
+        try
+        {
+            var line = $"{command} {string.Join(" ", args)}".TrimEnd();
+            CommandSent?.Invoke(this, line);
+            await _sIn.WriteLineAsync(line);
+
+            return await pending.Task.WaitAsync(TimeSpan.FromMilliseconds(timeout));
+        }
+        catch (TimeoutException)
+        {
+            OutputReceived?.Invoke(this, "error: GDB timed out");
+            return _timeout;
+        }
+        catch (ObjectDisposedException)
+        {
+            return new GdbCommandResult("") { Status = CommandStatus.Error };
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+            return _timeout;
+        }
+        finally
+        {
+            _pendingCommand = null;
+        }
+    }
+
+    private void CompletePending(GdbCommandResult result)
+    {
+        _pendingCommand?.TrySetResult(result);
+    }
+    
+    // Übergibt Dateipfade + Zeilennummer an in Unix-Schreibweise an GDB
+    // -> C:/MeineProjekte/Test/file.c:lineNr
     private static string Format(BreakPoint breakpoint)
     {
         return $"\"{breakpoint.File.Replace('\\', '/')}:{breakpoint.Line}\"";
     }
-
-    private Task<GdbCommandResult> RunCommandAsync(string command, params string[] args)
-    {
-        // Task.Run, weil RunCommand blockierend auf die Antwort wartet. Ohne das wuerde jeder
-        // Schritt den UI-Thread bis zu CommandTimeout lang einfrieren.
-        return Task.Run(() => RunCommand(command, CommandTimeout, args));
-    }
-
-    private GdbCommandResult RunCommand(string command, int timeout, params string[] args)
-    {
-        lock (_gdbLock)
-        lock (_syncLock)
-        {
-            _lastResult = null;
-
-            if (_sIn == null) return _timeout;
-
-            if (!_asyncMode)
-                lock (_eventLock)
-                {
-                    if (_running)
-                    {
-                        OutputReceived?.Invoke(this, "Not possible to run commands while the target is running!");
-                        return new GdbCommandResult("") { Status = CommandStatus.Running };
-                    }
-
-                    _running = true;
-                }
-
-            try
-            {
-                var line = $"{command} {string.Join(" ", args)}".TrimEnd();
-                CommandSent?.Invoke(this, line);
-                _sIn.WriteLine(line);
-
-                if (!Monitor.Wait(_syncLock, timeout))
-                {
-                    OutputReceived?.Invoke(this, "error: GDB timed out");
-                    return _timeout;
-                }
-
-                return _lastResult ?? _timeout;
-            }
-            catch (ObjectDisposedException)
-            {
-                return new GdbCommandResult("") { Status = CommandStatus.Error };
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e.Message, e);
-                return _lastResult ?? _timeout;
-            }
-        }
-    }
 }
+
