@@ -16,7 +16,7 @@ public interface IDebugSession
     /// <summary>
     /// Identifies the backend, e.g. <c>GDB</c>.
     /// </summary>
-    public string AdapterId { get; }
+    public string BackendId { get; }
 
     /// <summary>
     /// Latest published state.
@@ -88,7 +88,8 @@ public interface IDebugSession
     public Task<bool> SetBreakpointAsync(BreakPoint breakpoint);
 
     /// <summary>
-    /// Removes a previously armed breakpoint.
+    /// Removes a previously armed breakpoint. Removing one that is not armed counts as success —
+    /// the requested state is what matters, not how it was reached.
     /// </summary>
     public Task<bool> RemoveBreakpointAsync(BreakPoint breakpoint);
 
