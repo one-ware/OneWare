@@ -198,7 +198,7 @@ public class EditViewModel : ExtendedDocument, IEditor
 
         if (TypeAssistance != null)
         {
-            Editor.SetEnableBreakpoints(TypeAssistance.CanAddBreakPoints, FullPath);
+            Editor.SetEnableBreakpoints(TypeAssistance, FullPath);
 
             if (TypeAssistance.FoldingStrategy != null)
             {

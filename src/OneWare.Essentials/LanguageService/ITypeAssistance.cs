@@ -8,6 +8,14 @@ namespace OneWare.Essentials.LanguageService;
 public interface ITypeAssistance
 {
     bool CanAddBreakPoints { get; }
+
+    /// <summary>
+    /// Regular expression matching the lines that can carry a breakpoint; <see langword="null"/>
+    /// means every line qualifies. A language whose lines are not all executable reports the
+    /// executable ones here - without it the margin accepts a breakpoint the debugger cannot put
+    /// on that line, and the backend silently moves it to the next line that has code.
+    /// </summary>
+    string? BreakPointLinePattern => null;
     string? LineCommentSequence { get; }
     IFoldingStrategy? FoldingStrategy { get; }
     event EventHandler AssistanceActivated;

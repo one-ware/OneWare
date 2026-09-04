@@ -6,6 +6,8 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
+using OneWare.Essentials.LanguageService;
+using DynamicData;
 using TextMateSharp.Registry;
 
 namespace OneWare.Essentials.EditorExtensions;
@@ -85,32 +87,33 @@ public class ExtendedTextEditor : TextEditor
         TextMateInstallation = null;
     }
 
-    public void SetEnableBreakpoints(bool enable, string? filePath = null)
+    // Takes the ITypeAssistance rather than a flag: besides CanAddBreakPoints it also carries
+    // the pattern of breakpointable lines, and the margin needs both as a unit.
+    public void SetEnableBreakpoints(ITypeAssistance? typeAssistance, string? filePath = null)
     {
         if (TextArea.LeftMargins.Any(x => x is BreakPointLineNumberMargin))
         {
-            // Der Toggle raeumt auch die eigene Spalte ab (AvaloniaEdit prueft "is
-            // LineNumberMargin") und legt die Standardspalte samt Farb-Bindung neu an
+            // The toggle also clears our own margin - AvaloniaEdit tests for "is
+            // LineNumberMargin" - and recreates the standard one with its colour binding.
             ShowLineNumbers = false;
             ShowLineNumbers = true;
         }
 
-        if (!enable || string.IsNullOrWhiteSpace(filePath)) return;
+        if (typeAssistance is not { CanAddBreakPoints: true } || string.IsNullOrWhiteSpace(filePath)) return;
 
-        // Lokaler Wert schlaegt den Style-Setter -> die Zeilennummernspalte existiert danach
-        // sicher, auch wenn der Editor noch nicht am Visual Tree haengt
+        // A local value beats the style setter, so the line number margin exists afterwards even
+        // if the editor is not attached to the visual tree yet.
         ShowLineNumbers = true;
 
         for (var i = 0; i < TextArea.LeftMargins.Count; i++)
         {
             if (TextArea.LeftMargins[i] is not LineNumberMargin) continue;
-            // Entnehmen und Einfuegen statt Indexzuweisung -> das Verfahren ist mit
-            // ComparisonControl belegt, ob TextArea ein Replace sauber abhaengt, nicht.
-            // Der anwendungsweite Store, nicht ein eigener je Editor: sonst landen gesetzte
-            // Breakpoints in einer Instanz, die weder die Breakpoint-Liste noch die laufende
-            // Session je zu sehen bekommt.
+
+            // Remove and insert rather than assign by index: ComparisonControl relies on this
+            // sequence, and whether TextArea detaches cleanly on a replace is not established.
             TextArea.LeftMargins.RemoveAt(i);
-            TextArea.LeftMargins.Insert(i, new BreakPointLineNumberMargin(this, filePath, BreakpointStore.Instance));
+            TextArea.LeftMargins.Insert(i,
+                new BreakPointLineNumberMargin(this, filePath, BreakpointStore.Instance, typeAssistance));
             break;
         }
     }

@@ -34,6 +34,7 @@ public abstract class TypeAssistanceBase : ITypeAssistance
     protected bool IsOpen { get; private set; }
     protected bool IsAttached { get; private set; }
     public virtual bool CanAddBreakPoints => false;
+    public string? BreakPointLinePattern { get; protected init; }
     public string? LineCommentSequence { get; protected init; }
 
     public IFoldingStrategy? FoldingStrategy { get; protected init; }
