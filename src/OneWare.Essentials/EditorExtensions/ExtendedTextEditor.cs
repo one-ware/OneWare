@@ -3,8 +3,10 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Editing;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
+using OneWare.Essentials.LanguageService;
 using DynamicData;
 using TextMateSharp.Registry;
 
@@ -85,11 +87,35 @@ public class ExtendedTextEditor : TextEditor
         TextMateInstallation = null;
     }
 
-    public void SetEnableBreakpoints(bool enable, string? filePath = null)
+    // Takes the ITypeAssistance rather than a flag: besides CanAddBreakPoints it also carries
+    // the pattern of breakpointable lines, and the margin needs both as a unit.
+    public void SetEnableBreakpoints(ITypeAssistance? typeAssistance, string? filePath = null)
     {
-        TextArea.LeftMargins.RemoveMany(TextArea.LeftMargins.Where(x => x is BreakPointMargin));
-        if (enable && !string.IsNullOrWhiteSpace(filePath))
-            TextArea.LeftMargins.Add(new BreakPointMargin(this, filePath, new BreakpointStore()));
+        if (TextArea.LeftMargins.Any(x => x is BreakPointLineNumberMargin))
+        {
+            // The toggle also clears our own margin - AvaloniaEdit tests for "is
+            // LineNumberMargin" - and recreates the standard one with its colour binding.
+            ShowLineNumbers = false;
+            ShowLineNumbers = true;
+        }
+
+        if (typeAssistance is not { CanAddBreakPoints: true } || string.IsNullOrWhiteSpace(filePath)) return;
+
+        // A local value beats the style setter, so the line number margin exists afterwards even
+        // if the editor is not attached to the visual tree yet.
+        ShowLineNumbers = true;
+
+        for (var i = 0; i < TextArea.LeftMargins.Count; i++)
+        {
+            if (TextArea.LeftMargins[i] is not LineNumberMargin) continue;
+
+            // Remove and insert rather than assign by index: ComparisonControl relies on this
+            // sequence, and whether TextArea detaches cleanly on a replace is not established.
+            TextArea.LeftMargins.RemoveAt(i);
+            TextArea.LeftMargins.Insert(i,
+                new BreakPointLineNumberMargin(this, filePath, BreakpointStore.Instance, typeAssistance));
+            break;
+        }
     }
 
     public void SetEnableFolding(bool enable)
