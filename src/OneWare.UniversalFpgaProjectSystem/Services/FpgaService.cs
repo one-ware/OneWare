@@ -336,8 +336,7 @@ public class FpgaService
                     return false;
             }
 
-            await toolchain.CompileAsync(project, fpgaModel);
-            return true;
+            return await toolchain.CompileAsync(project, fpgaModel);
         }
         catch (Exception e)
         {

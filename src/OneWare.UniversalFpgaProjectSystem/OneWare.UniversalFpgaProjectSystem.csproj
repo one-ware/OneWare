@@ -12,4 +12,10 @@
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Skills for the FPGA agent, discovered at runtime from the output directory.
+             The relative Skills/<skill-name>/SKILL.md layout is what the host scans for. -->
+        <Content Include="Skills/**/*.md" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
 </Project>
