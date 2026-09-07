@@ -92,7 +92,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
 
         windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA", new MenuItemModel("Download")
         {
-            Header = "Download",
+            Header = "Config FPGA",
             Command = new AsyncRelayCommand(() => toolBarViewModel.DownloadAsync()),
             Icon = new IconModel("VsImageLib.Download16X")
         }, new MenuItemModel("Compile")

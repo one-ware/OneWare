@@ -70,7 +70,7 @@
             <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10" Margin="1 0" />
         </Button>
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
-        <Button ToolTip.Tip="Programs FPGA" Command="{Binding DownloadAsync}"
+        <Button ToolTip.Tip="Configures the FPGA or writes the FLASH memory" Command="{Binding DownloadAsync}"
                 IsEnabled="{Binding Project.Loader, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
                 <Grid VerticalAlignment="Center">
@@ -83,14 +83,14 @@
                         Source="{DynamicResource VsImageLib.DownloadAlternative16X}"
                         Height="14" Width="14" VerticalAlignment="Center" />
                 </Grid>
-                <TextBlock Text="Download" VerticalAlignment="Center" />
+                <TextBlock Text="Config FPGA" VerticalAlignment="Center" />
             </StackPanel>
         </Button>
         <Button>
             <Button.Flyout>
                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                     <StackPanel Orientation="Vertical">
-                        <MenuItem Header="Long Term Programming"
+                        <MenuItem Header="Write FLASH Memory"
                                   Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleLongTermProgramming, FallbackValue={x:Null}}"
                                   CommandParameter="{Binding}">
                             <MenuItem.Icon>

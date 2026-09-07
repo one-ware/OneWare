@@ -1,4 +1,5 @@
-﻿using OneWare.Essentials.Controls;
+﻿using System.Collections.ObjectModel;
+using OneWare.Essentials.Controls;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
@@ -21,6 +22,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
     private readonly ComboBoxSetting _nextPnrToolSetting;
     private readonly ComboBoxSetting _nextPnrToolConstrainFileSetting;
     private readonly ComboBoxSetting _nextPnrToolOutputTypeSetting;
+    private readonly CheckBoxSetting _nextPnrVerboseSetting;
     private readonly TextBoxSetting _packToolFlagSetting;
     private readonly ComboBoxSetting _packToolSetting;
     private readonly IFpga _selectedFpga;
@@ -35,7 +37,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         _fpgaProjectRoot = fpgaProjectRoot;
         _selectedFpga = selectedFpga;
 
-        Title = "Yosys Compile Settings";
+        Title = "Toolchain Settings";
         Id = "YosysCompileSettings";
 
         var defaultProperties = _selectedFpga.Properties;
@@ -123,6 +125,12 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             HoverDescription = "Set NextPnr tool"
         };
         
+        _nextPnrVerboseSetting = new CheckBoxSetting("nextpnr Verbose",
+            bool.Parse(defaultProperties.GetValueOrDefault("yosysToolchainNextPnrVerbose") ?? "false"))
+        {
+            HoverDescription = "Show detailed nextpnr output in the Output panel"
+        };
+
         _packToolSetting = new ComboBoxSetting("Pack Tool",
             defaultProperties.GetValueOrDefault("yosysToolchainPackTool") ?? "", [
                 "ecppack",
@@ -149,19 +157,24 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             HoverDescription = "Set Pack tool output format"
         };
         
-        SettingsCollection.SettingModels.Add(_yosysSynthToolSetting);
-        SettingsCollection.SettingModels.Add(_yosysFlagSetting);
-        SettingsCollection.SettingModels.Add(_yosysCommandSetting);
-        SettingsCollection.SettingModels.Add(_yosysQuietFlagSetting);
+        SynthesisSettings.SettingModels.Add(_yosysSynthToolSetting);
+        SynthesisSettings.SettingModels.Add(_yosysFlagSetting);
+        SynthesisSettings.SettingModels.Add(_yosysCommandSetting);
+        SynthesisSettings.SettingModels.Add(_yosysQuietFlagSetting);
 
-        SettingsCollection.SettingModels.Add(_nextPnrToolSetting);
-        SettingsCollection.SettingModels.Add(_nextPnrFlagSetting);
-        SettingsCollection.SettingModels.Add(_nextPnrToolConstrainFileSetting);
-        SettingsCollection.SettingModels.Add(_nextPnrToolOutputTypeSetting);
+        PlaceAndRouteSettings.SettingModels.Add(_nextPnrToolSetting);
+        PlaceAndRouteSettings.SettingModels.Add(_nextPnrFlagSetting);
+        PlaceAndRouteSettings.SettingModels.Add(_nextPnrToolConstrainFileSetting);
+        PlaceAndRouteSettings.SettingModels.Add(_nextPnrToolOutputTypeSetting);
+        PlaceAndRouteSettings.SettingModels.Add(_nextPnrVerboseSetting);
 
-        SettingsCollection.SettingModels.Add(_packToolSetting);
-        SettingsCollection.SettingModels.Add(_packToolFlagSetting);
-        SettingsCollection.SettingModels.Add(_packOutputTypeSetting);
+        BitstreamSettings.SettingModels.Add(_packToolSetting);
+        BitstreamSettings.SettingModels.Add(_packToolFlagSetting);
+        BitstreamSettings.SettingModels.Add(_packOutputTypeSetting);
+
+        SettingsCollections.Add(SynthesisSettings);
+        SettingsCollections.Add(PlaceAndRouteSettings);
+        SettingsCollections.Add(BitstreamSettings);
 
         if (_settings.TryGetValue("yosysToolchainYosysSynthTool", out var yTool))
             _yosysSynthToolSetting.Value = yTool;
@@ -181,6 +194,9 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             _nextPnrToolConstrainFileSetting.Value = nConstrain;
         if (_settings.TryGetValue("yosysToolchainOutputType", out var nOutput))
             _nextPnrToolOutputTypeSetting.Value = nOutput;
+        if (_settings.TryGetValue("yosysToolchainNextPnrVerbose", out var nVerbose)
+            && bool.TryParse(nVerbose, out var verbose))
+            _nextPnrVerboseSetting.Value = verbose;
 
         if (_settings.TryGetValue("yosysToolchainPackTool", out var pTool))
             _packToolSetting.Value = pTool;
@@ -190,10 +206,13 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             _packOutputTypeSetting.Value = pOutput;
     }
 
-    public SettingsCollectionViewModel SettingsCollection { get; } = new("Yosys Settings")
-    {
-        ShowTitle = false
-    };
+    public SettingsCollectionViewModel SynthesisSettings { get; } = new("Synthesis (Yosys)");
+
+    public SettingsCollectionViewModel PlaceAndRouteSettings { get; } = new("Place & Route (nextpnr)");
+
+    public SettingsCollectionViewModel BitstreamSettings { get; } = new("Bitstream (Pack)");
+
+    public ObservableCollection<SettingsCollectionViewModel> SettingsCollections { get; } = [];
 
     public void Save(FlexibleWindow flexibleWindow)
     {
@@ -209,6 +228,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         _settings["yosysToolchainOutputType"] = _nextPnrToolOutputTypeSetting.Value.ToString()!;
         _settings["packToolOutputFormat"] = _packOutputTypeSetting.Value.ToString()!;
         _settings["yosysQuietFlag"] = (!(bool)_yosysQuietFlagSetting.Value).ToString();
+        _settings["yosysToolchainNextPnrVerbose"] = ((bool)_nextPnrVerboseSetting.Value).ToString();
 
         FpgaSettingsParser.SaveSettings(_fpgaProjectRoot, _selectedFpga.Name, _settings);
 
@@ -217,6 +237,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
 
     public void Reset()
     {
-        foreach (var setting in SettingsCollection.SettingModels) setting.Value = setting.DefaultValue;
+        foreach (var collection in SettingsCollections)
+        foreach (var setting in collection.SettingModels)
+            setting.Value = setting.DefaultValue;
     }
 }

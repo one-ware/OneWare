@@ -114,7 +114,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         },
                         new MenuItem()
                         {
-                            Header = "Run Fit",
+                            Header = "Run Place&Route",
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
@@ -123,7 +123,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         },
                         new MenuItem()
                         {
-                            Header = "Run Assemble",
+                            Header = "Generate Bitstream",
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
@@ -133,7 +133,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         new Separator(),
                         new MenuItem()
                         {
-                            Header = "Yosys Settings",
+                            Header = "Toolchain Settings",
                             Icon = new Image()
                             {
                                 Source = Application.Current!.FindResource(
