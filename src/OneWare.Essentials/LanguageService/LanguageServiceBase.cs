@@ -1,5 +1,6 @@
 ﻿using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
@@ -96,7 +97,7 @@ public abstract class LanguageServiceBase : ILanguageService
     }
 
     public virtual Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range,
-        Diagnostic diagnostic)
+        IEnumerable<Diagnostic>? diagnostics = null)
     {
         return Task.FromResult<CommandOrCodeActionContainer?>(null);
     }
@@ -176,9 +177,9 @@ public abstract class LanguageServiceBase : ILanguageService
         return Task.FromResult<TextEditContainer?>(null);
     }
 
-    public virtual Task ExecuteCommandAsync(Command cmd)
+    public virtual Task<JToken?> ExecuteCommandAsync(Command cmd)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<JToken?>(null);
     }
 
     public virtual async Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param)
@@ -321,8 +322,13 @@ public abstract class LanguageServiceBase : ILanguageService
                     _ => ErrorType.Hint
                 };
 
+            var endLine = p.Range.End.Line;
+            var endCharacter = p.Range.End.Character;
+            if (p.Range.Start.Line == endLine && p.Range.Start.Character == endCharacter)
+                endCharacter++;
+
             yield return new ErrorListItem(p.Message, errorType, fullPath, Name, p.Range.Start.Line + 1,
-                p.Range.Start.Character + 1, p.Range.End.Line + 1, p.Range.End.Character + 1,
+                p.Range.Start.Character + 1, endLine + 1, endCharacter + 1,
                 p.Code?.String ?? p.Code?.Long.ToString() ?? "", p, root);
         }
     }

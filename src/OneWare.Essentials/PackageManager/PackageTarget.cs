@@ -6,5 +6,7 @@ public class PackageTarget
 
     public string? Url { get; init; }
 
+    public bool IsArchive { get; init; } = true;
+
     public PackageAutoSetting[]? AutoSetting { get; init; }
 }

@@ -105,16 +105,16 @@
   "define": {
     "prefix": "def",
     "body": [
-      "`def $1 = $2"
+      "`define ${1:name} ${2:value}"
     ],
-    "description": "`define var = val"
+    "description": "`define name value"
   },
   "parameter": {
     "prefix": "param",
     "body": [
       "parameter $1 = $2;"
     ],
-    "description": "paramter var = val;"
+    "description": "parameter name = value;"
   },
   "ternary": {
     "prefix": "ter",

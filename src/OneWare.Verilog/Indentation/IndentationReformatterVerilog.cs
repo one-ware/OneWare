@@ -41,13 +41,13 @@ internal sealed class IndentationReformatterVerilog
     {
         "module", "macromodule", "primitive", "program",
         "function", "task",
-        "case", "casex", "casez",
+        "case", "casex", "casez", "randcase",
         "generate",
         "interface",
         "class", "package",
         "clocking", "covergroup",
         "property", "sequence", "checker",
-        "config",
+        "config", "specify", "table",
         "fork"
     };
 
@@ -63,7 +63,7 @@ internal sealed class IndentationReformatterVerilog
         "endclass", "endpackage",
         "endclocking", "endgroup",
         "endproperty", "endsequence", "endchecker",
-        "endconfig",
+        "endconfig", "endspecify", "endtable",
         "join", "join_any", "join_none"
     };
 
@@ -215,6 +215,12 @@ internal sealed class IndentationReformatterVerilog
                             _block.Continuation = false;
                         }
                         break;
+                    case '{':
+                        OpenBlock("{", doc, set);
+                        break;
+                    case '}':
+                        CloseBlock();
+                        break;
                 }
             }
 
@@ -237,7 +243,7 @@ internal sealed class IndentationReformatterVerilog
 
         // Determine indentation for this line
         var firstWord = GetFirstWord(line);
-        var isCloser = BlockCloseKeywords.Contains(firstWord);
+        var isCloser = BlockCloseKeywords.Contains(firstWord) || line.TrimStart().StartsWith('}');
         var isElse = firstWord == "else";
 
         string indent;
@@ -267,31 +273,39 @@ internal sealed class IndentationReformatterVerilog
 
         if (word == "begin" || BlockOpenKeywords.Contains(word))
         {
-            // Opening a new block: cancel pending one-liner (begin supersedes it)
-            _pendingOneLineKeyword = null;
-            _blockOpenedThisLine = true;
-            _block.ResetOneLineBlock();
-            _block.OneLineBlock = 0;
-            _blocks.Push(_block);
-            _block.StartLine = doc.LineNumber;
-            _block.Indent(set);
-            _block.Bracket = word;
+            OpenBlock(word, doc, set);
         }
         else if (BlockCloseKeywords.Contains(word))
         {
-            if (_blocks.Count > 0)
-            {
-                _block = _blocks.Pop();
-                _block.Continuation = false;
-                _block.ResetOneLineBlock();
-                _block.OneLineBlock = 0;
-            }
+            CloseBlock();
         }
         else if (OneLineKeywords.Contains(word))
         {
             // Record the most recent one-liner keyword on this line; will be confirmed at end of line
             _pendingOneLineKeyword = word;
         }
+    }
+
+    private void OpenBlock(string bracket, IDocumentAccessor doc, IndentationSettings set)
+    {
+        _pendingOneLineKeyword = null;
+        _blockOpenedThisLine = true;
+        _block.ResetOneLineBlock();
+        _block.OneLineBlock = 0;
+        _blocks.Push(_block);
+        _block.StartLine = doc.LineNumber;
+        _block.Indent(set);
+        _block.Bracket = bracket;
+    }
+
+    private void CloseBlock()
+    {
+        if (_blocks.Count == 0) return;
+
+        _block = _blocks.Pop();
+        _block.Continuation = false;
+        _block.ResetOneLineBlock();
+        _block.OneLineBlock = 0;
     }
 
     private static string BuildIndent(Block block, IndentationSettings set)
@@ -375,4 +389,3 @@ internal sealed class IndentationReformatterVerilog
         }
     }
 }
-
