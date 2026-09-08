@@ -227,6 +227,15 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 //     
                 // });
                 options.WithCapability(new ReferenceCapability());
+                options.WithCapability(new DocumentSymbolCapability
+                {
+                    HierarchicalDocumentSymbolSupport = true,
+                    SymbolKind = new SymbolKindCapabilityOptions
+                    {
+                        ValueSet = new Container<SymbolKind>(
+                            (SymbolKind[])Enum.GetValues(typeof(SymbolKind)))
+                    }
+                });
                 options.WithCapability(new SignatureHelpCapability
                 {
                     SignatureInformation = new SignatureInformationCapabilityOptions
@@ -440,12 +449,17 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             {
                 Text = text,
                 Uri = fullPath,
-                LanguageId = Path.GetExtension(fullPath),
+                LanguageId = GetLanguageId(fullPath),
                 Version = _version
             }
         });
 
         RequestPullDiagnostics(fullPath);
+    }
+
+    protected virtual string GetLanguageId(string fullPath)
+    {
+        return Path.GetExtension(fullPath);
     }
 
     public override void DidSaveTextDocument(string fullPath, string text)
@@ -646,11 +660,26 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         });
     }
 
-    public override Task ExecuteCommandAsync(Command cmd)
+    public override async Task<JToken?> ExecuteCommandAsync(Command cmd)
     {
         if (Client?.ServerSettings.Capabilities.ExecuteCommandProvider == null)
-            return Task.CompletedTask;
-        return Client.ExecuteCommand(cmd);
+            return null;
+
+        try
+        {
+            return await Client
+                .SendRequest(WorkspaceNames.ExecuteCommand, new ExecuteCommandParams
+                {
+                    Command = cmd.Name,
+                    Arguments = cmd.Arguments
+                })
+                .Returning<JToken?>(CancellationToken.None);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            return null;
+        }
     }
 
     public override async Task<IEnumerable<SemanticToken>?> RequestSemanticTokensFullAsync(string fullPath)
@@ -845,7 +874,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     }
 
     public override async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range,
-        Diagnostic diagnostic)
+        IEnumerable<Diagnostic>? diagnostics = null)
     {
         if (Client == null || Client.ServerSettings.Capabilities.CodeActionProvider == null) return null;
         try
@@ -859,7 +888,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 Range = range,
                 Context = new CodeActionContext
                 {
-                    Diagnostics = new Container<Diagnostic>(diagnostic)
+                    Diagnostics = new Container<Diagnostic>(diagnostics ?? [])
                 }
             });
 

@@ -1,0 +1,168 @@
+{
+  "logic": {
+    "prefix": "logic",
+    "body": ["logic ${1:signal};"],
+    "description": "Declare a four-state variable"
+  },
+  "logic vector": {
+    "prefix": "logicv",
+    "body": ["logic [${1:WIDTH}-1:0] ${2:signal};"],
+    "description": "Declare a packed logic vector"
+  },
+  "always combinational": {
+    "prefix": "always_comb",
+    "body": [
+      "always_comb begin",
+      "\t${1}",
+      "end"
+    ],
+    "description": "SystemVerilog combinational process"
+  },
+  "always flip-flop": {
+    "prefix": "always_ff",
+    "body": [
+      "always_ff @(posedge ${1:clk}) begin",
+      "\t${2:q} <= ${3:d};",
+      "end"
+    ],
+    "description": "SystemVerilog sequential process"
+  },
+  "always flip-flop with reset": {
+    "prefix": "always_ff_reset",
+    "body": [
+      "always_ff @(posedge ${1:clk} or negedge ${2:rst_n}) begin",
+      "\tif (!${2:rst_n}) begin",
+      "\t\t${3:q} <= '0;",
+      "\tend else begin",
+      "\t\t${3:q} <= ${4:d};",
+      "\tend",
+      "end"
+    ],
+    "description": "Sequential process with asynchronous active-low reset"
+  },
+  "always latch": {
+    "prefix": "always_latch",
+    "body": [
+      "always_latch begin",
+      "\tif (${1:enable}) begin",
+      "\t\t${2:q} <= ${3:d};",
+      "\tend",
+      "end"
+    ],
+    "description": "SystemVerilog latch process"
+  },
+  "package": {
+    "prefix": "package",
+    "body": [
+      "package ${1:package_name};",
+      "\t${2}",
+      "endpackage : ${1:package_name}"
+    ],
+    "description": "SystemVerilog package"
+  },
+  "interface": {
+    "prefix": "interface",
+    "body": [
+      "interface ${1:interface_name} (input logic ${2:clk});",
+      "\t${3}",
+      "endinterface : ${1:interface_name}"
+    ],
+    "description": "SystemVerilog interface"
+  },
+  "modport": {
+    "prefix": "modport",
+    "body": [
+      "modport ${1:name} (",
+      "\tinput ${2:input_signal},",
+      "\toutput ${3:output_signal}",
+      ");"
+    ],
+    "description": "SystemVerilog interface modport"
+  },
+  "typedef enum": {
+    "prefix": "typedef_enum",
+    "body": [
+      "typedef enum logic [${1:WIDTH}-1:0] {",
+      "\t${2:IDLE},",
+      "\t${3:ACTIVE}",
+      "} ${4:state_t};"
+    ],
+    "description": "Strongly typed packed enumeration"
+  },
+  "typedef struct": {
+    "prefix": "typedef_struct",
+    "body": [
+      "typedef struct packed {",
+      "\t${1}",
+      "} ${2:data_t};"
+    ],
+    "description": "Packed structure type"
+  },
+  "automatic function": {
+    "prefix": "function_automatic",
+    "body": [
+      "function automatic ${1:logic} ${2:name} (${3});",
+      "\t${4}",
+      "endfunction : ${2:name}"
+    ],
+    "description": "Automatic SystemVerilog function"
+  },
+  "automatic task": {
+    "prefix": "task_automatic",
+    "body": [
+      "task automatic ${1:name} (${2});",
+      "\t${3}",
+      "endtask : ${1:name}"
+    ],
+    "description": "Automatic SystemVerilog task"
+  },
+  "property and assertion": {
+    "prefix": "assert_property",
+    "body": [
+      "property ${1:name};",
+      "\t@(posedge ${2:clk}) disable iff (!${3:rst_n})",
+      "\t${4:antecedent} |-> ${5:consequent};",
+      "endproperty : ${1:name}",
+      "",
+      "${1:name}_a: assert property (${1:name});"
+    ],
+    "description": "Concurrent assertion with a named property"
+  },
+  "generate loop": {
+    "prefix": "generate_for",
+    "body": [
+      "for (genvar ${1:i} = 0; ${1:i} < ${2:COUNT}; ${1:i}++) begin : ${3:gen_block}",
+      "\t${4}",
+      "end"
+    ],
+    "description": "SystemVerilog generate loop"
+  },
+  "class": {
+    "prefix": "class",
+    "body": [
+      "class ${1:class_name};",
+      "\t${2}",
+      "endclass : ${1:class_name}"
+    ],
+    "description": "SystemVerilog class"
+  },
+  "clocking block": {
+    "prefix": "clocking",
+    "body": [
+      "clocking ${1:cb} @(posedge ${2:clk});",
+      "\tdefault input #1step output #0;",
+      "\t${3}",
+      "endclocking : ${1:cb}"
+    ],
+    "description": "SystemVerilog clocking block"
+  },
+  "covergroup": {
+    "prefix": "covergroup",
+    "body": [
+      "covergroup ${1:name} @(posedge ${2:clk});",
+      "\t${3:cp}: coverpoint ${4:signal};",
+      "endgroup : ${1:name}"
+    ],
+    "description": "SystemVerilog functional coverage group"
+  }
+}

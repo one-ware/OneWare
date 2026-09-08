@@ -21,9 +21,9 @@ public class FileIconService : IFileIconService
         RegisterFileIcon("GhdpFileIcon", ".ghdp");
         RegisterFileIcon("VhdpFileIcon", ".vhdp");
         RegisterFileIcon("VhdlFileIcon", ".vhd", ".vhdl");
-        RegisterFileIcon("VerilogFileIcon", ".v");
+        RegisterFileIcon("VerilogFileIcon", ".v", ".vh");
         RegisterFileIcon("QsysFileIcon", ".qsys");
-        RegisterFileIcon("SystemVerilogFileIcon", ".sv");
+        RegisterFileIcon("SystemVerilogFileIcon", ".sv", ".svh");
         RegisterFileIcon("SimpleIcons.Arduino", ".ino");
         RegisterFileIcon("Ionicons.LogoJavascript", ".js");
         RegisterFileIcon("FontAwesome.PythonBrands", ".py");

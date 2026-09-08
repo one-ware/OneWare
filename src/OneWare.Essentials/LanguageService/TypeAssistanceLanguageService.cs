@@ -118,45 +118,53 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         var location = CodeBox.Document.GetLocation(offset);
         var pos = CodeBox.Document.GetPositionFromOffset(offset);
 
-        //Quick Fixes
         var error = GetErrorAtLocation(location);
-        if (error != null && error.Diagnostic != null)
+        var codeActionRange = error?.Diagnostic?.Range ?? new Range
         {
-            var codeactions = await Service.RequestCodeActionAsync(CurrentFilePath,
-                new Range
+            Start = pos,
+            End = pos
+        };
+        var diagnostics = error?.Diagnostic is { } diagnostic ? new[] { diagnostic } : [];
+        var codeactions = await Service.RequestCodeActionAsync(CurrentFilePath, codeActionRange, diagnostics);
+
+        if (codeactions is not null && IsOpen)
+        {
+            var actions = new ObservableCollection<MenuItemModel>();
+            foreach (var ca in codeactions)
+                if (ca.IsCodeAction && ca.CodeAction != null)
                 {
-                    Start = new Position(Math.Max(error.StartLine - 1, 0), Math.Max(error.StartColumn - 1 ?? 0, 0)),
-                    End = new Position(Math.Max(error.EndLine - 1 ?? 0, 0), Math.Max(error.EndColumn - 1 ?? 0, 0))
-                }, error.Diagnostic);
-
-            if (codeactions is not null && IsOpen)
-            {
-                var quickfixes = new ObservableCollection<MenuItemModel>();
-                foreach (var ca in codeactions)
-                    if (ca.IsCodeAction && ca.CodeAction != null)
+                    if (ca.CodeAction.Command != null)
+                        actions.Add(new MenuItemModel(ca.CodeAction.Title)
+                        {
+                            Header = ca.CodeAction.Title,
+                            Command = new RelayCommand<Command>(ExecuteCommand),
+                            CommandParameter = ca.CodeAction.Command
+                        });
+                    else if (ca.CodeAction.Edit != null)
+                        actions.Add(new MenuItemModel(ca.CodeAction.Title)
+                        {
+                            Header = ca.CodeAction.Title,
+                            Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
+                            CommandParameter = ca.CodeAction.Edit
+                        });
+                }
+                else if (ca.IsCommand && ca.Command != null)
+                {
+                    actions.Add(new MenuItemModel(ca.Command.Title)
                     {
-                        if (ca.CodeAction.Command != null)
-                            quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
-                            {
-                                Header = ca.CodeAction.Title,
-                                Command = new RelayCommand<Command>(ExecuteCommand),
-                                CommandParameter = ca.CodeAction.Command
-                            });
-                        else if (ca.CodeAction.Edit != null)
-                            quickfixes.Add(new MenuItemModel(ca.CodeAction.Title)
-                            {
-                                Header = ca.CodeAction.Title,
-                                Command = new AsyncRelayCommand<WorkspaceEdit>(Service.ApplyWorkspaceEditAsync),
-                                CommandParameter = ca.CodeAction.Edit
-                            });
-                    }
-
-                if (quickfixes.Count > 0)
-                    menuItems.Add(new MenuItemModel("Quick fix")
-                    {
-                        Header = "Quick fix...",
-                        Items = quickfixes
+                        Header = ca.Command.Title,
+                        Command = new RelayCommand<Command>(ExecuteCommand),
+                        CommandParameter = ca.Command
                     });
+                }
+
+            if (actions.Count > 0)
+            {
+                menuItems.Add(new MenuItemModel("Code actions")
+                {
+                    Header = "Code actions...",
+                    Items = actions
+                });
             }
         }
 
@@ -198,31 +206,32 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     {
         if (range == null) return;
 
-        if (range.IsRange && range.Range != null)
+        var renameRange = range.IsRange ? range.Range : range.PlaceholderRange?.Range;
+        if (renameRange != null)
         {
             await Task.Delay(10);
 
-            var sOff = CodeBox.Document.GetOffsetFromPosition(range.Range.Start) - 1;
-            var eOff = CodeBox.Document.GetOffsetFromPosition(range.Range.End) - 1;
+            var sOff = CodeBox.Document.GetOffsetFromPosition(renameRange.Start) - 1;
+            var eOff = CodeBox.Document.GetOffsetFromPosition(renameRange.End) - 1;
 
             if (sOff >= eOff) return;
 
-            var initialValue = CodeBox.Text[sOff..eOff];
+            var initialValue = range.PlaceholderRange?.Placeholder ?? CodeBox.Text[sOff..eOff];
 
             var textInputWindow = new TextInputWindow(CodeBox.TextArea,
-                new TextViewPosition(range.Range.Start.Line + 1, range.Range.Start.Character + 1), initialValue)
+                new TextViewPosition(renameRange.Start.Line + 1, renameRange.Start.Character + 1), initialValue)
             {
-                CompleteAction = x => _ = RenameSymbolAsync(range, x ?? "")
+                CompleteAction = x => _ = RenameSymbolAsync(renameRange, x ?? "")
             };
             textInputWindow.Show();
         }
         else
         {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
+            ContainerLocator.Container.Resolve<ILogger>()?.Error("Default rename behavior is not supported.");
         }
     }
 
-    private async Task RenameSymbolAsync(RangeOrPlaceholderRange range, string newName)
+    private async Task RenameSymbolAsync(Range range, string newName)
     {
         if (Regex.IsMatch(newName, @"\W"))
         {
@@ -231,17 +240,10 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             return;
         }
 
-        if (range.IsRange && range.Range != null)
-        {
-            var workspaceEdit = await Service.RequestRenameAsync(CurrentFilePath, range.Range.Start, newName);
-            if (workspaceEdit != null && IsOpen)
-                await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
-                    { Edit = workspaceEdit, Label = "Rename" });
-        }
-        else
-        {
-            ContainerLocator.Container.Resolve<ILogger>()?.Error("Placeholder Range renaming not supported yet!");
-        }
+        var workspaceEdit = await Service.RequestRenameAsync(CurrentFilePath, range.Start, newName);
+        if (workspaceEdit != null && IsOpen)
+            await Service.ApplyWorkspaceEditAsync(new ApplyWorkspaceEditParams
+                { Edit = workspaceEdit, Label = "Rename" });
     }
 
     public override async Task<Action?> GetActionOnControlWordAsync(int offset)

@@ -595,7 +595,8 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
             var url = target.Url ??
                       $"{state.Package.SourceUrl}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
-            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, progress, cancellationToken);
+            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, target.IsArchive, progress,
+                cancellationToken);
 
             if (!success)
             {

@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
@@ -178,6 +180,9 @@ internal static class AiBuiltInFunctions
             Description = """
                           Executes a command in the IDE terminal and returns the output.
                           Use this to run shell commands; output appears in the IDE terminal panel.
+                          On Windows the shell is PowerShell, not cmd.exe. Use PowerShell syntax, or
+                          quote the complete command passed to cmd.exe (for example: cmd /c "a & b").
+                          Multi-line PowerShell scripts are encoded and submitted as one complete command.
                           Output is automatically truncated to avoid oversized responses.
                           Commands must not wait for interactive input; they are aborted after 30 minutes.
                           """,
@@ -328,8 +333,9 @@ internal static class AiBuiltInFunctions
             ? null
             : new DelegateProgress(raw => context.ReportProgress(FormatTerminalProgress(command, raw)));
 
+        var commandToExecute = PrepareTerminalCommand(command, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
-            command,
+            commandToExecute,
             "AI Chat",
             resolvedWorkDir,
             true,
@@ -361,6 +367,17 @@ internal static class AiBuiltInFunctions
                       "derived from it. Judge the result from the output instead."
                     : null
         };
+    }
+
+    internal static string PrepareTerminalCommand(string command, bool isWindows)
+    {
+        if (!isWindows || !command.ContainsAny('\r', '\n')) return command;
+
+        // PowerShell's interactive parser can wait indefinitely while a pasted multi-line construct
+        // appears incomplete. Submit an encoded script block as one complete REPL command instead.
+        var encodedCommand = Convert.ToBase64String(Encoding.UTF8.GetBytes(command));
+        return
+            $"& ([ScriptBlock]::Create([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{encodedCommand}'))))";
     }
 
     private static string FormatTerminalProgress(string command, string rawOutput)

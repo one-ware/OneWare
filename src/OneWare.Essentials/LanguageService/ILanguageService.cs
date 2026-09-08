@@ -1,4 +1,5 @@
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Newtonsoft.Json.Linq;
 using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.ViewModels;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
@@ -44,7 +45,7 @@ public interface ILanguageService
         SignatureHelp? activeSignatureHelp);
 
     public Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range,
-        Diagnostic diagnostic);
+        IEnumerable<Diagnostic>? diagnostics = null);
 
     public Task<Container<FoldingRange>?> RequestFoldingsAsync(string fullPath);
     public Task<Hover?> RequestHoverAsync(string fullPath, Position pos);
@@ -67,7 +68,7 @@ public interface ILanguageService
     public Task<InlayHintContainer?> RequestInlayHintsAsync(string fullPath, Range range);
     public Task<TextEditContainer?> RequestFormattingAsync(string fullPath);
     public Task<TextEditContainer?> RequestRangeFormattingAsync(string fullPath, Range range);
-    public Task ExecuteCommandAsync(Command cmd);
+    public Task<JToken?> ExecuteCommandAsync(Command cmd);
     public Task<ApplyWorkspaceEditResponse> ApplyWorkspaceEditAsync(ApplyWorkspaceEditParams param);
     public Task ApplyWorkspaceEditAsync(WorkspaceEdit? param);
     public void ApplyContainer(string path, IEnumerable<TextEdit> con);

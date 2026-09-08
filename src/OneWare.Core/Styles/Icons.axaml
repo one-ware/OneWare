@@ -617,25 +617,50 @@
     </DrawingImage>
     <DrawingImage x:Key="VhdlFileIcon">
         <DrawingGroup>
-            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
-            <GeometryDrawing Brush="Gray"
-                             Geometry="F1 M 7.04631,12L 3.74546,4.23796L 6.03637,4.23796L 7.55767,8.20061L 8,9.52305C 8.11591,9.18719 8.18835,8.96562 8.21733,8.85834C 8.28892,8.6391 8.36477,8.41986 8.44489,8.20061L 9.96364,4.23796L 12.2545,4.23796L 8.99972,12L 7.04631,12 Z " />
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 L16,0 16,16 0,16 Z" />
+            <GeometryDrawing Geometry="M1,5 L3,5 M1,8 L3,8 M1,11 L3,11 M13,5 L15,5 M13,8 L15,8 M13,11 L15,11">
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#7C6CF2" Thickness="1.2" LineCap="Round" />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+            <GeometryDrawing Brush="#7C6CF2"
+                             Geometry="M3,1 L10,1 14,5 14,14.25 C14,14.66 13.66,15 13.25,15 L3.75,15 C3.34,15 3,14.66 3,14.25 Z" />
+            <GeometryDrawing Brush="#A99DF8" Geometry="M10,1 L10,5 14,5 Z" />
+            <GeometryDrawing Brush="White"
+                             Geometry="M4.2,6 L5.45,6 6.35,10.65 7.25,6 8.5,6 7.05,12 5.65,12 Z M9.1,6 L10.2,6 10.2,8.25 11.55,8.25 11.55,6 12.65,6 12.65,12 11.55,12 11.55,9.35 10.2,9.35 10.2,12 9.1,12 Z" />
         </DrawingGroup>
     </DrawingImage>
 
     <DrawingImage x:Key="VerilogFileIcon">
         <DrawingGroup>
-            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
-            <GeometryDrawing Brush="#00ffbf"
-                             Geometry="F1 M 7.04631,12L 3.74546,4.23796L 6.03637,4.23796L 7.55767,8.20061L 8,9.52305C 8.11591,9.18719 8.18835,8.96562 8.21733,8.85834C 8.28892,8.6391 8.36477,8.41986 8.44489,8.20061L 9.96364,4.23796L 12.2545,4.23796L 8.99972,12L 7.04631,12 Z " />
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 L16,0 16,16 0,16 Z" />
+            <GeometryDrawing Geometry="M1,5 L3,5 M1,8 L3,8 M1,11 L3,11 M13,5 L15,5 M13,8 L15,8 M13,11 L15,11">
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#00A98F" Thickness="1.2" LineCap="Round" />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+            <GeometryDrawing Brush="#00A98F"
+                             Geometry="M3,1 L10,1 14,5 14,14.25 C14,14.66 13.66,15 13.25,15 L3.75,15 C3.34,15 3,14.66 3,14.25 Z" />
+            <GeometryDrawing Brush="#65D6C5" Geometry="M10,1 L10,5 14,5 Z" />
+            <GeometryDrawing Brush="White"
+                             Geometry="M4.35,5.5 L6.15,5.5 8.5,11.05 10.85,5.5 12.65,5.5 9.35,12.5 7.65,12.5 Z" />
         </DrawingGroup>
     </DrawingImage>
 
     <DrawingImage x:Key="SystemVerilogFileIcon">
         <DrawingGroup>
-            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
-            <GeometryDrawing Brush="#ff6eb4"
-                             Geometry="F1 M 7.04631,12L 3.74546,4.23796L 6.03637,4.23796L 7.55767,8.20061L 8,9.52305C 8.11591,9.18719 8.18835,8.96562 8.21733,8.85834C 8.28892,8.6391 8.36477,8.41986 8.44489,8.20061L 9.96364,4.23796L 12.2545,4.23796L 8.99972,12L 7.04631,12 Z " />
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 L16,0 16,16 0,16 Z" />
+            <GeometryDrawing Geometry="M1,5 L3,5 M1,8 L3,8 M1,11 L3,11 M13,5 L15,5 M13,8 L15,8 M13,11 L15,11">
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#E548A0" Thickness="1.2" LineCap="Round" />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+            <GeometryDrawing Brush="#E548A0"
+                             Geometry="M3,1 L10,1 14,5 14,14.25 C14,14.66 13.66,15 13.25,15 L3.75,15 C3.34,15 3,14.66 3,14.25 Z" />
+            <GeometryDrawing Brush="#F294C8" Geometry="M10,1 L10,5 14,5 Z" />
+            <GeometryDrawing Brush="White"
+                             Geometry="M4,6.1 C4,5.49 4.49,5 5.1,5 L7.2,5 7.2,6.15 5.3,6.15 C5.14,6.15 5.05,6.24 5.05,6.4 5.05,6.53 5.12,6.61 5.25,6.66 L6.45,7.12 C7.04,7.35 7.4,7.87 7.4,8.5 7.4,9.33 6.73,10 5.9,10 L4,10 4,8.85 5.85,8.85 C6.1,8.85 6.25,8.7 6.25,8.5 6.25,8.34 6.16,8.22 6,8.16 L4.85,7.72 C4.32,7.52 4,6.9 4,6.1 Z M7.8,5 L9.15,5 10.35,9.15 11.55,5 12.9,5 11.05,11 9.65,11 Z" />
+            <GeometryDrawing Brush="#FFD5EC" Geometry="M5.1,11.25 L11.8,11.25 11.8,12.4 5.1,12.4 Z" />
         </DrawingGroup>
     </DrawingImage>
 

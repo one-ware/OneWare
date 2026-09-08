@@ -88,6 +88,11 @@ public class MainWindowViewModel : ObservableObject
             Header = "Find Files",
             Command = new RelayCommand(() => OpenManager(GetMainView(), "Files")),
             InputGesture = new KeyGesture(Key.A, PlatformHelper.ControlKey | KeyModifiers.Shift)
+        }, new MenuItemModel("FindSymbols")
+        {
+            Header = "Go to Symbol",
+            Command = new RelayCommand(() => OpenManager(GetMainView(), "Symbols")),
+            InputGesture = new KeyGesture(Key.O, PlatformHelper.ControlKey | KeyModifiers.Shift)
         });
 
         MainMenu.WatchTreeChanges(AddMenuItem, (r, p) => RemoveMenuItem(r));
