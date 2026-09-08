@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.Helpers;
 using OneWare.Debugger.Models;
+using OneWare.Debugger.Settings;
 using OneWare.Debugger.ViewModels;
 using OneWare.Debugger.ViewModels.Inspector;
 using OneWare.Debugger.ViewModels.Main;
@@ -15,9 +16,16 @@ namespace OneWare.Debugger;
 
 public class DebuggerModule : OneWareModuleBase
 {
-    public const string GdbPathSetting = "Debugger_GdbPath"; // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
+    // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
+    public const string GdbPathSetting = "Debugger_GdbPath"; 
     public const string RemoteEndpointSetting = "Debugger_RemoteEndpoint";
+    public const string RemoteProtocolLogSetting = "Debugger_LogRemoteProtocol";
     public const string ExecutableProperty = "Debugger/Executable";
+
+    public static string RemoteProtocolLogCommand(bool enabled)
+    {
+        return $"set debug remote {(enabled ? 1 : 0)}";
+    }
 
     public override void RegisterServices(IServiceCollection services)
     {
@@ -68,13 +76,22 @@ public class DebuggerModule : OneWareModuleBase
                 HoverDescription = "Path to the GDB executable for debugging via gdbserver."
             });
 
+        settingsService.RegisterCustom("Tools", "Debugger", RemoteProtocolLogSetting,
+            new ToggleSwitchSetting("Log GDB Remote Protocol", false,
+                "Logs every packet exchanged with the debug stub in the debugger console. " +
+                "Takes effect immediately, also while a session is running."));
+
+        settingsService.GetSettingObservable<bool>(RemoteProtocolLogSetting)
+            .Subscribe(enabled => _ = serviceProvider.Resolve<IDebuggerService>()
+                .SendRawCommandAsync(RemoteProtocolLogCommand(enabled)));
+
         settingsService.RegisterSetting("Tools", "Debugger", RemoteEndpointSetting,
             new TextBoxSetting("Remote Endpoint", string.Empty, "host:port, e.g. localhost:1234")
             {
                 HoverDescription = "Address of remote machine or debug stub to attach to. " +
                                    "Leave empty to debug the program on this machine."
             });
-        
+
         dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
         dockService.RegisterLayoutExtension<InspectorViewModel>(DockShowLocation.RightPinned);
         
@@ -92,3 +109,5 @@ public class DebuggerModule : OneWareModuleBase
             });
     }
 }
+
+

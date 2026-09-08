@@ -17,11 +17,13 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 {
     private readonly List<IDebugSessionLauncher> _sessionLaunchers = [];
     private readonly HashSet<BreakPoint> _armed = [];
-    private readonly HashSet<BreakPoint> _refused = [];
-    private readonly BreakpointStore _breakpoints = BreakpointStore.Instance;
+    private readonly HashSet<BreakPoint> _refused = []; // Breakpoints die der Stub ablehnt
+    private readonly BreakpointStore _breakpointStore = BreakpointStore.Instance;
     private readonly List<IDebugTargetPreparer> _targetPreparers = [];
 
     private IDebugTargetPreparer? _activePreparer;
+
+    private IReadOnlyList<string>? _sourceFiles;
 
     private IDebugSession? _session;
 
@@ -157,11 +159,13 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             return false;
         }
 
+        _sourceFiles = await session.GetSourceFilesAsync();
+
         // Erst die Breakpoints scharf machen, dann laufen lassen - andersherum rennt das Programm
         // an genau den Stellen vorbei, an denen der Nutzer halten wollte.
         await ResyncBreakpointsAsync();
 
-        _breakpoints.Breakpoints.CollectionChanged += OnBreakpointsChanged;
+        _breakpointStore.Breakpoints.CollectionChanged += OnBreakpointsChanged;
 
         await session.RunAsync();
 
@@ -174,7 +178,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         if (session != null)
         {
-            _breakpoints.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
+            _breakpointStore.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
             session.StateChanged -= OnSessionStateChanged;
             session.Exited -= OnSessionExited;
 
@@ -189,12 +193,13 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             TargetProfile = DebugTargetProfile.Default;
             _armed.Clear();
             _refused.Clear();
-            _breakpoints.IsTargetRunning = false;
-            _breakpoints.CurrentBreakPoint = null;
+            _sourceFiles = null;
+            _breakpointStore.IsTargetRunning = false;
+            _breakpointStore.CurrentBreakPoint = null;
 
             // Ohne Ziel sagt niemand mehr etwas ueber die Breakpoints aus -> ein hohler Punkt
             // waere ab hier eine Behauptung ohne Grundlage.
-            _breakpoints.ResetVerification();
+            _breakpointStore.ResetVerification();
 
             RaiseStateChanged();
         }
@@ -289,9 +294,10 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         {
             foreach (var breakpoint in removed)
             {
-                _armed.Remove(breakpoint);
+                var wasArmed = _armed.Remove(breakpoint);
                 _refused.Remove(breakpoint);
-                await session.RemoveBreakpointAsync(breakpoint);
+
+                if (wasArmed) await session.RemoveBreakpointAsync(breakpoint);
             }
 
             await ResyncBreakpointsAsync();
@@ -303,13 +309,6 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         }
     }
 
-    private bool HasFreeSlot()
-    {
-        if (TargetProfile.MaxBreakpoints is not { } limit) return true;
-
-        return _armed.Count < limit;
-    }
-
     private async Task ResyncBreakpointsAsync()
     {
         var session = _session;
@@ -318,11 +317,20 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         var waiting = 0;
         var rejected = 0;
 
-        foreach (var breakpoint in _breakpoints.Breakpoints.ToArray())
+        foreach (var breakpoint in _breakpointStore.Breakpoints.ToArray())
         {
             if (_armed.Contains(breakpoint) || _refused.Contains(breakpoint)) continue;
 
             var wasVerified = breakpoint.IsVerified;
+
+            if (!BelongsToLoadedProgram(breakpoint.File))
+            {
+                //Wird abgelehnt, weil er zu einen Fremdprogramm gehört
+                _refused.Add(breakpoint);
+                PublishVerification(breakpoint, false);
+                if (wasVerified) rejected++;
+                continue;
+            }
 
             if (!HasFreeSlot())
             {
@@ -351,11 +359,28 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         return verified;
     }
 
+    private bool HasFreeSlot()
+    {
+        if (TargetProfile.MaxBreakpoints is not { } limit) return true;
+
+        return _armed.Count < limit;
+    }
+
+    private bool BelongsToLoadedProgram(string file)
+    {
+        if (_sourceFiles is not { Count: > 0 } files) return true;
+
+        return files.Any(candidate =>
+            string.Equals(NormalizePath(candidate), NormalizePath(file), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string NormalizePath(string path) => path.Replace('\\', '/');
+
     // Auf den UI-Thread gebracht: das Ergebnis kommt vom Lesethread der Sitzung, und daran
     // haengt das Neuzeichnen der Randspalte in jedem offenen Editor.
     private void PublishVerification(BreakPoint breakpoint, bool verified)
     {
-        Dispatcher.UIThread.Post(() => _breakpoints.SetVerified(breakpoint, verified));
+        Dispatcher.UIThread.Post(() => _breakpointStore.SetVerified(breakpoint, verified));
     }
 
     // Der hohle Punkt in der Randspalte sagt nur etwas, wenn man die Schreibweise kennt.
@@ -368,12 +393,12 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     // dessen Ursache.
     private void NotifyWaiting(int waiting)
     {
-        var more = waiting == 1 ? "one more is" : $"{waiting} more are";
+        var more = waiting == 1 ? "One breakpoint is" : $"{waiting} breakpoints are";
 
         serviceProvider.Resolve<IWindowService>().ShowNotification(
             "Breakpoint limit reached",
-            $"The target holds {TargetProfile.MaxBreakpoints} breakpoints at once, {more} waiting for a " +
-            "free slot and shown as a grey ring. Remove one and the next takes its place.",
+            $"{more} waiting for a free slot on the target and shown as a grey ring. Remove one and " +
+            "the next takes its place.",
             NotificationType.Warning);
     }
 
@@ -396,8 +421,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             if (!ReferenceEquals(sender, _session)) return;
 
             State = state;
-            _breakpoints.IsTargetRunning = state.IsRunning;
-            _breakpoints.CurrentBreakPoint = FindCurrentBreakpoint(state);
+            _breakpointStore.IsTargetRunning = state.IsRunning;
+            _breakpointStore.CurrentBreakPoint = FindCurrentBreakpoint(state);
             RaiseStateChanged();
 
             if (!state.IsRunning) _ = SyncBreakpointsAsync([]);
@@ -411,7 +436,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         if (state.IsRunning) return null;
         if (state.CurrentFrame is not { File: { Length: > 0 } file, Line: > 0 } frame) return null;
 
-        return _breakpoints.Breakpoints.FirstOrDefault(x =>
+        return _breakpointStore.Breakpoints.FirstOrDefault(x =>
                    string.Equals(x.File, file, StringComparison.OrdinalIgnoreCase) && x.Line == frame.Line)
                ?? new BreakPoint { File = file, Line = frame.Line };
     }

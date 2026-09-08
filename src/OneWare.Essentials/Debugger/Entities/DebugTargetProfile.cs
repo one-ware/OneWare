@@ -46,8 +46,10 @@ public sealed record DebugTargetProfile
 
     /// <summary>
     /// How many breakpoints the target can hold at once; <see langword="null"/> means no limit.
-    /// A target that has run out can only refuse the next request, and the refusal alone does
-    /// not say why — stating the number here lets whoever asks name the reason instead.
+    /// Stating it lets a caller keep the ones beyond that number unarmed instead of offering them
+    /// to the target and collecting a refusal: a backend reports only <em>that</em> a breakpoint
+    /// was refused, never <em>why</em>, so a refusal cannot be told apart from one that will never
+    /// work, and a breakpoint that only lacks room would be written off for good.
     /// </summary>
     public int? MaxBreakpoints { get; init; }
 

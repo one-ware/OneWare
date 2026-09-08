@@ -52,7 +52,18 @@ public class GdbSessionLauncher(ILogger logger, ISettingsService settingsService
                         || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         return new GdbSession(gdbPath, launchRequest.ExecutablePath, launchRequest.RemoteEndpoint,
-            launchRequest.WorkingDirectory, launchRequest.InitCommands, asyncMode, logger);
+            launchRequest.WorkingDirectory, WithRemoteProtocolLog(launchRequest.InitCommands), asyncMode, logger);
+    }
+
+    private IReadOnlyList<string> WithRemoteProtocolLog(IReadOnlyList<string>? initCommands)
+    {
+        var commands = new List<string>(initCommands ?? []);
+
+        if (settingsService.HasSetting(DebuggerModule.RemoteProtocolLogSetting))
+            commands.Add(DebuggerModule.RemoteProtocolLogCommand(
+                settingsService.GetSettingValue<bool>(DebuggerModule.RemoteProtocolLogSetting)));
+
+        return commands;
     }
 
     // Ermittelt den zu verwendenden GDB-Pfad.

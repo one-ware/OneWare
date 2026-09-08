@@ -149,7 +149,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"GDB at '{_gdbExecutable}' failed to start: {e.Message}", e);
             return false;
         }
     }
@@ -266,6 +266,24 @@ public class GdbSession : IDebugSession
 
         return string.IsNullOrEmpty(contents) ? null : FormatBytes(contents);
     }
+    
+    public async Task<IReadOnlyList<string>?> GetSourceFilesAsync()                
+    {                                                                              
+        var result = await RunCommandAsync("-file-list-exec-source-files");        
+        if (result.Status != CommandStatus.Done) return null;                      
+                                                                                 
+        var files = result.GetObject("files");                                     
+        var fullnames = new List<string>(files.Count);                             
+                                                                                 
+        for (var i = 0; i < files.Count; i++)                                      
+        {                                                                          
+            var entry = files.GetObject(i);                                        
+            var fullname = entry.GetValue("fullname");                             
+            if (!string.IsNullOrEmpty(fullname)) fullnames.Add(fullname);          
+        }                                                                          
+                                                                                 
+        return fullnames;                                                          
+    }           
 
     // Macht aus der Hex-Kette von GDB Bytepaare mit Leerzeichen. Ohne die Trennung ist bei
     // mehr als ein paar Bytes nicht mehr zu erkennen, wo eines aufhoert.
@@ -300,7 +318,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"GDB did not shut down cleanly: {e.Message}", e);
         }
 
         try
@@ -309,7 +327,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Could not close GDB's input stream: {e.Message}", e);
         }
 
         try
@@ -320,7 +338,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Could not kill the GDB process: {e.Message}", e);
         }
         finally
         {
@@ -442,7 +460,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Stopped reading GDB's output: {e.Message}", e);
         }
     }
 
@@ -512,7 +530,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Could not publish the target state after a stop: {e.Message}", e);
         }
     }
 
@@ -661,7 +679,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Command '{command}' to GDB failed: {e.Message}", e);
             return _timeout;
         }
         finally

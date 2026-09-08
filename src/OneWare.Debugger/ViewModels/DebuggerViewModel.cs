@@ -205,18 +205,22 @@ public partial class DebuggerViewModel : ExtendedTool
     private string? FindProjectExecutable()
     {
         if (_projectExplorerService.ActiveProject is not { } project) return null;
-
         try
         {
             if (DeclaredExecutable(project) is { } declared) return declared;
-
-            return Directory.EnumerateFiles(project.FullPath, "*.elf", SearchOption.AllDirectories)
+            var executableExtensions = new[] { ".elf", ".axf", ".out", ".exe", ".dll", ".dylib",};
+            return executableExtensions
+                .SelectMany(extension =>
+                    Directory.EnumerateFiles(
+                        project.FullPath,
+                        $"*{extension}",
+                        SearchOption.AllDirectories))
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault();
         }
-        catch (Exception e)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Failed to find executable in project '{project.FullPath}': {e.Message}", e);
             return null;
         }
     }
@@ -233,7 +237,7 @@ public partial class DebuggerViewModel : ExtendedTool
         if (File.Exists(path)) return path;
 
         _logger.Warning($"The project declares '{relative}' as its debug executable, but no file exists at " +
-                        $"{path} - searching the project folder for a *.elf instead.");
+                        $"{path} - searching the project folder for an executable with debug info instead.");
         return null;
     }
 
@@ -306,7 +310,7 @@ public partial class DebuggerViewModel : ExtendedTool
         }
         catch (Exception e)
         {
-            _logger.Error(e.Message, e);
+            _logger.Error($"Could not jump to '{file}' line {frame.Line}: {e.Message}", e);
         }
     }
 

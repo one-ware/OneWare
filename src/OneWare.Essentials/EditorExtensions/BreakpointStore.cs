@@ -43,8 +43,7 @@ public class BreakpointStore : ObservableObject
         Breakpoints.Remove(bp);
     }
 
-    // Nur melden, wenn sich wirklich etwas geaendert hat -> das Neuzeichnen der Randspalte
-    // haengt an jedem Editor, der gerade offen ist.
+    // Nur melden, wenn sich wirklich etwas geaendert hat -> das Neuzeichnen der Randspalte haengt an jedem Editor, der gerade offen ist.
     public void SetVerified(BreakPoint bp, bool verified)
     {
         if (bp.IsVerified == verified) return;
