@@ -195,9 +195,14 @@
                 <Grid ColumnDefinitions="Auto, *, Auto">
                     <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                    <Button Grid.Column="2" Command="{Binding AiFileEditService.UndoAllAsync}">
-                        <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
-                    </Button>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                        <Button Command="{Binding AiFileEditService.UndoAllAsync}" ToolTip.Tip="Discard all file changes">
+                            <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
+                        </Button>
+                        <Button Command="{Binding AiFileEditService.AcceptAllAsync}" ToolTip.Tip="Accept all file changes">
+                            <TextBlock Text="Accept All" Foreground="{DynamicResource HighlightBrush}" />
+                        </Button>
+                    </StackPanel>
                 </Grid>
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
                     <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">

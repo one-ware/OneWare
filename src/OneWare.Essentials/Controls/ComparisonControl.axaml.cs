@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.ReactiveUI;
+using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using DynamicData;
@@ -51,6 +52,12 @@ public class ComparisonControl : TemplatedControl
     public static readonly StyledProperty<ICollection<ComparisonControlSection>?> ChunksProperty =
         AvaloniaProperty.Register<ComparisonControl, ICollection<ComparisonControlSection>?>(nameof(Chunks));
 
+    /// <summary>
+    /// One-based line of the rendered diff to scroll into view. Zero means no scroll target.
+    /// </summary>
+    public static readonly StyledProperty<int> ScrollToLineProperty =
+        AvaloniaProperty.Register<ComparisonControl, int>(nameof(ScrollToLine));
+
     public static readonly DirectProperty<ComparisonControl, ScrollInfoContext> ScrollInfoLeftProperty =
         AvaloniaProperty.RegisterDirect<ComparisonControl, ScrollInfoContext>(
             nameof(ScrollInfoLeft),
@@ -83,6 +90,12 @@ public class ComparisonControl : TemplatedControl
     {
         get => GetValue(ChunksProperty);
         set => SetValue(ChunksProperty, value);
+    }
+
+    public int ScrollToLine
+    {
+        get => GetValue(ScrollToLineProperty);
+        set => SetValue(ScrollToLineProperty, value);
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -152,6 +165,10 @@ public class ComparisonControl : TemplatedControl
                 }
                 ApplyChunks();
             }
+        }
+        else if (change.Property == ScrollToLineProperty)
+        {
+            ScrollToTargetLine();
         }
     }
 
@@ -321,6 +338,26 @@ public class ComparisonControl : TemplatedControl
             _rightInfoMargin.Lines = chunk.RightDiff;
             _rightBackgroundRenderer.Lines = chunk.RightDiff;
             _diffEditor.Text = string.Join("\n", chunk.RightDiff.Select(x => x.Text)).Replace("\t", "    ");
+
+            ScrollToTargetLine();
         }
+    }
+
+    /// <summary>
+    /// Scrolls the diff editor to <see cref="ScrollToLine" />. The head editor follows through the
+    /// existing scroll offset synchronisation. Only applies to the single chunk layout, the multi chunk
+    /// layout renders one editor per chunk and has no single line coordinate space.
+    /// </summary>
+    private void ScrollToTargetLine()
+    {
+        var line = ScrollToLine;
+        if (line <= 0) return;
+        if (_diffEditor is not { IsVisible: true }) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_diffEditor is not { IsVisible: true, Document: { } document }) return;
+            _diffEditor.ScrollToLine(Math.Clamp(line, 1, Math.Max(1, document.LineCount)));
+        }, DispatcherPriority.Background);
     }
 }

@@ -10,8 +10,10 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Chat.Services;
 
-public class AiFileEditService(IMainDockService mainDockService)
+public class AiFileEditService(IMainDockService mainDockService, ISettingsService settingsService)
 {
+    public const string AutoOpenFileEditsKey = "Chat_AutoOpenFileEdits";
+
     public ObservableCollection<AiEditViewModel> ActiveEdits { get; } = new();
     private readonly Dictionary<string, string> _currentEdits = new();
     
@@ -73,7 +75,8 @@ public class AiFileEditService(IMainDockService mainDockService)
             _currentEdits[filePath] = openTab.Original;
         }
 
-        mainDockService.Show(openTab, DockShowLocation.Document);
+        if (settingsService.GetSettingValue<bool>(AutoOpenFileEditsKey))
+            mainDockService.Show(openTab, DockShowLocation.Document);
 
         try
         {
@@ -97,7 +100,7 @@ public class AiFileEditService(IMainDockService mainDockService)
                 var updatedContent = ApplyLineEdit(currentContent, startLine.Value, lineCount.Value, newContent);
                 await File.WriteAllTextAsync(filePath, updatedContent);
                 _currentEdits[filePath] = updatedContent;
-                await openTab.RefreshChanges(updatedContent);
+                await openTab.RefreshChanges(updatedContent, startLine.Value);
             }
         }
         catch (Exception e)
@@ -143,9 +146,17 @@ public class AiFileEditService(IMainDockService mainDockService)
 
     public async Task UndoAllAsync()
     {
-        foreach (var edit in ActiveEdits)
+        foreach (var edit in ActiveEdits.ToArray())
         {
             await UndoAsync(edit);
+        }
+    }
+
+    public async Task AcceptAllAsync()
+    {
+        foreach (var edit in ActiveEdits.ToArray())
+        {
+            await AcceptAsync(edit);
         }
     }
 

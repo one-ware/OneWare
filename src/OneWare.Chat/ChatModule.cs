@@ -38,6 +38,13 @@ public class ChatModule : OneWareModuleBase
                 HoverDescription =
                     "Maximum number of chats kept per AI service. Older chats are deleted automatically."
             });
+
+        settingsService.RegisterSetting("AI Chat", "File Edits", AiFileEditService.AutoOpenFileEditsKey,
+            new CheckBoxSetting("Open edited files automatically", true)
+            {
+                HoverDescription =
+                    "Opens and focuses the diff view whenever the AI edits a file. If disabled, changed files are only listed in the chat."
+            });
         
         dockService.RegisterLayoutExtension<IChatManagerService>(DockShowLocation.Right);
 
