@@ -81,9 +81,10 @@ public interface IDebugSession
     public Task StepOutAsync();
 
     /// <summary>
-    /// Arms a breakpoint on the target.
-    /// Returns <see langword="false"/> if the target refused it, e.g. because it ran out of
-    /// hardware breakpoints.
+    /// Arms a breakpoint on the target. Returns <see langword="false"/> if the target refused it.
+    /// A backend reports only <em>that</em> a breakpoint was refused, never <em>why</em>, so a
+    /// caller cannot tell a target that is merely full from one that will never accept this
+    /// breakpoint — which is what <see cref="DebugTargetProfile.MaxBreakpoints"/> is for.
     /// </summary>
     public Task<bool> SetBreakpointAsync(BreakPoint breakpoint);
 
@@ -100,6 +101,16 @@ public interface IDebugSession
     /// cannot be read, so call only while halted.
     /// </summary>
     public Task<string?> ReadMemoryAsync(string address, int byteCount);
+
+    /// <summary>
+    /// Full paths of every source file that contributed to the loaded program, so a caller can
+    /// tell a breakpoint that belongs to this program from one that only happens to share a
+    /// running debug session (the breakpoint store is shared across every open file, not scoped
+    /// to one program). Returns <see langword="null"/> if the backend cannot answer — callers
+    /// must treat that as "unknown", not as "no files", and skip filtering rather than reject
+    /// every breakpoint.
+    /// </summary>
+    public Task<IReadOnlyList<string>?> GetSourceFilesAsync();
 
     /// <summary>
     /// Sends a command verbatim to the backend. The response arrives through
