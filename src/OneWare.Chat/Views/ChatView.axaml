@@ -141,6 +141,15 @@
                     </Interaction.Behaviors>
                     
                     <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}" Margin="10 0">
+                        <ItemsControl.ContextFlyout>
+                            <MenuFlyout Opening="OnMessagesContextFlyoutOpening">
+                                <MenuItem Header="Copy" InputGesture="Ctrl+C" Click="OnCopySelectionClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuFlyout>
+                        </ItemsControl.ContextFlyout>
                         <ItemsControl.Styles>
                             <Style Selector="Expander /template/ ToggleButton">
                                 <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
