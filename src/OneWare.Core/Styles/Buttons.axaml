@@ -62,12 +62,33 @@
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
     </Style>
 
-    <Style Selector="ToggleButton:checked /template/ ContentPresenter">
+    <!-- The base (Simple) theme fills checked toggles with ThemeControlHighBrush (a bright grey),
+         which stands out far too much. Use a subtle accent tint instead, matching the accent based
+         highlights used elsewhere (tabs, editor line highlight, expander headers). -->
+    <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
     </Style>
 
-    <Style Selector="ToggleButton:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+    <Style Selector="ToggleButton:checked /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush3}" />
+    </Style>
+
+    <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush3}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush2}" />
+    </Style>
+
+    <Style Selector="ToggleButton:checked:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush2}" />
+    </Style>
+
+    <!-- Primary toggles stay a solid accent button in every state. -->
+    <Style Selector="ToggleButton.PrimaryButton:checked /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource HighlightBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource HighlightBrush}" />
     </Style>
 
 </Styles>

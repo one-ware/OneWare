@@ -30,7 +30,7 @@ public class VerilogNodeProvider : INodeProvider
 
     public string Name => "Verilog_Basic";
 
-    public string[] SupportedLanguages => ["Verilog"];
+    public string[] SupportedLanguages => ["Verilog", "SystemVerilog"];
 
     public Task<IEnumerable<FpgaNode>> ExtractNodesAsync(IProjectFile file)
     {

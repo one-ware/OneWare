@@ -141,6 +141,15 @@
                     </Interaction.Behaviors>
                     
                     <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}" Margin="10 0">
+                        <ItemsControl.ContextFlyout>
+                            <MenuFlyout Opening="OnMessagesContextFlyoutOpening">
+                                <MenuItem Header="Copy" InputGesture="Ctrl+C" Click="OnCopySelectionClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuFlyout>
+                        </ItemsControl.ContextFlyout>
                         <ItemsControl.Styles>
                             <Style Selector="Expander /template/ ToggleButton">
                                 <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
@@ -195,9 +204,14 @@
                 <Grid ColumnDefinitions="Auto, *, Auto">
                     <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                    <Button Grid.Column="2" Command="{Binding AiFileEditService.UndoAllAsync}">
-                        <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
-                    </Button>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                        <Button Command="{Binding AiFileEditService.UndoAllAsync}" ToolTip.Tip="Discard all file changes">
+                            <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
+                        </Button>
+                        <Button Command="{Binding AiFileEditService.AcceptAllAsync}" ToolTip.Tip="Accept all file changes">
+                            <TextBlock Text="Accept All" Foreground="{DynamicResource HighlightBrush}" />
+                        </Button>
+                    </StackPanel>
                 </Grid>
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
                     <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">
