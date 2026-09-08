@@ -20,7 +20,7 @@
                     <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
                 </Button>
                 <Button DockPanel.Dock="Right" Width="24" Height="24"
-                        Command="{Binding RemoveWatchCommand}" ToolTip.Tip="Remove address">
+                        Command="{Binding RemoveWatchCommand}" ToolTip.Tip="Remove selected addresses">
                     <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
                 </Button>
                 <Button DockPanel.Dock="Right" Width="24" Height="24"
@@ -35,7 +35,11 @@
                          Background="{DynamicResource ThemeControlLowBrush}"
                          BorderThickness="0"
                          Height="24"
-                         Padding="6,2" />
+                         Padding="6,2">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding AddWatchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
             </DockPanel>
         </Border>
 
@@ -47,8 +51,10 @@
                 BorderThickness="1"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                 Background="{DynamicResource ThemeBackgroundBrush}">
-            <DataGrid ItemsSource="{Binding Watches}"
-                      SelectedItem="{Binding SelectedRow}"
+            <DataGrid x:Name="WatchGrid"
+                      ItemsSource="{Binding Watches}"
+                      SelectionMode="Extended"
+                      SelectionChanged="OnSelectionChanged"
                       GridLinesVisibility="Vertical"
                       VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
                       BorderThickness="0"
@@ -57,6 +63,9 @@
                       VerticalAlignment="Stretch"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto">
+                <DataGrid.KeyBindings>
+                    <KeyBinding Gesture="Delete" Command="{Binding RemoveWatchCommand}" />
+                </DataGrid.KeyBindings>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Address" Width="*" IsReadOnly="True"
                                         Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />

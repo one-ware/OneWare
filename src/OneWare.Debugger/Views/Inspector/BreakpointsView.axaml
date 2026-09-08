@@ -56,6 +56,8 @@
                                                   Converter={x:Static converters:ProjectRelativePathConverter.Instance}}" />
                     <DataGridTextColumn Header="Line" Width="Auto"
                                         Binding="{CompiledBinding Line, DataType=editorExtensions:BreakPoint}" />
+                    <DataGridCheckBoxColumn Header="Verified" Width="Auto"
+                                            Binding="{CompiledBinding IsVerified, DataType=editorExtensions:BreakPoint}" />
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

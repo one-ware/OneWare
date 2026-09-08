@@ -18,12 +18,12 @@ public partial class MemoryTabViewModel : ObservableObject
     // gemacht wird.
     [ObservableProperty] private string _addressText = string.Empty;
 
-    [ObservableProperty] private MemoryRow? _selectedRow;
-
     public MemoryTabViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat)
     {
         _debuggerService = debuggerService;
         ValueFormat = valueFormat;
+
+        SelectedRows.CollectionChanged += (_, _) => RemoveWatchCommand.NotifyCanExecuteChanged();
 
         // Das einzige Abo dieses Reiters, und es geht nicht ums Lesen: das Wasserzeichen gehoert
         // zum Ziel und steht erst mit der Sitzung fest. Wann gelesen wird, sagt weiterhin
@@ -45,6 +45,8 @@ public partial class MemoryTabViewModel : ObservableObject
     // Bleiben ueber Sessions hinweg stehen, damit man dieselben Adressen nach einem Neustart
     // nicht wieder eintippen muss.
     public ObservableCollection<MemoryRow> Watches { get; } = [];
+
+    public ObservableCollection<MemoryRow> SelectedRows { get; } = [];
 
     // Liest die ganze Beobachtungsliste neu. Nacheinander: das Backend beantwortet ohnehin nur
     // ein Kommando zur Zeit, und in der Reihenfolge der Liste zu lesen haelt die Anzeige
@@ -84,15 +86,14 @@ public partial class MemoryTabViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRemoveWatch))]
     private void RemoveWatch()
     {
-        if (SelectedRow is not { } row) return;
+        foreach (var row in SelectedRows.ToArray()) Watches.Remove(row);
 
-        Watches.Remove(row);
-        SelectedRow = null;
+        SelectedRows.Clear();
     }
 
     private bool CanRemoveWatch()
     {
-        return SelectedRow is not null;
+        return SelectedRows.Count > 0;
     }
 
     // Leert die ganze Beobachtungsliste statt nur der Auswahl. Auf einer leeren Liste ein
@@ -101,12 +102,7 @@ public partial class MemoryTabViewModel : ObservableObject
     private void ClearWatches()
     {
         Watches.Clear();
-        SelectedRow = null;
-    }
-
-    partial void OnSelectedRowChanged(MemoryRow? value)
-    {
-        RemoveWatchCommand.NotifyCanExecuteChanged();
+        SelectedRows.Clear();
     }
 
     private async Task RefreshRowAsync(MemoryRow row)

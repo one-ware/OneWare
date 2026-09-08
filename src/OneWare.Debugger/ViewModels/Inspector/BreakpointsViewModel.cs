@@ -30,6 +30,10 @@ public partial class BreakpointsViewModel : ObservableObject
         // das Abo muss nicht wieder geloest werden.
         BreakpointStore.Instance.Breakpoints.CollectionChanged += (_, _) =>
             RemoveAllBreakpointsCommand.NotifyCanExecuteChanged();
+
+        // IsVerified aendert sich im Objekt, nicht an der Sammlung - ohne dieses Abo bliebe die
+        // Spalte auf dem Wert stehen, den sie beim Oeffnen gelesen hat.
+        BreakpointStore.Instance.VerificationChanged += (_, _) => Breakpoints.Refresh();
     }
 
     private bool CanRemoveBreakpoint() => SelectedBreakpoints.Count > 0;
