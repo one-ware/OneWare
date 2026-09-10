@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\..\build\props\Base.props" />
+    <Import Project="..\..\build\props\OneWare.Module.props" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
+    </ItemGroup>
+
+    <Import Project="..\..\build\props\DotAcp.Client.props" />
+</Project>
+
