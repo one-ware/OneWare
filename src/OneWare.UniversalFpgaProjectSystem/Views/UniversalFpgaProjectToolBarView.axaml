@@ -10,11 +10,11 @@
 
     <StackPanel Orientation="Horizontal">
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
-        <Button ToolTip.Tip="Select signals and compile"
+        <Button ToolTip.Tip="Constraint Editor"
                 Command="{Binding OpenPinPlannerAsync}">
             <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
                 <Image Source="{DynamicResource CreateIcon}" Width="14" Height="14" VerticalAlignment="Center" />
-                <TextBlock Text="Pin Planner" VerticalAlignment="Center" />
+                <TextBlock Text="Constraints" VerticalAlignment="Center" />
             </StackPanel>
         </Button>
         <Button>

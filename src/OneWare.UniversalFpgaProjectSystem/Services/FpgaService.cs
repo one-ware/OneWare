@@ -319,7 +319,7 @@ public class FpgaService
                 if (fpgaPackage == null)
                 {
                     ContainerLocator.Container.Resolve<ILogger>()
-                        .Warning($"No FPGA Selected (or {name} not found). Open Pin Planner first");
+                        .Warning($"No FPGA Selected (or {name} not found). Open Constraints first");
                     return false;
                 }
 

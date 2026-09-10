@@ -71,7 +71,7 @@ stops the build.
 | `ERROR: Module ... not found` from yosys | A source file is missing from the project or is in `compileExcluded`. |
 | `ERROR: Can't open input file` from yosys | The top entity name does not match any module. Check `fpga_list_top_entities`. |
 | `Cannot run place & route: build/synth.json is missing` | Synthesis did not produce a netlist — fix the synthesis error above it. |
-| nextpnr reports unconstrained or unknown pins | The constraint file does not match the design. Assign the pins in the pin planner. |
+| nextpnr reports unconstrained or unknown pins | The constraint file does not match the design. Assign the pins in the constraint editor. |
 | `... exited with code N` with no other error | The tool failed without a parseable message; the verbose option for that stage usually reveals why. |
 
 Do not re-run an identical build to "see if it works this time". The stages are deterministic and a

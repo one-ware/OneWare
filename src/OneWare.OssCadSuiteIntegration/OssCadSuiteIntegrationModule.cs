@@ -153,7 +153,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                     if (selectedFpgaPackage == null)
                                     {
                                         serviceProvider.Resolve<ILogger>()
-                                            .Warning("No FPGA Selected. Open Pin Planner first!");
+                                            .Warning("No FPGA Selected. Open Constraints first!");
                                         return;
                                     }
 

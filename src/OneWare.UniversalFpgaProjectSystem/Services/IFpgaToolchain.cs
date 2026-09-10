@@ -10,7 +10,7 @@ public interface IFpgaToolchain
     public string Name { get; }
 
     /// <summary>
-    /// Per-pin properties this toolchain wants to expose and persist in the pin planner.
+    /// Per-pin properties this toolchain wants to expose and persist in the constraint editor.
     /// Override in toolchain implementations to declare properties such as IO Voltage.
     /// </summary>
     public IEnumerable<PinPropertyDefinition> PinProperties => [];

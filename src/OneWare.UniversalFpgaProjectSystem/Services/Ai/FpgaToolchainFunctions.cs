@@ -194,8 +194,8 @@ public sealed class FpgaToolchainFunctions(
 
             await SaveAsync(project);
 
-            return $"'{project.Name}' now targets the board {selected.Name}. Assign the pins in the pin planner " +
-                   "before compiling if the design uses IO.";
+            return $"'{project.Name}' now targets the board {selected.Name}. Assign the pins in the constraint " +
+                   "editor before compiling if the design uses IO.";
         });
     }
 
