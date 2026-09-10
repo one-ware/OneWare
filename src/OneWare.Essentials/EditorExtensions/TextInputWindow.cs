@@ -35,7 +35,7 @@ public class TextInputWindow : Popup
 
         PlacementGravity = PopupGravity.BottomRight;
         PlacementAnchor = PopupAnchor.TopLeft;
-
+        
         Closed += (sender, args) => DetachEvents();
 
         AttachEvents();

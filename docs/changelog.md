@@ -6,6 +6,7 @@
 - Improve completion tooltips, they now show the type of the symbol and mark deprecated entries
 - Highlight the parameter the cursor is on in the overload insight and start on the matching overload
 - Restyle rendered markdown after Visual Studio Code, everything from tooltips to release notes reads cleaner
+- Fix the rename input box cutting off its text instead of growing with the editor font size
 - Fix installed packages with prerelease versions showing as unavailable and not being removable
 - Fix completion crashing for language servers that return insert/replace text edits
 - Reduce language server log noise, servers now only report warnings and errors

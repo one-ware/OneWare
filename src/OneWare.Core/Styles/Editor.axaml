@@ -206,7 +206,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <TextBox Name="inputBox" IsReadOnly="False" />
+                    <!-- Height is auto so the box follows the editor font size instead of the fixed height every TextBox gets -->
+                    <TextBox Name="inputBox" IsReadOnly="False" Height="NaN"
+                             MinWidth="100" MaxWidth="500"
+                             VerticalContentAlignment="Center"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
