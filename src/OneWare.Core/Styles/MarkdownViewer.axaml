@@ -1,7 +1,8 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
         xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+        xmlns:mdc="clr-namespace:Markdown.Avalonia.Controls;assembly=Markdown.Avalonia"
         xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
         xmlns:extensions="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia"
         xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit">
@@ -26,46 +27,93 @@
                     </mdxaml:MarkdownScrollViewer.Plugins>
                     <mdxaml:MarkdownScrollViewer.Styles>
 
-                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CCode">
-                            <Style.Setters>
-                                <Setter Property="Foreground"
-                                        Value="{extensions:DivideColor HighlightBrush, ThemeForegroundColor, 0.45}" />
-                                <Setter Property="Background" Value="{extensions:Alpha ThemeControlMidColor, 0.9}" />
-                            </Style.Setters>
+                        <!-- ============ Text ============ -->
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock">
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="TextWrapping" Value="Wrap" />
                         </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Paragraph">
+                            <Setter Property="Margin" Value="0,0,0,8" />
+                        </Style>
+
+                        <!-- ============ Headings ============ -->
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading1">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.6}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                            <Setter Property="Margin" Value="0,12,0,6" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading2">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.35}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                            <Setter Property="Margin" Value="0,12,0,6" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading3">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.15}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                            <Setter Property="Margin" Value="0,10,0,4" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading4">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.0}" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                            <Setter Property="Margin" Value="0,10,0,4" />
+                        </Style>
+
+                        <!-- ============ Links ============ -->
 
                         <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CHyperlink">
-                            <Style.Setters>
-                                <Setter Property="IsUnderline" Value="False" />
-                                <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}" />
-                            </Style.Setters>
+                            <Setter Property="IsUnderline" Value="False" />
+                            <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}" />
                         </Style>
 
-                        <Style Selector="ScrollViewer">
-                            <Setter Property="Padding" Value="5" />
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CHyperlink:pointerover">
+                            <Setter Property="IsUnderline" Value="True" />
+                            <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}" />
                         </Style>
 
-                        <Style Selector="Grid.List">
-                            <Setter Property="Margin" Value="20 0 0 0" />
+                        <!-- ============ Code ============ -->
+
+                        <!-- Tinting the foreground colour keeps code readable in both light and dark themes -->
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CCode">
+                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                            <Setter Property="Background" Value="{extensions:Alpha ThemeForegroundColor, 0.12}" />
                         </Style>
 
-                        <Style Selector="ctxt|CTextBlock.Heading1">
-                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 2.0}" />
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.CodeBlock">
+                            <Setter Property="Background" Value="{extensions:Alpha ThemeForegroundColor, 0.06}" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="CornerRadius" Value="4" />
+                            <Setter Property="Padding" Value="10,8" />
+                            <Setter Property="Margin" Value="0,2,0,8" />
                         </Style>
 
-                        <Style Selector="ctxt|CTextBlock.Heading2">
-                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.6}" />
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.CodeBlock avaloniaEdit|TextEditor">
+                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="False" />
                         </Style>
 
-                        <Style Selector="ctxt|CTextBlock.Heading3">
-                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.3}" />
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer TextBlock.CodeBlock">
+                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+                            <Setter Property="MinHeight" Value="20" />
                         </Style>
 
-                        <Style Selector="Border.CodeBlock Label.LangInfo">
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.CodeBlock Label.LangInfo">
                             <Setter Property="IsVisible" Value="False" />
                         </Style>
 
-                        <Style Selector="Border.CodeBlock Button.CopyButton ContentPresenter">
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.CodeBlock Button.CopyButton ContentPresenter">
                             <Setter Property="CornerRadius" Value="3" />
                             <Setter Property="Cursor" Value="Hand" />
                             <Setter Property="Content">
@@ -76,84 +124,133 @@
                             </Setter>
                         </Style>
 
-                        <Style Selector="Border.CodeBlock">
-                            <Style.Setters>
-                                <Setter Property="Margin" Value="0" />
-                                <Setter Property="Padding" Value="5" />
-                                <Setter Property="CornerRadius" Value="3" />
-                                <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-                                <Setter Property="BorderThickness" Value="1" />
-                            </Style.Setters>
+                        <!-- ============ Rules, quotes and lists ============ -->
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer mdc|Rule">
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeBorderLowBrush}" />
+                            <Setter Property="SingleLineWidth" Value="1" />
+                            <Setter Property="BoldLineWidth" Value="2" />
+                            <Setter Property="LineMargin" Value="0" />
+                            <Setter Property="Margin" Value="0,6" />
                         </Style>
 
-                        <Style Selector="Border.CodeBlock avaloniaEdit|TextEditor">
-                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                            <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="False" />
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.Blockquote">
+                            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+                            <Setter Property="BorderThickness" Value="3,0,0,0" />
                         </Style>
 
-                        <Style Selector="ctxt|CCode">
-                            <Style.Setters>
-                                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-                                <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
-                            </Style.Setters>
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer StackPanel.Blockquote">
+                            <Setter Property="Margin" Value="10,2,0,2" />
                         </Style>
-                        
-                        <Style Selector="TextBlock.CodeBlock">
-                            <Style.Setters>
-                                <Setter Property="FontFamily" Value="menlo,monaco,consolas,droid sans mono,inconsolata,courier new,monospace,dejavu sans mono"/>
-                                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
-                                <Setter Property="MinHeight" Value="20" />
-                            </Style.Setters>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Grid.List">
+                            <Setter Property="Margin" Value="16,0,0,0" />
                         </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.ListMarker">
+                            <Setter Property="Margin" Value="0,0,6,0" />
+                        </Style>
+
+                        <!-- ============ Tables ============ -->
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.Table">
+                            <Setter Property="Margin" Value="0,2,0,8" />
+                            <Setter Property="BorderThickness" Value="0,0,1,1" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Grid.Table > Border">
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="Padding" Value="8,4" />
+                            <Setter Property="BorderThickness" Value="1,1,0,0" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.TableHeader">
+                            <Setter Property="Background" Value="{extensions:Alpha ThemeForegroundColor, 0.06}" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.TableHeader ctxt|CTextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Style>
+
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.EvenTableRow">
+                            <Setter Property="Background" Value="{extensions:Alpha ThemeForegroundColor, 0.03}" />
+                        </Style>
+
+                        <Style Selector="ScrollViewer">
+                            <Setter Property="Padding" Value="5" />
+                        </Style>
+
+                        <!-- ============ Tooltips ============ -->
+                        <!-- Hover, completion and overload tips, everything tighter and without chrome -->
 
                         <Style Selector=".ToolTip mdxaml|MarkdownScrollViewer">
-                            <Setter Property="MaxWidth" Value="500" />
-                            <Setter Property="MaxHeight" Value="300" />
+                            <Setter Property="MaxWidth" Value="520" />
+                            <Setter Property="MaxHeight" Value="320" />
                         </Style>
 
-                        <Style Selector=".ToolTip mdxaml|MarkdownScrollViewer ScrollViewer">
+                        <Style Selector=".ToolTip ScrollViewer">
+                            <Setter Property="Padding" Value="8,6" />
                             <!-- Documentation can be longer than the tip, cutting it off silently helps nobody -->
                             <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+                            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+                        </Style>
+
+                        <Style Selector=".ToolTip TextBlock">
+                            <Setter Property="MaxWidth" Value="496" />
+                        </Style>
+
+                        <Style Selector=".ToolTip ctxt|CTextBlock">
+                            <Setter Property="MaxWidth" Value="496" />
+                            <Setter Property="Margin" Value="0" />
+                        </Style>
+
+                        <Style Selector=".ToolTip ctxt|CTextBlock.Paragraph">
+                            <Setter Property="Margin" Value="0,0,0,4" />
+                        </Style>
+
+                        <Style Selector=".ToolTip ctxt|CTextBlock.Heading1, .ToolTip ctxt|CTextBlock.Heading2, .ToolTip ctxt|CTextBlock.Heading3, .ToolTip ctxt|CTextBlock.Heading4">
+                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.1}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Margin" Value="0,4,0,2" />
+                        </Style>
+
+                        <Style Selector=".ToolTip ctxt|CTextBlock.ListMarker">
+                            <Setter Property="Margin" Value="0,0,5,0" />
+                        </Style>
+
+                        <Style Selector=".ToolTip Grid.List">
+                            <Setter Property="Margin" Value="12,0,0,0" />
+                        </Style>
+
+                        <!-- Code sits on the tip background instead of in a box of its own -->
+                        <Style Selector=".ToolTip Border.CodeBlock">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="CornerRadius" Value="0" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,4" />
                         </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock avaloniaEdit|TextEditor">
                             <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                        </Style>
-
-                        <Style Selector=".ToolTip TextBlock">
-                            <Style.Setters>
-                                <Setter Property="MaxWidth" Value="490" />
-                            </Style.Setters>
-                        </Style>
-
-                        <Style Selector=".ToolTip ctxt|CTextBlock">
-                            <Style.Setters>
-                                <Setter Property="MaxWidth" Value="490" />
-                                <Setter Property="Margin" Value="0" />
-                            </Style.Setters>
-                        </Style>
-
-                        <Style Selector=".ToolTip ctxt|CTextBlock.Paragraph">
-                            <Style.Setters>
-                                <Setter Property="MaxWidth" Value="490" />
-                                <Setter Property="Margin" Value="0" />
-                            </Style.Setters>
-                        </Style>
-                        
-                        <Style Selector=".ToolTip ctxt|CTextBlock.ListMarker">
-                            <Style.Setters>
-                                <Setter Property="Margin" Value="0,0,5, 0"/>
-                            </Style.Setters>
+                            <Setter Property="WordWrap" Value="True" />
+                            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
                         </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock Button.CopyButton ContentPresenter">
                             <Setter Property="IsVisible" Value="False" />
                         </Style>
-                        
-                        <Style Selector=".ToolTip Border.CodeBlock">
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="BorderThickness" Value="0" />
-                            <Setter Property="Padding" Value="2" />
+
+                        <Style Selector=".ToolTip mdc|Rule">
+                            <Setter Property="Margin" Value="0,2,0,6" />
+                        </Style>
+
+                        <!-- The overload insight shows a signature, so it reads better in the editor font -->
+                        <Style Selector=".Signature ctxt|CTextBlock">
+                            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+                            <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                         </Style>
 
                     </mdxaml:MarkdownScrollViewer.Styles>
