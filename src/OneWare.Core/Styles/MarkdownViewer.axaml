@@ -106,7 +106,15 @@
                         <Style Selector=".Markdown_Avalonia_MarkdownViewer TextBlock.CodeBlock">
                             <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
                             <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-                            <Setter Property="MinHeight" Value="20" />
+                        </Style>
+
+                        <!--
+                            Padding on this scroll viewer is subtracted from the height its content gets arranged
+                            at, so a code block loses those pixels off the bottom once the editor font grows past
+                            the padding. Border.CodeBlock supplies the inset instead.
+                        -->
+                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ScrollViewer.CodeBlock">
+                            <Setter Property="Padding" Value="0" />
                         </Style>
 
                         <Style Selector=".Markdown_Avalonia_MarkdownViewer Border.CodeBlock Label.LangInfo">
@@ -192,7 +200,8 @@
                             <Setter Property="MaxHeight" Value="{extensions:Multiply EditorFontSize, 21}" />
                         </Style>
 
-                        <Style Selector=".ToolTip ScrollViewer">
+                        <!-- Only the tip's own scroll viewer, never the one a code block nests inside -->
+                        <Style Selector=".ToolTip ScrollViewer:not(.CodeBlock)">
                             <Setter Property="Padding" Value="8,6" />
                             <!-- Documentation can be longer than the tip, cutting it off silently helps nobody -->
                             <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
@@ -242,6 +251,7 @@
                             <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                             <Setter Property="WordWrap" Value="True" />
                             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+                            <Setter Property="IsVisible" Value="False"></Setter>
                         </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock Button.CopyButton ContentPresenter">
