@@ -2,7 +2,9 @@
 
 public class BreakPoint
 {
-    public string File { get; set; }
+    public required string File { get; set; }
 
     public int Line { get; set; }
+    
+    public bool IsVerified { get; set; } = true;
 }
