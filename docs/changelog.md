@@ -1,3 +1,8 @@
+## 1.0.31
+
+- Fix preventing plugin updates forcing a restart
+- Fix plugin removals forcing package manager viewmodel reconstruction
+
 ## 1.0.30
 
 - Huge LSP Support improvements (Benefitting all languages)
