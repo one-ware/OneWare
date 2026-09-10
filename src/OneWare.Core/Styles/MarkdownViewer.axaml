@@ -185,9 +185,11 @@
                         <!-- ============ Tooltips ============ -->
                         <!-- Hover, completion and overload tips, everything tighter and without chrome -->
 
+                        <!-- Sized in editor lines rather than pixels, so a tip shows the same amount
+                             of text whatever the editor font size is set to -->
                         <Style Selector=".ToolTip mdxaml|MarkdownScrollViewer">
-                            <Setter Property="MaxWidth" Value="520" />
-                            <Setter Property="MaxHeight" Value="320" />
+                            <Setter Property="MaxWidth" Value="{extensions:Multiply EditorFontSize, 34}" />
+                            <Setter Property="MaxHeight" Value="{extensions:Multiply EditorFontSize, 21}" />
                         </Style>
 
                         <Style Selector=".ToolTip ScrollViewer">
@@ -199,13 +201,13 @@
 
                         <Style Selector=".ToolTip TextBlock">
                             <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                            <Setter Property="MaxWidth" Value="496" />
+                            <Setter Property="MaxWidth" Value="{extensions:Multiply EditorFontSize, 31}" />
                         </Style>
 
                         <!-- Tips sit next to the editor and quote code, so they follow the editor font size -->
                         <Style Selector=".ToolTip ctxt|CTextBlock">
                             <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                            <Setter Property="MaxWidth" Value="496" />
+                            <Setter Property="MaxWidth" Value="{extensions:Multiply EditorFontSize, 31}" />
                             <Setter Property="Margin" Value="0" />
                         </Style>
 

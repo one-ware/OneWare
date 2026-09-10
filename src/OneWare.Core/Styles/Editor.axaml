@@ -103,8 +103,6 @@
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="MaxHeight" Value="350" />
-        <Setter Property="MaxWidth" Value="700" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Template">
             <Setter.Value>
@@ -145,8 +143,6 @@
                 Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="MaxWidth" Value="800" />
-        <Setter Property="MaxHeight" Value="400" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="Template">
             <ControlTemplate>
@@ -190,7 +186,7 @@
                             IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Grid.Row="1" Grid.Column="1" BorderThickness="0 1 0 0"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <controls:MarkdownViewer VerticalAlignment="Top" MaxHeight="250"
+                            <controls:MarkdownViewer VerticalAlignment="Top"
                                                      Classes="ToolTip"
                                                      Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Border>
