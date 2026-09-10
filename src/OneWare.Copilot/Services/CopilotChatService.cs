@@ -633,7 +633,7 @@ public sealed class CopilotChatService(
 
                 if (currentAuth.AuthInfo is not { } authInfo || !IsRemovableAuth(authInfo.Type)) break;
 
-                var result = await _client.Rpc.Account.LogoutAsync(authInfo);
+                var result = await _client.Rpc.Account.LogoutAsync(null, authInfo);
                 removedAny = true;
 
                 if (!result.HasMoreUsers) break;
