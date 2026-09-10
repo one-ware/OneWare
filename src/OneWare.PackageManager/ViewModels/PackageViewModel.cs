@@ -144,8 +144,8 @@ public class PackageViewModel : PackageListEntryViewModel
             PackageVersionModels.AddRange(PackageState.Package.Versions
                 .OrderByDescending(x =>
                 {
-                    if (Version.TryParse(x.Version, out var v)) return v;
-                    return new Version(int.MaxValue, 0);
+                    if (SemanticVersion.TryParse(x.Version, out var v)) return v;
+                    return SemanticVersion.Empty;
                 })
                 .Select(x => new PackageVersionModel(x)));
 
@@ -166,8 +166,8 @@ public class PackageViewModel : PackageListEntryViewModel
 
     private void UpdateStatus()
     {
-        Version.TryParse(SelectedVersionModel?.Version.Version ?? "", out var sV);
-        Version.TryParse(PackageState.InstalledVersion?.Version ?? "", out var iV);
+        SemanticVersion.TryParse(SelectedVersionModel?.Version.Version, out var sV);
+        SemanticVersion.TryParse(PackageState.InstalledVersion?.Version, out var iV);
 
         MainButtonCommand = null;
         var primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeBorderMidBrush");
@@ -194,6 +194,10 @@ public class PackageViewModel : PackageListEntryViewModel
                 PrimaryButtonText = "Cancel";
                 MainButtonCommand = CancelCommand;
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlMidBrush");
+                break;
+            case PackageStatus.Unavailable when PackageState.InstalledVersion != null:
+                PrimaryButtonText = "Remove";
+                MainButtonCommand = RemoveCommand;
                 break;
             case PackageStatus.Unavailable:
                 PrimaryButtonText = "Unavailable";

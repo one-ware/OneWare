@@ -765,7 +765,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         {
             var (signature, activeParam) = FormatSignatureLabel(s);
             
-            var docs = ExtractDocumentation(s.Documentation);
+            var docs = s.Documentation.GetPlainText();
             string? activeParamSection = null;
 
             if (s.Parameters is not null && s.ActiveParameter.HasValue)
@@ -774,7 +774,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
                 if (index >= 0 && index < s.Parameters.Count())
                 {
                     var param = s.Parameters.ElementAt(index);
-                    var paramDoc = ExtractDocumentation(param.Documentation);
+                    var paramDoc = param.Documentation.GetPlainText();
                     
                     // Always show active parameter indicator
                     if (!string.IsNullOrWhiteSpace(activeParam))
@@ -835,7 +835,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
         }
 
-        var description = ExtractDocumentation(comp.Documentation);
+        var description = comp.Documentation.GetPlainText();
         var insertText = comp.InsertText ?? comp.Label;
         var isSnippet = comp.InsertTextFormat == InsertTextFormat.Snippet;
         int? replaceStart = null;
@@ -843,17 +843,29 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         if (comp.TextEdit != null)
         {
+            // Ranges are guarded: a server that sends an edit the LSP library cannot map keeps the
+            // completion usable, it is then applied to the word in front of the caret instead.
             if (comp.TextEdit.IsTextEdit && comp.TextEdit.TextEdit != null)
             {
                 insertText = comp.TextEdit.TextEdit.NewText;
-                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.Start) - 1;
-                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.End) - 1;
+
+                if (comp.TextEdit.TextEdit.Range != null)
+                {
+                    replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.Start) - 1;
+                    replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.End) - 1;
+                }
             }
             else if (comp.TextEdit.IsInsertReplaceEdit && comp.TextEdit.InsertReplaceEdit != null)
             {
                 insertText = comp.TextEdit.InsertReplaceEdit.NewText;
-                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.Start) - 1;
-                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.End) - 1;
+
+                var range = comp.TextEdit.InsertReplaceEdit.Replace ?? comp.TextEdit.InsertReplaceEdit.Insert;
+
+                if (range != null)
+                {
+                    replaceStart = CodeBox.Document.GetOffsetFromPosition(range.Start) - 1;
+                    replaceEnd = CodeBox.Document.GetOffsetFromPosition(range.End) - 1;
+                }
             }
         }
 
@@ -866,14 +878,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             ReplaceStartOffset = replaceStart,
             ReplaceEndOffset = replaceEnd
         };
-    }
-
-    private static string? ExtractDocumentation(StringOrMarkupContent? documentation)
-    {
-        if (documentation == null) return null;
-        if (documentation.HasMarkupContent) return documentation.MarkupContent?.Value;
-        if (documentation.HasString) return documentation.String;
-        return null;
     }
 
     protected virtual (string signature, string? activeParam) FormatSignatureLabel(SignatureInformation signature)

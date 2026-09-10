@@ -2,6 +2,10 @@
 
 - Add possibility to add custom AI Agents and Skills
 - Add TypeScript / Javascript Support
+- Fix installed packages with prerelease versions showing as unavailable and not being removable
+- Fix completion crashing for language servers that return insert/replace text edits
+- Reduce language server log noise, servers now only report warnings and errors
+- Enable pull diagnostics for language servers that do not push diagnostics on their own
 
 ## 1.0.26
 
@@ -12,7 +16,7 @@
 
 ## 1.0.25
 
-- Add JavaScript/TypeScript language support (tsgo language server, auto-downloadable)
+- Add JavaScript/TypeScript language support (native tsc language server, auto-downloadable)
 - Support language servers that only provide pull diagnostics (textDocument/diagnostic)
 - Improve Copilot Terminal Handling in Windows
 - Add possibility to add default startup configuration

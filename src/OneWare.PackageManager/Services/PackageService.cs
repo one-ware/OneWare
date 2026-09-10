@@ -312,6 +312,12 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
             await SaveInstalledPackagesAsync();
 
+            // A package that no repository offers anymore only existed as a stub for its installation.
+            // Once it is removed there is nothing left to show or install, so it is dropped entirely.
+            if (!_catalog.Manifests.ContainsKey(packageId)) _packages.Remove(packageId);
+
+            PackagesUpdated?.Invoke(this, EventArgs.Empty);
+
             return true;
         }
         catch (Exception e)
@@ -664,8 +670,16 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
         var target = state.ResolveTargetVersion();
 
-        var hasTarget = Version.TryParse(target?.Version, out var targetVersion);
-        var hasInstalled = Version.TryParse(state.InstalledVersion?.Version ?? "", out var installedVersion);
+        var hasTarget = SemanticVersion.TryParse(target?.Version, out var targetVersion);
+        var hasInstalled = SemanticVersion.TryParse(state.InstalledVersion?.Version, out var installedVersion);
+
+        // An installed package stays removable even when its version string cannot be parsed or the
+        // package disappeared from every repository, otherwise it can never be uninstalled again.
+        if (!hasInstalled && state.InstalledVersion != null)
+        {
+            state.Status = PackageStatus.Installed;
+            return;
+        }
 
         if (hasInstalled && hasTarget && targetVersion > installedVersion)
             state.Status = target!.IsPrerelease

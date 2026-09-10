@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
@@ -389,9 +390,19 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     {
     }
 
+    /// <summary>
+    ///     window/logMessage is the server's own diagnostic log, not something the user asked for.
+    ///     Servers log every handled request there, so only problems are kept at a visible level.
+    /// </summary>
     private void WriteLog(LogMessageParams log)
     {
-        var level = MapMessageType(log.Type);
+        var level = log.Type switch
+        {
+            MessageType.Error => LogLevel.Error,
+            MessageType.Warning => LogLevel.Warning,
+            _ => LogLevel.Trace
+        };
+
         LogLspEvent("logMessage", log.Message ?? string.Empty, level);
     }
 
@@ -546,7 +557,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
     /// <summary>
     ///     Requests diagnostics for a document using the pull model (textDocument/diagnostic).
-    ///     Servers that only support pull diagnostics (like tsgo) never send publishDiagnostics for
+    ///     Servers that only support pull diagnostics (like the native tsc language server) never send publishDiagnostics for
     ///     source files, so they are requested here and forwarded to the regular diagnostics handling.
     /// </summary>
     private void RequestPullDiagnostics(string fullPath)
@@ -590,31 +601,25 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             var client = Client;
             if (client == null) return;
 
-            //The request is sent manually because the RelatedDocumentDiagnosticReport converter of
-            //OmniSharp.Extensions.LanguageServer.Protocol is not implemented and throws on deserialization
-            var report = await client
-                .SendRequest(TextDocumentNames.Diagnostics, new DocumentDiagnosticParams
-                {
-                    TextDocument = new TextDocumentIdentifier { Uri = fullPath },
-                    PreviousResultId = previousResultId
-                })
-                .Returning<JToken?>(cancellation.Token);
+            var report = await client.RequestDocumentDiagnostic(new DocumentDiagnosticParams
+            {
+                TextDocument = new TextDocumentIdentifier { Uri = fullPath },
+                PreviousResultId = previousResultId
+            }, cancellation.Token);
 
-            if (cancellation.IsCancellationRequested || report is not JObject reportObject) return;
+            if (cancellation.IsCancellationRequested || report == null) return;
 
-            HandlePullDiagnosticsReport(fullPath, reportObject);
+            HandlePullDiagnosticsReport(fullPath, report);
 
             //Servers may report diagnostics for other documents in the same response
-            if (reportObject["relatedDocuments"] is JObject relatedDocuments)
-                foreach (var relatedDocument in relatedDocuments.Properties())
-                {
-                    if (relatedDocument.Value is not JObject relatedReport) continue;
+            foreach (var (relatedUri, relatedReport) in report.RelatedDocuments ??
+                                                        ImmutableDictionary<DocumentUri, DocumentDiagnosticReport>.Empty)
+            {
+                var relatedPath = relatedUri.GetFileSystemPath();
+                if (relatedPath == null) continue;
 
-                    var relatedPath = DocumentUri.From(relatedDocument.Name).GetFileSystemPath();
-                    if (relatedPath == null) continue;
-
-                    HandlePullDiagnosticsReport(relatedPath, relatedReport);
-                }
+                HandlePullDiagnosticsReport(relatedPath, relatedReport);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -637,26 +642,30 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     }
 
     /// <summary>
-    ///     Parses a single document diagnostic report. An unchanged report means the previously
+    ///     Handles a single document diagnostic report. An unchanged report means the previously
     ///     published diagnostics are still valid, so only the result id is updated.
     /// </summary>
-    private void HandlePullDiagnosticsReport(string fullPath, JObject report)
+    private void HandlePullDiagnosticsReport(string fullPath, IDiagnosticReport report)
     {
-        var resultId = report["resultId"]?.Value<string>();
+        //Full and unchanged reports exist once for the requested document and once for related documents
+        var (resultId, items) = report switch
+        {
+            IFullDocumentDiagnosticReport full => (full.ResultId, full.Items),
+            IUnchangedDocumentDiagnosticReport unchanged => (unchanged.ResultId, null),
+            _ => (null, null)
+        };
 
         lock (_pullDiagnosticsRequests)
         {
             _pullDiagnosticsResultIds[fullPath] = resultId;
         }
 
-        if (report["kind"]?.Value<string>() == "unchanged") return;
-
-        var items = report["items"]?.ToObject<List<Diagnostic>>(LspSerializer.Instance.JsonSerializer);
+        if (items is null) return;
 
         PublishDiag(new PublishDiagnosticsParams
         {
             Uri = fullPath,
-            Diagnostics = new Container<Diagnostic>(items ?? [])
+            Diagnostics = items
         });
     }
 
@@ -941,9 +950,9 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
             return ca;
         }
-        catch
+        catch (Exception e)
         {
-            //ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e); Enable once bug fixed
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             return null;
         }
     }

@@ -20,9 +20,7 @@ public static class PackageStateExtensions
 
         return state.Package.Versions?
             .Where(x => (includePrerelease || !x.IsPrerelease) && x.IsSupportedByStudio())
-            .OrderByDescending(x => Version.TryParse(x.Version, out var parsed) ? parsed : EmptyVersion)
+            .OrderByDescending(x => SemanticVersion.TryParse(x.Version, out var parsed) ? parsed : SemanticVersion.Empty)
             .FirstOrDefault();
     }
-
-    private static readonly Version EmptyVersion = new(0, 0);
 }
