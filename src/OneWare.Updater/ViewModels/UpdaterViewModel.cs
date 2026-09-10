@@ -11,6 +11,8 @@ using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
+using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.Updater.Views;
 
@@ -195,13 +197,15 @@ public class UpdaterViewModel : ObservableObject
 
         var updatablePackages = _packageService.Packages
             .Select(x => x.Value)
-            .Where(x => x.Status == PackageStatus.UpdateAvailable)
+            .Where(x => x.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease)
+            .Select(x => (State: x, Target: x.ResolveTargetVersion()))
+            .Where(x => x.Target != null)
             .ToArray();
 
         if (updatablePackages.Length > 0)
         {
             var updateString = string.Join('\n',
-                updatablePackages.Select(x => x.Package.Name + " -> " + x.Package.Versions!.Last().Version).ToArray());
+                updatablePackages.Select(x => x.State.Package.Name + " -> " + x.Target!.Version).ToArray());
 
             var resultContinue = await _windowService.ShowYesNoCancelAsync("Update Packages",
                 $"There are package updates available:\n{updateString}\nDo you want to update them now?",
@@ -215,13 +219,13 @@ public class UpdaterViewModel : ObservableObject
 
             if (resultContinue == MessageBoxStatus.Yes)
             {
-            var updateTasks = updatablePackages
-                .Select(x => _packageService.UpdateAsync(x.Package.Id!, x.Package.Versions!.Last(),
-                    includePrerelease: true, ignoreCompatibility: true));
+                var updateTasks = updatablePackages
+                    .Select(x => _packageService.UpdateAsync(x.State.Package.Id!, x.Target,
+                        includePrerelease: true, ignoreCompatibility: true));
 
                 var updateResult = await Task.WhenAll(updateTasks);
 
-                if (!updateResult.All(x => true))
+                if (updateResult.Any(x => x.Status != PackageInstallResultReason.Installed))
                 {
                     _logger.Error("At least one package update have failed", null, true, true, topLevelWindow);
                     Status = UpdaterStatus.UpdateAvailable;

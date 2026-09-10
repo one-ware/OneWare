@@ -662,30 +662,33 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     {
         if (state.Status == PackageStatus.NeedRestart) return;
 
-        var lastPrerelease = state.Package.Versions?.Where(x => x.IsPrerelease).LastOrDefault();
-        var lastStable = state.Package.Versions?.Where(x => !x.IsPrerelease).LastOrDefault();
+        var target = state.ResolveTargetVersion();
 
-        var hasStable = Version.TryParse(lastStable?.Version, out var lastVersion);
-        var hasPrerelease = Version.TryParse(lastPrerelease?.Version, out var lastPrereleaseVersion);
+        var hasTarget = Version.TryParse(target?.Version, out var targetVersion);
         var hasInstalled = Version.TryParse(state.InstalledVersion?.Version ?? "", out var installedVersion);
 
-        if (hasStable && hasInstalled && lastVersion > installedVersion)
-            state.Status = PackageStatus.UpdateAvailable;
-        else if (hasInstalled && hasPrerelease && lastPrereleaseVersion > installedVersion)
-            state.Status = PackageStatus.UpdateAvailablePrerelease;
+        if (hasInstalled && hasTarget && targetVersion > installedVersion)
+            state.Status = target!.IsPrerelease
+                ? PackageStatus.UpdateAvailablePrerelease
+                : PackageStatus.UpdateAvailable;
         else if (hasInstalled)
             state.Status = PackageStatus.Installed;
-        else if (!hasInstalled && hasStable)
+        else if (hasTarget)
             state.Status = PackageStatus.Available;
         else
             state.Status = PackageStatus.Unavailable;
     }
 
+    /// <summary>
+    /// Picks the newest version this Studio build can actually run. Versions that require a newer
+    /// Studio are skipped, so an outdated Studio is never updated to a plugin it cannot load.
+    /// </summary>
     private PackageVersion? ResolveVersion(PackageState state, PackageVersion? version, bool includePrerelease)
     {
         if (version != null) return version;
 
-        return state.Package.Versions?.LastOrDefault(x => includePrerelease || !x.IsPrerelease);
+        return state.Package.Versions?
+            .LastOrDefault(x => (includePrerelease || !x.IsPrerelease) && x.IsSupportedByStudio());
     }
 
     private IPackageInstaller ResolveInstaller(Package package)

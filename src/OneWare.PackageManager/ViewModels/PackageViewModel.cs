@@ -149,12 +149,9 @@ public class PackageViewModel : PackageListEntryViewModel
                 })
                 .Select(x => new PackageVersionModel(x)));
 
-        var includePrerelease = PackageState.InstalledVersion?.IsPrerelease ?? false;
+        var target = PackageState.ResolveTargetVersion();
 
-        SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
-            .FirstOrDefault(x => x.Version.MinStudioVersion == null
-                                 || (Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
-                                     && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion));
+        SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version == target);
 
         _resolveTabsStarted = false;
 
