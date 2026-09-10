@@ -244,14 +244,13 @@
                             <Setter Property="BorderThickness" Value="0" />
                             <Setter Property="CornerRadius" Value="0" />
                             <Setter Property="Padding" Value="0" />
-                            <Setter Property="Margin" Value="0,0,0,4" />
+                            <Setter Property="Margin" Value="0,0,0,0" />
                         </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock avaloniaEdit|TextEditor">
                             <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                             <Setter Property="WordWrap" Value="True" />
                             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                            <Setter Property="IsVisible" Value="False"></Setter>
                         </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock Button.CopyButton ContentPresenter">
