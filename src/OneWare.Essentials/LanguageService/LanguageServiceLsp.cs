@@ -190,7 +190,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 });
                 options.WithCapability(new HoverCapability
                 {
-                    ContentFormat = new Container<MarkupKind>(MarkupKind.PlainText, MarkupKind.Markdown)
+                    //Markdown first, servers glue the signature and the documentation together in plain text
+                    ContentFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText)
                 });
                 options.WithCapability(new PublishDiagnosticsCapability
                 {
@@ -241,7 +242,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 {
                     SignatureInformation = new SignatureInformationCapabilityOptions
                     {
-                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText),
                         ParameterInformation = new SignatureParameterInformationCapabilityOptions
                         {
                             LabelOffsetSupport = true
@@ -272,7 +273,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                     CompletionItem = new CompletionItemCapabilityOptions
                     {
                         CommitCharactersSupport = false,
-                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText),
                         SnippetSupport = true,
                         PreselectSupport = true,
                         InsertReplaceSupport = true,
@@ -744,7 +745,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         CompletionTriggerKind triggerKind, string? triggerChar)
     {
         var cts = new CancellationTokenSource();
-        cts.CancelAfter(1000);
+        cts.CancelAfter(5000);
         if (Client?.ServerSettings.Capabilities.CompletionProvider == null) return null;
         try
         {

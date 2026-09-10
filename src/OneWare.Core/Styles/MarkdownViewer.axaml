@@ -112,7 +112,8 @@
                         </Style>
 
                         <Style Selector=".ToolTip mdxaml|MarkdownScrollViewer ScrollViewer">
-                            <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+                            <!-- Documentation can be longer than the tip, cutting it off silently helps nobody -->
+                            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
                         </Style>
 
                         <Style Selector=".ToolTip Border.CodeBlock avaloniaEdit|TextEditor">

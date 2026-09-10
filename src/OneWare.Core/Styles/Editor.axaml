@@ -56,9 +56,14 @@
                                                    Height="{Binding #CompletionName.Bounds.Height}" />
                                             <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
                                                        Margin="8,0,0,0" Text="{Binding Label}"
+                                                       Classes.Deprecated="{Binding IsDeprecated}"
                                                        Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                            <TextBlock VerticalAlignment="Center" Padding="0"
+                                                       Text="{Binding LabelDetail}"
+                                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{Binding Detail}"
+                                        <TextBlock Grid.Column="2" Text="{Binding Annotation}"
                                                    Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                                    TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                                    TextAlignment="Right" HorizontalAlignment="Right" />
@@ -84,6 +89,10 @@
         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
     </Style>
 
+    <Style Selector="cc|CompletionList TextBlock.Deprecated">
+        <Setter Property="TextDecorations" Value="Strikethrough" />
+    </Style>
+
     <Style Selector="cc|CompletionList > ListBox > ListBoxItem">
         <Setter Property="Margin" Value="0" />
         <Setter Property="Padding" Value="5, 3, 3, 3" />
@@ -105,7 +114,7 @@
                             BorderThickness="1"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             Background="{TemplateBinding Background}">
-                        <controls:MarkdownViewer Markdown="{TemplateBinding Content}">
+                        <controls:MarkdownViewer Markdown="{TemplateBinding Content}" Classes="ToolTip">
                             <controls:MarkdownViewer.Styles>
                                 <Style Selector="avaloniaEdit|TextEditor">
                                     <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
@@ -208,6 +217,7 @@
                             Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
                             <controls:MarkdownViewer VerticalAlignment="Top" MaxHeight="250"
+                                                     Classes="ToolTip"
                                                      Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
                                 <controls:MarkdownViewer.Styles>
                                     <Style Selector="avaloniaEdit|TextEditor">
