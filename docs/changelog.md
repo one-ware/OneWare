@@ -1,17 +1,24 @@
+## 1.0.30
+
+- Huge LSP Support improvements (Benefitting all languages)
+- Improved Markdown Styling
+- Added Verilator simulator and improved Verilog / SystemVerilog support
+- Added FPGA AI skills for projects, toolchains and simulations
+- Added Go to Symbol
+- Added Accept All for AI edits and a copy button in the AI chat
+- Breakpoints now sit on the line number margin and can be restricted per file type
+- Renamed the Pin Planner to Constraint Editor
+- More robust native tool downloads and plugin updates
+- Fixed prerelease packages showing as unavailable and not being removable
+- Fixed a crash in the Problems list
+- Fixed resuming the cloud login after a host change
+- Fixed opening files from a link being handled twice
+- Fixed windows stealing focus when a document opens in the background
+
 ## 1.0.28
 
 - Add possibility to add custom AI Agents and Skills
 - Add TypeScript / Javascript Support
-- Improve hover tooltips, they now show formatted documentation and the diagnostics separately
-- Improve completion tooltips, they now show the type of the symbol and mark deprecated entries
-- Highlight the parameter the cursor is on in the overload insight and start on the matching overload
-- Restyle rendered markdown after Visual Studio Code, everything from tooltips to release notes reads cleaner
-- Fix the rename input box cutting off its text instead of growing with the editor font size
-- Fix hover and completion tips cutting off their content, they now scale with the editor font size
-- Fix installed packages with prerelease versions showing as unavailable and not being removable
-- Fix completion crashing for language servers that return insert/replace text edits
-- Reduce language server log noise, servers now only report warnings and errors
-- Enable pull diagnostics for language servers that do not push diagnostics on their own
 
 ## 1.0.26
 
