@@ -37,9 +37,22 @@ public class YosysService(
 
         outputService.WriteLine("Compiling...\n==================");
 
+        var failedStage = string.Empty;
+
         var success = await SynthAsync(project, fpgaModel, mandatoryFiles);
-        success = success && await FitAsync(project, fpgaModel);
-        success = success && await AssembleAsync(project, fpgaModel);
+        if (!success) failedStage = "Synthesis";
+
+        if (success)
+        {
+            success = await FitAsync(project, fpgaModel);
+            if (!success) failedStage = "Place&Route";
+        }
+
+        if (success)
+        {
+            success = await AssembleAsync(project, fpgaModel);
+            if (!success) failedStage = "Generate Bitstream";
+        }
 
         var compileTime = DateTime.Now - start;
 
@@ -48,7 +61,7 @@ public class YosysService(
                 $"==================\n\nCompilation finished after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n");
         else
             outputService.WriteLine(
-                $"==================\n\nCompilation failed after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n",
+                $"==================\n\nCompilation failed in stage '{failedStage}' after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n",
                 Brushes.Red);
 
         return success;
@@ -65,6 +78,8 @@ public class YosysService(
         {
             var properties = FpgaSettingsParser.LoadSettings(project, fpgaModel.Fpga.Name);
             var top = project.TopEntity ?? throw new Exception("TopEntity not set!");
+
+            Directory.CreateDirectory(Path.Combine(project.FullPath, "build"));
 
             var includedFiles = project.GetFiles("*.v").Concat(project.GetFiles("*.sv"))
                 .Where(x => !project.IsCompileExcluded(x))
@@ -83,14 +98,18 @@ public class YosysService(
             
             var yosysSynthTool = properties.GetValueOrDefault("yosysToolchainYosysSynthTool") ??
                                  throw new Exception("Yosys Tool not set. This hardware might not be configured to be used with Yosys Toolchain");
-            
+
+            const string synthOutput = "build/synth.json";
+            // Remove a previous result so a failing run can never be followed by a stale netlist
+            DeleteArtifact(project, synthOutput);
+
             var builder = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus("Running yosys...")
                 .WithTimer(true)
                 .WithOutputHandler(x =>
                 {
-                    if (x.StartsWith("Error:"))
+                    if (IsErrorLine(x))
                     {
                         logger.Error(x);
                         return false;
@@ -101,7 +120,7 @@ public class YosysService(
                 })
                 .WithErrorHandler(x =>
                 {
-                    if (x.StartsWith("Error:", StringComparison.OrdinalIgnoreCase))
+                    if (IsErrorLine(x))
                     {
                         logger.Error(x);
                         return false;
@@ -145,6 +164,13 @@ public class YosysService(
             var command = builder.Build();
 
             var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
+
+            if (success && !ArtifactExists(project, synthOutput))
+            {
+                logger.Error($"Yosys did not produce '{synthOutput}'. Synthesis failed.");
+                return false;
+            }
+
             return success;
         }
         catch (Exception e)
@@ -168,12 +194,41 @@ public class YosysService(
             var nextPnrTool = properties.GetValueOrDefault("yosysToolchainNextPnrTool")
                               ?? throw new Exception("NextPnr Tool not set!");
 
+            Directory.CreateDirectory(Path.Combine(project.FullPath, "build"));
+
+            const string synthInput = "build/synth.json";
+            if (!ArtifactExists(project, synthInput))
+            {
+                logger.Error(
+                    $"'{synthInput}' not found. Run Synthesis successfully before running Place&Route.");
+                return false;
+            }
+
+            bool.TryParse(properties.GetValueOrDefault("yosysToolchainNextPnrVerbose") ?? "false", out var verbose);
+
             var builder = toolExecutionDispatcherService.CreateToolCommandBuilder(nextPnrTool)
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus($"Running {nextPnrTool}...")
                 .WithTimer(true)
+                .WithOutputHandler(s =>
+                {
+                    if (IsErrorLine(s))
+                    {
+                        logger.Error(s);
+                        return false;
+                    }
+
+                    Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
+                    return true;
+                })
                 .WithErrorHandler(s =>
                 {
+                    if (IsErrorLine(s))
+                    {
+                        logger.Error(s);
+                        return false;
+                    }
+
                     Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                     return true;
                 });
@@ -212,21 +267,29 @@ public class YosysService(
             }
 
             var cOutputType = properties.GetValueOrDefault("yosysToolchainOutputType", "asc");
+            string pnrOutput;
             switch (cOutputType)
             {
                 case "asc":
-                    builder.Add("--asc").AddPath("./build/nextpnr.asc");
+                    pnrOutput = "./build/nextpnr.asc";
+                    builder.Add("--asc").AddPath(pnrOutput);
                     break;
                 case "txt":
+                    pnrOutput = "./build/impl.txt";
                     builder.Add("-o");
-                    builder.AddScript("out={path}", ("{path}", "./build/impl.txt"));
+                    builder.AddScript("out={path}", ("{path}", pnrOutput));
                     break;
                 default:
                     outputService.WriteLine($"Could not find output type: {cOutputType}");
                     return false;
             }
 
+            // Remove a previous result so a failing run can never be followed by a stale bitstream
+            if (!withGui) DeleteArtifact(project, pnrOutput);
+
             if (withGui) builder.Add("--gui");
+
+            if (verbose) builder.Add("--verbose");
 
             var extraFlags = properties.GetValueOrDefault("yosysToolchainNextPnrFlags")?
                 .Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
@@ -235,7 +298,16 @@ public class YosysService(
 
             var command = builder.Build();
             var status = await toolExecutionDispatcherService.ExecuteAsync(command);
-            return status.success;
+
+            if (!status.success) return false;
+
+            if (!withGui && !ArtifactExists(project, pnrOutput))
+            {
+                logger.Error($"{nextPnrTool} did not produce '{pnrOutput}'. Place&Route failed.");
+                return false;
+            }
+
+            return true;
         }
         catch (Exception e)
         {
@@ -252,12 +324,20 @@ public class YosysService(
             var packTool = properties.GetValueOrDefault("yosysToolchainPackTool")
                            ?? throw new Exception("Pack Tool not set!");
 
+            Directory.CreateDirectory(Path.Combine(project.FullPath, "build"));
+
             var builder = toolExecutionDispatcherService.CreateToolCommandBuilder(packTool)
                 .WithWorkingDirectory(project.FullPath)
                 .WithStatus($"Running {packTool}...")
                 .WithTimer(true)
                 .WithErrorHandler(s =>
                 {
+                    if (IsErrorLine(s))
+                    {
+                        logger.Error(s);
+                        return false;
+                    }
+
                     Dispatcher.UIThread.Post(() => { outputService.WriteLine(s); });
                     return true;
                 });
@@ -269,6 +349,14 @@ public class YosysService(
                 "txt" => "./build/impl.txt",
                 _ => throw new ArgumentException($"Unsupported input type: {cOutputType}")
             };
+
+            if (!ArtifactExists(project, inputPath))
+            {
+                logger.Error(
+                    $"'{inputPath}' not found. Run Place&Route successfully before generating the bitstream.");
+                return false;
+            }
+
             builder.AddPath(inputPath);
 
             var pOutputFormat = properties.GetValueOrDefault("packToolOutputFormat", "bin");
@@ -278,6 +366,10 @@ public class YosysService(
                 "bit" => "./build/pack.bit",
                 _ => throw new ArgumentException($"Unsupported output format: {pOutputFormat}")
             };
+
+            // Remove a previous result so a failing run can never be followed by a stale bitstream
+            DeleteArtifact(project, outputPath);
+
             builder.AddPath(outputPath);
 
             var flags = properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
@@ -291,7 +383,16 @@ public class YosysService(
             var command = builder.Build();
 
             var status = await toolExecutionDispatcherService.ExecuteAsync(command);
-            return status.success;
+
+            if (!status.success) return false;
+
+            if (!ArtifactExists(project, outputPath))
+            {
+                logger.Error($"{packTool} did not produce '{outputPath}'. Bitstream generation failed.");
+                return false;
+            }
+
+            return true;
         }
         catch (Exception e)
         {
@@ -330,6 +431,29 @@ public class YosysService(
 
         await toolExecutionDispatcherService.ExecuteAsync(command);
         return ReadJson(Path.Combine(buildpath, "yosys_nodes.json"));
+    }
+
+    private static bool IsErrorLine(string line)
+    {
+        return line.TrimStart().StartsWith("Error:", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void DeleteArtifact(UniversalFpgaProjectRoot project, string relativePath)
+    {
+        try
+        {
+            var fullPath = Path.Combine(project.FullPath, relativePath);
+            if (File.Exists(fullPath)) File.Delete(fullPath);
+        }
+        catch (Exception)
+        {
+            // Deleting is best effort, the artifact existence check below reports real problems
+        }
+    }
+
+    private static bool ArtifactExists(UniversalFpgaProjectRoot project, string relativePath)
+    {
+        return File.Exists(Path.Combine(project.FullPath, relativePath));
     }
 
     private List<FpgaNode> ReadJson(string filePath)
