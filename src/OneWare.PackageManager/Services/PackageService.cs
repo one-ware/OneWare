@@ -314,9 +314,8 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
             // A package that no repository offers anymore only existed as a stub for its installation.
             // Once it is removed there is nothing left to show or install, so it is dropped entirely.
-            if (!_catalog.Manifests.ContainsKey(packageId)) _packages.Remove(packageId);
-
-            PackagesUpdated?.Invoke(this, EventArgs.Empty);
+            if (!_catalog.Manifests.ContainsKey(packageId) && _packages.Remove(packageId))
+                PackagesUpdated?.Invoke(this, EventArgs.Empty);
 
             return true;
         }
@@ -627,6 +626,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
             state.InstalledVersion = version;
             state.InstalledVersionWarningText = result.InstalledVersionWarningText;
+            state.Status = result.Status;
             state.Progress = 0;
             UpdateStatus(state);
 
