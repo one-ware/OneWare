@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia;
@@ -212,6 +213,7 @@ public sealed class CopilotChatService(
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
                 RefreshReasoningEfforts(value);
                 RefreshContextSizes(value);
+                RefreshAutoTier(value);
                 if (oldValue != null && oldValue.Id != value.Id)
                 {
                     // Switch the model in place for the next message, preserving conversation history.
@@ -358,6 +360,119 @@ public sealed class CopilotChatService(
         });
     }
 
+    public const string AutoTierDefault = "Default";
+    public const string AutoTierEfficiency = "Efficiency";
+    public const string AutoTierBalance = "Balance";
+    public const string AutoTierIntelligence = "Intelligence";
+
+    /// <summary>
+    /// Routing preferences offered for the <c>auto</c> model. <see cref="AutoTierDefault"/> hands the
+    /// choice back to the provider.
+    /// </summary>
+    public ObservableCollection<string> AutoTiers { get; } =
+        [AutoTierDefault, AutoTierEfficiency, AutoTierBalance, AutoTierIntelligence];
+
+    /// <summary>
+    /// True while the <c>auto</c> model is selected — only then does a routing preference apply.
+    /// </summary>
+    public bool ShowAutoTier
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    private bool _suppressAutoTierApply;
+
+    /// <summary>
+    /// Routing preference used when the session model is <c>auto</c>. The runtime records the
+    /// request and commits it on the next turn that resolves a model, so a change here is not
+    /// applied immediately.
+    /// </summary>
+    public string SelectedAutoTier
+    {
+        get;
+        set
+        {
+            if (!SetProperty(ref field, value) || _suppressAutoTierApply) return;
+
+            settingsService.SetSettingValue(CopilotModule.CopilotAutoTierSettingKey, value);
+            ApplyAutoTierToSession();
+        }
+    } = AutoTierDefault;
+
+    private static bool IsAutoModel(ModelInfo? model) =>
+        model != null && string.Equals(model.Id, CopilotModule.AutoModelId, StringComparison.OrdinalIgnoreCase);
+
+    private void RefreshAutoTier(ModelInfo model)
+    {
+        ShowAutoTier = IsAutoModel(model);
+        if (!ShowAutoTier) return;
+
+        var persisted = settingsService.GetSettingValue<string>(CopilotModule.CopilotAutoTierSettingKey);
+
+        _suppressAutoTierApply = true;
+        try
+        {
+            SelectedAutoTier = !string.IsNullOrWhiteSpace(persisted) && AutoTiers.Contains(persisted)
+                ? persisted
+                : AutoTierDefault;
+        }
+        finally
+        {
+            _suppressAutoTierApply = false;
+        }
+    }
+
+    private AutoTier? ResolveAutoTier() => SelectedAutoTier switch
+    {
+        AutoTierEfficiency => AutoTier.Efficiency,
+        AutoTierBalance => AutoTier.Balance,
+        AutoTierIntelligence => AutoTier.Intelligence,
+        _ => null
+    };
+
+    private static string DescribeAutoTier(AutoTier? tier) => tier?.Value switch
+    {
+        null => AutoTierDefault,
+        var value when value == AutoTier.Efficiency.Value => AutoTierEfficiency,
+        var value when value == AutoTier.Balance.Value => AutoTierBalance,
+        var value when value == AutoTier.Intelligence.Value => AutoTierIntelligence,
+        var value => value
+    };
+
+    private void ApplyAutoTierToSession()
+    {
+        var session = _session;
+        if (session == null || !ShowAutoTier) return;
+
+        var tier = ResolveAutoTier();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await session.SetAutoTierAsync(tier);
+            }
+            catch (Exception ex) when (IsAutoModelRequiredError(ex))
+            {
+                // The session is not on `auto` (yet) - a pending model switch carries the
+                // preference along, so there is nothing to recover from here.
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogWarning("Copilot auto routing tier skipped: the session is not using the auto model.");
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogError(ex, "Failed to set Copilot auto routing tier.");
+            }
+        });
+    }
+
+    private static bool IsAutoModelRequiredError(Exception exception) =>
+        exception.Message.Contains("requires the selected model", StringComparison.OrdinalIgnoreCase) ||
+        exception.InnerException?.Message.Contains("requires the selected model",
+            StringComparison.OrdinalIgnoreCase) == true;
+
     public bool ShowReasoningEffort
     {
         get;
@@ -437,13 +552,25 @@ public sealed class CopilotChatService(
         var model = SelectedModel;
         if (session == null || model == null) return;
 
-        var effort = ShowReasoningEffort ? SelectedReasoningEffort : null;
+        var options = new SetModelOptions
+        {
+            ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null
+        };
+
+        // The routing preference only exists for `auto`, and the runtime rejects it for any other
+        // model, so it has to travel with the model switch instead of being set separately.
+        if (IsAutoModel(model))
+        {
+            var tier = ResolveAutoTier();
+            if (tier != null) options.AutoTier = tier;
+            else options.ResetAutoTier = true;
+        }
 
         _ = Task.Run(async () =>
         {
             try
             {
-                await session.SetModelAsync(model.Id, effort);
+                await session.SetModelAsync(model.Id, options);
             }
             catch (Exception ex)
             {
@@ -816,19 +943,28 @@ public sealed class CopilotChatService(
 
     private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
     {
-        if (!update)
-        {
-            var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-            if (PlatformHelper.ExistsOnPath(cliPath)) return true;
-        }
+        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+
+        if (!update && PlatformHelper.ExistsOnPath(cliPath)) return true;
+
+        // Resume the conversation that was active before the reinstall/update
+        // instead of starting an empty session. Has to happen before the runtime is shut down,
+        // because that clears the current session id.
+        _requestedSessionId ??= CurrentSessionId;
+
+        // A running Copilot CLI keeps its own executable open, and overwriting it fails with
+        // "Text file busy" (Unix) or a sharing violation (Windows). Shut the runtime down and make
+        // sure the OS released the files before the installer extracts the new version.
+        await ShutdownCliAsync(cliPath);
 
         var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
 
-        if (!installResult) return false;
-
-        // Resume the conversation that was active before the reinstall/update
-        // instead of starting an empty session.
-        _requestedSessionId ??= CurrentSessionId;
+        if (!installResult)
+        {
+            // The runtime was stopped for the install, so bring it back up on the old version.
+            await InitializeAsync();
+            return false;
+        }
 
         SessionReset?.Invoke(this, EventArgs.Empty);
 
@@ -836,6 +972,38 @@ public sealed class CopilotChatService(
         await AuthenticateAsync(owner);
 
         return installResult;
+    }
+
+    /// <summary>
+    /// Grace period the Copilot runtime gets to exit on its own before its processes are killed.
+    /// </summary>
+    private static readonly TimeSpan CliShutdownGracePeriod = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// Additional time the operating system gets to release the executable after the remaining
+    /// processes were killed.
+    /// </summary>
+    private static readonly TimeSpan CliKillTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Stops the Copilot runtime and waits until its executable can be overwritten, killing any
+    /// process still running from the CLI installation directory if the graceful shutdown was not
+    /// enough.
+    /// </summary>
+    private async Task ShutdownCliAsync(string? cliPath)
+    {
+        await DisposeAsync();
+
+        if (string.IsNullOrWhiteSpace(cliPath) || !File.Exists(cliPath)) return;
+
+        if (await ProcessHelper.WaitForFileReleaseAsync(cliPath, CliShutdownGracePeriod)) return;
+
+        var installDirectory = Path.GetDirectoryName(cliPath);
+        if (installDirectory == null) return;
+
+        if (!await ProcessHelper.ReleaseDirectoryAsync(installDirectory, CliKillTimeout))
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(
+                "Copilot CLI at {Path} is still in use; the update may fail.", cliPath);
     }
 
     private async Task<bool> AuthenticateAsync(Control? owner)
@@ -934,6 +1102,7 @@ public sealed class CopilotChatService(
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 WorkingDirectory = paths.ProjectsDirectory,
+                ClientInfo = BuildClientInfo(),
                 Connection = RuntimeConnection.ForStdio(cliPath, [])
             });
 
@@ -995,6 +1164,18 @@ public sealed class CopilotChatService(
             _sync.Release();
         }
     }
+
+    /// <summary>
+    /// Identifies OneWare on the runtime handshake so Copilot attributes requests to the IDE
+    /// instead of falling back to the SDK's generic identity.
+    /// </summary>
+    private CopilotClientInfo BuildClientInfo() => new()
+    {
+        ApplicationName = paths.AppName,
+        ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(),
+        IntegrationName = "OneWare.Copilot",
+        IntegrationVersion = typeof(CopilotChatService).Assembly.GetName().Version?.ToString()
+    };
 
     private async Task InitializeSessionAsync()
     {
@@ -1079,6 +1260,19 @@ public sealed class CopilotChatService(
         }
 
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
+
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            // The routing preference is not part of the session config, so it has to be applied to
+            // every freshly created session.
+            ApplyAutoTierToSession();
+        }
+        else
+        {
+            // A resumed session keeps the model it was persisted with - the resume config cannot
+            // carry one - so the picker's selection and its routing preference are re-applied.
+            ApplyModelToSession();
+        }
     }
 
     /// <summary>
@@ -1449,7 +1643,40 @@ public sealed class CopilotChatService(
                 RemoteSessionUrl = sessionInfo.Data.Url;
                 IsRemoteSession = true;
                 break;
+            case SessionModelChangeEvent modelChange when ShowAutoTier:
+                SyncAutoTierFromSession(modelChange.Data.AutoTier);
+                break;
+            case SessionAutoTierSwitchFailedEvent failed:
+                EventReceived?.Invoke(this, new ChatMessageEvent(
+                    $"Auto routing preference '{DescribeAutoTier(failed.Data.RequestedAutoTier)}' could not be " +
+                    $"applied ({failed.Data.Reason.Value}). Copilot keeps routing with " +
+                    $"'{DescribeAutoTier(failed.Data.EffectiveAutoTier)}'."));
+                SyncAutoTierFromSession(failed.Data.EffectiveAutoTier);
+                break;
         }
+    }
+
+    /// <summary>
+    /// Mirrors the tier the runtime actually committed back into the picker, without triggering
+    /// another switch request.
+    /// </summary>
+    private void SyncAutoTierFromSession(AutoTier? tier)
+    {
+        var label = DescribeAutoTier(tier);
+        if (!AutoTiers.Contains(label) || label == SelectedAutoTier) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _suppressAutoTierApply = true;
+            try
+            {
+                SelectedAutoTier = label;
+            }
+            finally
+            {
+                _suppressAutoTierApply = false;
+            }
+        });
     }
 
     /// <summary>

@@ -15,11 +15,18 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
     public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
+    public const string CopilotAutoTierSettingKey = "AI_Chat_Copilot_AutoTier";
 
     /// <summary>
     /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
     /// </summary>
     public const string DefaultModelId = "claude-sonnet-4-5";
+
+    /// <summary>
+    /// Id of the model that lets Copilot route each turn to a backend model itself. Sessions using
+    /// it can express a routing preference through <see cref="CopilotAutoTierSettingKey"/>.
+    /// </summary>
+    public const string AutoModelId = "auto";
 
     /// <summary>
     /// Default reasoning effort, matching the Copilot CLI <c>effortLevel</c> default.
@@ -210,6 +217,25 @@ public class CopilotModule : OneWareModuleBase
         //     {
         //         HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
         //     });
+
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+            CopilotAutoTierSettingKey,
+            new ComboBoxSetting("Auto Routing",
+                CopilotChatService.AutoTierDefault,
+                new object[]
+                {
+                    CopilotChatService.AutoTierDefault,
+                    CopilotChatService.AutoTierEfficiency,
+                    CopilotChatService.AutoTierBalance,
+                    CopilotChatService.AutoTierIntelligence
+                })
+            {
+                HoverDescription =
+                    "Routing preference for the \"auto\" model, which lets Copilot pick a backend " +
+                    "model per turn. Default: leave the choice to Copilot. Efficiency: prefer " +
+                    "faster, cheaper models. Balance: trade off speed and capability. " +
+                    "Intelligence: prefer the most capable models."
+            });
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, DefaultModelId);
 

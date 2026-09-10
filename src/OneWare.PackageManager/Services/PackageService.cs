@@ -541,6 +541,16 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
         }
 
+        // Installing a different version over an existing one would extract over files that may
+        // still be in use. Removing first stops the running processes and clears the directory.
+        if (state.InstalledVersion != null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!await RemoveAsync(state.Package.Id!))
+                return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
+        }
+
         return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility, cancellationToken);
     }
 
