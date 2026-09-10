@@ -18,7 +18,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageViewModel : PackageListEntryViewModel
+public class PackageViewModel : ObservableObject
 {
     private readonly IHttpService _httpService;
     private readonly IPackageService _packageService;
@@ -108,6 +108,17 @@ public class PackageViewModel : PackageListEntryViewModel
         private set => SetProperty(ref field, value);
     } = string.Empty;
 
+    public string StatusText => PackageState.Status switch
+    {
+        PackageStatus.Available => "Available",
+        PackageStatus.Installed => "Installed",
+        PackageStatus.UpdateAvailable => "Update available",
+        PackageStatus.UpdateAvailablePrerelease => "Prerelease update",
+        PackageStatus.Installing => "Installing",
+        PackageStatus.NeedRestart => "Restart required",
+        _ => "Unavailable"
+    };
+
     public IBrush? PrimaryButtonBrush
     {
         get;
@@ -166,6 +177,7 @@ public class PackageViewModel : PackageListEntryViewModel
 
     private void UpdateStatus()
     {
+        OnPropertyChanged(nameof(StatusText));
         SemanticVersion.TryParse(SelectedVersionModel?.Version.Version, out var sV);
         SemanticVersion.TryParse(PackageState.InstalledVersion?.Version, out var iV);
 

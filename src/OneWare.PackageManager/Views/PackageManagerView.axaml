@@ -1,4 +1,4 @@
-﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -18,200 +18,129 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="0 0 5 0" />
-            <Setter Property="Margin" Value="0 5 5 5" />
-        </Style>
-        <Style Selector="Button.PackageSeparatorButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="0" />
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="Margin" Value="0 2" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
     </controls:FlexibleWindow.Styles>
 
-    <Border BorderThickness="0 1 0 0">
-        <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="180, Auto, *, Auto, *">
-
-            <Border Grid.Column="0" Height="30" Grid.ColumnSpan="5" BorderThickness="0 0 0 1">
-                <DockPanel LastChildFill="False">
-                    <StackPanel DockPanel.Dock="Left" Classes="ToolBar" Spacing="5" Margin="5"
-                                HorizontalAlignment="Left">
-                        <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
-                                Command="{Binding RefreshPackagesAsync}">
-                            <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
-                        </Button>
-                        <TextBlock Text="Show" />
-                        <controls:SegmentedControl VerticalAlignment="Center"
-                                                   SelectedIndex="{Binding SelectedFilterIndex, Mode=TwoWay}">
-                            <controls:SegmentedControlItem Content="All" />
-                            <controls:SegmentedControlItem Content="Installed" />
-                            <controls:SegmentedControlItem Content="Available" />
-                        </controls:SegmentedControl>
-
-                    </StackPanel>
-
-                    <StackPanel DockPanel.Dock="Right" Classes="ToolBar" Spacing="5" Margin="5"
-                                HorizontalAlignment="Left">
-                        <Button Classes="RoundButton" VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
-                                Command="{Binding UpdateAllAsync}" Padding="8 0">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBlock Text="Update All" />
-                                <Image Height="14" Width="14" Source="{DynamicResource VsImageLib.Download16X}" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-            <Border Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" BorderThickness="0, 0, 1, 0"
-                    Background="{DynamicResource ThemeControlLowBrush}">
-                <TreeView Padding="3" BorderThickness="0" Background="Transparent"
-                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
-                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
-                    <TreeView.Styles>
-                        <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
-                            <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
-                        </Style>
-                    </TreeView.Styles>
-                    <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
-                                          ItemsSource="{Binding SubCategories}">
-                            <Grid ColumnDefinitions="Auto, Auto, *" Margin="2 5">
-                                <Image
-                                    IsVisible="{Binding IconModel, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    VerticalAlignment="Center" Width="18" HorizontalAlignment="Center"
-                                    Source="{Binding IconModel.IconObservable^, FallbackValue={x:Null}}" />
-                                <TextBlock Grid.Column="1" Margin="7 0" FontSize="13" Text="{Binding Header}"
-                                           TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="2" Margin="3 0" HorizontalAlignment="Right"
-                                           TextAlignment="Center" Text="{Binding VisiblePackages.Count}"
-                                           Foreground="{DynamicResource ThemeBorderHighBrush}" />
-                            </Grid>
-                        </TreeDataTemplate>
-                    </TreeView.DataTemplates>
-                </TreeView>
-            </Border>
-            
-            <GridSplitter Grid.Row="1" Grid.Column="1" Width="6" BorderThickness="0 0 1 0"
-                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                          Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center" />
-
-            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-                  Background="{DynamicResource ThemeBackgroundBrush}"
-                  RowDefinitions="Auto,*" ColumnDefinitions="6,*">
-                <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="3" BorderThickness="0 0 0 1">
-                    <Grid ColumnDefinitions="6,*">
-                        <Border Grid.Column="1" Classes="RoundToolBar">
-                            <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False" />
-                        </Border>
-                    </Grid>
+    <Grid RowDefinitions="Auto,*">
+        <Border Padding="10" BorderThickness="0 1 0 1">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                <Border Classes="RoundToolBar" Margin="0 0 10 0">
+                    <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False"
+                                        Label="Search packages" />
                 </Border>
-                <Grid Grid.Row="1" Grid.Column="1">
-                    <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             Background="Transparent" BorderThickness="0"
-                             SelectedItem="{Binding SelectedCategory.SelectedPackage, Mode=TwoWay, FallbackValue={x:Null}}"
-                             ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">
-                       <ListBox.ItemContainerTheme>
-                           <ControlTheme TargetType="ListBoxItem"
-                                         x:DataType="viewModels:PackageListEntryViewModel"
-                                         BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                               <Setter Property="Focusable" Value="{Binding IsSelectable}" />
-                               <Setter Property="IsTabStop" Value="{Binding IsSelectable}" />
-                           </ControlTheme>
-                       </ListBox.ItemContainerTheme>
-                       <Interaction.Behaviors>
-                           <EventTriggerBehavior EventName="SelectionChanged">
-                              <InvokeCommandAction Command="{Binding ResolveSelectedPackageTabsAsync}" />
-                            </EventTriggerBehavior>
-                        </Interaction.Behaviors>
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.DataTemplates>
-                            <DataTemplate DataType="viewModels:PackageSeparatorViewModel">
-                                <Button Classes="PackageSeparatorButton"
-                                        Click="PackageSeparatorButton_OnClick">
-                                    <Grid ColumnDefinitions="Auto,*"
-                                          Margin="5 4 0 2">
-                                        <TextBlock Text="{Binding Text}"
+                <ComboBox Grid.Column="1" Width="240" Margin="0 0 10 0"
+                          ItemsSource="{Binding CategoryOptions}"
+                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                          ToolTip.Tip="Filter by category">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:PackageCategoryViewModel">
+                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="2" Margin="0 0 10 0" VerticalAlignment="Center"
+                        IsEnabled="{Binding !IsLoading}" Command="{Binding RefreshPackagesAsync}"
+                        ToolTip.Tip="Refresh packages">
+                    <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                </Button>
+                <Button Grid.Column="3" Classes="RoundButton" VerticalAlignment="Center"
+                        IsEnabled="{Binding !IsLoading}" Command="{Binding UpdateAllCommand}" Padding="10 5">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Update All" />
+                        <Image Height="14" Width="14" Source="{DynamicResource VsImageLib.Download16X}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="3*,6,2*">
+            <Grid Background="{DynamicResource ThemeBackgroundBrush}" MinWidth="350">
+                <ListBox Name="PluginList" Margin="4"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         AutoScrollToSelectedItem="True"
+                         Background="Transparent" BorderThickness="0"
+                         SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
+                         ItemsSource="{Binding VisiblePackages}">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="SelectionChanged">
+                            <InvokeCommandAction Command="{Binding ResolveSelectedPackageTabsAsync}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:PackageViewModel">
+                            <Grid ColumnDefinitions="48,*,132" Height="76">
+                                <Interaction.Behaviors>
+                                    <behaviors:CommandOnAttachedToVisualTreeBehavior
+                                        Command="{Binding ResolveIconCommand}" />
+                                </Interaction.Behaviors>
+                                <Grid Margin="0 0 8 0">
+                                    <Image Source="{Binding Image}" Width="36" Height="36"
+                                           IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <controls:Spinner Width="24" Height="24"
+                                                      IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNull}}" />
+                                </Grid>
+                                <Grid Grid.Column="1" RowDefinitions="24,24,20" Margin="0 0 8 0"
+                                      VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PackageState.Package.Name}"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Row="1" Text="{Binding PackageState.Package.Description}"
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11"
                                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                        <Border Grid.Column="1"
-                                                IsVisible="{Binding ShowLine}"
-                                                BorderThickness="0 1 0 0"
-                                                BorderBrush="{DynamicResource ThemeBorderMidBrush}"
-                                                Margin="8 0 0 0"
-                                                VerticalAlignment="Center" />
-                                    </Grid>
-                                </Button>
-                            </DataTemplate>
-                            <DataTemplate DataType="viewModels:PackageViewModel">
-                                <DockPanel>
+                                        <TextBlock Text="{Binding PackageState.InstalledVersion.Version, FallbackValue={}}"
+                                                   FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                        <Image Source="{DynamicResource VsImageLib.StatusWarning16X}" Width="12" Height="12"
+                                               IsVisible="{Binding PackageState.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                               ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
+                                    </StackPanel>
+                                </Grid>
+                                <Button Grid.Column="2" Content="{Binding PrimaryButtonText}"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Classes="RoundButton" Padding="8 4"
+                                        Background="{Binding PrimaryButtonBrush}"
+                                        Command="{Binding MainButtonCommand}" CommandParameter="{Binding $self}">
                                     <Interaction.Behaviors>
-                                        <behaviors:CommandOnAttachedToVisualTreeBehavior
-                                            Command="{Binding ResolveIconCommand}" />
+                                        <ButtonClickEventTriggerBehavior>
+                                            <ChangePropertyAction TargetObject="PluginList" PropertyName="SelectedItem"
+                                                                  Value="{Binding}" />
+                                        </ButtonClickEventTriggerBehavior>
                                     </Interaction.Behaviors>
-                                    <Grid DockPanel.Dock="Left" Width="60" Height="60">
-                                        <Image
-                                            VerticalAlignment="Center" HorizontalAlignment="Center"
-                                            IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                            Source="{Binding Image}" Height="50" Width="50" />
-                                        <controls:Spinner
-                                            Height="30" Width="30" VerticalAlignment="Center"
-                                            HorizontalAlignment="Center"
-                                            IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNull}}" />
-                                    </Grid>
-                                    <Grid DockPanel.Dock="Right" RowDefinitions="25, 25" Margin="10, 5, 0, 5"
-                                          ColumnDefinitions="*, Auto">
-                                        <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold"
-                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding PackageState.Package.Name}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
-                                                   VerticalAlignment="Center"
-                                                   Text="{Binding PackageState.Package.Description}"
-                                                   TextWrapping="Wrap" />
-                                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10" Orientation="Horizontal"
-                                                    Margin="2 0 0 0">
-                                            <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
-                                                   Height="12"
-                                                   IsVisible="{Binding PackageState.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                   ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
-                                            <TextBlock
-                                                Text="{Binding PackageState.InstalledVersion.Version, FallbackValue={}}"
-                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                            <Button Content="{Binding PrimaryButtonText}"
-                                                    Name="MainButton"
-                                                    Classes="RoundButton" Padding="8 3"
-                                                    Background="{Binding PrimaryButtonBrush}"
-                                                    Command="{Binding MainButtonCommand}">
-                                                <Interaction.Behaviors>
-                                                    <ButtonClickEventTriggerBehavior>
-                                                        <ChangePropertyAction TargetObject="PluginList"
-                                                                              PropertyName="SelectedItem"
-                                                                              Value="{Binding}" />
-                                                    </ButtonClickEventTriggerBehavior>
-                                                </Interaction.Behaviors>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                </DockPanel>
-                            </DataTemplate>
-                        </ListBox.DataTemplates>
-                    </ListBox>
-                    <controls:Spinner Height="20" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                      IsVisible="{Binding IsLoading}" />
-                </Grid>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="No packages match your search or category." Margin="20"
+                           TextWrapping="Wrap" TextAlignment="Center"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                           IsVisible="{Binding HasNoResults}" />
+                <controls:Spinner Height="24" Width="24" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                  IsVisible="{Binding IsLoading}" />
             </Grid>
 
-            <GridSplitter Grid.Row="1" Grid.Column="3" Width="6" BorderThickness="1 0 0 0"
-                          BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                          Background="{DynamicResource ThemeBackgroundBrush}" HorizontalAlignment="Center" />
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch"
+                          BorderThickness="1 0 0 0" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                          Background="{DynamicResource ThemeBackgroundBrush}" />
 
-            <Border Grid.Row="1" Grid.Column="4" Padding="5">
-                <ContentPresenter Content="{Binding #PluginList.SelectedItem}" />
-            </Border>
+            <Grid Grid.Column="2" Margin="10" MinWidth="280">
+                <ContentPresenter Content="{Binding SelectedPackage}" />
+                <TextBlock Text="Select a package to see its details." TextWrapping="Wrap" TextAlignment="Center"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                           IsVisible="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNull}}" />
+            </Grid>
         </Grid>
-    </Border>
-
+    </Grid>
 </controls:FlexibleWindow>
