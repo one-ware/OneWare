@@ -11,7 +11,7 @@
             Classes="RoundButton" Padding="5 0"
             CommandParameter="{Binding #YosysCompileWindowExtensionViewView}">
         <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock VerticalAlignment="Center" Text="Yosys Settings" />
+            <TextBlock VerticalAlignment="Center" Text="Toolchain Settings" />
             <Image Source="{DynamicResource Material.SettingsOutline}" VerticalAlignment="Center"
                    Height="15" />
         </StackPanel>
