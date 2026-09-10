@@ -198,10 +198,13 @@
                         </Style>
 
                         <Style Selector=".ToolTip TextBlock">
+                            <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                             <Setter Property="MaxWidth" Value="496" />
                         </Style>
 
+                        <!-- Tips sit next to the editor and quote code, so they follow the editor font size -->
                         <Style Selector=".ToolTip ctxt|CTextBlock">
+                            <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
                             <Setter Property="MaxWidth" Value="496" />
                             <Setter Property="Margin" Value="0" />
                         </Style>
@@ -211,7 +214,7 @@
                         </Style>
 
                         <Style Selector=".ToolTip ctxt|CTextBlock.Heading1, .ToolTip ctxt|CTextBlock.Heading2, .ToolTip ctxt|CTextBlock.Heading3, .ToolTip ctxt|CTextBlock.Heading4">
-                            <Setter Property="FontSize" Value="{extensions:Multiply FontSizeNormal, 1.1}" />
+                            <Setter Property="FontSize" Value="{extensions:Multiply EditorFontSize, 1.15}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="Margin" Value="0,4,0,2" />
                         </Style>
