@@ -8,8 +8,8 @@ namespace OneWare.TypeScript;
 
 public class TypeScriptModule : OneWareModuleBase
 {
-    public const string LspName = "tsgo";
-    public const string LspPathSetting = "TypeScriptModule_TsgoPath";
+    public const string LspName = "tsc";
+    public const string LspPathSetting = "TypeScriptModule_TscPath";
 
     /// <summary>
     ///     Extensions handled by the language server. .mts/.cts are resolved through extension links.
@@ -17,14 +17,14 @@ public class TypeScriptModule : OneWareModuleBase
     public static readonly string[] SupportedExtensions =
         [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 
-    private const string TsgoVersion = "7.0.0-dev.20260707.2";
+    private const string TypeScriptVersion = "7.0.2";
 
-    public static readonly Package TsgoPackage = new()
+    public static readonly Package TypeScriptPackage = new()
     {
         Category = "Binaries",
-        Id = "tsgo",
+        Id = "typescript",
         Type = "NativeTool",
-        Name = "TypeScript Native Preview (tsgo)",
+        Name = "TypeScript (native tsc)",
         Description = "Used for JavaScript and TypeScript Support",
         License = "Apache 2.0",
         IconUrl = "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/typescript.png",
@@ -33,7 +33,7 @@ public class TypeScriptModule : OneWareModuleBase
             new PackageLink
             {
                 Name = "GitHub",
-                Url = "https://github.com/microsoft/typescript-go"
+                Url = "https://github.com/microsoft/TypeScript"
             }
         ],
         Tabs =
@@ -41,26 +41,26 @@ public class TypeScriptModule : OneWareModuleBase
             new PackageTab
             {
                 Title = "License",
-                ContentUrl = "https://raw.githubusercontent.com/microsoft/typescript-go/main/LICENSE"
+                ContentUrl = "https://raw.githubusercontent.com/microsoft/TypeScript/main/LICENSE.txt"
             }
         ],
         Versions =
         [
             new PackageVersion
             {
-                Version = TsgoVersion,
+                Version = TypeScriptVersion,
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "win-x64",
                         Url =
-                            $"https://registry.npmjs.org/@typescript/native-preview-win32-x64/-/native-preview-win32-x64-{TsgoVersion}.tgz",
+                            $"https://registry.npmjs.org/@typescript/typescript-win32-x64/-/typescript-win32-x64-{TypeScriptVersion}.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = Path.Combine("package", "lib", "tsgo.exe"),
+                                RelativePath = Path.Combine("package", "lib", "tsc.exe"),
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -69,12 +69,12 @@ public class TypeScriptModule : OneWareModuleBase
                     {
                         Target = "win-arm64",
                         Url =
-                            $"https://registry.npmjs.org/@typescript/native-preview-win32-arm64/-/native-preview-win32-arm64-{TsgoVersion}.tgz",
+                            $"https://registry.npmjs.org/@typescript/typescript-win32-arm64/-/typescript-win32-arm64-{TypeScriptVersion}.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = Path.Combine("package", "lib", "tsgo.exe"),
+                                RelativePath = Path.Combine("package", "lib", "tsc.exe"),
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -83,12 +83,12 @@ public class TypeScriptModule : OneWareModuleBase
                     {
                         Target = "linux-x64",
                         Url =
-                            $"https://registry.npmjs.org/@typescript/native-preview-linux-x64/-/native-preview-linux-x64-{TsgoVersion}.tgz",
+                            $"https://registry.npmjs.org/@typescript/typescript-linux-x64/-/typescript-linux-x64-{TypeScriptVersion}.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "package/lib/tsgo",
+                                RelativePath = "package/lib/tsc",
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -97,12 +97,12 @@ public class TypeScriptModule : OneWareModuleBase
                     {
                         Target = "linux-arm64",
                         Url =
-                            $"https://registry.npmjs.org/@typescript/native-preview-linux-arm64/-/native-preview-linux-arm64-{TsgoVersion}.tgz",
+                            $"https://registry.npmjs.org/@typescript/typescript-linux-arm64/-/typescript-linux-arm64-{TypeScriptVersion}.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "package/lib/tsgo",
+                                RelativePath = "package/lib/tsc",
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -111,12 +111,12 @@ public class TypeScriptModule : OneWareModuleBase
                     {
                         Target = "osx-x64",
                         Url =
-                            $"https://registry.npmjs.org/@typescript/native-preview-darwin-x64/-/native-preview-darwin-x64-{TsgoVersion}.tgz",
+                            $"https://registry.npmjs.org/@typescript/typescript-darwin-x64/-/typescript-darwin-x64-{TypeScriptVersion}.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "package/lib/tsgo",
+                                RelativePath = "package/lib/tsc",
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -125,12 +125,12 @@ public class TypeScriptModule : OneWareModuleBase
                     {
                         Target = "osx-arm64",
                         Url =
-                            $"https://registry.npmjs.org/@typescript/native-preview-darwin-arm64/-/native-preview-darwin-arm64-{TsgoVersion}.tgz",
+                            $"https://registry.npmjs.org/@typescript/typescript-darwin-arm64/-/typescript-darwin-arm64-{TypeScriptVersion}.tgz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "package/lib/tsgo",
+                                RelativePath = "package/lib/tsc",
                                 SettingKey = LspPathSetting
                             }
                         ]
@@ -146,14 +146,14 @@ public class TypeScriptModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IPackageService>().RegisterPackage(TsgoPackage);
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(TypeScriptPackage);
 
         serviceProvider.Resolve<ISettingsService>().RegisterSetting("Languages", "TypeScript", LspPathSetting,
-            new FilePathSetting("tsgo Path", "", null,
+            new FilePathSetting("tsc Path", "", null,
                 serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
                 PlatformHelper.ExeFile)
             {
-                HoverDescription = "Path for the tsgo executable"
+                HoverDescription = "Path for the native tsc executable"
             });
 
         serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);

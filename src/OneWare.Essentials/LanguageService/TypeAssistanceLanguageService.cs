@@ -68,47 +68,37 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         var pos = CodeBox.Document.GetLocation(offset);
 
-        var error = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFilePath)
+        var errors = ContainerLocator.Container.Resolve<IErrorService>().GetErrorsForFile(CurrentFilePath)
+            .Where(error => pos.Line >= error.StartLine
+                            && pos.Line <= error.EndLine
+                            && pos.Column >= error.StartColumn
+                            && pos.Column <= error.EndColumn)
             .OrderBy(x => x.Type)
-            .FirstOrDefault(error => pos.Line >= error.StartLine
-                                     && pos.Line <= error.EndLine
-                                     && pos.Column >= error.StartColumn
-                                     && pos.Column <= error.EndColumn);
-        var parts = new List<string>();
-        if (error != null) parts.Add(error.Description);
+            .ToList();
+
+        var sections = new List<string>();
+
+        var diagnostics = FormatDiagnostics(errors);
+        if (diagnostics != null) sections.Add(diagnostics);
 
         var hover = await Service.RequestHoverAsync(CurrentFilePath,
             new Position(pos.Line - 1, pos.Column - 1));
         if (hover != null)
         {
-            var hoverText = BuildHoverText(hover);
-            if (!string.IsNullOrWhiteSpace(hoverText)) parts.Add(hoverText);
+            var hoverText = LanguageServiceMarkdown.BuildHoverText(hover);
+            if (!string.IsNullOrWhiteSpace(hoverText)) sections.Add(hoverText);
         }
 
-        var info = string.Join("\n\n", parts);
-        return string.IsNullOrWhiteSpace(info) ? null : info;
+        //A rule keeps the diagnostics apart from what the language server has to say about the symbol
+        return sections.Count > 0 ? string.Join(LanguageServiceMarkdown.SectionSeparator, sections) : null;
     }
 
-    private static string? BuildHoverText(Hover hover)
+    /// <summary>
+    ///     Renders the diagnostics under the cursor as markdown.
+    /// </summary>
+    protected virtual string? FormatDiagnostics(IReadOnlyList<ErrorListItem> errors)
     {
-        if (hover.Contents.HasMarkupContent)
-            return hover.Contents.MarkupContent?.Value;
-
-        if (hover.Contents is { HasMarkedStrings: true, MarkedStrings: not null })
-        {
-            var segments = new List<string>();
-            foreach (var marked in hover.Contents.MarkedStrings)
-            {
-                if (!string.IsNullOrWhiteSpace(marked.Language))
-                    segments.Add($"```{marked.Language}\n{marked.Value}\n```");
-                else
-                    segments.Add(marked.Value);
-            }
-
-            return segments.Count > 0 ? string.Join("\n\n", segments) : null;
-        }
-
-        return null;
+        return LanguageServiceMarkdown.FormatDiagnostics(errors);
     }
 
     public override async Task<List<MenuItemModel>?> GetQuickMenuAsync(int offset)
@@ -586,8 +576,9 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             OverloadInsight.SetValue(TextBlock.FontSizeProperty,
                 SettingsService.GetSettingValue<int>("Editor_FontSize"));
             
-            // Restore previous selected index if retriggering and valid
-            if (retrigger && previousSelectedIndex > 0 && previousSelectedIndex < overloadProvider.Count)
+            // Restore previous selected index if retriggering and valid, unless the server picked an overload
+            if (retrigger && previousSelectedIndex > 0 && previousSelectedIndex < overloadProvider.Count &&
+                signatureHelp.ActiveSignature is null)
             {
                 overloadProvider.SelectedIndex = previousSelectedIndex;
             }
@@ -740,7 +731,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             var resolvedCi = await Service.ResolveCompletionItemAsync(selectedItem.CompletionItemLsp);
             if (resolvedCi != null && IsOpen && Completion.IsOpen)
             {
-                var cc = ConvertCompletionItem(resolvedCi, selectedItem.CompletionOffset);
+                var cc = ConvertCompletionItem(resolvedCi, selectedItem.CompletionOffset, selectedItem.Priority);
                 var cindex = Completion.CompletionList.CompletionData.IndexOf(selectedItem);
                 if (cindex >= 0)
                 {
@@ -760,51 +751,22 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
     protected virtual OverloadProvider ConvertOverloadProvider(SignatureHelp signatureHelp)
     {
         var overloadOptions = new List<(string, string?)>();
-        
+
         foreach (var s in signatureHelp.Signatures)
         {
-            var (signature, activeParam) = FormatSignatureLabel(s);
-            
-            var docs = ExtractDocumentation(s.Documentation);
-            string? activeParamSection = null;
+            var activeParameter = LanguageServiceMarkdown.GetActiveParameter(signatureHelp, s);
 
-            if (s.Parameters is not null && s.ActiveParameter.HasValue)
-            {
-                var index = s.ActiveParameter.Value;
-                if (index >= 0 && index < s.Parameters.Count())
-                {
-                    var param = s.Parameters.ElementAt(index);
-                    var paramDoc = ExtractDocumentation(param.Documentation);
-                    
-                    // Always show active parameter indicator
-                    if (!string.IsNullOrWhiteSpace(activeParam))
-                    {
-                        activeParamSection = !string.IsNullOrWhiteSpace(paramDoc) 
-                            ? $"**{activeParam}**: {paramDoc}" 
-                            : $"**{activeParam}**";
-                    }
-                    else if (!string.IsNullOrWhiteSpace(paramDoc))
-                    {
-                        activeParamSection = paramDoc;
-                    }
-                }
-            }
-
-            // Combine documentation sections
-            var combinedDocs = new List<string>();
-            if (!string.IsNullOrWhiteSpace(activeParamSection))
-                combinedDocs.Add(activeParamSection);
-            if (!string.IsNullOrWhiteSpace(docs))
-                combinedDocs.Add(docs);
-            
-            var finalDocs = combinedDocs.Count > 0 ? string.Join("\n\n---\n\n", combinedDocs) : null;
-
-            overloadOptions.Add((signature, finalDocs));
+            overloadOptions.Add((FormatSignatureLabel(s, activeParameter),
+                FormatSignatureDocumentation(s, activeParameter)));
         }
+
+        var activeSignature = signatureHelp.ActiveSignature ?? 0;
 
         return new OverloadProvider(overloadOptions)
         {
-            SignatureHelp = signatureHelp
+            SignatureHelp = signatureHelp,
+            //The server knows which overload matches what is already typed, so start out on that one
+            SelectedIndex = activeSignature >= 0 && activeSignature < overloadOptions.Count ? activeSignature : 0
         };
     }
 
@@ -835,7 +797,7 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             _ = ShowSignatureHelpAsync(SignatureHelpTriggerKind.Invoked, null, false, null);
         }
 
-        var description = ExtractDocumentation(comp.Documentation);
+        var description = BuildCompletionDescription(comp);
         var insertText = comp.InsertText ?? comp.Label;
         var isSnippet = comp.InsertTextFormat == InsertTextFormat.Snippet;
         int? replaceStart = null;
@@ -843,17 +805,29 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
 
         if (comp.TextEdit != null)
         {
+            // Ranges are guarded: a server that sends an edit the LSP library cannot map keeps the
+            // completion usable, it is then applied to the word in front of the caret instead.
             if (comp.TextEdit.IsTextEdit && comp.TextEdit.TextEdit != null)
             {
                 insertText = comp.TextEdit.TextEdit.NewText;
-                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.Start) - 1;
-                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.End) - 1;
+
+                if (comp.TextEdit.TextEdit.Range != null)
+                {
+                    replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.Start) - 1;
+                    replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.TextEdit.Range.End) - 1;
+                }
             }
             else if (comp.TextEdit.IsInsertReplaceEdit && comp.TextEdit.InsertReplaceEdit != null)
             {
                 insertText = comp.TextEdit.InsertReplaceEdit.NewText;
-                replaceStart = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.Start) - 1;
-                replaceEnd = CodeBox.Document.GetOffsetFromPosition(comp.TextEdit.InsertReplaceEdit.Replace.End) - 1;
+
+                var range = comp.TextEdit.InsertReplaceEdit.Replace ?? comp.TextEdit.InsertReplaceEdit.Insert;
+
+                if (range != null)
+                {
+                    replaceStart = CodeBox.Document.GetOffsetFromPosition(range.Start) - 1;
+                    replaceEnd = CodeBox.Document.GetOffsetFromPosition(range.End) - 1;
+                }
             }
         }
 
@@ -863,43 +837,43 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
         {
             FilterText = comp.FilterText,
             SortText = comp.SortText,
+            LabelDetail = comp.LabelDetails?.Detail,
+            LabelDescription = comp.LabelDetails?.Description,
+            IsDeprecated = LanguageServiceMarkdown.IsDeprecated(comp),
             ReplaceStartOffset = replaceStart,
             ReplaceEndOffset = replaceEnd
         };
     }
 
-    private static string? ExtractDocumentation(StringOrMarkupContent? documentation)
-    {
-        if (documentation == null) return null;
-        if (documentation.HasMarkupContent) return documentation.MarkupContent?.Value;
-        if (documentation.HasString) return documentation.String;
-        return null;
-    }
-
-    protected virtual (string signature, string? activeParam) FormatSignatureLabel(SignatureInformation signature)
-    {
-        var label = signature.Label ?? string.Empty;
-        string? activeParamText = null;
-        
-        if (signature.Parameters is not null && signature.ActiveParameter.HasValue)
-        {
-            var index = signature.ActiveParameter.Value;
-            if (index >= 0 && index < signature.Parameters.Count())
-            {
-                var param = signature.Parameters.ElementAt(index);
-                activeParamText = GetParameterLabelText(param.Label);
-            }
-        }
-
-        // Format as fenced code block for syntax highlighting
-        var languageId = GetLanguageIdForMarkdown();
-        var formatted = $"```{languageId}\n{label}\n```";
-
-        return (formatted, activeParamText);
-    }
-    
     /// <summary>
-    /// Gets the language identifier for markdown code blocks based on the current file extension.
+    ///     Builds the markdown shown next to the completion list.
+    /// </summary>
+    protected virtual string? BuildCompletionDescription(CompletionItem comp)
+    {
+        return LanguageServiceMarkdown.BuildCompletionDescription(comp, GetLanguageIdForMarkdown());
+    }
+
+
+    /// <summary>
+    ///     Renders the signature with the parameter the caret is on in bold.
+    /// </summary>
+    protected virtual string FormatSignatureLabel(SignatureInformation signature,
+        ParameterInformation? activeParameter)
+    {
+        return LanguageServiceMarkdown.FormatSignatureLabel(signature, activeParameter);
+    }
+
+    /// <summary>
+    ///     Renders the documentation of a signature, led by the parameter the caret is on.
+    /// </summary>
+    protected virtual string? FormatSignatureDocumentation(SignatureInformation signature,
+        ParameterInformation? activeParameter)
+    {
+        return LanguageServiceMarkdown.FormatSignatureDocumentation(signature, activeParameter);
+    }
+
+    /// <summary>
+    ///     Gets the language identifier for markdown code blocks based on the current file extension.
     /// </summary>
     protected virtual string GetLanguageIdForMarkdown()
     {
@@ -923,14 +897,6 @@ public abstract class TypeAssistanceLanguageService : TypeAssistanceBase
             "java" => "java",
             _ => extension ?? ""
         };
-    }
-
-    private static string? GetParameterLabelText(object? label)
-    {
-        if (label == null) return null;
-        if (label is string text) return text;
-        var asString = label.ToString();
-        return string.IsNullOrWhiteSpace(asString) ? null : asString;
     }
 
     public ErrorListItem? GetErrorAtLocation(TextLocation location)

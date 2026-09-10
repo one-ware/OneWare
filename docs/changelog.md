@@ -2,6 +2,16 @@
 
 - Add possibility to add custom AI Agents and Skills
 - Add TypeScript / Javascript Support
+- Improve hover tooltips, they now show formatted documentation and the diagnostics separately
+- Improve completion tooltips, they now show the type of the symbol and mark deprecated entries
+- Highlight the parameter the cursor is on in the overload insight and start on the matching overload
+- Restyle rendered markdown after Visual Studio Code, everything from tooltips to release notes reads cleaner
+- Fix the rename input box cutting off its text instead of growing with the editor font size
+- Fix hover and completion tips cutting off their content, they now scale with the editor font size
+- Fix installed packages with prerelease versions showing as unavailable and not being removable
+- Fix completion crashing for language servers that return insert/replace text edits
+- Reduce language server log noise, servers now only report warnings and errors
+- Enable pull diagnostics for language servers that do not push diagnostics on their own
 
 ## 1.0.26
 
@@ -12,7 +22,7 @@
 
 ## 1.0.25
 
-- Add JavaScript/TypeScript language support (tsgo language server, auto-downloadable)
+- Add JavaScript/TypeScript language support (native tsc language server, auto-downloadable)
 - Support language servers that only provide pull diagnostics (textDocument/diagnostic)
 - Improve Copilot Terminal Handling in Windows
 - Add possibility to add default startup configuration
