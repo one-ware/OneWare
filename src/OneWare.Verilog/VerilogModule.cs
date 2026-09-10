@@ -18,7 +18,6 @@ public class VerilogModule : OneWareModuleBase
 {
     public const string LspName = "LazyVerilog";
     public const string LspPathSetting = "VerilogModule_LazyVerilogPath";
-    public const string EnableSnippetsSetting = "VerilogModule_EnableSnippets";
     public static readonly string[] VerilogExtensions = [".v", ".vh"];
     public static readonly string[] SystemVerilogExtensions = [".sv", ".svh"];
     public static readonly string[] FileListExtensions = [".f"];
@@ -112,8 +111,6 @@ public class VerilogModule : OneWareModuleBase
             serviceProvider.Resolve<IPaths>().PackagesDirectory,
             File.Exists, PlatformHelper.ExeFile);
         settingsService.RegisterSetting("Languages", "Verilog", LspPathSetting, pathSetting);
-        settingsService.RegisterSetting("Languages", "Verilog", EnableSnippetsSetting,
-            new CheckBoxSetting("Enable Snippets", true));
 
         serviceProvider.Resolve<IErrorService>().RegisterErrorSource(LspName);
         var languageManager = serviceProvider.Resolve<ILanguageManager>();
