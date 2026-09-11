@@ -17,16 +17,24 @@
                 <ItemsControl ItemsSource="{Binding Event.Choices}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
+                            <StackPanel Orientation="Vertical" Spacing="4" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
-                            <Button Height="NaN" Margin="0 0 6 6" Padding="5 3"
+                            <Button Height="NaN" Padding="8 4"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
                                     Classes="RoundButton"
                                     Content="{Binding}"
                                     CommandParameter="{Binding}"
-                                    Command="{Binding $parent[ItemsControl].((chatMessages:ChatMessageUserInputRequestViewModel)DataContext).SelectChoice}" />
+                                    Command="{Binding $parent[ItemsControl].((chatMessages:ChatMessageUserInputRequestViewModel)DataContext).SelectChoice}">
+                                <Button.ContentTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </Button.ContentTemplate>
+                            </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -48,6 +56,7 @@
 
             <!-- Answered -->
             <TextBlock IsVisible="{Binding IsAnswered}"
+                       TextWrapping="Wrap"
                        Foreground="{DynamicResource ThemeForegroundLowBrush}"
                        FontStyle="Italic"
                        Text="{Binding AnswerText, StringFormat='→ {0}'}" />

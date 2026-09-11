@@ -130,8 +130,13 @@ public class MainDockService : Factory, IMainDockService
         base.FloatDockable(dockable);
     }
 
-    public override void CloseDockable(IDockable dockable)
+    public override void CloseDockable(IDockable? dockable)
     {
+        // When closing a floating window in Windows, the method might get called with a null dockable
+        // This is likely a bug with the dock library
+        // We check it to prevent a crash
+        if (dockable == null) return;
+        
         try
         {
             base.CloseDockable(dockable);
@@ -149,9 +154,9 @@ public class MainDockService : Factory, IMainDockService
         }
     }
 
-    private void SafeRemoveDockable(IDockable dockable)
+    private void SafeRemoveDockable(IDockable? dockable)
     {
-        if (dockable.Owner is IDock { VisibleDockables: { } dockables } &&
+        if (dockable?.Owner is IDock { VisibleDockables: { } dockables } &&
             dockables.Contains(dockable))
         {
             dockables.Remove(dockable);
@@ -266,6 +271,20 @@ public class MainDockService : Factory, IMainDockService
         return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
             ? ContainerLocator.Container.Resolve<MainWindow>()
             : null;
+    }
+
+    /// <summary>
+    /// Returns the floating dock window hosting the given dockable, or null when it lives in the main window.
+    /// </summary>
+    private static Window? GetFloatingWindowOwner(IDockable? dockable)
+    {
+        while (dockable != null)
+        {
+            if (dockable is IRootDock { Window.Host: Window host }) return host;
+            dockable = dockable.Owner;
+        }
+
+        return null;
     }
 
     public IDockable? SearchView(IDockable instance, IDockable? layout = null)
@@ -398,9 +417,12 @@ public class MainDockService : Factory, IMainDockService
         if (SearchView(dockable) is { } result)
         {
             SetActiveDockable(result);
+            // Only floating dock windows are raised here. Activating the main window would
+            // steal focus from whatever the user is doing whenever a dockable is shown
+            // programmatically (background tools, AI functions, ...).
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                var ownerWindow = GetWindowOwner(dockable);
+                var ownerWindow = GetFloatingWindowOwner(dockable);
                 if (ownerWindow != null) Dispatcher.UIThread.Post(ownerWindow.Activate);
             }
 

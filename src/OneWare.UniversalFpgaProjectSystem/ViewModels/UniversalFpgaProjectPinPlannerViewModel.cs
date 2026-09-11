@@ -38,7 +38,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
 
         this.WhenValueChanged(x => x.IsDirty).Subscribe(x =>
         {
-            Title = $"Pin Planner - {Project.Header}{(x ? "*" : "")}";
+            Title = $"Constraints - {Project.Header}{(x ? "*" : "")}";
         });
 
         _ = InitializeAsync();
@@ -261,7 +261,7 @@ public class UniversalFpgaProjectPinPlannerViewModel : FlexibleWindowViewModelBa
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error("Error initializing pin planner", e);
+            ContainerLocator.Container.Resolve<ILogger>().Error("Error initializing constraint editor", e);
         }
         finally
         {

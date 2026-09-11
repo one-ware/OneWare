@@ -18,8 +18,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 {
     public const string IconKey = "Bootstrap.ChatLeft";
 
+    /// <summary>
+    /// Settings key for the maximum number of stored chat sessions per chat service.
+    /// </summary>
+    public const string MaxSessionHistoryKey = "Chat_MaxSessionHistory";
+
+    public const int DefaultMaxSessionHistory = 50;
+
     private readonly IMainDockService _mainDockService;
     private readonly IAiFunctionProvider _aiFunctionProvider;
+    private readonly ISettingsService _settingsService;
     private ChatMessageErrorViewModel? _notConnectedMessage;
     private readonly string _statePath;
     private readonly string _historyRootPath;
@@ -34,6 +42,17 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
     private bool _initialized;
+
+    // Single-flight guard: initialization is kicked off automatically when a service is
+    // selected. A send that happens while that is still running must join the running
+    // operation instead of starting a second (destructive) initialization.
+    private Task<bool>? _initializeTask;
+    private IChatService? _initializeTaskService;
+
+    // Completion sources waiting for the selected service to report a connected status.
+    private readonly List<TaskCompletionSource<bool>> _connectionWaiters = [];
+
+    private static readonly TimeSpan ConnectionWaitTimeout = TimeSpan.FromMinutes(2);
     // FIFO of messages sent locally so the echoed ChatUserMessageEvent can be matched
     // (suppressed for normal/steered sends, or used to activate a queued message).
     private readonly Queue<PendingLocalMessage> _pendingLocalMessages = new();
@@ -54,8 +73,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Converters = { new JsonStringEnumConverter() }
     };
 
+    // Upper bound for how much of a conversation can be lost when the IDE crashes: the
+    // transcript is persisted at most this long after the first pending change.
+    private static readonly TimeSpan AutoSaveInterval = TimeSpan.FromSeconds(5);
+
+    private DispatcherTimer? _autoSaveTimer;
+
     public ChatViewModel(IAiFunctionProvider aiFunctionProvider, IMainDockService mainDockService,
-        AiFileEditService aiFileEditService, IPaths paths,
+        AiFileEditService aiFileEditService, IPaths paths, ISettingsService settingsService,
         IApplicationStateService applicationStateService) : base(IconKey)
     {
         Id = "AI_Chat";
@@ -67,6 +92,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         _aiFunctionProvider = aiFunctionProvider;
         _mainDockService = mainDockService;
+        _settingsService = settingsService;
 
         var chatDirectory = Path.Combine(paths.AppDataDirectory, "Chat");
         _statePath = Path.Combine(chatDirectory, "ChatState.json");
@@ -84,6 +110,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         InitializeCurrentCommand = new AsyncRelayCommand(InitializeCurrentAsync);
 
         QueuedMessages.CollectionChanged += (_, _) => RemoveQueuedMessageCommand.NotifyCanExecuteChanged();
+        Messages.CollectionChanged += (_, _) => RequestSaveState();
         applicationStateService.RegisterShutdownAction(SaveState);
     }
 
@@ -136,6 +163,41 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 SteerCommand.NotifyCanExecuteChanged();
                 QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
+
+                if (value) ReleaseConnectionWaiters(true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// True while a send is waiting for the selected service to finish connecting.
+    /// </summary>
+    public bool IsWaitingForConnection
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value))
+            {
+                SendCommand.NotifyCanExecuteChanged();
+                SteerCommand.NotifyCanExecuteChanged();
+                QueueCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// True while the selected service is still initializing/starting up. Sending is allowed in
+    /// this state; the message is held back until the connection is up.
+    /// </summary>
+    public bool IsConnecting
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value))
+            {
+                SendCommand.NotifyCanExecuteChanged();
             }
         }
     }
@@ -194,6 +256,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 oldValue.EventReceived -= OnEventReceived;
                 oldValue.StatusChanged -= OnStatusChanged;
                 oldValue.SessionReset -= OnSessionReset;
+                ReleaseConnectionWaiters(false);
             }
 
             if (value == null) return;
@@ -234,13 +297,86 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private async Task<bool> InitializeCurrentAsync()
     {
-        if (SelectedChatService == null) return false;
-        
-        var status = await SelectedChatService.InitializeAsync();
+        var service = SelectedChatService;
+        if (service == null) return false;
+
+        // Join an initialization that is already running for this service instead of
+        // starting a second one (a concurrent initialization tears down the client the
+        // first one is still setting up).
+        if (_initializeTask is { } running && _initializeTaskService == service)
+        {
+            return await running;
+        }
+
+        var task = InitializeServiceAsync(service);
+        _initializeTask = task;
+        _initializeTaskService = service;
+        IsConnecting = true;
+
+        try
+        {
+            return await task;
+        }
+        finally
+        {
+            if (ReferenceEquals(_initializeTask, task))
+            {
+                _initializeTask = null;
+                _initializeTaskService = null;
+                IsConnecting = false;
+            }
+        }
+    }
+
+    private async Task<bool> InitializeServiceAsync(IChatService service)
+    {
+        var status = await service.InitializeAsync();
+
+        if (SelectedChatService != service) return status;
 
         IsInitialized = status;
 
+        if (!status) ReleaseConnectionWaiters(false);
+
         return status;
+    }
+
+    /// <summary>
+    /// Waits until the selected service reports a connected status, instead of failing a send
+    /// that arrives while the service is still starting up.
+    /// </summary>
+    private async Task<bool> WaitForConnectionAsync()
+    {
+        if (IsConnected) return true;
+
+        var waiter = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _connectionWaiters.Add(waiter);
+
+        IsWaitingForConnection = true;
+
+        try
+        {
+            return await waiter.Task.WaitAsync(ConnectionWaitTimeout);
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
+        finally
+        {
+            _connectionWaiters.Remove(waiter);
+            IsWaitingForConnection = _connectionWaiters.Count > 0;
+        }
+    }
+
+    private void ReleaseConnectionWaiters(bool connected)
+    {
+        if (_connectionWaiters.Count == 0) return;
+
+        foreach (var waiter in _connectionWaiters.ToArray())
+        {
+            waiter.TrySetResult(connected);
+        }
     }
 
     private async Task InitializeAndRestoreCurrentServiceAsync(IChatService chatService)
@@ -293,26 +429,39 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         var prompt = CurrentMessage.Trim();
         if (string.IsNullOrWhiteSpace(prompt)) return;
 
-        if (SelectedChatService == null)
+        var chatService = SelectedChatService;
+        if (chatService == null)
         {
             AddErrorMessage("No chat service selected.");
             return;
         }
 
-        if (!IsInitialized)
+        var initialized = IsInitialized;
+        if (!initialized)
         {
-            await InitializeCurrentAsync();
+            initialized = await InitializeCurrentAsync();
         }
 
         if (!IsConnected)
         {
-            // Replace (don't stack) the transient connection warning; it is removed
-            // again as soon as a message actually goes through.
-            if (_notConnectedMessage != null) Messages.Remove(_notConnectedMessage);
-            _notConnectedMessage = new ChatMessageErrorViewModel($"{SelectedChatService.Name} is not connected yet.");
-            AddMessage(_notConnectedMessage);
-            return;
+            // The service may still be starting up (typical right after IDE launch).
+            // Wait for it to connect instead of rejecting the message.
+            var connected = initialized && await WaitForConnectionAsync();
+
+            if (!connected)
+            {
+                // Replace (don't stack) the transient connection warning; it is removed
+                // again as soon as a message actually goes through.
+                if (_notConnectedMessage != null) Messages.Remove(_notConnectedMessage);
+                _notConnectedMessage =
+                    new ChatMessageErrorViewModel($"{chatService.Name} is not connected yet.");
+                AddMessage(_notConnectedMessage);
+                return;
+            }
         }
+
+        // The user may have switched services while we were waiting for the connection.
+        if (!ReferenceEquals(SelectedChatService, chatService)) return;
 
         if (_notConnectedMessage != null)
         {
@@ -350,11 +499,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         CurrentMessage = string.Empty;
         IsBusy = true;
 
-        ContentAdded?.Invoke(this, EventArgs.Empty);
+        NotifyContentAdded();
 
         try
         {
-            await SelectedChatService.SendAsync(prompt, mode);
+            await chatService.SendAsync(prompt, mode);
         }
         catch (Exception ex)
         {
@@ -435,7 +584,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private bool CanRemoveQueuedMessage(ChatMessageUserViewModel? message) =>
         message != null && ReferenceEquals(QueuedMessages.LastOrDefault(), message);
 
-    private bool CanSend() => IsConnected && !string.IsNullOrWhiteSpace(CurrentMessage);
+    private bool CanSend() => (IsConnected || IsConnecting) && !IsWaitingForConnection &&
+                              !string.IsNullOrWhiteSpace(CurrentMessage);
 
     private bool CanAbort() => IsConnected && IsBusy;
 
@@ -563,6 +713,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             IsBusy = false;
             // Safety: never let the steering indicator stick past the end of a turn.
             WorkingStatusText = DefaultWorkingStatus;
+
+            // The turn is complete — persist it immediately instead of waiting for the
+            // throttled auto save.
+            SaveState();
         });
     }
 
@@ -578,7 +732,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantMessage(x.MessageId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -590,7 +744,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantMessage(x.MessageId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -601,7 +755,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -612,12 +766,21 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
             case ChatToolExecutionStartEvent:
             {
+                break;
+            }
+            case ChatSkillLoadedEvent x:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageSkillViewModel(x.SkillName, x.Content));
+                    NotifyContentAdded();
+                });
                 break;
             }
             case ChatUserMessageEvent x:
@@ -633,7 +796,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                                 QueuedMessages.Remove(pending.QueuedView);
                                 AddMessage(pending.QueuedView);
                                 IsBusy = true;
-                                ContentAdded?.Invoke(this, EventArgs.Empty);
+                                NotifyContentAdded();
                                 break;
                             case ChatSendMode.Steer:
                                 // Steering has been applied to the current turn.
@@ -650,7 +813,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     // Originates from a remote session user; show it and mark busy.
                     AddMessage(new ChatMessageUserViewModel(x.Content));
                     IsBusy = true;
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -659,7 +822,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     AddMessage(new ChatMessageWithButtonViewModel(x));
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -670,7 +833,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var msg = new ChatMessagePermissionRequestViewModel(x);
                     msg.CloseAction = () => Messages.Remove(msg);
                     AddMessage(msg);
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -679,7 +842,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     AddMessage(new ChatMessageUserInputRequestViewModel(x));
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -688,7 +851,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     AddErrorMessage(x.Message);
-                    ContentAdded?.Invoke(this, EventArgs.Empty);
+                    NotifyContentAdded();
                 });
                 break;
             }
@@ -811,7 +974,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             () => _aiFunctionProvider.CancelFunction(newMessage.Id),
             () => newMessage.IsToolRunning);
         AddMessage(newMessage);
-        ContentAdded?.Invoke(this, EventArgs.Empty);
+        NotifyContentAdded();
     }
 
     private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)
@@ -828,6 +991,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 toolFinished.ToolOutput += '\n';
             toolFinished.ToolOutput += function.ToolOutput;
         }
+
+        RequestSaveState();
     }
 
     private void OnFunctionProgress(object? sender, AiFunctionProgressEvent progress)
@@ -836,6 +1001,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (tool == null || !tool.IsToolRunning) return;
 
         tool.ToolOutput = progress.Output;
+        RequestSaveState();
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)
@@ -845,8 +1011,62 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         _mainDockService.Show(editViewModel, DockShowLocation.Document);
     }
 
+    /// <summary>
+    /// Raises <see cref="ContentAdded"/> and schedules a state save, so a crash cannot take the
+    /// whole conversation with it.
+    /// </summary>
+    private void NotifyContentAdded()
+    {
+        ContentAdded?.Invoke(this, EventArgs.Empty);
+        RequestSaveState();
+    }
+
+    /// <summary>
+    /// Schedules a throttled state save. Repeated requests within <see cref="AutoSaveInterval"/>
+    /// are coalesced into the already scheduled save, so a streaming turn writes at most once per
+    /// interval instead of once per delta.
+    /// </summary>
+    private void RequestSaveState()
+    {
+        if (!_initialized) return;
+
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(RequestSaveState, DispatcherPriority.Background);
+            return;
+        }
+
+        _autoSaveTimer ??= CreateAutoSaveTimer();
+
+        if (_autoSaveTimer.IsEnabled) return;
+
+        _autoSaveTimer.Start();
+    }
+
+    private DispatcherTimer CreateAutoSaveTimer()
+    {
+        var timer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = AutoSaveInterval
+        };
+        timer.Tick += OnAutoSaveTick;
+        return timer;
+    }
+
+    private void OnAutoSaveTick(object? sender, EventArgs e)
+    {
+        SaveState();
+    }
+
+    private void StopAutoSaveTimer()
+    {
+        _autoSaveTimer?.Stop();
+    }
+
     public void SaveState()
     {
+        StopAutoSaveTimer();
+
         if (SelectedChatService != null)
         {
             StoreCurrentMessages(SelectedChatService.Name, SelectedChatService);
@@ -889,6 +1109,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                             _selectedSessionByService[kvp.Key] = kvp.Value;
                     }
 
+                    PruneAllSessionHistory();
+
                     SelectedChatService = ChatServices.FirstOrDefault(x => x.Name == state.SelectedChatServiceName) ??
                                           ChatServices.FirstOrDefault();
                     return;
@@ -901,7 +1123,94 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
         }
 
+        PruneAllSessionHistory();
+
         SelectedChatService = ChatServices.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Enforces the configured history limit for every known chat service. Called on load so a
+    /// lowered limit also cleans up chats that were stored by a previous session.
+    /// </summary>
+    private void PruneAllSessionHistory()
+    {
+        foreach (var serviceName in _historyByService.Keys.ToArray())
+        {
+            _selectedSessionByService.TryGetValue(serviceName, out var protectedSessionId);
+            PruneSessionHistory(serviceName, protectedSessionId);
+        }
+    }
+
+    /// <summary>
+    /// Deletes the oldest stored chats of a service once more than <see cref="MaxSessionHistoryKey"/>
+    /// of them exist. The currently open session is never deleted.
+    /// </summary>
+    private void PruneSessionHistory(string serviceName, string? protectedSessionId)
+    {
+        var limit = GetMaxSessionHistory();
+        if (limit <= 0) return;
+
+        if (!_historyByService.TryGetValue(serviceName, out var items) || items.Count <= limit) return;
+
+        items.Sort((a, b) => b.UpdatedAt.CompareTo(a.UpdatedAt));
+
+        var kept = 0;
+        var removed = new List<ChatSessionHistoryItem>();
+
+        foreach (var item in items)
+        {
+            var isProtected = !string.IsNullOrWhiteSpace(protectedSessionId) &&
+                              string.Equals(item.SessionId, protectedSessionId, StringComparison.Ordinal);
+
+            if (kept < limit || isProtected)
+            {
+                ++kept;
+                continue;
+            }
+
+            if (!TryDeleteSessionFile(item)) continue;
+
+            removed.Add(item);
+        }
+
+        if (removed.Count == 0) return;
+
+        foreach (var item in removed)
+        {
+            items.Remove(item);
+            SessionHistory.Remove(item);
+        }
+    }
+
+    private static bool TryDeleteSessionFile(ChatSessionHistoryItem item)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(item.FilePath) && File.Exists(item.FilePath))
+                File.Delete(item.FilePath);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            // Keep the entry so the file is retried instead of being orphaned in the index.
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning($"Deleting old chat '{item.Name}' failed", e);
+            return false;
+        }
+    }
+
+    private int GetMaxSessionHistory()
+    {
+        try
+        {
+            return _settingsService.GetSettingValue<int>(MaxSessionHistoryKey);
+        }
+        catch (Exception)
+        {
+            // The setting is not registered (e.g. in tests) — fall back to the default.
+            return DefaultMaxSessionHistory;
+        }
     }
 
     private ChatState BuildChatState()
@@ -943,6 +1252,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             case ChatMessageErrorViewModel:
                 // Error chat messages are intentionally not serialized.
                 return null;
+            case ChatMessageSkillViewModel skill:
+                return new ChatMessageState(ChatMessageKind.Skill)
+                {
+                    SkillName = skill.SkillName,
+                    Content = skill.Content
+                };
             default:
                 return null;
         }
@@ -983,6 +1298,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     IsToolRunning = false
                 };
                 return true;
+            case ChatMessageKind.Skill:
+                if (string.IsNullOrWhiteSpace(state.SkillName))
+                {
+                    message = null!;
+                    return false;
+                }
+
+                message = new ChatMessageSkillViewModel(state.SkillName, state.Content ?? string.Empty);
+                return true;
             default:
                 message = null!;
                 return false;
@@ -1004,6 +1328,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         _selectedSessionByService[serviceName] = serviceWithSessions.CurrentSessionId;
         SaveSessionHistory(serviceName, serviceWithSessions.CurrentSessionId, messages);
+        PruneSessionHistory(serviceName, serviceWithSessions.CurrentSessionId);
     }
 
     private List<ChatMessageState> BuildCurrentMessageStates()
@@ -1095,7 +1420,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             LoadMessagesFromStates(states);
         }
         
-        ContentAdded?.Invoke(this, EventArgs.Empty);
+        NotifyContentAdded();
     }
 
     private void LoadSessionHistoryIndex()
@@ -1376,6 +1701,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         public string? Id { get; set; }
         public string? ToolName { get; set; }
         public string? ToolOutput { get; set; }
+        public string? SkillName { get; set; }
         public bool IsSuccessful { get; set; }
     }
 
@@ -1384,6 +1710,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         User,
         Assistant,
         Reasoning,
-        Tool
+        Tool,
+        Skill
     }
 }

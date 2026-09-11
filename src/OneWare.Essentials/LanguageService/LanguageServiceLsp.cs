@@ -1,9 +1,11 @@
+using System.Collections.Immutable;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Nerdbank.Streams;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client;
@@ -11,6 +13,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.General;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Serialization;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
@@ -25,6 +28,9 @@ namespace OneWare.Essentials.LanguageService;
 public abstract class LanguageServiceLsp(string name, string? workspace) : LanguageServiceBase(name, workspace)
 {
     private readonly Dictionary<ProgressToken, (ApplicationProcess, string)> _tokenRegister = new();
+
+    private readonly Dictionary<string, CancellationTokenSource> _pullDiagnosticsRequests = new();
+    private readonly Dictionary<string, string?> _pullDiagnosticsResultIds = new();
 
     private CancellationTokenSource? _cancellation;
     private IChildProcess? _process;
@@ -123,6 +129,14 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     public override async Task DeactivateAsync()
     {
         IsActivated = false;
+
+        lock (_pullDiagnosticsRequests)
+        {
+            foreach (var request in _pullDiagnosticsRequests.Values) request.Cancel();
+            _pullDiagnosticsRequests.Clear();
+            _pullDiagnosticsResultIds.Clear();
+        }
+
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             if (Client == null) return;
@@ -176,11 +190,17 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 });
                 options.WithCapability(new HoverCapability
                 {
-                    ContentFormat = new Container<MarkupKind>(MarkupKind.PlainText, MarkupKind.Markdown)
+                    //Markdown first, servers glue the signature and the documentation together in plain text
+                    ContentFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText)
                 });
                 options.WithCapability(new PublishDiagnosticsCapability
                 {
                     RelatedInformation = false
+                });
+                options.WithCapability(new DiagnosticClientCapabilities
+                {
+                    DynamicRegistration = false,
+                    RelatedDocumentSupport = false
                 });
                 options.WithCapability(new TypeDefinitionCapability
                 {
@@ -209,11 +229,20 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 //     
                 // });
                 options.WithCapability(new ReferenceCapability());
+                options.WithCapability(new DocumentSymbolCapability
+                {
+                    HierarchicalDocumentSymbolSupport = true,
+                    SymbolKind = new SymbolKindCapabilityOptions
+                    {
+                        ValueSet = new Container<SymbolKind>(
+                            (SymbolKind[])Enum.GetValues(typeof(SymbolKind)))
+                    }
+                });
                 options.WithCapability(new SignatureHelpCapability
                 {
                     SignatureInformation = new SignatureInformationCapabilityOptions
                     {
-                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText),
                         ParameterInformation = new SignatureParameterInformationCapabilityOptions
                         {
                             LabelOffsetSupport = true
@@ -244,7 +273,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                     CompletionItem = new CompletionItemCapabilityOptions
                     {
                         CommitCharactersSupport = false,
-                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText),
                         SnippetSupport = true,
                         PreselectSupport = true,
                         InsertReplaceSupport = true,
@@ -362,9 +391,19 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     {
     }
 
+    /// <summary>
+    ///     window/logMessage is the server's own diagnostic log, not something the user asked for.
+    ///     Servers log every handled request there, so only problems are kept at a visible level.
+    /// </summary>
     private void WriteLog(LogMessageParams log)
     {
-        var level = MapMessageType(log.Type);
+        var level = log.Type switch
+        {
+            MessageType.Error => LogLevel.Error,
+            MessageType.Warning => LogLevel.Warning,
+            _ => LogLevel.Trace
+        };
+
         LogLspEvent("logMessage", log.Message ?? string.Empty, level);
     }
 
@@ -422,10 +461,17 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             {
                 Text = text,
                 Uri = fullPath,
-                LanguageId = Path.GetExtension(fullPath),
+                LanguageId = GetLanguageId(fullPath),
                 Version = _version
             }
         });
+
+        RequestPullDiagnostics(fullPath);
+    }
+
+    protected virtual string GetLanguageId(string fullPath)
+    {
+        return Path.GetExtension(fullPath);
     }
 
     public override void DidSaveTextDocument(string fullPath, string text)
@@ -438,10 +484,14 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             },
             Text = text
         });
+
+        RequestPullDiagnostics(fullPath);
     }
 
     public override void DidCloseTextDocument(string fullPath)
     {
+        CancelPullDiagnostics(fullPath);
+
         Client?.DidCloseTextDocument(new DidCloseTextDocumentParams
         {
             TextDocument = new TextDocumentIdentifier
@@ -484,6 +534,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 new OptionalVersionedTextDocumentIdentifier { Uri = fullPath, Version = _version },
             ContentChanges = changes
         });
+
+        RequestPullDiagnostics(fullPath);
     }
 
     public override void RefreshTextDocument(string fullPath, string newText)
@@ -500,13 +552,144 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 Text = newText
             })
         });
+
+        RequestPullDiagnostics(fullPath);
     }
 
-    public override Task ExecuteCommandAsync(Command cmd)
+    /// <summary>
+    ///     Requests diagnostics for a document using the pull model (textDocument/diagnostic).
+    ///     Servers that only support pull diagnostics (like the native tsc language server) never send publishDiagnostics for
+    ///     source files, so they are requested here and forwarded to the regular diagnostics handling.
+    /// </summary>
+    private void RequestPullDiagnostics(string fullPath)
+    {
+        if (Client?.ServerSettings.Capabilities.DiagnosticProvider == null) return;
+
+        CancellationTokenSource cancellation;
+        lock (_pullDiagnosticsRequests)
+        {
+            if (_pullDiagnosticsRequests.Remove(fullPath, out var running)) running.Cancel();
+
+            cancellation = new CancellationTokenSource();
+            _pullDiagnosticsRequests[fullPath] = cancellation;
+        }
+
+        _ = PullDiagnosticsAsync(fullPath, cancellation);
+    }
+
+    private void CancelPullDiagnostics(string fullPath)
+    {
+        lock (_pullDiagnosticsRequests)
+        {
+            if (_pullDiagnosticsRequests.Remove(fullPath, out var running)) running.Cancel();
+            _pullDiagnosticsResultIds.Remove(fullPath);
+        }
+    }
+
+    private async Task PullDiagnosticsAsync(string fullPath, CancellationTokenSource cancellation)
+    {
+        try
+        {
+            //Debounce to avoid a request for every single keystroke
+            await Task.Delay(500, cancellation.Token);
+
+            string? previousResultId;
+            lock (_pullDiagnosticsRequests)
+            {
+                _pullDiagnosticsResultIds.TryGetValue(fullPath, out previousResultId);
+            }
+
+            var client = Client;
+            if (client == null) return;
+
+            var report = await client.RequestDocumentDiagnostic(new DocumentDiagnosticParams
+            {
+                TextDocument = new TextDocumentIdentifier { Uri = fullPath },
+                PreviousResultId = previousResultId
+            }, cancellation.Token);
+
+            if (cancellation.IsCancellationRequested || report == null) return;
+
+            HandlePullDiagnosticsReport(fullPath, report);
+
+            //Servers may report diagnostics for other documents in the same response
+            foreach (var (relatedUri, relatedReport) in report.RelatedDocuments ??
+                                                        ImmutableDictionary<DocumentUri, DocumentDiagnosticReport>.Empty)
+            {
+                var relatedPath = relatedUri.GetFileSystemPath();
+                if (relatedPath == null) continue;
+
+                HandlePullDiagnosticsReport(relatedPath, relatedReport);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            //Superseded by a newer request or the document was closed
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+        }
+        finally
+        {
+            lock (_pullDiagnosticsRequests)
+            {
+                if (_pullDiagnosticsRequests.TryGetValue(fullPath, out var current) && current == cancellation)
+                    _pullDiagnosticsRequests.Remove(fullPath);
+            }
+
+            cancellation.Dispose();
+        }
+    }
+
+    /// <summary>
+    ///     Handles a single document diagnostic report. An unchanged report means the previously
+    ///     published diagnostics are still valid, so only the result id is updated.
+    /// </summary>
+    private void HandlePullDiagnosticsReport(string fullPath, IDiagnosticReport report)
+    {
+        //Full and unchanged reports exist once for the requested document and once for related documents
+        var (resultId, items) = report switch
+        {
+            IFullDocumentDiagnosticReport full => (full.ResultId, full.Items),
+            IUnchangedDocumentDiagnosticReport unchanged => (unchanged.ResultId, null),
+            _ => (null, null)
+        };
+
+        lock (_pullDiagnosticsRequests)
+        {
+            _pullDiagnosticsResultIds[fullPath] = resultId;
+        }
+
+        if (items is null) return;
+
+        PublishDiag(new PublishDiagnosticsParams
+        {
+            Uri = fullPath,
+            Diagnostics = items
+        });
+    }
+
+    public override async Task<JToken?> ExecuteCommandAsync(Command cmd)
     {
         if (Client?.ServerSettings.Capabilities.ExecuteCommandProvider == null)
-            return Task.CompletedTask;
-        return Client.ExecuteCommand(cmd);
+            return null;
+
+        try
+        {
+            return await Client
+                .SendRequest(WorkspaceNames.ExecuteCommand, new ExecuteCommandParams
+                {
+                    Command = cmd.Name,
+                    Arguments = cmd.Arguments
+                })
+                .Returning<JToken?>(CancellationToken.None);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            return null;
+        }
     }
 
     public override async Task<IEnumerable<SemanticToken>?> RequestSemanticTokensFullAsync(string fullPath)
@@ -562,7 +745,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         CompletionTriggerKind triggerKind, string? triggerChar)
     {
         var cts = new CancellationTokenSource();
-        cts.CancelAfter(1000);
+        cts.CancelAfter(5000);
         if (Client?.ServerSettings.Capabilities.CompletionProvider == null) return null;
         try
         {
@@ -701,7 +884,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     }
 
     public override async Task<CommandOrCodeActionContainer?> RequestCodeActionAsync(string fullPath, Range range,
-        Diagnostic diagnostic)
+        IEnumerable<Diagnostic>? diagnostics = null)
     {
         if (Client == null || Client.ServerSettings.Capabilities.CodeActionProvider == null) return null;
         try
@@ -715,7 +898,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 Range = range,
                 Context = new CodeActionContext
                 {
-                    Diagnostics = new Container<Diagnostic>(diagnostic)
+                    Diagnostics = new Container<Diagnostic>(diagnostics ?? [])
                 }
             });
 
@@ -768,9 +951,9 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
             return ca;
         }
-        catch
+        catch (Exception e)
         {
-            //ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e); Enable once bug fixed
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             return null;
         }
     }

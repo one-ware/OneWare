@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -223,7 +224,14 @@ internal abstract class Program
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}");
 
-            ContainerLocator.Container?.Resolve<MainWindow>()?.Activate();
+            var mainWindow = ContainerLocator.Container?.Resolve<MainWindow>();
+            if (mainWindow != null)
+            {
+                if (mainWindow.WindowState == WindowState.Minimized)
+                    mainWindow.WindowState = WindowState.Normal;
+
+                mainWindow.Activate();
+            }
 
             if (target == "activateWindow")
             {
@@ -231,7 +239,6 @@ internal abstract class Program
             }
             else if (target.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
             {
-                Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", target);
                 logger?.Log($"Opening URL: {target}");
                 ContainerLocator.Container?.Resolve<IApplicationStateService>()
                     .ExecuteUrlLaunchActions(new Uri(target));
@@ -260,8 +267,6 @@ internal abstract class Program
     {
         try
         {
-            EnvironmentDefaultsService.Load();
-
             Option<string> dirOption = new("--oneware-dir")
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
             Option<string> projectsDirOption = new("--oneware-projects-dir")
@@ -280,6 +285,11 @@ internal abstract class Program
                 Description =
                     "Overrides the package repository URL(s) used by OneWare Studio. Separate multiple URLs with ';'. (optional)"
             };
+            Option<string> configurationProfileOption = new("--configuration-profile")
+            {
+                Description =
+                    "Applies a configuration profile (settings, packages, package sources) at startup. Accepts a file path or an http(s) URL. (optional)"
+            };
             Argument<string?> openArgument = new("open")
             {
                 Description = "File/Folder path or oneware:// URI to open",
@@ -295,7 +305,8 @@ internal abstract class Program
                     projectsDirOption,
                     moduleOption,
                     autoLaunchOption,
-                    packageRepositoryOption
+                    packageRepositoryOption,
+                    configurationProfileOption
                 },
                 Arguments =
                 {
@@ -328,6 +339,10 @@ internal abstract class Program
                 var packageRepositoryValue = parseResult.GetValue(packageRepositoryOption);
                 if (!string.IsNullOrEmpty(packageRepositoryValue))
                     Environment.SetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY", packageRepositoryValue);
+
+                var configurationProfileValue = parseResult.GetValue(configurationProfileOption);
+                if (!string.IsNullOrEmpty(configurationProfileValue))
+                    Environment.SetEnvironmentVariable("ONEWARE_CONFIGURATION_PROFILE", configurationProfileValue);
 
                 var openValue = parseResult.GetValue(openArgument);
                 if (!string.IsNullOrEmpty(openValue))

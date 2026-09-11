@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:OneWare.Copilot.Services"
+             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="30" d:DesignHeight="30"
+             x:Class="OneWare.Copilot.Views.CopilotChatHeaderView" x:DataType="services:CopilotChatService">
+    <Button Name="OverflowButton" VerticalAlignment="Center" ToolTip.Tip="More">
+        <Button.Flyout>
+            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                    Placement="BottomEdgeAlignedRight">
+                <StackPanel MinWidth="200" Margin="8" Spacing="8">
+
+                    <!-- Account state -->
+                    <StackPanel Spacing="1" IsVisible="{Binding IsAuthenticated}">
+                        <TextBlock Text="Signed in to GitHub Copilot" FontWeight="SemiBold" FontSize="11" />
+                        <TextBlock Text="{Binding AccountStatusText, FallbackValue={x:Null}}" FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Not signed in to GitHub Copilot" FontWeight="SemiBold" FontSize="11"
+                               IsVisible="{Binding !IsAuthenticated}" />
+
+                    <TextBlock
+                        Text="This login is provided outside of OneWare and cannot be removed here."
+                        FontSize="11" TextWrapping="Wrap"
+                        Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                        IsVisible="{Binding !CanSignOut}" />
+
+                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            IsVisible="{Binding !IsAuthenticated}"
+                            Command="{Binding SignInCommand}"
+                            CommandParameter="{Binding $self}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Source="{DynamicResource Bootstrap.Github}" Width="12" Height="12" />
+                            <TextBlock Text="Sign in with GitHub" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            IsVisible="{Binding CanSignOut}"
+                            Command="{Binding SignOutCommand}"
+                            CommandParameter="{Binding $self}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Source="{DynamicResource BoxIcons.RegularLogOutCircle}" Width="12" Height="12" />
+                            <TextBlock Text="Sign out" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+        <Image Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" Width="12" Height="12" />
+    </Button>
+</UserControl>

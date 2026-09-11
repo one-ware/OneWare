@@ -33,7 +33,6 @@ public class PackageViewModel : PackageListEntryViewModel
     private bool _resolveImageStarted;
 
     private bool _resolveTabsStarted;
-    
 
     public PackageViewModel(IPackageState packageState, IPackageService packageService, IHttpService httpService,
         IWindowService windowService, IApplicationStateService applicationStateService, ILogger logger)
@@ -44,6 +43,8 @@ public class PackageViewModel : PackageListEntryViewModel
         _windowService = windowService;
         _applicationStateService = applicationStateService;
         _logger = logger;
+
+        ResolveIconCommand = new AsyncRelayCommand(ResolveIconAsync);
 
         RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
             _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
@@ -127,6 +128,11 @@ public class PackageViewModel : PackageListEntryViewModel
 
     public ICommand CancelCommand { get; }
 
+    /// <summary>
+    /// Resolves the package icon lazily, invoked when the package entry enters the visual tree.
+    /// </summary>
+    public ICommand ResolveIconCommand { get; }
+
     private void InitPackage()
     {
         Links.Clear();
@@ -138,28 +144,30 @@ public class PackageViewModel : PackageListEntryViewModel
             PackageVersionModels.AddRange(PackageState.Package.Versions
                 .OrderByDescending(x =>
                 {
-                    if (Version.TryParse(x.Version, out var v)) return v;
-                    return new Version(int.MaxValue, 0);
+                    if (SemanticVersion.TryParse(x.Version, out var v)) return v;
+                    return SemanticVersion.Empty;
                 })
                 .Select(x => new PackageVersionModel(x)));
 
-        var includePrerelease = PackageState.InstalledVersion?.IsPrerelease ?? false;
+        var target = PackageState.ResolveTargetVersion();
 
-        SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
-            .FirstOrDefault(x => x.Version.MinStudioVersion == null
-                                 || (Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
-                                     && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion));
+        SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version == target);
 
         _resolveTabsStarted = false;
+
+        var iconWasRequested = _resolveImageStarted;
         _resolveImageStarted = false;
+
         UpdateStatus();
-        _ = ResolveIconAsync();
+
+        // Only reload the icon if it was requested before, icons are resolved lazily when the package becomes visible.
+        if (iconWasRequested) _ = ResolveIconAsync();
     }
 
     private void UpdateStatus()
     {
-        Version.TryParse(SelectedVersionModel?.Version.Version ?? "", out var sV);
-        Version.TryParse(PackageState.InstalledVersion?.Version ?? "", out var iV);
+        SemanticVersion.TryParse(SelectedVersionModel?.Version.Version, out var sV);
+        SemanticVersion.TryParse(PackageState.InstalledVersion?.Version, out var iV);
 
         MainButtonCommand = null;
         var primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeBorderMidBrush");
@@ -186,6 +194,10 @@ public class PackageViewModel : PackageListEntryViewModel
                 PrimaryButtonText = "Cancel";
                 MainButtonCommand = CancelCommand;
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlMidBrush");
+                break;
+            case PackageStatus.Unavailable when PackageState.InstalledVersion != null:
+                PrimaryButtonText = "Remove";
+                MainButtonCommand = RemoveCommand;
                 break;
             case PackageStatus.Unavailable:
                 PrimaryButtonText = "Unavailable";
@@ -266,12 +278,25 @@ public class PackageViewModel : PackageListEntryViewModel
         }
     }
 
-    private async Task ResolveIconAsync()
+    /// <summary>
+    /// Resolves the package icon. Called when the package becomes visible in the package list.
+    /// </summary>
+    public async Task ResolveIconAsync()
     {
         if (_resolveImageStarted) return;
         _resolveImageStarted = true;
 
-        var icon = await _packageService.DownloadPackageIconAsync(PackageState.Package);
+        IImage? icon = null;
+
+        try
+        {
+            icon = await _packageService.DownloadPackageIconAsync(PackageState.Package);
+        }
+        catch (Exception e)
+        {
+            // Failing icons are not critical and must never be reported to the user
+            _logger.LogDebug(e, "Failed to resolve icon for package {PackageId}", PackageState.Package.Id);
+        }
 
         if (icon == null)
         {

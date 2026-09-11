@@ -4,6 +4,11 @@
     </PropertyGroup>
     <Import Project="..\..\build\props\Base.props" />
     <Import Project="..\..\build\props\OneWare.Module.props" />
+    <Import Project="..\..\build\props\Markdown.Avalonia.props" />
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="OneWare.Chat.UnitTests" />
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>

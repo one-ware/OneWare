@@ -4,35 +4,49 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          xmlns:viewModels="clr-namespace:OneWare.SourceControl.ViewModels"
-                         mc:Ignorable="d" d:DesignWidth="300" SizeToContent="Height" PrefWidth="300" Padding="4"
+                         mc:Ignorable="d" d:DesignWidth="360" SizeToContent="Height" PrefWidth="360" Padding="4"
                          x:Class="OneWare.SourceControl.Views.AuthenticateGitView"
                          x:DataType="viewModels:AuthenticateGitViewModel"
                          WindowStartupLocation="CenterOwner"
                          CustomIcon="{DynamicResource Bootstrap.Github}"
                          Name="AuthenticateGitViewView" Title="{Binding Title}">
-    <DockPanel Margin="4" LastChildFill="False">
-        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 10">
-            <TextBlock Text="{Binding Description}" />
-            <Grid ColumnDefinitions="50, *">
-                <TextBlock Text="Server:" VerticalAlignment="Center" />
-                <TextBox Grid.Column="1" IsEnabled="False" VerticalAlignment="Center" Text="{Binding Server}" />
-            </Grid>
-            <Grid ColumnDefinitions="50, *, 70">
-                <TextBlock VerticalAlignment="Center" Text="Token:" />
-                <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Password}" PasswordChar="*" />
-                <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding Generate}" CornerRadius="3"
-                        BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1" Content="Generate"
-                        Height="23" Padding="0" Margin="2 0 0 0" />
-            </Grid>
+    <DockPanel Margin="6" LastChildFill="False">
+        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 8">
+            <controls:DeviceCodeLoginPanel />
+
+            <StackPanel Orientation="Horizontal" Spacing="6"
+                        IsVisible="{Binding IsDeviceCodeLoginEnabled}">
+                <Button Command="{Binding RetryCommand}"
+                        CommandParameter="{Binding #AuthenticateGitViewView}" IsEnabled="{Binding !IsBusy}"
+                        CornerRadius="3" BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1"
+                        Content="Retry" Height="23" Padding="6 0" />
+                <Button Command="{Binding ShowTokenLoginFallback}" IsVisible="{Binding !ShowTokenLogin}"
+                        CornerRadius="3" BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1"
+                        Content="Use access token instead" Height="23" Padding="6 0" />
+            </StackPanel>
+
+            <StackPanel Spacing="10" IsVisible="{Binding ShowTokenLogin}">
+                <Grid ColumnDefinitions="50, *">
+                    <TextBlock Text="Server:" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" IsEnabled="False" VerticalAlignment="Center" Text="{Binding Server}" />
+                </Grid>
+                <Grid ColumnDefinitions="50, *, 70">
+                    <TextBlock VerticalAlignment="Center" Text="Token:" />
+                    <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Password}" PasswordChar="*" />
+                    <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding Generate}" CornerRadius="3"
+                            BorderBrush="{DynamicResource ThemeBorderMidBrush}" BorderThickness="1" Content="Generate"
+                            Height="23" Padding="0" Margin="2 0 0 0" />
+                </Grid>
+            </StackPanel>
         </StackPanel>
 
         <StackPanel Margin="0 8 0 0" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Classes="WindowButtons">
-
             <Button Command="{Binding Cancel}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
                     Content="Cancel" />
             <Button Command="{Binding LoginAsync}"
                     CommandParameter="{Binding #AuthenticateGitViewView}"
+                    IsVisible="{Binding ShowTokenLogin}"
                     Classes="PrimaryButton"
                     Content="Log In" />
         </StackPanel>

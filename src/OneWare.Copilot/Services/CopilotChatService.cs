@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia;
@@ -148,6 +149,10 @@ public sealed class CopilotChatService(
     private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    private static readonly Regex SkillContextRegex = new(
+        @"<skill-context(?:\s+name=""(?<name>[^""]*)"")?[^>]*>(?<content>.*?)</skill-context>",
+        RegexOptions.Singleline | RegexOptions.Compiled);
+
     public ObservableCollection<ModelInfo> Models { get; } = [];
 
     public ObservableCollection<ModelInfo> FilteredModels { get; } = [];
@@ -177,6 +182,26 @@ public sealed class CopilotChatService(
         foreach (var model in source) FilteredModels.Add(model);
     }
 
+    /// <summary>
+    /// Finds a model by id. Falls back to a separator-insensitive comparison because model ids are
+    /// not spelled consistently across Copilot releases ("claude-sonnet-4-5" vs "claude-sonnet-4.5").
+    /// </summary>
+    private ModelInfo? ResolveModel(string? modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId)) return null;
+
+        var exact = Models.FirstOrDefault(x => string.Equals(x.Id, modelId, StringComparison.OrdinalIgnoreCase));
+        if (exact != null) return exact;
+
+        var normalized = NormalizeModelId(modelId);
+        return Models.FirstOrDefault(x => NormalizeModelId(x.Id) == normalized);
+    }
+
+    private static string NormalizeModelId(string modelId)
+    {
+        return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+    }
+
     public ModelInfo? SelectedModel
     {
         get;
@@ -188,6 +213,7 @@ public sealed class CopilotChatService(
                 settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
                 RefreshReasoningEfforts(value);
                 RefreshContextSizes(value);
+                RefreshAutoTier(value);
                 if (oldValue != null && oldValue.Id != value.Id)
                 {
                     // Switch the model in place for the next message, preserving conversation history.
@@ -334,6 +360,119 @@ public sealed class CopilotChatService(
         });
     }
 
+    public const string AutoTierDefault = "Default";
+    public const string AutoTierEfficiency = "Efficiency";
+    public const string AutoTierBalance = "Balance";
+    public const string AutoTierIntelligence = "Intelligence";
+
+    /// <summary>
+    /// Routing preferences offered for the <c>auto</c> model. <see cref="AutoTierDefault"/> hands the
+    /// choice back to the provider.
+    /// </summary>
+    public ObservableCollection<string> AutoTiers { get; } =
+        [AutoTierDefault, AutoTierEfficiency, AutoTierBalance, AutoTierIntelligence];
+
+    /// <summary>
+    /// True while the <c>auto</c> model is selected — only then does a routing preference apply.
+    /// </summary>
+    public bool ShowAutoTier
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    private bool _suppressAutoTierApply;
+
+    /// <summary>
+    /// Routing preference used when the session model is <c>auto</c>. The runtime records the
+    /// request and commits it on the next turn that resolves a model, so a change here is not
+    /// applied immediately.
+    /// </summary>
+    public string SelectedAutoTier
+    {
+        get;
+        set
+        {
+            if (!SetProperty(ref field, value) || _suppressAutoTierApply) return;
+
+            settingsService.SetSettingValue(CopilotModule.CopilotAutoTierSettingKey, value);
+            ApplyAutoTierToSession();
+        }
+    } = AutoTierDefault;
+
+    private static bool IsAutoModel(ModelInfo? model) =>
+        model != null && string.Equals(model.Id, CopilotModule.AutoModelId, StringComparison.OrdinalIgnoreCase);
+
+    private void RefreshAutoTier(ModelInfo model)
+    {
+        ShowAutoTier = IsAutoModel(model);
+        if (!ShowAutoTier) return;
+
+        var persisted = settingsService.GetSettingValue<string>(CopilotModule.CopilotAutoTierSettingKey);
+
+        _suppressAutoTierApply = true;
+        try
+        {
+            SelectedAutoTier = !string.IsNullOrWhiteSpace(persisted) && AutoTiers.Contains(persisted)
+                ? persisted
+                : AutoTierDefault;
+        }
+        finally
+        {
+            _suppressAutoTierApply = false;
+        }
+    }
+
+    private AutoTier? ResolveAutoTier() => SelectedAutoTier switch
+    {
+        AutoTierEfficiency => AutoTier.Efficiency,
+        AutoTierBalance => AutoTier.Balance,
+        AutoTierIntelligence => AutoTier.Intelligence,
+        _ => null
+    };
+
+    private static string DescribeAutoTier(AutoTier? tier) => tier?.Value switch
+    {
+        null => AutoTierDefault,
+        var value when value == AutoTier.Efficiency.Value => AutoTierEfficiency,
+        var value when value == AutoTier.Balance.Value => AutoTierBalance,
+        var value when value == AutoTier.Intelligence.Value => AutoTierIntelligence,
+        var value => value
+    };
+
+    private void ApplyAutoTierToSession()
+    {
+        var session = _session;
+        if (session == null || !ShowAutoTier) return;
+
+        var tier = ResolveAutoTier();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await session.SetAutoTierAsync(tier);
+            }
+            catch (Exception ex) when (IsAutoModelRequiredError(ex))
+            {
+                // The session is not on `auto` (yet) - a pending model switch carries the
+                // preference along, so there is nothing to recover from here.
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogWarning("Copilot auto routing tier skipped: the session is not using the auto model.");
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogError(ex, "Failed to set Copilot auto routing tier.");
+            }
+        });
+    }
+
+    private static bool IsAutoModelRequiredError(Exception exception) =>
+        exception.Message.Contains("requires the selected model", StringComparison.OrdinalIgnoreCase) ||
+        exception.InnerException?.Message.Contains("requires the selected model",
+            StringComparison.OrdinalIgnoreCase) == true;
+
     public bool ShowReasoningEffort
     {
         get;
@@ -381,14 +520,30 @@ public sealed class CopilotChatService(
             SelectedReasoningEffort =
                 !string.IsNullOrEmpty(persisted) && ReasoningEfforts.Contains(persisted)
                     ? persisted
-                    : model.DefaultReasoningEffort is { } def && ReasoningEfforts.Contains(def)
-                        ? def
-                        : ReasoningEfforts.FirstOrDefault();
+                    : ResolveDefaultReasoningEffort(model);
         }
         finally
         {
             _suppressReasoningEffortApply = false;
         }
+    }
+
+    /// <summary>
+    /// Picks the effort a fresh session should use: the model's own default, otherwise the Copilot
+    /// CLI default ("medium"). Never falls back to the first supported entry, which would silently
+    /// select "low".
+    /// </summary>
+    private string? ResolveDefaultReasoningEffort(ModelInfo model)
+    {
+        if (model.DefaultReasoningEffort is { } modelDefault && ReasoningEfforts.Contains(modelDefault))
+            return modelDefault;
+
+        var copilotDefault = ReasoningEfforts.FirstOrDefault(x =>
+            string.Equals(x, CopilotModule.DefaultReasoningEffort, StringComparison.OrdinalIgnoreCase));
+        if (copilotDefault != null) return copilotDefault;
+
+        // The model uses a non-standard scale — prefer the middle of it over the lowest entry.
+        return ReasoningEfforts.Count > 0 ? ReasoningEfforts[ReasoningEfforts.Count / 2] : null;
     }
 
     private void ApplyModelToSession()
@@ -397,13 +552,25 @@ public sealed class CopilotChatService(
         var model = SelectedModel;
         if (session == null || model == null) return;
 
-        var effort = ShowReasoningEffort ? SelectedReasoningEffort : null;
+        var options = new SetModelOptions
+        {
+            ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null
+        };
+
+        // The routing preference only exists for `auto`, and the runtime rejects it for any other
+        // model, so it has to travel with the model switch instead of being set separately.
+        if (IsAutoModel(model))
+        {
+            var tier = ResolveAutoTier();
+            if (tier != null) options.AutoTier = tier;
+            else options.ResetAutoTier = true;
+        }
 
         _ = Task.Run(async () =>
         {
             try
             {
-                await session.SetModelAsync(model.Id, effort);
+                await session.SetModelAsync(model.Id, options);
             }
             catch (Exception ex)
             {
@@ -453,6 +620,164 @@ public sealed class CopilotChatService(
             return new CopilotChatAttachmentsView { DataContext = this };
         }
     }
+
+    public Control HeaderUiExtension => new CopilotChatHeaderView
+    {
+        DataContext = this
+    };
+
+    #region Account
+
+    /// <summary>
+    ///     Auth type of a login that OneWare stored itself and can therefore remove again. Every other
+    ///     source (gh CLI, environment variable, API key) is owned outside of OneWare.
+    /// </summary>
+    private const string RemovableAuthType = "user";
+
+    /// <summary>GitHub account the Copilot CLI is signed in with, if known.</summary>
+    public string? AccountLogin
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>How the CLI is authenticated ("user", "gh-cli", "env", ...).</summary>
+    public string? AccountAuthType
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>Account line for the header menu, including where the login comes from.</summary>
+    public string? AccountStatusText
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public bool IsAuthenticated
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    /// <summary>
+    ///     Signing out is only possible for a login performed through OneWare. The CLI also accepts
+    ///     credentials from the gh CLI or from COPILOT_GITHUB_TOKEN/GH_TOKEN/GITHUB_TOKEN, and those
+    ///     have to be removed where they are configured.
+    /// </summary>
+    public bool CanSignOut
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public IAsyncRelayCommand<Control?> SignInCommand => field ??= new AsyncRelayCommand<Control?>(SignInAsync);
+
+    public IAsyncRelayCommand<Control?> SignOutCommand => field ??= new AsyncRelayCommand<Control?>(SignOutAsync);
+
+    private void ApplyAuthStatus(GetAuthStatusResponse? status)
+    {
+        IsAuthenticated = status?.IsAuthenticated ?? false;
+        AccountLogin = IsAuthenticated ? status?.Login : null;
+        AccountAuthType = IsAuthenticated ? status?.AuthType : null;
+        CanSignOut = IsAuthenticated && IsRemovableAuth(AccountAuthType);
+        AccountStatusText = IsAuthenticated
+            ? string.IsNullOrWhiteSpace(AccountLogin)
+                ? DescribeAuthSource(AccountAuthType)
+                : $"{AccountLogin} ({DescribeAuthSource(AccountAuthType)})"
+            : null;
+    }
+
+    private static bool IsRemovableAuth(string? authType) =>
+        string.Equals(authType, RemovableAuthType, StringComparison.OrdinalIgnoreCase);
+
+    private static string DescribeAuthSource(string? authType) => authType?.ToLowerInvariant() switch
+    {
+        RemovableAuthType => "GitHub login",
+        "gh-cli" or "ghcli" => "GitHub CLI",
+        "env" => "environment variable",
+        "api-key" or "apikey" => "API key",
+        null or "" => "unknown source",
+        _ => authType
+    };
+
+    private async Task SignInAsync(Control? owner)
+    {
+        if (IsAuthenticated) return;
+
+        if (await AuthenticateAsync(owner)) await InitializeAsync();
+    }
+
+    private async Task SignOutAsync(Control? owner)
+    {
+        var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
+
+        var confirmation = await windowService.ShowYesNoAsync("Sign out",
+            string.IsNullOrWhiteSpace(AccountLogin)
+                ? "Sign out of GitHub Copilot?"
+                : $"Sign out of GitHub Copilot ({AccountLogin})?",
+            MessageBoxIcon.Warning, ownerWindow);
+
+        if (confirmation != MessageBoxStatus.Yes) return;
+
+        if (!await RunSignOutAsync())
+        {
+            await windowService.ShowMessageAsync("Sign out",
+                "Could not sign out of GitHub Copilot. See the output for details.",
+                MessageBoxIcon.Error, ownerWindow);
+            return;
+        }
+
+        // Drop the conversation of the signed out account instead of resuming it after the next login.
+        _requestedSessionId = null;
+        SessionReset?.Invoke(this, EventArgs.Empty);
+
+        // Re-initializing refreshes the account state and offers the login button again.
+        await InitializeAsync();
+
+        // The CLI falls back to any other credential it can find, so signing out of the OneWare login
+        // does not necessarily leave the CLI unauthenticated.
+        if (IsAuthenticated)
+            await windowService.ShowMessageAsync("Sign out",
+                $"The GitHub login was removed, but Copilot is still authenticated through the " +
+                $"{DescribeAuthSource(AccountAuthType)}. Remove it there to sign out completely.",
+                MessageBoxIcon.Info, ownerWindow);
+    }
+
+    private async Task<bool> RunSignOutAsync()
+    {
+        if (_client == null) return false;
+
+        try
+        {
+            var removedAny = false;
+
+            // The CLI can hold several stored users; HasMoreUsers tells us another one took over.
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                var currentAuth = await _client.Rpc.Account.GetCurrentAuthAsync();
+
+                if (currentAuth.AuthInfo is not { } authInfo || !IsRemovableAuth(authInfo.Type)) break;
+
+                var result = await _client.Rpc.Account.LogoutAsync(null, authInfo);
+                removedAny = true;
+
+                if (!result.HasMoreUsers) break;
+            }
+
+            if (removedAny) ApplyAuthStatus(null);
+
+            return removedAny;
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, "Copilot sign out failed.");
+            return false;
+        }
+    }
+
+    #endregion
 
     #region Attachments
 
@@ -558,6 +883,7 @@ public sealed class CopilotChatService(
         {
             Attachments.Remove(attachment);
         }
+        attachment.Dispose();
     }
 
     public IAsyncRelayCommand<Visual?> AddAttachmentCommand => field ??= new AsyncRelayCommand<Visual?>(AddAttachmentAsync);
@@ -594,9 +920,18 @@ public sealed class CopilotChatService(
 
     private void ClearAttachmentsAfterSend()
     {
+        foreach (var attachment in Attachments)
+            attachment.Dispose();
         Attachments.Clear();
         _activeFileDismissed = false;
         RefreshActiveFileAttachment(focusChanged: false);
+    }
+
+    public bool TryAddImageAttachment(byte[] data, string mimeType, string displayName)
+    {
+        EnsureAttachmentTracking();
+        Attachments.Add(new CopilotAttachmentViewModel(data, mimeType, displayName, isActiveFile: false, RemoveAttachment));
+        return true;
     }
 
     #endregion
@@ -608,19 +943,28 @@ public sealed class CopilotChatService(
 
     private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
     {
-        if (!update)
-        {
-            var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-            if (PlatformHelper.ExistsOnPath(cliPath)) return true;
-        }
+        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+
+        if (!update && PlatformHelper.ExistsOnPath(cliPath)) return true;
+
+        // Resume the conversation that was active before the reinstall/update
+        // instead of starting an empty session. Has to happen before the runtime is shut down,
+        // because that clears the current session id.
+        _requestedSessionId ??= CurrentSessionId;
+
+        // A running Copilot CLI keeps its own executable open, and overwriting it fails with
+        // "Text file busy" (Unix) or a sharing violation (Windows). Shut the runtime down and make
+        // sure the OS released the files before the installer extracts the new version.
+        await ShutdownCliAsync(cliPath);
 
         var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
 
-        if (!installResult) return false;
-
-        // Resume the conversation that was active before the reinstall/update
-        // instead of starting an empty session.
-        _requestedSessionId ??= CurrentSessionId;
+        if (!installResult)
+        {
+            // The runtime was stopped for the install, so bring it back up on the old version.
+            await InitializeAsync();
+            return false;
+        }
 
         SessionReset?.Invoke(this, EventArgs.Empty);
 
@@ -628,6 +972,38 @@ public sealed class CopilotChatService(
         await AuthenticateAsync(owner);
 
         return installResult;
+    }
+
+    /// <summary>
+    /// Grace period the Copilot runtime gets to exit on its own before its processes are killed.
+    /// </summary>
+    private static readonly TimeSpan CliShutdownGracePeriod = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// Additional time the operating system gets to release the executable after the remaining
+    /// processes were killed.
+    /// </summary>
+    private static readonly TimeSpan CliKillTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Stops the Copilot runtime and waits until its executable can be overwritten, killing any
+    /// process still running from the CLI installation directory if the graceful shutdown was not
+    /// enough.
+    /// </summary>
+    private async Task ShutdownCliAsync(string? cliPath)
+    {
+        await DisposeAsync();
+
+        if (string.IsNullOrWhiteSpace(cliPath) || !File.Exists(cliPath)) return;
+
+        if (await ProcessHelper.WaitForFileReleaseAsync(cliPath, CliShutdownGracePeriod)) return;
+
+        var installDirectory = Path.GetDirectoryName(cliPath);
+        if (installDirectory == null) return;
+
+        if (!await ProcessHelper.ReleaseDirectoryAsync(installDirectory, CliKillTimeout))
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(
+                "Copilot CLI at {Path} is still in use; the update may fail.", cliPath);
     }
 
     private async Task<bool> AuthenticateAsync(Control? owner)
@@ -641,6 +1017,7 @@ public sealed class CopilotChatService(
             {
                 var currentAuthStatus = await _client.GetAuthStatusAsync();
                 isAuthenticated = currentAuthStatus.IsAuthenticated;
+                ApplyAuthStatus(currentAuthStatus);
             }
             catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
                                          ex.Message.Contains("401"))
@@ -649,6 +1026,7 @@ public sealed class CopilotChatService(
                 ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
                     "Authentication check failed with 401, treating as unauthenticated.");
                 isAuthenticated = false;
+                ApplyAuthStatus(null);
             }
 
             if (isAuthenticated) return true;
@@ -657,41 +1035,28 @@ public sealed class CopilotChatService(
 
             if (!PlatformHelper.ExistsOnPath(cliPath)) return false;
 
-            using var cts = new CancellationTokenSource();
-            var viewModel = new CopilotDeviceLoginViewModel(cts);
+            var viewModel = new DeviceCodeLoginViewModel("Login to GitHub Copilot",
+                "Authorize OneWare in your browser to finish the sign in.",
+                (prompt, token) => RunCopilotLoginAsync(cliPath, prompt, token));
+
             var view = new CopilotDeviceLoginView
             {
                 DataContext = viewModel
             };
 
             var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
-            var showTask = windowService.ShowDialogAsync(view, ownerWindow);
-            var loginTask = RunCopilotLoginAsync(cliPath, viewModel, cts.Token);
 
-            var loginResult = await loginTask;
+            // The view model owns the login task and closes the dialog on success.
+            await windowService.ShowDialogAsync(view, ownerWindow);
 
-            if (loginResult)
+            if (viewModel.Success)
             {
-                await Dispatcher.UIThread.InvokeAsync(view.Close);
-                await showTask;
                 // Keep the previous conversation (if any) across the re-login.
                 _requestedSessionId ??= CurrentSessionId;
                 SessionReset?.Invoke(this, EventArgs.Empty);
                 return await InitializeAsync();
             }
 
-            if (cts.IsCancellationRequested)
-            {
-                UpdateLoginStatus(viewModel, "Login cancelled.");
-            }
-            else
-            {
-                UpdateLoginStatus(viewModel, "Authentication failed.");
-            }
-
-            // Keep dialog lifecycle contained in this method so the token source
-            // is not disposed while the window can still trigger cancellation.
-            await showTask;
             return false;
         }
         catch (Exception e)
@@ -707,10 +1072,11 @@ public sealed class CopilotChatService(
 
 
         await _sync.WaitAsync().ConfigureAwait(false);
-        await DisposeAsync();
 
         try
         {
+            await DisposeAsync();
+
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
@@ -720,7 +1086,7 @@ public sealed class CopilotChatService(
                 return false;
             }
 
-            if (packageService.IsLoaded || await packageService.RefreshAsync())
+            if (packageService.IsLoaded || await packageService.RefreshAsync(false))
             {
                 if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
                     state.Status is PackageStatus.UpdateAvailable)
@@ -736,6 +1102,7 @@ public sealed class CopilotChatService(
             _client = new CopilotClient(new CopilotClientOptions()
             {
                 WorkingDirectory = paths.ProjectsDirectory,
+                ClientInfo = BuildClientInfo(),
                 Connection = RuntimeConnection.ForStdio(cliPath, [])
             });
 
@@ -744,6 +1111,7 @@ public sealed class CopilotChatService(
             {
                 var authStatus = await _client.GetAuthStatusAsync();
                 isAuthenticated = authStatus.IsAuthenticated;
+                ApplyAuthStatus(authStatus);
             }
             catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
                                          ex.Message.Contains("401"))
@@ -752,6 +1120,7 @@ public sealed class CopilotChatService(
                 ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
                     "Authentication check failed with 401, treating as unauthenticated.");
                 isAuthenticated = false;
+                ApplyAuthStatus(null);
             }
 
             if (!isAuthenticated)
@@ -777,7 +1146,9 @@ public sealed class CopilotChatService(
 
             var selectedModelSetting =
                 settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
-            SelectedModel = Models.FirstOrDefault(x => x.Id == selectedModelSetting) ?? Models.FirstOrDefault();
+            SelectedModel = ResolveModel(selectedModelSetting) ??
+                            ResolveModel(CopilotModule.DefaultModelId) ??
+                            Models.FirstOrDefault();
 
             return true;
         }
@@ -793,6 +1164,18 @@ public sealed class CopilotChatService(
             _sync.Release();
         }
     }
+
+    /// <summary>
+    /// Identifies OneWare on the runtime handshake so Copilot attributes requests to the IDE
+    /// instead of falling back to the SDK's generic identity.
+    /// </summary>
+    private CopilotClientInfo BuildClientInfo() => new()
+    {
+        ApplicationName = paths.AppName,
+        ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(),
+        IntegrationName = "OneWare.Copilot",
+        IntegrationVersion = typeof(CopilotChatService).Assembly.GetName().Version?.ToString()
+    };
 
     private async Task InitializeSessionAsync()
     {
@@ -825,8 +1208,14 @@ public sealed class CopilotChatService(
                 IncludeSubAgentStreamingEvents = false,
                 SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
-                AvailableTools = tools.Select(x => x.Name).ToList(),
+                // Restrict the session to OneWare's own tools plus the session-isolated built-ins
+                // (task/skill delegation, ask_user, …) that plugin-contributed agents and skills
+                // need. Host-capable built-ins stay unavailable.
+                AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
+                CustomAgents = BuildCustomAgents(),
+                SkillDirectories = BuildSkillDirectories(),
+                EnableSkills = true,
                 ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
@@ -846,7 +1235,11 @@ public sealed class CopilotChatService(
                 ContextTier = ResolveContextTier(),
                 IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
+                AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
+                CustomAgents = BuildCustomAgents(),
+                SkillDirectories = BuildSkillDirectories(),
+                EnableSkills = true,
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
                 Hooks = new SessionHooks
@@ -867,10 +1260,62 @@ public sealed class CopilotChatService(
         }
 
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
+
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            // The routing preference is not part of the session config, so it has to be applied to
+            // every freshly created session.
+            ApplyAutoTierToSession();
+        }
+        else
+        {
+            // A resumed session keeps the model it was persisted with - the resume config cannot
+            // carry one - so the picker's selection and its routing preference are re-applied.
+            ApplyModelToSession();
+        }
     }
 
-    private SystemMessageConfig BuildSystemMessageConfig()
+    /// <summary>
+    /// Allow-list for the session: every tool OneWare registers, plus the built-ins that operate
+    /// only inside the session (agent delegation via <c>task</c>, <c>skill</c> loading, …). Built-ins
+    /// with host filesystem, shell or network access stay out, because <see cref="OnPreToolUseAsync"/>
+    /// auto-approves any tool that has no OneWare confirmation check.
+    /// </summary>
+    private ToolSet BuildAvailableTools()
     {
+        return new ToolSet()
+            .AddCustom("*")
+            .AddBuiltIn(BuiltInTools.Isolated);
+    }
+
+    /// <summary>
+    /// Converts the agents contributed by modules/plugins (e.g. a dataset agent from an FPGA AI
+    /// extension) into Copilot custom agents the main agent can delegate to.
+    /// </summary>
+    private IList<CustomAgentConfig> BuildCustomAgents()
+    {
+        return toolProvider.GetAgents()
+            .Select(agent => new CustomAgentConfig
+            {
+                Name = agent.Name,
+                DisplayName = string.IsNullOrWhiteSpace(agent.DisplayName) ? agent.Name : agent.DisplayName,
+                Description = agent.Description,
+                Prompt = agent.Instructions,
+                Model = string.IsNullOrWhiteSpace(agent.Model) ? null : agent.Model,
+                ReasoningEffort = string.IsNullOrWhiteSpace(agent.ReasoningEffort) ? null : agent.ReasoningEffort,
+                Tools = agent.Tools?.ToList(),
+                Skills = agent.Skills?.ToList(),
+                Infer = agent.Infer
+            })
+            .ToList();
+    }
+
+    private IList<string> BuildSkillDirectories()
+    {
+        return toolProvider.GetSkillDirectories().ToList();
+    }
+
+    private SystemMessageConfig BuildSystemMessageConfig()    {
         var overrides = new Dictionary<SystemMessageSection, SectionOverride>
         {
             // Tell the model it is embedded in OneWare Studio IDE
@@ -1161,8 +1606,16 @@ public sealed class CopilotChatService(
             }
             case UserMessageEvent x:
             {
-                EventReceived?.Invoke(this,
-                    new ChatUserMessageEvent(x.Data.Content));
+                // The backend injects the content of loaded skills into the user message. That
+                // content is meant for the model, so report it as a skill indicator and only show
+                // what the user actually wrote.
+                var content = ExtractSkillContext(x.Data.Content, out var skills);
+
+                foreach (var skill in skills)
+                    EventReceived?.Invoke(this, new ChatSkillLoadedEvent(skill.Name, skill.Content));
+
+                if (!string.IsNullOrWhiteSpace(content))
+                    EventReceived?.Invoke(this, new ChatUserMessageEvent(content));
                 break;
             }
             case ToolExecutionStartEvent x:
@@ -1190,7 +1643,64 @@ public sealed class CopilotChatService(
                 RemoteSessionUrl = sessionInfo.Data.Url;
                 IsRemoteSession = true;
                 break;
+            case SessionModelChangeEvent modelChange when ShowAutoTier:
+                SyncAutoTierFromSession(modelChange.Data.AutoTier);
+                break;
+            case SessionAutoTierSwitchFailedEvent failed:
+                EventReceived?.Invoke(this, new ChatMessageEvent(
+                    $"Auto routing preference '{DescribeAutoTier(failed.Data.RequestedAutoTier)}' could not be " +
+                    $"applied ({failed.Data.Reason.Value}). Copilot keeps routing with " +
+                    $"'{DescribeAutoTier(failed.Data.EffectiveAutoTier)}'."));
+                SyncAutoTierFromSession(failed.Data.EffectiveAutoTier);
+                break;
         }
+    }
+
+    /// <summary>
+    /// Mirrors the tier the runtime actually committed back into the picker, without triggering
+    /// another switch request.
+    /// </summary>
+    private void SyncAutoTierFromSession(AutoTier? tier)
+    {
+        var label = DescribeAutoTier(tier);
+        if (!AutoTiers.Contains(label) || label == SelectedAutoTier) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _suppressAutoTierApply = true;
+            try
+            {
+                SelectedAutoTier = label;
+            }
+            finally
+            {
+                _suppressAutoTierApply = false;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Removes the <c>&lt;skill-context&gt;</c> blocks the backend injects into a user message when a
+    /// skill is loaded, and returns the skills that were found.
+    /// </summary>
+    private static string ExtractSkillContext(string content, out IReadOnlyList<(string Name, string Content)> skills)
+    {
+        skills = [];
+        if (string.IsNullOrEmpty(content) || !content.Contains("<skill-context", StringComparison.Ordinal))
+            return content;
+
+        var found = new List<(string Name, string Content)>();
+
+        var stripped = SkillContextRegex.Replace(content, match =>
+        {
+            var name = match.Groups["name"].Value;
+            found.Add((string.IsNullOrWhiteSpace(name) ? "Skill" : name,
+                match.Groups["content"].Value.Trim()));
+            return string.Empty;
+        });
+
+        skills = found;
+        return stripped.Trim();
     }
 
     private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
@@ -1415,7 +1925,7 @@ public sealed class CopilotChatService(
             source.TrySetResult(new UserInputResponse { Answer = string.Empty, WasFreeform = true });
     }
 
-    private async Task<bool> RunCopilotLoginAsync(string cliPath, CopilotDeviceLoginViewModel viewModel,
+    private async Task<bool> RunCopilotLoginAsync(string cliPath, IDeviceCodeLoginPrompt prompt,
         CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(cliPath, "login")
@@ -1435,20 +1945,20 @@ public sealed class CopilotChatService(
         {
             if (!process.Start())
             {
-                UpdateLoginStatus(viewModel, "Failed to start Copilot CLI.");
+                prompt.Status = "Failed to start Copilot CLI.";
                 return false;
             }
         }
         catch (Exception ex)
         {
-            UpdateLoginStatus(viewModel, $"Failed to start Copilot CLI: {ex.Message}");
+            prompt.Status = $"Failed to start Copilot CLI: {ex.Message}";
             return false;
         }
 
-        UpdateLoginStatus(viewModel, "Waiting for device code...");
+        prompt.Status = "Starting sign in...";
 
-        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, viewModel, cancellationToken);
-        var stderrTask = ReadLoginStreamAsync(process.StandardError, viewModel, cancellationToken);
+        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, prompt, cancellationToken);
+        var stderrTask = ReadLoginStreamAsync(process.StandardError, prompt, cancellationToken);
 
         try
         {
@@ -1457,6 +1967,7 @@ public sealed class CopilotChatService(
         catch (OperationCanceledException)
         {
             TryKillProcess(process);
+            prompt.Status = "Login cancelled.";
             return false;
         }
 
@@ -1464,67 +1975,62 @@ public sealed class CopilotChatService(
 
         if (process.ExitCode != 0)
         {
-            UpdateLoginStatus(viewModel, $"Copilot CLI exited with code {process.ExitCode}.");
+            prompt.Status = $"Copilot CLI exited with code {process.ExitCode}.";
             return false;
         }
 
         return true;
     }
 
-    private async Task ReadLoginStreamAsync(StreamReader reader, CopilotDeviceLoginViewModel viewModel,
+    private async Task ReadLoginStreamAsync(StreamReader reader, IDeviceCodeLoginPrompt prompt,
         CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync();
             if (line == null) break;
-            ApplyLoginOutputLine(viewModel, line);
+            ApplyLoginOutputLine(prompt, line);
         }
     }
 
-    private void ApplyLoginOutputLine(CopilotDeviceLoginViewModel viewModel, string line)
+    /// <summary>
+    ///     Translates the login output of the Copilot CLI into dialog state. The CLI picks the flow itself:
+    ///     on a desktop it opens the browser and captures the result on a loopback callback (no code to type),
+    ///     remote/headless environments fall back to the device code flow.
+    /// </summary>
+    private void ApplyLoginOutputLine(IDeviceCodeLoginPrompt prompt, string line)
     {
         if (string.IsNullOrWhiteSpace(line)) return;
 
-        UpdateLoginViewModel(viewModel, () =>
+        var urlMatch = DeviceLoginUrlRegex.Match(line);
+        if (urlMatch.Success && string.IsNullOrWhiteSpace(prompt.VerificationUrl))
         {
-            var urlMatch = DeviceLoginUrlRegex.Match(line);
-            if (urlMatch.Success && string.IsNullOrWhiteSpace(viewModel.VerificationUrl))
-            {
-                viewModel.VerificationUrl = urlMatch.Value;
-            }
-
-            var codeMatch = DeviceLoginCodeRegex.Match(line);
-            if (codeMatch.Success && string.IsNullOrWhiteSpace(viewModel.UserCode))
-            {
-                viewModel.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
-            }
-
-            if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
-            {
-                viewModel.StatusText = "Waiting for authorization...";
-            }
-            else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
-            {
-                viewModel.StatusText = "Enter the code in your browser.";
-            }
-        });
-    }
-
-    private static void UpdateLoginStatus(CopilotDeviceLoginViewModel viewModel, string status)
-    {
-        UpdateLoginViewModel(viewModel, () => viewModel.StatusText = status);
-    }
-
-    private static void UpdateLoginViewModel(CopilotDeviceLoginViewModel viewModel, Action update)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            update();
+            prompt.VerificationUrl = urlMatch.Value;
         }
-        else
+
+        var codeMatch = DeviceLoginCodeRegex.Match(line);
+        if (codeMatch.Success && string.IsNullOrWhiteSpace(prompt.UserCode))
         {
-            Dispatcher.UIThread.Post(update);
+            prompt.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
+        }
+
+        if (line.Contains("Opening your browser", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "Opening your browser...";
+        }
+        else if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = string.IsNullOrWhiteSpace(prompt.UserCode)
+                ? "Waiting for the authorization in your browser..."
+                : "Waiting for authorization...";
+        }
+        else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "Enter the code in your browser.";
+        }
+        else if (line.Contains("doesn't open automatically", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt.Status = "If the browser did not open, use the link below.";
         }
     }
 

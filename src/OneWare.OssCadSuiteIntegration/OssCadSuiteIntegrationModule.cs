@@ -20,6 +20,7 @@ using OneWare.OssCadSuiteIntegration.Views;
 using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using OneWare.UniversalFpgaProjectSystem.Services.Ai;
 using OneWare.UniversalFpgaProjectSystem.ViewModels;
 
 // ReSharper disable StringLiteralTypo
@@ -75,6 +76,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         RegisterTool("gtkwave", "Visualisation", "gtkwave");
         RegisterTool("iverilog", "Simulation", "iverilog");
         RegisterTool("vvp", "Simulation", "vvp");
+        RegisterTool("verilator", "Simulation", "verilator");
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadSuiteHelper.OssCadPackage);
@@ -118,7 +120,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         },
                         new MenuItem()
                         {
-                            Header = "Run Fit",
+                            Header = "Run Place&Route",
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
@@ -127,7 +129,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         },
                         new MenuItem()
                         {
-                            Header = "Run Assemble",
+                            Header = "Generate Bitstream",
                             Command = new AsyncRelayCommand(async () =>
                             {
                                 await projectExplorerService.SaveOpenFilesForProjectAsync(root);
@@ -137,7 +139,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                         new Separator(),
                         new MenuItem()
                         {
-                            Header = "Yosys Settings",
+                            Header = "Toolchain Settings",
                             Icon = new Image()
                             {
                                 Source = Application.Current!.FindResource(
@@ -156,7 +158,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                                     if (selectedFpgaPackage == null)
                                     {
                                         serviceProvider.Resolve<ILogger>()
-                                            .Warning("No FPGA Selected. Open Pin Planner first!");
+                                            .Warning("No FPGA Selected. Open Constraints first!");
                                         return;
                                     }
 
@@ -203,6 +205,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<YosysToolchain>();
         serviceProvider.Resolve<FpgaService>().RegisterLoader<OpenFpgaLoader>();
         serviceProvider.Resolve<FpgaService>().RegisterSimulator<IcarusVerilogSimulator>();
+        serviceProvider.Resolve<FpgaService>().RegisterSimulator<VerilatorSimulator>();
         
         settingsService.RegisterSetting(
             "Tools", 
@@ -245,8 +248,9 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 Path.Combine(x, "share", "openFPGALoader"));
             environmentService.SetEnvironmentVariable("PYTHON_EXECUTABLE",
                 Path.Combine(x, "lib", $"python3{PlatformHelper.ExecutableExtension}"));
-            //environmentService.SetEnvironmentVariable("VERILATOR_ROOT",
-            //    Path.Combine(x, "share", $"verilator"));
+            var verilatorRoot = Path.Combine(x, "share", "verilator");
+            if (Directory.Exists(verilatorRoot))
+                environmentService.SetEnvironmentVariable("VERILATOR_ROOT", verilatorRoot);
             // GHDL is not provided in the Windows version
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -350,6 +354,34 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
         });
         
         serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("Material.Pulse", GtkWaveService.GtkWaveformEndings);
+
+        RegisterToolchainSkill(serviceProvider);
+    }
+
+    /// <summary>
+    /// Contributes the Yosys toolchain skill to the IDE chat, so the FPGA agent knows how the
+    /// synthesis, place &amp; route and bitstream stages are configured and how to read a failed run.
+    /// </summary>
+    /// <remarks>
+    /// The chat is an optional module — the browser studio ships without it — so the registration is
+    /// skipped when no function provider is registered. Resolving it unconditionally would build a
+    /// second, unused provider through the container fallback.
+    /// </remarks>
+    private static void RegisterToolchainSkill(IServiceProvider serviceProvider)
+    {
+        if (!serviceProvider.IsRegistered<IAiFunctionProvider>()) return;
+
+        // The skill ships next to the assembly, one sub-directory with a SKILL.md.
+        var skillDirectory = FpgaSkillDirectoryLocator.TryResolve(typeof(OssCadSuiteIntegrationModule).Assembly);
+
+        if (skillDirectory is null)
+        {
+            serviceProvider.Resolve<ILogger>().Warning(
+                "The Yosys toolchain skill was not found next to the assembly. The FPGA agent runs without it.");
+            return;
+        }
+
+        serviceProvider.Resolve<IAiFunctionProvider>().RegisterSkillDirectory(skillDirectory);
     }
 
     private static bool IsOssPathValid(string path)

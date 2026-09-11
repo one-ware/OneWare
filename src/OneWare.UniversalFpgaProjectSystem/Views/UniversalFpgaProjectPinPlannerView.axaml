@@ -42,7 +42,7 @@
             <StackPanel Spacing="16">
                 <TextBlock Text="Configure Project" FontSize="18" FontWeight="Bold"
                            HorizontalAlignment="Center" />
-                <TextBlock Text="Please configure the required settings before opening the Pin Planner."
+                <TextBlock Text="Please configure the required settings before opening the Constraint Editor."
                            TextWrapping="Wrap" Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" />
 
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSetupLoading}"
@@ -67,7 +67,7 @@
                               IsEnabled="{Binding !IsSetupLoading}" />
                 </StackPanel>
 
-                <Button Classes="RoundButton PrimaryButton" Content="Load Pin Planner"
+                <Button Classes="RoundButton PrimaryButton" Content="Load Constraint Editor"
                         HorizontalAlignment="Center"
                         Command="{Binding ApplySetupAsync}"
                         IsEnabled="{Binding !IsSetupLoading}" />

@@ -37,6 +37,7 @@ using OneWare.Studio.Desktop.ViewModels;
 using OneWare.Studio.Desktop.Views;
 using OneWare.TerminalManager;
 using OneWare.ToolEngine;
+using OneWare.TypeScript;
 using OneWare.Updater;
 using OneWare.Updater.ViewModels;
 using OneWare.Updater.Views;
@@ -63,6 +64,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<ToolEngineModule>();
         moduleCatalog.AddModule<OssCadSuiteIntegrationModule>();
         moduleCatalog.AddModule<PythonModule>();
+        moduleCatalog.AddModule<TypeScriptModule>();
         moduleCatalog.AddModule<ChatModule>();
         moduleCatalog.AddModule<CopilotModule>();
         moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
@@ -157,7 +159,7 @@ public class DesktopStudioApp : StudioApp
                 ];
 
         Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
-
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
             var key = Services.Resolve<IApplicationStateService>()
@@ -194,7 +196,7 @@ public class DesktopStudioApp : StudioApp
             }
 
             //step 2: Load the installed plugins
-            await packageService.RefreshAsync();
+            await packageService.RefreshAsync(false);
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages

@@ -18,6 +18,14 @@ public sealed class UserInputEchoFilter
     private DateTimeOffset _lastInput = DateTimeOffset.MinValue;
     private bool _dropNextLf;
 
+    /// <summary>Forgets all pending input, e.g. after the captured output has been reset.</summary>
+    public void Reset()
+    {
+        _pending.Clear();
+        _dropNextLf = false;
+        _lastInput = DateTimeOffset.MinValue;
+    }
+
     /// <summary>Records user input written to the pty so its echo can be recognized.</summary>
     public void OnUserInput(byte[] data)
     {

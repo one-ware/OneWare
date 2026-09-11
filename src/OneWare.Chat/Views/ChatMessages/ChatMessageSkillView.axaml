@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageSkillView"
+             x:DataType="chatMessages:ChatMessageSkillViewModel">
+
+    <Expander Margin="0 2" VerticalAlignment="Top"
+              ToolTip.Tip="The AI loaded this skill into its context">
+        <Expander.Header>
+            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                <Image Source="{DynamicResource FluentIconsFilled.LightbulbFilled}"
+                       Width="12" Height="12" VerticalAlignment="Center" />
+                <TextBlock VerticalAlignment="Center"
+                           Text="{Binding SkillName, StringFormat='Using skill {0}'}" />
+            </StackPanel>
+        </Expander.Header>
+        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+                MaxHeight="300" Padding="5">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
+            </ScrollViewer>
+        </Border>
+    </Expander>
+
+</UserControl>

@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Collections.Specialized;
+using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
 using AvaloniaEdit;
@@ -8,6 +9,9 @@ using OneWare.Essentials.Extensions;
 
 namespace OneWare.Essentials.EditorExtensions;
 
+[Obsolete("Superseded by BreakPointLineNumberMargin, which puts the breakpoint on the line " +
+          "number instead of adding a column of its own. Kept so that anyone using this margin " +
+          "directly keeps working.")]
 public class BreakPointMargin : AbstractMargin
 {
     private readonly string _filePath;
@@ -28,7 +32,23 @@ public class BreakPointMargin : AbstractMargin
         _editor = editor;
         _filePath = filePath;
 
-        _manager.Breakpoints.CollectionChanged += (o, i) => { InvalidateVisual(); };
+    }
+
+    // Subscribing here rather than in the constructor: the store is shared and outlives this
+    // margin, so a subscription that is never released would keep every margin of every closed
+    // editor alive and redraw it on each change.
+    protected override void OnTextViewChanged(TextView oldTextView, TextView newTextView)
+    {
+        if (oldTextView != null) _manager.Breakpoints.CollectionChanged -= OnBreakpointsChanged;
+
+        base.OnTextViewChanged(oldTextView, newTextView);
+
+        if (newTextView != null) _manager.Breakpoints.CollectionChanged += OnBreakpointsChanged;
+    }
+
+    private void OnBreakpointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        InvalidateVisual();
     }
 
     public override void Render(DrawingContext context)

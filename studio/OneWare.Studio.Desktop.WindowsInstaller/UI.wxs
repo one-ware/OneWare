@@ -3,6 +3,12 @@
     <UI Id="UI">
       <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
       <UIRef Id="WixUI_ErrorProgressText" />
+      <DialogRef Id="RemoveUserDataDlg" />
+
+      <!-- Ask whether user data should be removed before confirming the uninstall.
+           The higher order overrides the default navigation to VerifyReadyDlg. -->
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog"
+        Value="RemoveUserDataDlg" Order="2" Condition="NOT Preselected" />
 
       <!-- Shows launch application on last screen -->
       <Publish Dialog="ExitDialog"

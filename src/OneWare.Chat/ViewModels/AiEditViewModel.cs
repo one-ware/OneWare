@@ -42,18 +42,58 @@ public class AiEditViewModel : Document, INoSerializeLayout
 
     public string LanguageExtension { get; }
 
-    public async Task RefreshChanges(string modifiedText)
+    /// <summary>
+    /// One-based line of the rendered diff that should be brought into view, or zero for none.
+    /// </summary>
+    public int ScrollToLine
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
+    public async Task RefreshChanges(string modifiedText, int? focusLine = null)
     {
         try
         {
             if (Original == null) throw new NullReferenceException(nameof(Original));
 
-            Chunks = await Task.Run(() => DiffHelper.BuildDiff(Original, modifiedText));
+            var chunks = await Task.Run(() => DiffHelper.BuildDiff(Original, modifiedText));
+            Chunks = chunks;
+            ScrollToLine = GetScrollTargetLine(chunks, focusLine);
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
+    }
+
+    /// <summary>
+    /// Translates a line of the modified file into a line of the rendered diff. The diff inserts blank
+    /// filler lines to keep both sides aligned, so the rendered line number does not match
+    /// <see cref="DiffLineModel.LineNumber" /> and has to be resolved through the list index.
+    /// </summary>
+    private static int GetScrollTargetLine(IReadOnlyList<ComparisonControlSection> chunks, int? focusLine)
+    {
+        if (chunks.Count != 1) return 0;
+
+        var rightDiff = chunks[0].RightDiff;
+
+        if (focusLine is > 0)
+        {
+            for (var i = 0; i < rightDiff.Count; i++)
+            {
+                if (rightDiff[i].Style is not DiffContext.Blank && rightDiff[i].LineNumber >= focusLine)
+                    return i + 1;
+            }
+        }
+
+        for (var i = 0; i < rightDiff.Count; i++)
+        {
+            if (rightDiff[i].Style is DiffContext.Added or DiffContext.Deleted)
+                return i + 1;
+        }
+
+        return 0;
     }
 
     public async Task UndoAsync()

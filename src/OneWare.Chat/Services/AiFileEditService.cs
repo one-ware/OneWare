@@ -10,8 +10,10 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Chat.Services;
 
-public class AiFileEditService(IMainDockService mainDockService)
+public class AiFileEditService(IMainDockService mainDockService, ISettingsService settingsService)
 {
+    public const string AutoOpenFileEditsKey = "Chat_AutoOpenFileEdits";
+
     public ObservableCollection<AiEditViewModel> ActiveEdits { get; } = new();
     private readonly Dictionary<string, string> _currentEdits = new();
     
@@ -73,7 +75,8 @@ public class AiFileEditService(IMainDockService mainDockService)
             _currentEdits[filePath] = openTab.Original;
         }
 
-        mainDockService.Show(openTab, DockShowLocation.Document);
+        if (settingsService.GetSettingValue<bool>(AutoOpenFileEditsKey))
+            mainDockService.Show(openTab, DockShowLocation.Document);
 
         try
         {
@@ -97,7 +100,7 @@ public class AiFileEditService(IMainDockService mainDockService)
                 var updatedContent = ApplyLineEdit(currentContent, startLine.Value, lineCount.Value, newContent);
                 await File.WriteAllTextAsync(filePath, updatedContent);
                 _currentEdits[filePath] = updatedContent;
-                await openTab.RefreshChanges(updatedContent);
+                await openTab.RefreshChanges(updatedContent, startLine.Value);
             }
         }
         catch (Exception e)
@@ -143,9 +146,17 @@ public class AiFileEditService(IMainDockService mainDockService)
 
     public async Task UndoAllAsync()
     {
-        foreach (var edit in ActiveEdits)
+        foreach (var edit in ActiveEdits.ToArray())
         {
             await UndoAsync(edit);
+        }
+    }
+
+    public async Task AcceptAllAsync()
+    {
+        foreach (var edit in ActiveEdits.ToArray())
+        {
+            await AcceptAsync(edit);
         }
     }
 
@@ -203,7 +214,7 @@ public class AiFileEditService(IMainDockService mainDockService)
         return builder.ToString();
     }
 
-    private static string ApplyLineEdit(string original, int startLine, int lineCount, string newContent)
+    internal static string ApplyLineEdit(string original, int startLine, int lineCount, string newContent)
     {
         var newline = DetectNewLineFromText(original) ?? Environment.NewLine;
         var lines = SplitLines(original).ToList();
@@ -213,7 +224,7 @@ public class AiFileEditService(IMainDockService mainDockService)
         if (removeCount > 0)
             lines.RemoveRange(startIndex, removeCount);
 
-        var insertLines = SplitLines(newContent);
+        var insertLines = SplitContentLines(newContent);
         if (insertLines.Length > 0)
             lines.InsertRange(startIndex, insertLines);
 
@@ -225,6 +236,22 @@ public class AiFileEditService(IMainDockService mainDockService)
         if (content.Length == 0)
             return Array.Empty<string>();
         return content.Replace("\r\n", "\n").Split('\n');
+    }
+
+    /// <summary>
+    /// Splits replacement content into lines, treating a single trailing newline as a line terminator
+    /// instead of a separator, so that "X\n" yields one line and not an extra empty one.
+    /// </summary>
+    private static string[] SplitContentLines(string content)
+    {
+        if (content.Length == 0)
+            return Array.Empty<string>();
+
+        var normalized = content.Replace("\r\n", "\n");
+        if (normalized.EndsWith('\n'))
+            normalized = normalized[..^1];
+
+        return normalized.Split('\n');
     }
 
     private static string? DetectNewLineFromText(string content)

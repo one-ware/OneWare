@@ -1,8 +1,11 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using OneWare.Settings.ViewModels;
 using OneWare.Settings.Views;
 
@@ -13,7 +16,7 @@ internal static class AiBuiltInFunctions
     private const int MaxTerminalOutputLines = 220;
     private const int MaxTerminalOutputChars = 12000;
 
-    private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromHours(12);
+    private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromMinutes(30);
 
     public static void Register(
         IAiFunctionProvider functionProvider,
@@ -123,6 +126,30 @@ internal static class AiBuiltInFunctions
 
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
+            Name = "openFile",
+            FriendlyName = "Open File",
+            RunOnUiThread = true,
+            Description = """
+                          Opens the specified file in the IDE editor and focuses it.
+                          If the file is already open, its existing tab is focused instead.
+                          Optionally jumps to a specific line. Always pass an absolute path.
+                          """,
+            Handler = ([Description("absolute path of the file to open")] string path,
+                    [Description("1-based line number to jump to (omit to keep the current position)")] int? line =
+                        null) =>
+                OpenFileAsync(projectExplorerService, dockService, path, line),
+            DetailExtractor = args => GetRelativePath(projectExplorerService, TryGetStringArgument(args, "path")),
+            ConfirmationCheck = args =>
+            {
+                var rawPath = TryGetStringArgument(args, "path");
+                var resolved = ResolvePath(projectExplorerService, rawPath);
+                if (IsInsideWorkspace(projectExplorerService, resolved)) return null;
+                return $"**Copilot wants to open a file outside the workspace.**\n\n`{resolved ?? rawPath ?? "?"}`";
+            }
+        });
+
+        functionProvider.RegisterFunction(new OneWareAiFunction
+        {
             Name = "getErrorsForFile",
             FriendlyName = "Get Errors for File",
             RunOnUiThread = true,
@@ -153,7 +180,11 @@ internal static class AiBuiltInFunctions
             Description = """
                           Executes a command in the IDE terminal and returns the output.
                           Use this to run shell commands; output appears in the IDE terminal panel.
+                          On Windows the shell is PowerShell, not cmd.exe. Use PowerShell syntax, or
+                          quote the complete command passed to cmd.exe (for example: cmd /c "a & b").
+                          Multi-line PowerShell scripts are encoded and submitted as one complete command.
                           Output is automatically truncated to avoid oversized responses.
+                          Commands must not wait for interactive input; they are aborted after 30 minutes.
                           """,
             Handler = ([Description("Shell command to execute")] string command,
                     [Description("Absolute working directory for execution (optional, defaults to active project).")]
@@ -233,6 +264,38 @@ internal static class AiBuiltInFunctions
         };
     }
 
+    private static async Task<object> OpenFileAsync(
+        IProjectExplorerService projectExplorerService,
+        IMainDockService dockService,
+        string path,
+        int? line)
+    {
+        var resolvedPath = ResolvePath(projectExplorerService, path);
+        if (string.IsNullOrWhiteSpace(resolvedPath))
+            return new { result = false, error = (string?)"No active project and no path provided." };
+
+        if (!File.Exists(resolvedPath))
+            return new { result = false, error = (string?)$"File does not exist: {resolvedPath}" };
+
+        var document = await dockService.OpenFileAsync(resolvedPath);
+        if (document == null)
+            return new
+            {
+                result = true,
+                path = resolvedPath,
+                error = (string?)null,
+                note = (string?)"The file was handled by an external program and is not open in an IDE editor."
+            };
+
+        if (line is > 0 && document is IEditor editor)
+        {
+            var lineCount = editor.CurrentDocument.LineCount;
+            editor.JumpToLine(Math.Min(line.Value, lineCount));
+        }
+
+        return new { result = true, path = resolvedPath, error = (string?)null, note = (string?)null };
+    }
+
     private static object GetErrorsForFile(
         IProjectExplorerService projectExplorerService,
         IErrorService errorService,
@@ -270,8 +333,9 @@ internal static class AiBuiltInFunctions
             ? null
             : new DelegateProgress(raw => context.ReportProgress(FormatTerminalProgress(command, raw)));
 
+        var commandToExecute = PrepareTerminalCommand(command, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
-            command,
+            commandToExecute,
             "AI Chat",
             resolvedWorkDir,
             true,
@@ -281,10 +345,11 @@ internal static class AiBuiltInFunctions
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var truncatedOutput = TruncateTerminalOutput(terminalResult.Output, out var outputTruncated);
-        var result = outputTruncated
-            ? terminalResult with { Output = truncatedOutput }
-            : terminalResult;
+        // Control sequences are meaningless to the model and can make up most of the
+        // payload for commands that draw progress bars, so they are removed here as well.
+        var cleanedOutput = StripAnsiEscapes(terminalResult.Output);
+        var truncatedOutput = TruncateTerminalOutput(cleanedOutput, out var outputTruncated);
+        var result = terminalResult with { Output = truncatedOutput };
 
         // Show the final, cleaned output in the chat tool box.
         context?.ReportProgress(FormatTerminalProgress(command, terminalResult.Output));
@@ -293,8 +358,26 @@ internal static class AiBuiltInFunctions
         {
             result,
             outputTruncated,
-            originalOutputLength = terminalResult.Output.Length
+            originalOutputLength = terminalResult.Output.Length,
+            note = terminalResult.TimedOut
+                ? $"The command did not finish within {TerminalCommandTimeout.TotalMinutes:0} minutes and was aborted. " +
+                  "The output above is partial and the exit code is unknown."
+                : terminalResult.ExitCode < 0
+                    ? "The shell did not report an exit code for this command, so success or failure cannot be " +
+                      "derived from it. Judge the result from the output instead."
+                    : null
         };
+    }
+
+    internal static string PrepareTerminalCommand(string command, bool isWindows)
+    {
+        if (!isWindows || !command.ContainsAny('\r', '\n')) return command;
+
+        // PowerShell's interactive parser can wait indefinitely while a pasted multi-line construct
+        // appears incomplete. Submit an encoded script block as one complete REPL command instead.
+        var encodedCommand = Convert.ToBase64String(Encoding.UTF8.GetBytes(command));
+        return
+            $"& ([ScriptBlock]::Create([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{encodedCommand}'))))";
     }
 
     private static string FormatTerminalProgress(string command, string rawOutput)

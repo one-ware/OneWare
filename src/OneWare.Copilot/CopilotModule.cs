@@ -10,12 +10,28 @@ namespace OneWare.Copilot;
 
 public class CopilotModule : OneWareModuleBase
 {
-
     public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
     public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
+    public const string CopilotAutoTierSettingKey = "AI_Chat_Copilot_AutoTier";
+
+    /// <summary>
+    /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
+    /// </summary>
+    public const string DefaultModelId = "claude-sonnet-4-5";
+
+    /// <summary>
+    /// Id of the model that lets Copilot route each turn to a backend model itself. Sessions using
+    /// it can express a routing preference through <see cref="CopilotAutoTierSettingKey"/>.
+    /// </summary>
+    public const string AutoModelId = "auto";
+
+    /// <summary>
+    /// Default reasoning effort, matching the Copilot CLI <c>effortLevel</c> default.
+    /// </summary>
+    public const string DefaultReasoningEffort = "medium";
 
     public static readonly Package CopilotPackage = new()
     {
@@ -58,13 +74,13 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "1.0.74",
+                Version = "1.0.83",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-win32-x64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -77,7 +93,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-win32-arm64.zip",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -90,7 +106,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-linux-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -103,7 +119,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-linux-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -116,7 +132,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-darwin-x64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -129,7 +145,7 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.74/copilot-darwin-arm64.tar.gz",
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -202,7 +218,26 @@ public class CopilotModule : OneWareModuleBase
         //         HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
         //     });
 
-        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, "gpt-5-mini");
+        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+            CopilotAutoTierSettingKey,
+            new ComboBoxSetting("Auto Routing",
+                CopilotChatService.AutoTierDefault,
+                new object[]
+                {
+                    CopilotChatService.AutoTierDefault,
+                    CopilotChatService.AutoTierEfficiency,
+                    CopilotChatService.AutoTierBalance,
+                    CopilotChatService.AutoTierIntelligence
+                })
+            {
+                HoverDescription =
+                    "Routing preference for the \"auto\" model, which lets Copilot pick a backend " +
+                    "model per turn. Default: leave the choice to Copilot. Efficiency: prefer " +
+                    "faster, cheaper models. Balance: trade off speed and capability. " +
+                    "Intelligence: prefer the most capable models."
+            });
+
+        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, DefaultModelId);
 
         serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedReasoningEffortSettingKey, "");
 

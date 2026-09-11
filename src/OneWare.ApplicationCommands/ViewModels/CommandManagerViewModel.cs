@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using OneWare.ApplicationCommands.Models;
 using OneWare.ApplicationCommands.Tabs;
 using OneWare.ApplicationCommands.Views;
 using OneWare.Essentials.Commands;
@@ -28,21 +29,28 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
     private readonly IApplicationCommandService _applicationCommandService;
 
     private readonly IProjectExplorerService _projectExplorerService;
+    private readonly ILanguageManager _languageManager;
+    private readonly IMainDockService _mainDockService;
     private readonly IWindowService _windowService;
 
     [ObservableProperty] private CommandManagerTabBase _selectedTab;
 
     private readonly CommandManagerAllTab _allTab;
     private readonly CommandManagerFilesTab _filesTab;
+    private readonly CommandManagerSymbolsTab _symbolsTab;
     private readonly CommandManagerActionsTab _actionsTab;
     private readonly IReadOnlyCollection<IApplicationCommand> _staticCommands;
     private CancellationTokenSource _fileSearchCancellation = new();
+    private CancellationTokenSource _symbolSearchCancellation = new();
 
     public CommandManagerViewModel(ILogical logical, IApplicationCommandService commandService,
-        IProjectExplorerService projectExplorerService, IWindowService windowService)
+        IProjectExplorerService projectExplorerService, IWindowService windowService,
+        ILanguageManager languageManager, IMainDockService mainDockService)
     {
         ActiveFocus = logical;
         _projectExplorerService = projectExplorerService;
+        _languageManager = languageManager;
+        _mainDockService = mainDockService;
         _applicationCommandService = commandService;
         _windowService = windowService;
         _staticCommands = commandService.ApplicationCommands.ToList();
@@ -57,6 +65,11 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
             Items = new ObservableCollection<IApplicationCommand>()
         };
         Tabs.Add(_filesTab);
+        _symbolsTab = new CommandManagerSymbolsTab(logical)
+        {
+            Items = new ObservableCollection<IApplicationCommand>()
+        };
+        Tabs.Add(_symbolsTab);
         _actionsTab = new CommandManagerActionsTab(logical)
         {
             Items = commandService.ApplicationCommands
@@ -72,6 +85,9 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
         _filesTab.WhenValueChanged(x => x.SearchText)
             .Throttle(TimeSpan.FromMilliseconds(150))
             .Subscribe(text => _ = UpdateFileSearchAsync(_filesTab, text));
+        _symbolsTab.WhenValueChanged(x => x.SearchText)
+            .Throttle(TimeSpan.FromMilliseconds(150))
+            .Subscribe(text => _ = UpdateSymbolSearchAsync(text));
     }
 
     public static KeyGesture ChangeShortcutGesture => new(Key.Enter, PlatformHelper.ControlKey);
@@ -162,6 +178,61 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
             .ToList();
 
         return sorted;
+    }
+
+    private async Task UpdateSymbolSearchAsync(string? searchText)
+    {
+        await _symbolSearchCancellation.CancelAsync();
+        _symbolSearchCancellation.Dispose();
+        _symbolSearchCancellation = new CancellationTokenSource();
+        var token = _symbolSearchCancellation.Token;
+
+        if (string.IsNullOrWhiteSpace(searchText) || _mainDockService.CurrentDocument is not IEditor editor)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => ApplySymbolCommands([]));
+            return;
+        }
+
+        var languageService = _languageManager.GetLanguageService(editor.FullPath);
+        if (languageService == null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => ApplySymbolCommands([]));
+            return;
+        }
+
+        IsSearching = true;
+        var symbols = await languageService.RequestWorkspaceSymbolsAsync(searchText);
+        IsSearching = false;
+        if (token.IsCancellationRequested) return;
+
+        var commands = symbols?
+            .Where(symbol => symbol.Location.IsLocation && symbol.Location.Location != null)
+            .Select(symbol =>
+            {
+                var location = symbol.Location.Location!;
+                var path = location.Uri.GetFileSystemPath();
+                return (IApplicationCommand)new OpenSymbolApplicationCommand(symbol.Name, path,
+                    location.Range.Start.Line, location.Range.Start.Character)
+                {
+                    Detail = string.IsNullOrWhiteSpace(symbol.ContainerName)
+                        ? Path.GetFileName(path)
+                        : $"{symbol.ContainerName} - {Path.GetFileName(path)}"
+                };
+            })
+            .Take(MaxFileResults)
+            .ToList() ?? [];
+
+        await Dispatcher.UIThread.InvokeAsync(() => ApplySymbolCommands(commands));
+    }
+
+    private void ApplySymbolCommands(IReadOnlyList<IApplicationCommand> commands)
+    {
+        _symbolsTab.Items.Clear();
+        _symbolsTab.Items.AddRange(commands);
+        _symbolsTab.VisibleItems = commands
+            .Select(command => new CommandManagerItemModel(command, command.CanExecute(ActiveFocus)))
+            .ToList();
+        _symbolsTab.SelectedItem = _symbolsTab.VisibleItems.FirstOrDefault();
     }
 
     private static int ScoreFileMatch(string relativePath, string searchText)

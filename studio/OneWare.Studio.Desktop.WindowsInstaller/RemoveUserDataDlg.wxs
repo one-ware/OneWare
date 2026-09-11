@@ -1,0 +1,45 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <UI>
+      <!-- Unchecked by default. Can also be set on the command line (REMOVEUSERDATA=1) -->
+      <Property Id="REMOVEUSERDATA" Secure="yes" />
+
+      <Dialog Id="RemoveUserDataDlg" Width="370" Height="270" Title="!(loc.RemoveUserDataDlg_Title)">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no"
+          Text="WixUI_Bmp_Banner" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="340" Height="15" Transparent="yes"
+          NoPrefix="yes" Text="!(loc.RemoveUserDataDlgTitle)" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="340" Height="20" Transparent="yes"
+          NoPrefix="yes" Text="!(loc.RemoveUserDataDlgDescription)" />
+
+        <Control Id="Text" Type="Text" X="25" Y="60" Width="320" Height="60" NoPrefix="yes"
+          Text="!(loc.RemoveUserDataDlgText)" />
+        <Control Id="RemoveUserDataCheckBox" Type="CheckBox" X="25" Y="125" Width="320" Height="17"
+          Property="REMOVEUSERDATA" CheckBoxValue="1" Text="!(loc.RemoveUserDataDlgCheckBox)" />
+
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17"
+          Text="!(loc.WixUIBack)" DisableCondition="Preselected">
+          <Publish Event="NewDialog" Value="MaintenanceTypeDlg" Condition="NOT Preselected" />
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes"
+          Text="!(loc.WixUINext)">
+          <Publish Event="NewDialog" Value="VerifyReadyDlg" Condition="NOT Preselected" />
+          <Publish Event="EndDialog" Value="Return" Condition="Preselected" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes"
+          Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+
+      <!-- Uninstall started from Apps and Features skips the maintenance dialogs,
+           so the dialog has to be sequenced manually in that case -->
+      <InstallUISequence>
+        <Show Dialog="RemoveUserDataDlg" Before="ProgressDlg"
+          Condition="Installed AND Preselected AND REMOVE~=&quot;ALL&quot; AND NOT PATCH AND NOT UPGRADINGPRODUCTCODE" />
+      </InstallUISequence>
+    </UI>
+  </Fragment>
+</Wix>

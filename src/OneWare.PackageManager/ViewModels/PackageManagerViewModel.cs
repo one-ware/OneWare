@@ -3,12 +3,14 @@ using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Controls;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.PackageManager.Views;
@@ -56,14 +58,20 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         SelectedCategory = GetAllCategory() ?? PackageCategories.FirstOrDefault();
 
-        _packageService.WhenValueChanged(x => x.IsUpdating).Subscribe(x => { IsLoading = x; });
+        _packageService.WhenValueChanged(x => x.IsUpdating)
+            .Subscribe(x => Dispatcher.UIThread.Post(() => IsLoading = x));
 
-        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x => x.Value.Status == PackageStatus.UpdateAvailable));
+        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x =>
+            x.Value.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease));
         
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
-            ConstructPackageViewModels();
-            UpdateAllCommand.NotifyCanExecuteChanged();
+            // PackagesUpdated can be raised from a background thread
+            Dispatcher.UIThread.Post(() =>
+            {
+                ConstructPackageViewModels();
+                UpdateAllCommand.NotifyCanExecuteChanged();
+            });
         });
 
         ConstructPackageViewModels();
@@ -158,7 +166,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task RefreshPackagesAsync()
     {
-        await _packageService.RefreshAsync();
+        await _packageService.RefreshAsync(false);
     }
 
     public Control ShowExtensionManager()
@@ -235,7 +243,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     {
         if (SelectedCategory?.SelectedPackage == null)
             return;
-
+        
         await SelectedCategory.SelectedPackage.ResolveTabsAsync();
     }
 
@@ -277,6 +285,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             SelectedCategory = categoryVm;
             SelectedCategory.SelectedPackage = packageVm;
 
+            _ = packageVm.ResolveIconAsync();
             await packageVm.ResolveTabsAsync();
             return packageVm;
         }
@@ -354,32 +363,26 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> UpdateAllAsync()
     {
+        // A prerelease installation stays on the prerelease channel, so its updates are offered
+        // here too.
         var packages = _packageService.Packages.Values
-            .Where(x => x.Status == PackageStatus.UpdateAvailable)
-            .OrderBy(x => x.Package.Name, StringComparer.OrdinalIgnoreCase)
+            .Where(x => x.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease)
+            .Select(x => (State: x, Target: x.ResolveTargetVersion()))
+            .Where(x => x.Target != null)
+            .OrderBy(x => x.State.Package.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         if (packages.Count == 0)
             return true;
 
         var requiresRestart = packages.Any(x =>
-            string.Equals(x.Package.Type, "Plugin", StringComparison.OrdinalIgnoreCase));
+            string.Equals(x.State.Package.Type, "Plugin", StringComparison.OrdinalIgnoreCase));
 
         var packageLines = packages.Select(x =>
         {
-            var installedVersion = x.InstalledVersion?.Version ?? "?";
-            var targetVersion = x.Package.Versions?
-                .Where(v => !v.IsPrerelease)
-                .OrderByDescending(v =>
-                {
-                    if (Version.TryParse(v.Version, out var parsedVersion))
-                        return parsedVersion;
+            var installedVersion = x.State.InstalledVersion?.Version ?? "?";
 
-                    return new Version(0, 0);
-                })
-                .FirstOrDefault()?.Version ?? "latest";
-
-            return $"- **{x.Package.Name}** `{installedVersion} -> {targetVersion}`";
+            return $"- **{x.State.Package.Name}** `{installedVersion} -> {x.Target!.Version}`";
         });
 
         var message =
@@ -416,8 +419,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         
         foreach (var package in packages)
         {
-            await FocusPluginAsync(package.Package!.Id!);
-            await _packageService.UpdateAsync(package.Package.Id!, null, false, true);
+            await FocusPluginAsync(package.State.Package!.Id!);
+            await _packageService.UpdateAsync(package.State.Package.Id!, package.Target, false, true);
         }
         
         UpdateAllCommand.NotifyCanExecuteChanged();

@@ -1,0 +1,89 @@
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
+                         xmlns:models="clr-namespace:OneWare.PackageManager.Models"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         PrefWidth="450" PrefHeight="280" Padding="4"
+                         mc:Ignorable="d"
+                         x:Class="OneWare.PackageManager.Views.ConfigurationProfileImportView"
+                         CustomIcon="{DynamicResource PackageManager}"
+                         Title="{Binding Title}" Name="ConfigurationProfileImportViewView"
+                         x:CompileBindings="True"
+                         x:DataType="viewModels:ConfigurationProfileImportViewModel"
+                         WindowStartupLocation="CenterOwner">
+
+    <controls:FlexibleWindow.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </controls:FlexibleWindow.Styles>
+
+    <DockPanel Margin="8" LastChildFill="True">
+
+        <!-- Description -->
+        <TextBlock DockPanel.Dock="Top" Margin="0 0 0 8"
+                   Text="Importing configuration profile. This applies settings and installs the referenced packages."
+                   TextWrapping="Wrap" />
+
+        <!-- Footer -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0"
+                    Classes="WindowButtons"
+                    HorizontalAlignment="Right">
+            <Button Command="{Binding CancelCommand}"
+                    CommandParameter="{Binding #ConfigurationProfileImportViewView}">
+                <TextBlock Text="Cancel" />
+            </Button>
+            <Button Command="{Binding DoneCommand}"
+                    CommandParameter="{Binding #ConfigurationProfileImportViewView}"
+                    IsEnabled="{Binding !IsImporting}"
+                    Classes="PrimaryButton">
+                <TextBlock Text="Done" />
+            </Button>
+        </StackPanel>
+
+        <!-- Error -->
+        <TextBlock DockPanel.Dock="Bottom" Margin="0 8 0 0"
+                   Text="{Binding ErrorMessage}"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource ErrorBrush}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        <!-- Steps -->
+        <Border BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="8"
+                Background="{DynamicResource ThemeControlLowBrush}" ClipToBounds="True" Padding="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Steps}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="models:ConfigurationImportStepModel">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" Margin="4 4">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Title}" Height="20" />
+
+                                <Panel Grid.Row="0" Grid.Column="1" Width="16" Height="16">
+                                    <controls:Spinner Width="16" Height="16" IsVisible="{Binding IsRunning}" />
+                                    <Image Source="{DynamicResource BoxIcons.RegularCheck.Green}"
+                                           IsVisible="{Binding IsCompleted}" />
+                                </Panel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                            Margin="0 4 0 0" Spacing="2"
+                                            IsVisible="{Binding ShowProgress}">
+                                    <ProgressBar Height="6" Minimum="0" Maximum="100"
+                                                 Value="{Binding ProgressPercent}"
+                                                 IsIndeterminate="{Binding !IsDeterminate}" />
+                                    <TextBlock Text="{Binding Detail}"
+                                               FontSize="11" Opacity="0.7"
+                                               TextTrimming="CharacterEllipsis"
+                                               IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+    </DockPanel>
+
+</controls:FlexibleWindow>

@@ -120,7 +120,7 @@ public sealed class FpgaModel : ObservableObject, IHardwareModel
 
     public event EventHandler? NodeDisconnected;
 
-    /// <summary>Raised when any pin's per-pin property value changes (triggers IsDirty in the pin planner).</summary>
+    /// <summary>Raised when any pin's per-pin property value changes (triggers IsDirty in the constraint editor).</summary>
     public event EventHandler? PinPropertyChanged;
 
     private void SearchPins(string? search)

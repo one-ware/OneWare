@@ -35,6 +35,16 @@ public interface IHttpService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Downloads an image and returns it. When <paramref name="silent" /> is true, failures are only written to the debug
+    /// log and never surfaced to the user.
+    /// </summary>
+    public Task<IImage?> DownloadImageAsync(string url, bool silent, TimeSpan timeout = default,
+        CancellationToken cancellationToken = default)
+    {
+        return DownloadImageAsync(url, timeout, cancellationToken);
+    }
+
+    /// <summary>
     /// Downloads text content.
     /// </summary>
     public Task<string?> DownloadTextAsync(string url, TimeSpan timeout = default,

@@ -28,6 +28,12 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     public Control? FooterUiExtension => null;
 
     /// <summary>
+    /// Optional UI extension displayed in the chat header, next to the session history button
+    /// (e.g. an account/overflow menu).
+    /// </summary>
+    public Control? HeaderUiExtension => null;
+
+    /// <summary>
     /// Fired when the chat session is reset.
     /// </summary>
     event EventHandler SessionReset;
@@ -77,6 +83,13 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     /// Clears all queued messages, returning whether the service queue was cleared.
     /// </summary>
     Task<bool> ClearQueuedMessagesAsync() => Task.FromResult(false);
+
+    /// <summary>
+    /// Attaches raw image data (e.g. from a clipboard paste) to the next message.
+    /// Returns <see langword="true"/> if the service accepted the image; <see langword="false"/>
+    /// if image attachments are not supported and the caller should fall back to text paste.
+    /// </summary>
+    bool TryAddImageAttachment(byte[] data, string mimeType, string displayName) => false;
 
     /// <summary>
     /// Starts a new chat session.

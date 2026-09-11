@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Verilog.ViewModels"
+             xmlns:models="clr-namespace:OneWare.Verilog.Models"
+             x:Class="OneWare.Verilog.Views.VerilogRtlTreeView"
+             x:DataType="viewModels:VerilogRtlTreeViewModel"
+             mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="500">
+    <Grid RowDefinitions="Auto,*">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="4">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Content="Forward" Command="{Binding LoadForwardCommand}" />
+                <Button Content="Reverse" Command="{Binding LoadReverseCommand}" />
+                <Button Content="Refresh" Command="{Binding RefreshCommand}" />
+            </StackPanel>
+        </Border>
+        <TreeView Grid.Row="1" ItemsSource="{Binding Nodes}" SelectedItem="{Binding SelectedNode}"
+                  DoubleTapped="TreeView_OnDoubleTapped">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="models:VerilogRtlTreeNode" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding DisplayName}" />
+                        <TextBlock Text="recursive" IsVisible="{Binding IsRecursive}"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <TextBlock Text="truncated" IsVisible="{Binding IsTruncated}"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                    </StackPanel>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+    </Grid>
+</UserControl>

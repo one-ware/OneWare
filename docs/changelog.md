@@ -1,3 +1,44 @@
+## 1.0.31
+
+- Fix preventing plugin updates forcing a restart
+- Fix plugin removals forcing package manager viewmodel reconstruction
+
+## 1.0.30
+
+- Huge LSP Support improvements (Benefitting all languages)
+- Improved Markdown Styling
+- Added Verilator simulator and improved Verilog / SystemVerilog support
+- Added FPGA AI skills for projects, toolchains and simulations
+- Added Go to Symbol
+- Added Accept All for AI edits and a copy button in the AI chat
+- Breakpoints now sit on the line number margin and can be restricted per file type
+- Renamed the Pin Planner to Constraint Editor
+- More robust native tool downloads and plugin updates
+- Fixed prerelease packages showing as unavailable and not being removable
+- Fixed a crash in the Problems list
+- Fixed resuming the cloud login after a host change
+- Fixed opening files from a link being handled twice
+- Fixed windows stealing focus when a document opens in the background
+
+## 1.0.28
+
+- Add possibility to add custom AI Agents and Skills
+- Add TypeScript / Javascript Support
+
+## 1.0.26
+
+- Add option to the Windows Installer to remove all user data when uninstalling
+- Add possibility to install default configurations using oneware://config links
+- Removed Deployment defaults
+- Silence some warnings when GitHub Servers are down
+
+## 1.0.25
+
+- Add JavaScript/TypeScript language support (native tsc language server, auto-downloadable)
+- Support language servers that only provide pull diagnostics (textDocument/diagnostic)
+- Improve Copilot Terminal Handling in Windows
+- Add possibility to add default startup configuration
+
 ## 1.0.24
 
 - Improve Copilot Terminal Handling

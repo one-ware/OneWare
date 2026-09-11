@@ -19,7 +19,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.Services;
 
-public class PackageService : ObservableObject, IPackageService
+public class PackageService : ObservableObject, IPackageService, IDisposable
 {
     private readonly ICompositeServiceProvider _compositeServiceProvider;
     private readonly IPackageCatalog _catalog;
@@ -35,8 +35,10 @@ public class PackageService : ObservableObject, IPackageService
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
     private readonly Dictionary<string, CancellationTokenSource> _installCancellation = new();
     private readonly List<string[]> _repositoryUrls = [];
-
+    
+    private bool _disposed;
     private Task<bool>? _currentRefreshTask;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     public PackageService(IPackageCatalog catalog, IPackageDownloader downloader, IPackageStateStore stateStore,
         ISettingsService settingsService, ILogger logger, IApplicationStateService applicationStateService,
@@ -52,6 +54,8 @@ public class PackageService : ObservableObject, IPackageService
         _paths = paths;
         _defaultInstaller = genericPackageInstaller;
         _compositeServiceProvider = compositeServiceProvider;
+
+        _settingsService.Saved += OnSettingsSaved;
     }
 
     public bool IsUpdating
@@ -75,6 +79,34 @@ public class PackageService : ObservableObject, IPackageService
 
     public event EventHandler? PackagesUpdated;
     public event EventHandler<PackageProgressEventArgs>? PackageProgress;
+
+    public void Dispose()
+    {
+        if (_disposed) 
+            return;
+        
+        _disposed = true;
+        PackagesUpdated = null; 
+        PackageProgress = null; 
+        
+        foreach (var cts in _installCancellation.Values.ToArray())
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // already completed and disposed by the owning install task
+            }
+        }
+
+        _installCancellation.Clear();
+        _activeInstalls.Clear();
+        _currentRefreshTask = null;
+
+        _settingsService.Saved -= OnSettingsSaved;
+    }
 
     public void RegisterPackage(Package package)
     {
@@ -122,17 +154,34 @@ public class PackageService : ObservableObject, IPackageService
             cts.Cancel();
     }
 
-    public async Task<bool> RefreshAsync()
+    [Obsolete]
+    public Task<bool> RefreshAsync()
+    {
+        return RefreshAsync(false);
+    }
+
+    public async Task<bool> RefreshAsync(bool force)
     {
         try
         {
-            if (_currentRefreshTask is { IsCompleted: false })
+            // Join an already running refresh unless the caller requires one that uses the current settings
+            if (!force && _currentRefreshTask is { IsCompleted: false } pending)
             {
-                return await _currentRefreshTask;
+                return await pending;
             }
 
-            _currentRefreshTask = RefreshInternalAsync();
-            return await _currentRefreshTask;
+            // Serialize refreshes, a forced refresh must not run in parallel with an outdated one
+            await _refreshLock.WaitAsync();
+            try
+            {
+                var refreshTask = RefreshInternalAsync();
+                _currentRefreshTask = refreshTask;
+                return await refreshTask;
+            }
+            finally
+            {
+                _refreshLock.Release();
+            }
         }
         catch (Exception e)
         {
@@ -263,6 +312,11 @@ public class PackageService : ObservableObject, IPackageService
 
             await SaveInstalledPackagesAsync();
 
+            // A package that no repository offers anymore only existed as a stub for its installation.
+            // Once it is removed there is nothing left to show or install, so it is dropped entirely.
+            if (!_catalog.Manifests.ContainsKey(packageId) && _packages.Remove(packageId))
+                PackagesUpdated?.Invoke(this, EventArgs.Empty);
+
             return true;
         }
         catch (Exception e)
@@ -298,7 +352,7 @@ public class PackageService : ObservableObject, IPackageService
 
         if (package.IconUrl == null) return null;
 
-        return await _httpService.DownloadImageAsync(package.IconUrl);
+        return await _httpService.DownloadImageAsync(package.IconUrl, true);
     }
 
     private IImage? CreateImageFromBase64(string icon, string? packageId)
@@ -375,7 +429,11 @@ public class PackageService : ObservableObject, IPackageService
                 .Select(item => new[] { item })
                 .ToList();
 
-            var allRepos = _repositoryUrls.Concat(customRepositories);
+            var onlyCustomSources = _settingsService.GetSettingValue<bool>("PackageManager_OnlyCustomSources");
+            var allRepos = onlyCustomSources
+                ? customRepositories
+                : _repositoryUrls.Concat(customRepositories).ToList();
+
             result = await _catalog.RefreshAsync(allRepos);
 
             var installed = await _stateStore.LoadAsync();
@@ -488,6 +546,16 @@ public class PackageService : ObservableObject, IPackageService
             return new PackageInstallResult { Status = PackageInstallResultReason.NotFound };
         }
 
+        // Installing a different version over an existing one would extract over files that may
+        // still be in use. Removing first stops the running processes and clears the directory.
+        if (state.InstalledVersion != null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!await RemoveAsync(state.Package.Id!))
+                return new PackageInstallResult { Status = PackageInstallResultReason.ErrorDownloading };
+        }
+
         return await DownloadAndInstallAsync(state, selectedVersion, target, installer, compatibility, cancellationToken);
     }
 
@@ -542,7 +610,8 @@ public class PackageService : ObservableObject, IPackageService
             var url = target.Url ??
                       $"{state.Package.SourceUrl}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
-            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, progress, cancellationToken);
+            var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, target.IsArchive, progress,
+                cancellationToken);
 
             if (!success)
             {
@@ -559,6 +628,7 @@ public class PackageService : ObservableObject, IPackageService
             state.InstalledVersionWarningText = result.InstalledVersionWarningText;
             state.Status = result.Status;
             state.Progress = 0;
+            UpdateStatus(state);
 
             await SaveInstalledPackagesAsync();
 
@@ -588,35 +658,51 @@ public class PackageService : ObservableObject, IPackageService
             state.IsIndeterminate = false;
         }
     }
+    
+    private void OnSettingsSaved(object? sender, EventArgs e)
+    {
+        _ = RefreshAsync(false);
+    }
 
     private void UpdateStatus(PackageState state)
     {
         if (state.Status == PackageStatus.NeedRestart) return;
 
-        var lastPrerelease = state.Package.Versions?.Where(x => x.IsPrerelease).LastOrDefault();
-        var lastStable = state.Package.Versions?.Where(x => !x.IsPrerelease).LastOrDefault();
+        var target = state.ResolveTargetVersion();
 
-        var hasStable = Version.TryParse(lastStable?.Version, out var lastVersion);
-        var hasPrerelease = Version.TryParse(lastPrerelease?.Version, out var lastPrereleaseVersion);
-        var hasInstalled = Version.TryParse(state.InstalledVersion?.Version ?? "", out var installedVersion);
+        var hasTarget = SemanticVersion.TryParse(target?.Version, out var targetVersion);
+        var hasInstalled = SemanticVersion.TryParse(state.InstalledVersion?.Version, out var installedVersion);
 
-        if (hasStable && hasInstalled && lastVersion > installedVersion)
-            state.Status = PackageStatus.UpdateAvailable;
-        else if (hasInstalled && hasPrerelease && lastPrereleaseVersion > installedVersion)
-            state.Status = PackageStatus.UpdateAvailablePrerelease;
+        // An installed package stays removable even when its version string cannot be parsed or the
+        // package disappeared from every repository, otherwise it can never be uninstalled again.
+        if (!hasInstalled && state.InstalledVersion != null)
+        {
+            state.Status = PackageStatus.Installed;
+            return;
+        }
+
+        if (hasInstalled && hasTarget && targetVersion > installedVersion)
+            state.Status = target!.IsPrerelease
+                ? PackageStatus.UpdateAvailablePrerelease
+                : PackageStatus.UpdateAvailable;
         else if (hasInstalled)
             state.Status = PackageStatus.Installed;
-        else if (!hasInstalled && hasStable)
+        else if (hasTarget)
             state.Status = PackageStatus.Available;
         else
             state.Status = PackageStatus.Unavailable;
     }
 
+    /// <summary>
+    /// Picks the newest version this Studio build can actually run. Versions that require a newer
+    /// Studio are skipped, so an outdated Studio is never updated to a plugin it cannot load.
+    /// </summary>
     private PackageVersion? ResolveVersion(PackageState state, PackageVersion? version, bool includePrerelease)
     {
         if (version != null) return version;
 
-        return state.Package.Versions?.LastOrDefault(x => includePrerelease || !x.IsPrerelease);
+        return state.Package.Versions?
+            .LastOrDefault(x => (includePrerelease || !x.IsPrerelease) && x.IsSupportedByStudio());
     }
 
     private IPackageInstaller ResolveInstaller(Package package)

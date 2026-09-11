@@ -53,6 +53,18 @@ public sealed class ChatToolExecutionStartEvent(string tool)
     public string Tool { get; } = tool;
 }
 
+/// <summary>
+/// Raised when the AI loaded a skill into its context.
+/// </summary>
+public sealed class ChatSkillLoadedEvent(string skillName, string content)
+    : ChatEvent()
+{
+    public string SkillName { get; } = skillName;
+
+    /// <summary>The skill instructions the AI received.</summary>
+    public string Content { get; } = content;
+}
+
 public sealed class ChatErrorEvent(string message)
     : ChatEvent()
 {
