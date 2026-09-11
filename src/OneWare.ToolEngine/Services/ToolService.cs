@@ -12,7 +12,9 @@ public class ToolService : IToolService
     private readonly ILogger _logger;
     private readonly ISettingsService _settingsService;
     private readonly ObservableCollection<ToolContext> _tools = new();
-    private readonly Dictionary<string, Dictionary<string, IToolExecutionStrategy>> _toolStrategies = new();
+    private readonly Dictionary<string, IToolExecutionStrategy> _strategies = new();
+    private readonly HashSet<string> _universalStrategyKeys = new();
+    private readonly Dictionary<string, Func<ToolContext, bool>> _strategyToolPredicates = new();
 
     public ToolService(ISettingsService settingsService, ILogger logger)
     {
@@ -21,12 +23,13 @@ public class ToolService : IToolService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public void Register(ToolContext description, IToolExecutionStrategy strategy)
+    public void Register(ToolContext description)
     {
-        RegisterStrategy(description.Key, strategy);
-        RegisterToolInSettings(description);
+        if (_tools.Any(t => t.Key == description.Key))
+            throw new InvalidOperationException($"Tool with key '{description.Key}' is already registered.");
 
         _tools.Add(description);
+        SyncStrategyOptions(description.Key);
     }
 
 
@@ -57,39 +60,100 @@ public class ToolService : IToolService
         return config;
     }
 
-    public void RegisterStrategy(string toolKey, IToolExecutionStrategy strategy)
+    public void RegisterStrategy(IToolExecutionStrategy strategy)
     {
-        if (!_toolStrategies.TryGetValue(toolKey, out var strategyMap))
+        _strategies[strategy.GetStrategyKey()] = strategy;
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
+    }
+
+    public void RegisterStrategy(IToolExecutionStrategy strategy, IReadOnlyCollection<string> supportedToolKeys)
+    {
+        RegisterStrategy(strategy, tool => supportedToolKeys.Contains(tool.Key));
+    }
+
+    public void RegisterStrategy(IToolExecutionStrategy strategy, Func<ToolContext, bool> supportsTool)
+    {
+        var strategyKey = strategy.GetStrategyKey();
+        _strategies[strategyKey] = strategy;
+        _strategyToolPredicates[strategyKey] = supportsTool;
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
+    }
+
+    public void RegisterUniversalStrategy(IToolExecutionStrategy strategy)
+    {
+        _strategies[strategy.GetStrategyKey()] = strategy;
+        _universalStrategyKeys.Add(strategy.GetStrategyKey());
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
+    }
+
+    /// <summary>
+    /// Builds the tool's Settings dropdown the first time both its <see cref="ToolContext"/> and at least
+    /// one strategy are known, and keeps it in sync afterwards. <see cref="Register"/> and
+    /// <see cref="RegisterStrategy"/> can run in either order - whichever call completes the pair builds
+    /// the setting. Once built, only the selectable options are ever updated here, never the active value,
+    /// so a tool's runtime behavior never changes without the user explicitly picking a new strategy.
+    /// </summary>
+    private void SyncStrategyOptions(string toolKey)
+    {
+        var currentKeys = GetStrategyKeys(toolKey);
+        if (currentKeys.Length == 0) return;
+
+        if (_settingsService.HasSetting(toolKey))
         {
-            strategyMap = new Dictionary<string, IToolExecutionStrategy>();
-            _toolStrategies[toolKey] = strategyMap;
+            if (_settingsService.GetSetting(toolKey) is ComboBoxSetting combo &&
+                !combo.Options.SequenceEqual(currentKeys))
+                combo.Options = currentKeys.Cast<object>().ToArray();
+            return;
         }
 
-        strategyMap[strategy.GetStrategyKey()] = strategy;
+        var description = _tools.FirstOrDefault(t => t.Key == toolKey);
+        if (description is null) return;
+
+        var defaultStrategy = description.PreferredStrategyKeys.FirstOrDefault(currentKeys.Contains) ?? currentKeys[0];
+
+        var setting = new ComboBoxSetting(description.Name, defaultStrategy, currentKeys.Cast<object>().ToArray());
+        _settingsService.RegisterSetting("Binary Management", "Execution Strategy", toolKey, setting);
     }
 
     public void UnregisterStrategy(string strategyKey)
     {
-        foreach (var toolEntry in _toolStrategies)
-        {
-            var strategyMap = toolEntry.Value;
-            strategyMap.Remove(strategyKey);
-        }
+        _strategies.Remove(strategyKey);
+        _universalStrategyKeys.Remove(strategyKey);
+        _strategyToolPredicates.Remove(strategyKey);
+
+        foreach (var tool in _tools) SyncStrategyOptions(tool.Key);
     }
 
+    /// <summary>
+    /// Computes the strategy keys available to a tool from all three opt-in paths: universal
+    /// strategies, strategies whose predicate matches this tool, and strategies named in the tool's
+    /// own <see cref="ToolContext.PreferredStrategyKeys"/>. Evaluated fresh on every call, so it stays
+    /// correct regardless of the order tools and strategies were registered in, or when a tool was
+    /// registered relative to a matching strategy's predicate.
+    /// </summary>
     public string[] GetStrategyKeys(string toolKey)
     {
-        if (_toolStrategies.TryGetValue(toolKey, out var strategies))
-            return strategies.Values
-                .Select(s => s.GetStrategyKey())
-                .ToArray();
+        var keys = new HashSet<string>(_universalStrategyKeys);
 
-        return [];
+        var tool = _tools.FirstOrDefault(t => t.Key == toolKey);
+        if (tool is not null)
+        {
+            foreach (var (strategyKey, supportsTool) in _strategyToolPredicates)
+                if (supportsTool(tool)) keys.Add(strategyKey);
+
+            foreach (var strategyKey in tool.PreferredStrategyKeys)
+                if (_strategies.ContainsKey(strategyKey)) keys.Add(strategyKey);
+        }
+
+        return keys.ToArray();
     }
 
     public IReadOnlyList<IToolExecutionStrategy> GetStrategies(string toolKey)
     {
-        return _toolStrategies[toolKey].Values.ToList();
+        return GetStrategyKeys(toolKey).Select(key => _strategies[key]).ToList();
     }
 
     public IToolExecutionStrategy GetStrategy(string toolKey)
@@ -99,34 +163,77 @@ public class ToolService : IToolService
             throw new InvalidOperationException(
                 $"No Setting  for key '{toolKey}' was found. Register Tool first bevor you are using it");
         }
-        
+
         var strategyKey = _settingsService.GetSettingValue<string>(toolKey);
-        if (_toolStrategies.TryGetValue(toolKey, out var strategies) &&
-            strategies.TryGetValue(strategyKey, out var strategy))
-            return strategy;
-        
+        var strategy = TryGetStrategy(toolKey, strategyKey);
+        if (strategy is not null) return strategy;
+
         _logger.LogError($"No execution strategy found for tool '{toolKey}' and strategy '{strategyKey}'");
         _logger.LogError("Using default strategy");
-        
-        if (strategies != null && strategies.TryGetValue(NativeStrategy.ToolKey, out var defaultStrategy))
-            return defaultStrategy;
-        
+
+        var fallback = TryGetStrategy(toolKey, NativeStrategy.ToolKey);
+        if (fallback is not null) return fallback;
+
         throw new InvalidOperationException($"No strategy with key '{toolKey}' was found.");
     }
 
-    private void RegisterToolInSettings(ToolContext description)
+    public IToolExecutionStrategy? TryGetStrategy(string toolKey, string strategyKey)
     {
-        var strategies = GetStrategyKeys(description.Key);
+        if (!GetStrategyKeys(toolKey).Contains(strategyKey)) return null;
 
-        if (strategies.Length == 0)
-        {
-            _logger.Warning($"No strategies found for Tool: {description.Key}");
-            return;
-        }
-
-        var setting = new ComboBoxSetting(description.Name, strategies[0], strategies.ToArray());
-        _settingsService.RegisterSetting("Binary Management", "Execution Strategy", description.Key, setting);
+        return _strategies.GetValueOrDefault(strategyKey);
     }
+
+    public IReadOnlyDictionary<string, string> GetStrategyConfiguration(string toolKey)
+    {
+        var defaults = _tools.FirstOrDefault(t => t.Key == toolKey)?.StrategyConfiguration
+                       ?? new Dictionary<string, string>();
+
+        var overrideKey = StrategyConfigOverrideKey(toolKey);
+        if (!_settingsService.HasSetting(overrideKey)) return defaults;
+
+        var overrides = _settingsService.GetSettingValue<Dictionary<string, string>>(overrideKey);
+        if (overrides.Count == 0) return defaults;
+
+        var merged = new Dictionary<string, string>(defaults);
+        foreach (var (key, value) in overrides) merged[key] = value;
+        return merged;
+    }
+
+    public IReadOnlyDictionary<string, string> GetStrategyConfiguration(string toolKey, string prefix)
+    {
+        return GetStrategyConfiguration(toolKey)
+            .Where(kv => kv.Key.StartsWith(prefix, StringComparison.Ordinal))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    public void SetStrategyConfigurationValue(string toolKey, string configKey, string value)
+    {
+        var overrideKey = StrategyConfigOverrideKey(toolKey);
+        if (!_settingsService.HasSetting(overrideKey))
+            _settingsService.Register(overrideKey, new Dictionary<string, string>());
+
+        // Copy rather than mutate in place: Setting.Value change notifications only fire on a new reference.
+        var overrides = new Dictionary<string, string>(
+            _settingsService.GetSettingValue<Dictionary<string, string>>(overrideKey))
+        {
+            [configKey] = value
+        };
+
+        _settingsService.SetSettingValue(overrideKey, overrides);
+    }
+
+    public IReadOnlyDictionary<string, string> GetEffectiveStrategyConfiguration(ToolCommand command)
+    {
+        var configuration = GetStrategyConfiguration(command.ToolName);
+        if (command.StrategyConfigurationOverrides.Count == 0) return configuration;
+
+        var merged = new Dictionary<string, string>(configuration);
+        foreach (var (key, value) in command.StrategyConfigurationOverrides) merged[key] = value;
+        return merged;
+    }
+
+    private static string StrategyConfigOverrideKey(string toolKey) => $"{toolKey}_StrategyConfigOverrides";
 
     public void UpdateSettings()
     {
