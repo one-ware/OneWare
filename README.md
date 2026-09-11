@@ -93,6 +93,32 @@ Packages that are already installed are left untouched, and a profile that canno
 skipped rather than blocking startup. A package entry without a `version` installs the latest stable version. Settings
 that are only read while the application starts take effect on the next launch.
 
+### Python support
+
+Python source and stub files (`.py` / `.pyi`) use [Pyrefly](https://pyrefly.org/). With automatic binary downloads enabled
+under **Settings > Experimental > Environment**, opening a Python file installs the pinned native language server.
+Alternatively, install **Pyrefly** from Package Manager or set **Settings > Languages > Python > Pyrefly Path**.
+Native packages are provided for Windows, Linux, and macOS on x64 and ARM64; pip and Node are not needed to host the server.
+The former pylsp integration and its executable-path setting are no longer used.
+
+Use **Code > Python > Select Interpreter...** or the **Python: Select Interpreter** command to choose an existing
+interpreter for the active Python file's workspace (or the active project). The picker lists detected environments and
+supports browsing, refreshing, and returning to **Automatic**. Selections are saved in this machine's IDE settings,
+not written into the project.
+
+Automatic resolution uses the workspace's `.venv`, then `venv`, then **Settings > Languages > Python > Default Python
+interpreter**, then Python on PATH. An explicit workspace selection overrides that chain. Missing explicit selections
+are reported and pause Python language analysis rather than silently selecting a different interpreter. With no Python
+installation and no explicit selection, available Pyrefly analysis remains usable, but third-party imports cannot be
+resolved reliably. OneWare does not install Python runtimes or create virtual environments.
+
+Interpreter changes update the workspace's analysis without reopening files. Pyrefly project configuration can take
+precedence over the IDE's interpreter fallback, including an explicit project interpreter or `skip-interpreter-query`.
+Type-checking strictness follows Pyrefly's project configuration and upstream defaults.
+The interpreter selection configures language analysis, not terminal activation or a Python run/debug configuration.
+Basic newline indentation and `#` commenting work independently of the server. Pyrefly does not supply document
+formatting; Ruff/formatter integration is not included.
+
 ## Nuget
 
 | Package                             | Download                                                                            |
