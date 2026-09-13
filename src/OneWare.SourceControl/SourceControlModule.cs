@@ -40,7 +40,7 @@ public class SourceControlModule : OneWareModuleBase
         settingsService.RegisterSetting("Team Explorer", "Fetch", "SourceControl_AutoFetchEnable",
             new CheckBoxSetting("Auto fetch", true)
             {
-                HoverDescription = "Fetch for changed automatically"
+                HoverDescription = "Fetch remote changes automatically without prompting for login"
             });
         settingsService.RegisterSetting("Team Explorer", "Fetch", "SourceControl_AutoFetchDelay",
             new SliderSetting("Auto fetch interval", 60, 5, 60, 5)
@@ -50,7 +50,7 @@ public class SourceControlModule : OneWareModuleBase
         settingsService.RegisterSetting("Team Explorer", "Polling", "SourceControl_PollChangesEnable",
             new CheckBoxSetting("Poll for changes", true)
             {
-                HoverDescription = "Fetch for changed files automatically"
+                HoverDescription = "Refresh local file changes automatically"
             });
         settingsService.RegisterSetting("Team Explorer", "Polling", "SourceControl_PollChangesDelay",
             new SliderSetting("Poll changes interval", 5, 1, 60, 1)

@@ -24,6 +24,9 @@ public class CompareGitViewModel : Document, IWaitForContent
 {
     private readonly IDisposable? _fileWatcher;
     private readonly SourceControlViewModel _sourceControlViewModel;
+    private FileSystemWatcher? _indexWatcher;
+    private bool _closed;
+    private bool _reloadRequested;
     
     public CompareGitViewModel(string fullPath, SourceControlViewModel sourceControlViewModel)
     {
@@ -43,6 +46,12 @@ public class CompareGitViewModel : Document, IWaitForContent
     
     public string LanguageExtension { get; }
 
+    public bool IsStaged { get; set; }
+
+    public string? RepositoryPath { get; set; }
+
+    public int ContextLines { get; set; } = 10000;
+
     public ICollection<ComparisonControlSection>? Chunks
     {
         get => field;
@@ -53,36 +62,70 @@ public class CompareGitViewModel : Document, IWaitForContent
 
     public override bool OnClose()
     {
+        _closed = true;
         _fileWatcher?.Dispose();
+        _indexWatcher?.Dispose();
         return base.OnClose();
     }
     
     public void InitializeContent()
     {
+        if (_closed) return;
+        if (_indexWatcher == null && RepositoryPath != null)
+        {
+            try
+            {
+                // Git replaces index.lock with index atomically, rather than just writing index in place.
+                _indexWatcher = new FileSystemWatcher(RepositoryPath, "index")
+                {
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName
+                };
+                _indexWatcher.Changed += OnIndexChanged;
+                _indexWatcher.Created += OnIndexChanged;
+                _indexWatcher.Deleted += OnIndexChanged;
+                _indexWatcher.Renamed += OnIndexChanged;
+                _indexWatcher.EnableRaisingEvents = true;
+            }
+            catch (Exception e)
+            {
+                // The repository may have been moved or deleted while the comparison tab remained open.
+                _indexWatcher?.Dispose();
+                _indexWatcher = null;
+                ContainerLocator.Container.Resolve<ILogger>().LogDebug(e, "Could not watch the Git index");
+            }
+        }
         _ = LoadAsync();
     }
 
+    private void OnIndexChanged(object sender, FileSystemEventArgs args) => Dispatcher.UIThread.Post(InitializeContent);
+
     private async Task LoadAsync()
     {
+        if (IsLoading)
+        {
+            _reloadRequested = true;
+            return;
+        }
         IsLoading = true;
         try
         {
-            var patch = _sourceControlViewModel.GetPatch(FullPath, 10000);
-            if (patch != null)
+            do
             {
-                await ParsePatchFileAsync(patch);
-            }
-            else
-            {
-                Chunks = null;
-            }
+                _reloadRequested = false;
+                using var patch = await Task.Run(() => _sourceControlViewModel.GetPatch(FullPath, ContextLines, IsStaged, RepositoryPath));
+                if (_closed) return;
+                if (patch != null) await ParsePatchFileAsync(patch);
+                else Chunks = null;
+            } while (_reloadRequested && !_closed);
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
-
-        IsLoading = false;
+        finally
+        {
+            IsLoading = false;
+        }
     }
     
     private async Task ParsePatchFileAsync(Patch patchFile)
@@ -157,7 +200,7 @@ public class CompareGitViewModel : Document, IWaitForContent
             return chunks;
         });
         
-        Chunks = result;
+        if (!_closed) Chunks = result;
     }
 
     private static List<ComparisonControlSection> ResolveDiffSections(IEnumerable<string> hunkElements)
@@ -166,7 +209,7 @@ public class CompareGitViewModel : Document, IWaitForContent
             @"\-(?<leftStart>\d{1,})(\,(?<leftCount>\d{1,})){0,1}\s\+(?<rightStart>\d{1,})(\,(?<rightCount>\d{1,}){0,1})",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        var diffContents = hunkElements.Skip(3).Where(x => !x.StartsWith(@"\ No newline at end of file")).ToList();
+        var diffContents = hunkElements.Where(x => !x.StartsWith(@"\ No newline at end of file")).ToList();
         var sectionHeaders = diffContents.Where(x => x.StartsWith("@@ ")).ToList();
 
         var sections = new List<ComparisonControlSection>();

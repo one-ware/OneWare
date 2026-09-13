@@ -1,10 +1,11 @@
 ﻿using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using LibGit2Sharp;
 using OneWare.Essentials.Models;
 
 namespace OneWare.SourceControl.Models;
 
-public class SourceControlFileModel
+public class SourceControlFileModel : ObservableObject
 {
     public SourceControlFileModel(string fullPath, StatusEntry change)
     {
@@ -16,7 +17,11 @@ public class SourceControlFileModel
     
     public string FullPath { get; }
 
-    public StatusEntry Status { get; set; }
+    public StatusEntry Status
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
 
     public string Name => Path.GetFileName(FullPath);
 }

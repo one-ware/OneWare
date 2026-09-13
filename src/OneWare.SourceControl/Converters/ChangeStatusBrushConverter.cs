@@ -15,14 +15,14 @@ public class ChangeStatusBrushConverter : IValueConverter
             return status switch
             {
                 FileStatus.Unaltered => Brushes.Transparent,
-                FileStatus.Conflicted => Brushes.Purple,
-                FileStatus.DeletedFromIndex => Brushes.Red,
-                FileStatus.DeletedFromWorkdir => Brushes.Red,
-                FileStatus.ModifiedInIndex => (IBrush?)new BrushConverter().ConvertFrom("#FFC107"),
-                FileStatus.ModifiedInWorkdir => (IBrush?)new BrushConverter().ConvertFrom("#FFC107"),
-                FileStatus.NewInIndex => Application.Current?.FindResource("GreenAccent"),
-                FileStatus.NewInWorkdir => Application.Current?.FindResource("GreenAccent"),
-                _ => Application.Current?.FindResource("ForegroundColor")
+                _ when status.HasFlag(FileStatus.Conflicted) => Brushes.Purple,
+                _ when (status & (FileStatus.DeletedFromIndex | FileStatus.DeletedFromWorkdir)) != 0 => Brushes.Red,
+                _ when (status & (FileStatus.ModifiedInIndex | FileStatus.ModifiedInWorkdir |
+                                 FileStatus.RenamedInIndex | FileStatus.RenamedInWorkdir |
+                                 FileStatus.TypeChangeInIndex | FileStatus.TypeChangeInWorkdir)) != 0 => Brushes.Goldenrod,
+                _ when (status & (FileStatus.NewInIndex | FileStatus.NewInWorkdir)) != 0 =>
+                    Application.Current?.FindResource("GreenAccent") ?? Brushes.Green,
+                _ => Application.Current?.FindResource("ThemeForegroundBrush")
             };
         return null;
     }
