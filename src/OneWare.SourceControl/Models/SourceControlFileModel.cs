@@ -24,4 +24,9 @@ public class SourceControlFileModel : ObservableObject
     }
 
     public string Name => Path.GetFileName(FullPath);
+
+    /// <summary>
+    /// Repository relative directory of the file, shown dimmed next to the file name.
+    /// </summary>
+    public string RelativeDirectory => Path.GetDirectoryName(Status.FilePath)?.Replace('\\', '/') ?? string.Empty;
 }
