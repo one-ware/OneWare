@@ -133,11 +133,11 @@ public class PackageServiceTests
             .Returns(new PackageInstallerResult(installerStatus));
         installer.InstallAsync(Arg.Any<PackageInstallContext>(), Arg.Any<CancellationToken>())
             .Returns(new PackageInstallerResult(installerStatus));
-        _downloader.DownloadAndExtractAsync(Arg.Any<string>(), _nativeToolsDirectory, Arg.Any<bool>(),
+        _downloader.DownloadAndExtractAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(),
                 Arg.Any<IProgress<float>>(), Arg.Any<CancellationToken>())
-            .Returns(_ =>
+            .Returns(call =>
             {
-                Directory.CreateDirectory(_nativeToolsDirectory);
+                Directory.CreateDirectory(call.ArgAt<string>(1));
                 return true;
             });
         _catalog.Manifests.Returns(new Dictionary<string, Package> { ["plugin"] = package });
@@ -157,7 +157,7 @@ public class PackageServiceTests
                 : await _service.InstallAsync("plugin", selectedVersion);
 
             Assert.Equal(PackageInstallResultReason.Installed, result.Status);
-            Assert.Equal(expectedStatus, state.Status);
+            Assert.Equal(update ? PackageStatus.NeedRestart : expectedStatus, state.Status);
             Assert.Equal(version, state.InstalledVersion?.Version);
             Assert.Same(state, _service.Packages["plugin"]);
             Assert.Equal(0, updates);

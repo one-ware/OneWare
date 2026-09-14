@@ -96,6 +96,100 @@ You can generate `compatibility.txt` automatically during build by marking depen
 - If `IOneWareModule.RegisterServices` adds services, they are injected into the main container
   before module initialization. If the app is already running, modules are initialized immediately.
 
+## Versioned package dependencies
+
+Package dependencies belong to a **particular package version**, not to the repository or
+the top-level package. Example plugin manifest (the example URLs and package IDs are placeholders):
+
+```json
+{
+  "id": "Example.Analysis",
+  "name": "Example Analysis",
+  "type": "Plugin",
+  "category": "Tools",
+  "description": "Analysis tools using the Example shared plugin.",
+  "license": "Example commercial license",
+  "acceptLicenseBeforeDownload": true,
+  "tabs": [
+    {
+      "title": "License",
+      "contentUrl": "https://example.com/analysis/LICENSE.md"
+    }
+  ],
+  "versions": [
+    {
+      "version": "1.2.0",
+      "dependencies": [
+        {
+          "id": "Example.Shared",
+          "minVersion": "2.0.0",
+          "maxVersionExclusive": "3.0.0"
+        }
+      ],
+      "targets": [
+        {
+          "target": "all",
+          "url": "https://example.com/analysis/Example.Analysis_1.2.0.zip",
+          "isArchive": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+The catalog must also contain a separate `Plugin` manifest with ID `Example.Shared` and a
+compatible version/target. Dependency records do not accept URLs or implicitly add sources.
+
+- `id` is the exact package ID, not its display name, assembly name or module ID. Use
+  unambiguous portable IDs; case-colliding package IDs and unsafe path-like IDs are rejected.
+- `minVersion` is inclusive and `maxVersionExclusive` is exclusive. Either bound may be
+  omitted; omitting both accepts any otherwise compatible version. The example accepts
+  versions from 2.0.0 up to, but not including, 3.0.0.
+- Omitting `dependencies` or using an empty array declares no dependencies for that catalog
+  version. Old installed records without dependency metadata are treated as unknown until
+  their exact installed-version metadata is available, not inferred from the newest version.
+- Version strings use OneWare's existing semantic-version parser (including short/four-part
+  versions and prereleases), not NuGet/npm range syntax. Do not use `^`, `~`, wildcards or
+  comparison expressions in these fields. Invalid/empty bounds, self references, cycles,
+  missing packages and unsatisfiable intersections block planning before mutation.
+- Only **required plugin-to-plugin** dependencies are supported. Optional dependencies and
+  plugin-to-native/tool dependencies are not part of this schema. There is no automatic downgrade.
+- A satisfying installed dependency is reused where possible. Otherwise the resolver selects
+  a compatible version subject to platform, Studio version and all installed reverse
+  dependents. Stable versions are preferred unless prereleases are explicitly allowed.
+
+### Package dependencies versus module dependencies
+
+Keep the assembly-level compatibility manifest and `IOneWareModule.Dependencies` where needed.
+The package graph does not replace core assembly compatibility checks. Declared dependency
+assemblies provide an explicit compatibility context; arbitrary loaded assemblies are not a
+substitute for declared dependencies.
+
+One package may contain multiple modules. Package IDs must not be used as module IDs unless
+they really are the same identifiers. The managed plugin loader carries package edges into
+dependency-first startup and module service-registration/initialization ordering; explicit
+module dependencies remain applicable. Missing or incompatible dependencies block the affected
+dependent package rather than pretending the dependency is satisfied.
+
+### Installation, licenses, restart and removal
+
+The Package Manager previews the root and its transitive dependencies before execution. Each
+package that requires consent must expose a downloadable tab titled exactly **License**;
+`license` alone is a label, not the license content consumed by the consent flow. Required
+licenses are downloaded independently of the currently selected details tab. Declined or
+unavailable license content prevents execution. Service callers without accepted license IDs
+receive a consent-required result; do not auto-accept on behalf of users.
+
+Dependencies are staged/validated and installed before dependents. Plugin updates and
+dependents needing a refreshed loaded assembly require restart. Installed constraints and
+resolved versions are persisted for offline validation and managed dependency-first startup.
+Removing a package still needed by another installed package is blocked; removing a parent
+does not remove its dependencies. A later failure can retain already completed dependencies;
+there is no graph-wide rollback or unrestricted plugin hot-unload guarantee.
+
+See [PackageManager.md](PackageManager.md) for the actual UI, navigation and current limitations.
+
 ## Module lifecycle and dependency injection
 
 `IOneWareModule` is the entry point for plugins:

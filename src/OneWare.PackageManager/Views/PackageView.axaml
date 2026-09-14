@@ -11,13 +11,31 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
+    <ScrollViewer Name="DetailsScroll" HorizontalScrollBarVisibility="Disabled">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="12">
-            <TextBlock Text="{Binding PackageState.Package.Name}" FontSize="18" FontWeight="Bold" />
+            <Grid ColumnDefinitions="64,*" ColumnSpacing="12">
+                <Panel Width="56" Height="56">
+                    <TextBlock Text="□" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNull}}" />
+                    <Image Source="{Binding Image}" />
+                </Panel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="{Binding PackageState.Package.Name}" FontSize="26" FontWeight="Bold" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding PackageState.Package.Id}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding PackageState.Package.Description}" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{Binding PackageState.Status}" />
+                <TextBlock Text="Installed:" />
+                <TextBlock Text="{Binding PackageState.InstalledVersion.Version, FallbackValue='Not installed'}" />
+                <TextBlock Text="Latest known:" />
+                <TextBlock Text="{Binding LatestVersion, TargetNullValue='Unavailable'}" />
+            </StackPanel>
             <ItemsControl ItemsSource="{Binding Links}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="7" />
+                        <WrapPanel Orientation="Horizontal" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.DataTemplates>
@@ -29,9 +47,10 @@
             </ItemsControl>
 
             <StackPanel Orientation="Horizontal" Spacing="6">
-
+                <Expander Header="Version and platform options">
+                <StackPanel Spacing="8">
                 <ComboBox ItemsSource="{Binding PackageVersionModels}"
-                          SelectedItem="{Binding SelectedVersionModel}">
+                          SelectedItem="{Binding SelectedVersionModel}" AutomationProperties.Name="Package version">
                     <ComboBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Vertical" />
@@ -49,14 +68,24 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <ItemsControl ItemsSource="{Binding SelectedVersionModel.Version.Targets}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="packageManager:PackageTarget">
+                            <TextBlock Text="{Binding Target}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                </StackPanel>
+                </Expander>
 
                 <StackPanel Orientation="Horizontal">
                     <Button Content="{Binding PrimaryButtonText}"
                             Command="{Binding MainButtonCommand}"
+                            IsEnabled="{Binding MainButtonCommand, Converter={x:Static ObjectConverters.IsNotNull}}"
                             CommandParameter="{Binding $self}"
                             Background="{Binding PrimaryButtonBrush}"
                             Classes="RoundButton" Padding="8 3" />
-                    <Button>
+                    <Button AutomationProperties.Name="More package actions">
                         <Button.Flyout>
                             <MenuFlyout>
                                 <MenuItem Header="Remove" Command="{Binding RemoveCommand}" />
@@ -76,19 +105,24 @@
                 </StackPanel>
             </StackPanel>
 
-            <ItemsControl ItemsSource="{Binding SelectedVersionModel.Version.Targets, FallbackValue={x:Null}}"
-                          IsVisible="{Binding !SelectedVersionModel.TargetAll, FallbackValue={x:False}}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="5" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.DataTemplates>
-                    <DataTemplate x:DataType="packageManager:PackageTarget">
-                        <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                    </DataTemplate>
-                </ItemsControl.DataTemplates>
-            </ItemsControl>
+            <Expander Header="Dependencies" IsExpanded="True">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding DependencySummary}" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding Dependencies}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:PackageDependencyViewModel">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,4">
+                                    <Button Content="{Binding Id}" IsEnabled="{Binding CanOpen}" Command="{Binding $parent[controls:FlexibleWindow].((viewModels:PackageManagerViewModel)DataContext).OpenDependencyCommand}" CommandParameter="{Binding Id}" />
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Text="{Binding Requirement}" />
+                                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Expander>
             
             <StackPanel
                 IsVisible="{Binding SelectedVersionModel.Version.IsPrerelease, FallbackValue={x:False}}"
@@ -100,13 +134,14 @@
             </StackPanel>
 
             <Border Background="{DynamicResource ThemeControlLowBrush}"
+                    IsVisible="{Binding SelectedVersionModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Classes="RoundBorder" 
                     Classes.ValidBorder="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
                     Classes.InvalidBorder="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
                     Padding="5">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Spacing="5" Orientation="Vertical"
-                                IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNull}, FallbackValue={x:False}}">
+                                IsVisible="{Binding IsCompatibilityChecking}">
                         <TextBlock Text="Checking Compatibility..." HorizontalAlignment="Center" />
                         <controls:Spinner Height="20" Width="20" />
                     </StackPanel>
@@ -130,11 +165,12 @@
                          Height="24"
                          IsVisible="{Binding PackageState.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
+                        <TextBlock Text="{Binding OperationMessage}" TextWrapping="Wrap"
+                                             IsVisible="{Binding OperationMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
         </StackPanel>
 
         <Panel Margin="0 10 0 0" DockPanel.Dock="Top">
-            <TabControl IsVisible="{Binding IsTabsResolved}"
-                        ItemsSource="{Binding Tabs}">
+            <TabControl ItemsSource="{Binding Tabs}">
                 <TabControl.ItemTemplate>
                     <DataTemplate DataType="models:TabModel">
                         <TextBlock Text="{Binding Title}" />
@@ -149,10 +185,11 @@
                 </TabControl.ContentTemplate>
             </TabControl>
 
-            <controls:Spinner VerticalAlignment="Center" HorizontalAlignment="Center" Height="40" Width="40"
+            <controls:Spinner VerticalAlignment="Top" HorizontalAlignment="Right" Height="20" Width="20"
                               IsVisible="{Binding !IsTabsResolved}" />
         </Panel>
 
     </DockPanel>
+    </ScrollViewer>
 
 </UserControl>

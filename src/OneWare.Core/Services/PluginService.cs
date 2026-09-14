@@ -7,12 +7,13 @@ using OneWare.Core.ModuleLogic;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Core.Services;
 
-public class PluginService : IPluginService
+public class PluginService : IPluginService, IPluginDependencyService
 {
     private readonly IPaths _paths;
     private readonly OneWareModuleCatalog _moduleCatalog;
@@ -22,6 +23,8 @@ public class PluginService : IPluginService
 
     private readonly string _pluginDirectory;
     private readonly HashSet<string> _resolverSetAssemblies = new();
+    // Removing files cannot unload assemblies, including assemblies from a partially failed activation.
+    private readonly HashSet<string> _attemptedPluginLoads = new(StringComparer.OrdinalIgnoreCase);
 
     private List<Assembly> _initAssemblies;
 
@@ -43,14 +46,29 @@ public class PluginService : IPluginService
     public List<IPlugin> InstalledPlugins { get; } = new();
 
     public IPlugin AddPlugin(string path)
+        => AddPlugin(path, new Dictionary<string, string>());
+
+    public IPlugin AddPlugin(string path, IReadOnlyDictionary<string, string> dependencyPaths)
     {
+        var id = Path.GetFileName(Path.TrimEndingDirectorySeparator(path));
+        if (InstalledPluginGraph.IsTransactionDirectoryName(id))
+            throw new InvalidOperationException("Temporary package directories cannot be loaded as plugins.");
+        if (_attemptedPluginLoads.Contains(id))
+            throw new InvalidOperationException($"Plugin {id} has already been loaded in this process. Restart before reinstalling it.");
         // Update known assemblies to avoid redundant resolver registration
         _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
-        var plugin = new Plugin(Path.GetFileName(path), path);
+        var plugin = new Plugin(id, path);
         InstalledPlugins.Add(plugin);
 
-        if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
+        if (dependencyPaths.Keys.Any(id => !InstalledPlugins.Any(p => p.Id == id && p.IsCompatible)))
+        {
+            plugin.CompatibilityReport = "A declared plugin dependency failed to load. Restart or repair the dependency first.";
+            return plugin;
+        }
+
+        if (PluginCompatibilityChecker.CheckCompatibilityPath(path,
+            PluginCompatibilityChecker.ReadProvidedAssemblies(dependencyPaths.Values)) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
             ContainerLocator.Container?.Resolve<ILogger>().Error($"Plugin {path} failed loading:\n{test.Report}", null, false);
@@ -66,10 +84,12 @@ public class PluginService : IPluginService
 
         try
         {
-            var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
+            _attemptedPluginLoads.Add(id);
+            var realPath = Path.Combine(_pluginDirectory, id);
             PlatformHelper.CopyDirectory(path, realPath);
 
             var addedModules = LoadModulesFromPath(realPath);
+            _moduleManager.RegisterPackageModules(plugin.Id, addedModules, dependencyPaths.Keys);
 
             if (addedModules.Count > 0 && ContainerLocator.Container != null)
             {
@@ -86,7 +106,9 @@ public class PluginService : IPluginService
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            plugin.IsCompatible = false;
+            plugin.CompatibilityReport = e.Message;
+            ContainerLocator.Container?.Resolve<ILogger>().Error(e.Message, e);
         }
 
         return plugin;
@@ -114,7 +136,7 @@ public class PluginService : IPluginService
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories)
-                     .Where(file => ShouldProbePluginAssembly(path, file)))
+                     .Where(file => PluginCompatibilityChecker.ShouldProbePluginAssembly(path, file)))
         {
             if (!TryGetManagedAssemblyName(file, out var assemblyName))
                 continue;
@@ -143,23 +165,6 @@ public class PluginService : IPluginService
                 .Log($"Module '{module.Id}' loaded");
 
         return added;
-    }
-
-    // Usually we can assume that all managed DLLs will be in the base dir of a plugin
-    // Some libraries ship in runtimes/arch/lib/...
-    private static bool ShouldProbePluginAssembly(string pluginPath, string filePath)
-    {
-        var relativePath = Path.GetRelativePath(pluginPath, filePath);
-        var pathSegments = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-        if (pathSegments.Length < 2 || !pathSegments[0].Equals("runtimes", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if (pathSegments.Length < 4)
-            return false;
-
-        return pathSegments[1].Equals(PlatformHelper.PlatformIdentifier, StringComparison.OrdinalIgnoreCase)
-               && pathSegments[2].Equals("lib", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryGetManagedAssemblyName(string filePath, out AssemblyName assemblyName)

@@ -7,6 +7,8 @@ namespace OneWare.PackageManager.Services;
 
 public partial class PackageRepositoryClient : IPackageRepositoryClient
 {
+    private readonly Dictionary<string, string[]> _featuredIds = new(StringComparer.Ordinal);
+    public IReadOnlyList<string> GetFeaturedIds(string source) => _featuredIds.GetValueOrDefault(source) ?? [];
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -28,6 +30,7 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
     {
         try
         {
+            _featuredIds.Remove(url);
             var repositoryString = await _httpService.DownloadTextAsync(url, TimeSpan.FromSeconds(10), cancellationToken);
             if (repositoryString == null) return Array.Empty<Package>();
 
@@ -38,6 +41,7 @@ public partial class PackageRepositoryClient : IPackageRepositoryClient
                 try
                 {
                     var repository = JsonSerializer.Deserialize<PackageRepository>(repositoryString, SerializerOptions);
+                    _featuredIds[url] = repository?.FeaturedPackageIds ?? [];
 
                     if (repository is { Packages: not null })
                         foreach (var manifest in repository.Packages)

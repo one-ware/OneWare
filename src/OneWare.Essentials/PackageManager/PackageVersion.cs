@@ -11,4 +11,6 @@ public class PackageVersion
     public PackageTarget[]? Targets { get; init; }
 
     public string? CompatibilityUrl { get; init; }
+
+    public PackageDependency[]? Dependencies { get; init; }
 }

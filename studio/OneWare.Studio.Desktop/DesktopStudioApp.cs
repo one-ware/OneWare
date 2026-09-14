@@ -25,6 +25,8 @@ using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
+using OneWare.PackageManager.Services;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
@@ -77,8 +79,31 @@ public class DesktopStudioApp : StudioApp
             if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
                 Services.Resolve<IPluginService>().AddPlugin(pluginPath);
 
-            var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Services.Resolve<IPluginService>().AddPlugin(module);
+            var loader = Services.Resolve<IPluginService>();
+            // Package services/modules are not initialized yet. Read only local persisted metadata.
+            var records = new PackageStateStore(Paths, Services.Resolve<ILogger>()).LoadAsync().GetAwaiter().GetResult();
+            var order = InstalledPluginGraph.Resolve(records.Values,
+                id => Directory.Exists(Path.Combine(Paths.PluginsDirectory, id)));
+            foreach (var message in order.Blocked.Values)
+                Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification
+                { Kind = ApplicationNotificationKind.Error, Message = message });
+            foreach (var record in order.Packages)
+            {
+                try
+                {
+                    var dependencies = InstalledPluginGraph.DependencyClosure(record.Id, records)
+                        .ToDictionary(id => id, id => Path.Combine(Paths.PluginsDirectory, id));
+                    if (loader is IPluginDependencyService dependencyLoader)
+                        dependencyLoader.AddPlugin(Path.Combine(Paths.PluginsDirectory, record.Id), dependencies);
+                    else if (dependencies.Count == 0) loader.AddPlugin(Path.Combine(Paths.PluginsDirectory, record.Id));
+                }
+                catch (Exception ex) { Services.Resolve<ILogger>().Error($"Loading {record.Id} failed: {ex.Message}", ex); }
+            }
+            // Preserve unmanaged/legacy plugin discovery; never discover temporary install directories.
+            foreach (var module in Directory.GetDirectories(Paths.PluginsDirectory).OrderBy(x => x))
+                if (InstalledPluginGraph.ShouldDiscoverLegacyDirectory(Path.GetFileName(module), records.Keys))
+                    try { loader.AddPlugin(module); }
+                    catch (Exception ex) { Services.Resolve<ILogger>().Error(ex.Message, ex); }
         }
         catch (Exception e)
         {
@@ -159,6 +184,9 @@ public class DesktopStudioApp : StudioApp
                 ];
 
         Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY")) &&
+            Services.Resolve<IPackageService>() is IPackageDiscoveryService discovery)
+            foreach (var repository in repositories) discovery.RegisterOfficialSource(repository);
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {

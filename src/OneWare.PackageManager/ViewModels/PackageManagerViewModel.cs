@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -17,8 +18,10 @@ using OneWare.PackageManager.Views;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
+public partial class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService, IDisposable
 {
+    private readonly CompositeDisposable _subscriptions = new();
+    private bool _disposed;
     private const string AllCategoryHeader = "All";
     private static readonly char[] CategorySeparators = ['/', '\\'];
 
@@ -41,6 +44,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _windowService = windowService;
         _logger = logger;
         _applicationStateService = applicationStateService;
+        _searchTimer.Tick += (_, _) => { _searchTimer.Stop(); FilterPackages(); };
 
         RegisterCategory(AllCategoryHeader);
         RegisterCategory("Plugins", new IconModel("BoxIcons.RegularExtension"));
@@ -58,21 +62,25 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         SelectedCategory = GetAllCategory() ?? PackageCategories.FirstOrDefault();
 
-        _packageService.WhenValueChanged(x => x.IsUpdating)
-            .Subscribe(x => Dispatcher.UIThread.Post(() => IsLoading = x));
-
-        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x =>
+        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => !IsLoading && !_packageService.Packages.Any(x => x.Value.Status == PackageStatus.Installing) && _packageService.Packages.Any(x =>
             x.Value.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease));
+        _subscriptions.Add(_packageService.WhenValueChanged(x => x.IsUpdating)
+            .Subscribe(x =>
+            {
+                if (Dispatcher.UIThread.CheckAccess()) { if (!_disposed) IsLoading = x; }
+                else Dispatcher.UIThread.Post(() => { if (!_disposed) IsLoading = x; });
+            }));
         
-        Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
+        _subscriptions.Add(Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
             // PackagesUpdated can be raised from a background thread
             Dispatcher.UIThread.Post(() =>
             {
+                if (_disposed) return;
                 ConstructPackageViewModels();
                 UpdateAllCommand.NotifyCanExecuteChanged();
             });
-        });
+        }));
 
         ConstructPackageViewModels();
     }
@@ -98,7 +106,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     }
 
     /// <summary>
-    ///     Index of the segmented control filter: 0 = All, 1 = Installed only, 2 = Available only.
+    ///     Browse page: 0 = Discover, 1 = Installed, 2 = Updates.
     /// </summary>
     public int SelectedFilterIndex
     {
@@ -118,20 +126,27 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         set
         {
             SetProperty(ref field, value);
-            FilterPackages();
+            _searchTimer.Stop();
+            _searchTimer.Start();
+            OnPropertyChanged(nameof(ShowFeatured));
         }
     } = string.Empty;
 
     public bool IsLoading
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            if (!SetProperty(ref field, value)) return;
+            UpdateAllCommand?.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(ShowEmptyState));
+        }
     }
 
     public PackageCategoryViewModel? SelectedCategory
     {
         get;
-        set => SetProperty(ref field, value);
+        set { if (SetProperty(ref field, value) && value != null) CategoryFilter = value.Header; }
     }
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
@@ -162,11 +177,20 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
             current = existing;
         }
+        RefreshCategoryFilters();
     }
 
     public async Task RefreshPackagesAsync()
     {
-        await _packageService.RefreshAsync(false);
+        try
+        {
+            SourceWarning = await _packageService.RefreshAsync(false) ? null : "Some sources could not be loaded. Installed packages remain available. Retry with Refresh.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not refresh package sources");
+            SourceWarning = "Sources could not be loaded. Installed packages remain available. Retry with Refresh.";
+        }
     }
 
     public Control ShowExtensionManager()
@@ -204,7 +228,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             return false;
 
         var view = ShowExtensionManager();
-        await pvm.InstallCommand.ExecuteAsync(view);
+        if (pvm.InstallCommand.CanExecute(view)) await pvm.InstallCommand.ExecuteAsync(view);
 
         return true;
     }
@@ -218,7 +242,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     {
         if (!_packageService.Packages.TryGetValue(packageId, out var packageModel)) return false;
 
-        var quickInstallViewModel = new PackageQuickInstallViewModel(packageModel, _packageService);
+        var quickInstallViewModel = new PackageQuickInstallViewModel(packageModel, _packageService, _windowService);
 
         var view = new PackageQuickInstallView
         {
@@ -232,6 +256,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> ShowAndUpdateAllAsync()
     {
+        SelectedPackage = null;
+        SelectedFilterIndex = 2;
         ShowExtensionManager();
 
         await Task.Delay(100);
@@ -241,10 +267,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task ResolveSelectedPackageTabsAsync()
     {
-        if (SelectedCategory?.SelectedPackage == null)
-            return;
-        
-        await SelectedCategory.SelectedPackage.ResolveTabsAsync();
+        if (SelectedPackage != null) await SelectedPackage.ResolveTabsAsync();
     }
 
     private bool FocusCategory(string category, string? subcategory)
@@ -263,34 +286,22 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         }
 
         SelectedCategory = categoryVm;
+        CategoryFilter = subcategory == null ? category : $"{category}/{subcategory}";
+        SelectedPackage = null;
+        SelectedFilterIndex = 0;
         SelectedCategory.SelectedPackage = null;
         return true;
     }
     
     private async Task<PackageViewModel?> FocusPluginAsync(string packageId)
     {
-        var categoryVm = PackageCategories
-            .Where(x => !x.Header.Equals(AllCategoryHeader, StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault(x => x.VisiblePackages.Any(y => y.PackageState.Package.Id == packageId))
-            ?? GetAllCategory();
-
-        if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
+        if (!_cache.TryGetValue(packageId, out var packageVm))
         {
-            var packageVm = categoryVm.VisiblePackages
-                .FirstOrDefault(x => x.PackageState == packageModel);
-
-            if (packageVm == null)
-                return null;
-
-            SelectedCategory = categoryVm;
-            SelectedCategory.SelectedPackage = packageVm;
-
-            _ = packageVm.ResolveIconAsync();
-            await packageVm.ResolveTabsAsync();
-            return packageVm;
+            await _windowService.ShowMessageAsync("Package unavailable", $"{packageId} is not in the current catalog or installed packages. Check Sources and refresh.", MessageBoxIcon.Warning);
+            return null;
         }
-
-        return null;
+        SelectedPackage = packageVm;
+        return packageVm;
     }
 
     private void ConstructPackageViewModels()
@@ -303,9 +314,20 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         foreach (var (_, packageModel) in _packageService.Packages)
             try
             {
-                var viewModel =
-                    new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService, _logger);
+                if (!_cache.TryGetValue(packageModel.Package.Id!, out var viewModel))
+                {
+                    viewModel = new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService, _logger);
+                    _cache[packageModel.Package.Id!] = viewModel;
+                    packageModel.PropertyChanged += OnPackageChanged;
+                }
+                else if (!ReferenceEquals(viewModel.PackageState, packageModel))
+                {
+                    viewModel.PackageState.PropertyChanged -= OnPackageChanged;
+                    viewModel.PackageState = packageModel;
+                    packageModel.PropertyChanged += OnPackageChanged;
+                }
 
+                viewModel.RefreshMetadata();
                 var targetCategory = ResolveCategoryForPackage(packageModel.Package);
                 if (targetCategory == null) continue;
 
@@ -319,13 +341,37 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                 _logger.Error(e.Message, e);
             }
 
+        foreach (var id in _cache.Keys.Where(id => !_packageService.Packages.ContainsKey(id)).ToArray())
+        {
+            var old = _cache[id];
+            old.PackageState.PropertyChanged -= OnPackageChanged;
+            old.Dispose();
+            _cache.Remove(id);
+            if (SelectedPackage == old) SelectedPackage = null;
+        }
+        foreach (var vm in _cache.Values) vm.RefreshDependencies();
         FilterPackages();
     }
 
     private void FilterPackages()
     {
+        if (_disposed) return;
         foreach (var categoryModel in PackageCategories)
             categoryModel.Filter(Filter, _showInstalled, _showAvailable);
+        RefreshBrowse();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _searchTimer.Stop();
+        _subscriptions.Dispose();
+        foreach (var vm in _cache.Values)
+        {
+            vm.PackageState.PropertyChanged -= OnPackageChanged;
+            vm.Dispose();
+        }
+        _cache.Clear();
     }
 
     public override bool OnWindowClosing(FlexibleWindow window)
@@ -363,69 +409,18 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> UpdateAllAsync()
     {
-        // A prerelease installation stays on the prerelease channel, so its updates are offered
-        // here too.
         var packages = _packageService.Packages.Values
             .Where(x => x.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease)
             .Select(x => (State: x, Target: x.ResolveTargetVersion()))
             .Where(x => x.Target != null)
             .OrderBy(x => x.State.Package.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
-
-        if (packages.Count == 0)
-            return true;
-
-        var requiresRestart = packages.Any(x =>
-            string.Equals(x.State.Package.Type, "Plugin", StringComparison.OrdinalIgnoreCase));
-
-        var packageLines = packages.Select(x =>
-        {
-            var installedVersion = x.State.InstalledVersion?.Version ?? "?";
-
-            return $"- **{x.State.Package.Name}** `{installedVersion} -> {x.Target!.Version}`";
-        });
-
-        var message =
-            $"The following packages will be updated:\n\n{string.Join("\n", packageLines)}\n\n" +
-            (requiresRestart
-                ? "> Restart will be required after the update completes."
-                : "Do you want to continue?");
-
-        var confirmation = await _windowService.ShowMessageBoxAsync(new MessageBoxRequest
-        {
-            Title = "Update Packages",
-            Message = message,
-            Icon = MessageBoxIcon.Info,
-            Buttons =
-            [
-                new MessageBoxButton
-                {
-                    Text = "Update All",
-                    Role = MessageBoxButtonRole.Yes,
-                    Style = MessageBoxButtonStyle.Primary,
-                    IsDefault = true
-                },
-                new MessageBoxButton
-                {
-                    Text = "Cancel",
-                    Role = MessageBoxButtonRole.Cancel,
-                    Style = MessageBoxButtonStyle.Secondary
-                }
-            ]
-        });
-
-        if (!confirmation.IsAccepted)
-            return false;
-        
-        foreach (var package in packages)
-        {
-            await FocusPluginAsync(package.State.Package!.Id!);
-            await _packageService.UpdateAsync(package.State.Package.Id!, package.Target, false, true);
-        }
-        
+        if (packages.Count == 0) return true;
+        var result = await PackageOperationReview.RunAsync(_packageService, _windowService,
+            packages.Select(x => new PackageRequest(x.State.Package.Id!, x.Target!.Version, x.Target.IsPrerelease)).ToArray());
         UpdateAllCommand.NotifyCanExecuteChanged();
-        
-        return true;
+        return result.Status is Essentials.PackageManager.Compatibility.PackageInstallResultReason.Installed
+            or Essentials.PackageManager.Compatibility.PackageInstallResultReason.AlreadyInstalled;
     }
 
     private static string[] SplitCategoryPath(string? categoryPath)

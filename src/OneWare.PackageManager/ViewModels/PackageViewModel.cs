@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -18,7 +19,9 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageViewModel : PackageListEntryViewModel
+public sealed record PackageDependencyViewModel(string Id, string Requirement, string Status, bool CanOpen);
+
+public class PackageViewModel : PackageListEntryViewModel, IDisposable
 {
     private readonly IHttpService _httpService;
     private readonly IPackageService _packageService;
@@ -27,12 +30,26 @@ public class PackageViewModel : PackageListEntryViewModel
     private readonly ILogger _logger;
     
     private IPackageState _packageState;
+    private Package? _manifest;
+    private PackageVersion[]? _manifestVersions;
 
     private IDisposable? _primaryButtonBrushSubscription;
+    private IDisposable? _statusSubscription;
+    private IDisposable? _iconSubscription;
+    private int _generation;
+    private bool _disposed;
+    public void Dispose()
+    {
+        _disposed = true;
+        _generation++;
+        _primaryButtonBrushSubscription?.Dispose();
+        _statusSubscription?.Dispose();
+        _iconSubscription?.Dispose();
+    }
 
     private bool _resolveImageStarted;
 
-    private bool _resolveTabsStarted;
+    private Task? _tabsTask;
 
     public PackageViewModel(IPackageState packageState, IPackageService packageService, IHttpService httpService,
         IWindowService windowService, IApplicationStateService applicationStateService, ILogger logger)
@@ -46,22 +63,20 @@ public class PackageViewModel : PackageListEntryViewModel
 
         ResolveIconCommand = new AsyncRelayCommand(ResolveIconAsync);
 
-        RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
-            _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
-                or PackageStatus.UpdateAvailablePrerelease);
+        RemoveCommand = new AsyncRelayCommand<Control?>(ConfirmRemoveAsync,
+            _ => PackageState.InstalledVersion != null && PackageState.Status is not (PackageStatus.Installing or PackageStatus.NeedRestart));
 
         InstallCommand = new AsyncRelayCommand<Control?>(
-            x => ConfirmLicenseAndDownloadAsync(x, PackageState, SelectedVersionModel!.Version),
-            _ => PackageState.Status is PackageStatus.Available);
+            x => ConfirmLicenseAndDownloadAsync(x),
+            _ => SelectedVersionModel != null && PackageState.Status is PackageStatus.Available);
 
-        UpdateCommand = new AsyncRelayCommand<Control?>(_ =>
-                _packageService.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
-            _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
+        UpdateCommand = new AsyncRelayCommand<Control?>(ConfirmLicenseAndDownloadAsync,
+            _ => SelectedVersionModel != null && PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
 
         CancelCommand = new RelayCommand(() => _packageService.CancelInstall(PackageState.Package.Id!),
             () => PackageState.Status is PackageStatus.Installing);
 
-        PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
+        SubscribeStatus();
         InitPackage();
     }
 
@@ -76,7 +91,8 @@ public class PackageViewModel : PackageListEntryViewModel
         get => _packageState;
         set
         {
-            SetProperty(ref _packageState, value);
+            if (!SetProperty(ref _packageState, value)) return;
+            SubscribeStatus();
             InitPackage();
         }
     }
@@ -85,6 +101,54 @@ public class PackageViewModel : PackageListEntryViewModel
     {
         get;
         private set => SetProperty(ref field, value);
+    }
+
+    public ObservableCollection<PackageDependencyViewModel> Dependencies { get; } = [];
+    public string DependencySummary => Dependencies.Count > 0 ? "Required by the selected version:" :
+        PackageState.InstalledVersion != null &&
+        (SelectedVersionModel?.Version ?? PackageState.InstalledVersion) is { Dependencies: null, Targets: null } version &&
+        version.Version == PackageState.InstalledVersion.Version
+            ? "Dependency metadata is unavailable for this installed version." : "No declared dependencies.";
+    public string? LatestVersion => PackageVersionModels.FirstOrDefault()?.Version.Version;
+    public bool IsInstalling => PackageState.Status == PackageStatus.Installing;
+    public bool IsCompatibilityChecking { get; private set => SetProperty(ref field, value); }
+    public string? OperationMessage { get; private set => SetProperty(ref field, value); }
+
+    public void RefreshDependencies()
+    {
+        var rows = new List<PackageDependencyViewModel>();
+        foreach (var dependency in (SelectedVersionModel?.Version ?? PackageState.InstalledVersion)?.Dependencies ?? [])
+        {
+            var state = _packageService.Packages.GetValueOrDefault(dependency.Id);
+            var version = state?.InstalledVersion?.Version;
+            string status;
+            try
+            {
+                status = version == null ? (state == null ? "Not in current catalog" : "Not installed") :
+                    $"Installed {version} — {(dependency.Accepts(version) ? "satisfies requirement" : "version change required")}";
+            }
+            catch (InvalidOperationException) { status = "Invalid dependency requirement"; }
+            var requirement = dependency.MinVersion == null && dependency.MaxVersionExclusive == null ? "Any version" :
+                string.Join(", ", new[] { dependency.MinVersion == null ? null : $"≥ {dependency.MinVersion}",
+                    dependency.MaxVersionExclusive == null ? null : $"< {dependency.MaxVersionExclusive}" }.OfType<string>());
+            rows.Add(new(dependency.Id, requirement, status, state != null));
+        }
+        if (!Dependencies.SequenceEqual(rows))
+        {
+            Dependencies.Clear();
+            foreach (var row in rows) Dependencies.Add(row);
+        }
+        OnPropertyChanged(nameof(DependencySummary));
+    }
+
+    private void SubscribeStatus()
+    {
+        _statusSubscription?.Dispose();
+        _statusSubscription = PackageState.WhenValueChanged(x => x.Status).Subscribe(_ =>
+        {
+            if (Dispatcher.UIThread.CheckAccess()) UpdateStatus();
+            else Dispatcher.UIThread.Post(() => { if (!_disposed) UpdateStatus(); });
+        });
     }
 
     public ObservableCollection<PackageVersionModel> PackageVersionModels { get; } = new();
@@ -96,8 +160,9 @@ public class PackageViewModel : PackageListEntryViewModel
         get;
         set
         {
-            SetProperty(ref field, value);
+            if (!SetProperty(ref field, value)) return;
             UpdateStatus();
+            RefreshDependencies();
             _ = CheckSelectedVersionCompatibilityAsync();
         }
     }
@@ -133,8 +198,21 @@ public class PackageViewModel : PackageListEntryViewModel
     /// </summary>
     public ICommand ResolveIconCommand { get; }
 
+    public void RefreshMetadata()
+    {
+        if (!ReferenceEquals(_manifest, PackageState.Package) || !ReferenceEquals(_manifestVersions, PackageState.Package.Versions))
+            InitPackage();
+    }
+
     private void InitPackage()
     {
+        _manifest = PackageState.Package;
+        _manifestVersions = _manifest.Versions;
+        _generation++;
+        var tabsWereRequested = _tabsTask != null;
+        _tabsTask = null;
+        Tabs.Clear();
+        IsTabsResolved = false;
         Links.Clear();
         if (PackageState.Package.Links != null)
             Links.AddRange(PackageState.Package.Links.Select(x => new LinkModel(x.Name ?? "Link", x.Url ?? "")));
@@ -153,7 +231,8 @@ public class PackageViewModel : PackageListEntryViewModel
 
         SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version == target);
 
-        _resolveTabsStarted = false;
+        OnPropertyChanged(nameof(LatestVersion));
+        RefreshDependencies();
 
         var iconWasRequested = _resolveImageStarted;
         _resolveImageStarted = false;
@@ -162,10 +241,13 @@ public class PackageViewModel : PackageListEntryViewModel
 
         // Only reload the icon if it was requested before, icons are resolved lazily when the package becomes visible.
         if (iconWasRequested) _ = ResolveIconAsync();
+        if (tabsWereRequested) _ = ResolveTabsAsync();
     }
 
     private void UpdateStatus()
     {
+        if (_disposed) return;
+        OnPropertyChanged(nameof(IsInstalling));
         SemanticVersion.TryParse(SelectedVersionModel?.Version.Version, out var sV);
         SemanticVersion.TryParse(PackageState.InstalledVersion?.Version, out var iV);
 
@@ -187,8 +269,7 @@ public class PackageViewModel : PackageListEntryViewModel
             case PackageStatus.Installed:
             case PackageStatus.UpdateAvailable:
             case PackageStatus.UpdateAvailablePrerelease:
-                PrimaryButtonText = "Remove";
-                MainButtonCommand = RemoveCommand;
+                PrimaryButtonText = "Installed";
                 break;
             case PackageStatus.Installing:
                 PrimaryButtonText = "Cancel";
@@ -196,8 +277,7 @@ public class PackageViewModel : PackageListEntryViewModel
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlMidBrush");
                 break;
             case PackageStatus.Unavailable when PackageState.InstalledVersion != null:
-                PrimaryButtonText = "Remove";
-                MainButtonCommand = RemoveCommand;
+                PrimaryButtonText = "Installed";
                 break;
             case PackageStatus.Unavailable:
                 PrimaryButtonText = "Unavailable";
@@ -221,61 +301,31 @@ public class PackageViewModel : PackageListEntryViewModel
         (CancelCommand as RelayCommand)?.NotifyCanExecuteChanged();
     }
 
-    private async Task ConfirmLicenseAndDownloadAsync(Control? control, IPackageState model, PackageVersion version)
+    private async Task ConfirmLicenseAndDownloadAsync(Control? control)
     {
-        var topLevel = TopLevel.GetTopLevel(control);
+        if (SelectedVersionModel is not { } selected) return;
+        OperationMessage = null;
+        var result = await PackageOperationReview.RunAsync(_packageService, _windowService,
+            [new(PackageState.Package.Id!, selected.Version.Version, selected.Version.IsPrerelease)], control == null ? null : TopLevel.GetTopLevel(control) as Window);
+        OperationMessage = PackageOperationReview.DescribeResult(result);
+    }
 
-        if (version.IsPrerelease)
+    private async Task ConfirmRemoveAsync(Control? control)
+    {
+        var owner = control == null ? null : TopLevel.GetTopLevel(control) as Window;
+        if (await _windowService.ShowYesNoAsync("Remove package", $"Remove {PackageState.Package.Name}? Dependencies will be retained.",
+                MessageBoxIcon.Warning, owner) != MessageBoxStatus.Yes) return;
+        try
         {
-            var warningResult = await ContainerLocator.Container!.Resolve<IWindowService>()
-                .ShowYesNoAsync("Install Prerelease",
-                    "The selected version is a prerelease version. Bugs are expected. Do you want to continue?",
-                    MessageBoxIcon.Warning, topLevel as Window);
-
-            if (warningResult != MessageBoxStatus.Yes) return;
+            if (await _packageService.RemoveAsync(PackageState.Package.Id!)) return;
+            OperationMessage = "Another installed package requires this package, or removal failed. See the log for details.";
         }
-
-        if (model.Package.AcceptLicenseBeforeDownload)
+        catch (Exception ex)
         {
-            if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
-
-            var confirmLicenseResult = await ContainerLocator.Container!.Resolve<IWindowService>()
-                .ShowMessageBoxAsync(new MessageBoxRequest
-                {
-                    Title = "Confirm License",
-                    Icon = MessageBoxIcon.Info,
-                    Message = licenseTab.Content,
-                    Buttons =
-                    [
-                        new MessageBoxButton
-                        {
-                            Text = "Accept",
-                            Role = MessageBoxButtonRole.Yes,
-                            Style = MessageBoxButtonStyle.Primary,
-                            IsDefault = true
-                        },
-                        new MessageBoxButton
-                        {
-                            Text = "Decline",
-                            Role = MessageBoxButtonRole.No,
-                            Style = MessageBoxButtonStyle.Secondary,
-                        }
-                    ]
-                }, topLevel as Window);
-
-            if (!confirmLicenseResult.IsAccepted) return;
+            _logger.LogWarning(ex, "Could not remove package {PackageId}", PackageState.Package.Id);
+            OperationMessage = "Removal failed. " + ex.Message;
         }
-
-        var installResult = await _packageService.InstallAsync(model.Package.Id!, version);
-
-        if (installResult.Status is PackageInstallResultReason.Incompatible)
-        {
-            if (installResult.CompatibilityRecord != null)
-            {
-                await _windowService.ShowMessageAsync("Installation Failed",
-                    $"Package is incompatible with current version of OneWare\n{installResult.CompatibilityRecord.Report}", MessageBoxIcon.Warning, topLevel as Window);
-            }
-        }
+        await _windowService.ShowMessageAsync("Cannot remove package", OperationMessage!, MessageBoxIcon.Warning, owner);
     }
 
     /// <summary>
@@ -285,6 +335,9 @@ public class PackageViewModel : PackageListEntryViewModel
     {
         if (_resolveImageStarted) return;
         _resolveImageStarted = true;
+        var generation = _generation;
+        _iconSubscription?.Dispose();
+        _iconSubscription = null;
 
         IImage? icon = null;
 
@@ -298,10 +351,12 @@ public class PackageViewModel : PackageListEntryViewModel
             _logger.LogDebug(e, "Failed to resolve icon for package {PackageId}", PackageState.Package.Id);
         }
 
+        if (_disposed || generation != _generation) return;
         if (icon == null)
         {
             var iconObservable = Application.Current!.GetResourceObservable("BoxIcons.RegularExtension");
-            iconObservable.Subscribe(x => { Image = x as IImage; });
+            _iconSubscription?.Dispose();
+            _iconSubscription = iconObservable.Subscribe(x => { Image = x as IImage; });
         }
         else
         {
@@ -309,38 +364,57 @@ public class PackageViewModel : PackageListEntryViewModel
         }
     }
 
-    public async Task ResolveTabsAsync()
+    public Task ResolveTabsAsync() => _tabsTask ??= LoadTabsAsync(_generation, PackageState.Package);
+
+    private async Task LoadTabsAsync(int generation, Package package)
     {
-        if (_resolveTabsStarted) return;
-        _resolveTabsStarted = true;
         IsTabsResolved = false;
         Tabs.Clear();
+        Tabs.Add(new TabModel("About", package.Description ?? "No description provided."));
 
-        if (PackageState.Package.Tabs != null)
-            foreach (var tab in PackageState.Package.Tabs)
+        if (package.Tabs != null)
+            foreach (var tab in package.Tabs)
             {
                 if (tab.ContentUrl == null) continue;
-                var content = await _httpService.DownloadTextAsync(tab.ContentUrl);
-
-                Tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
+                string? content;
+                try { content = await _httpService.DownloadTextAsync(tab.ContentUrl); }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Failed to load package tab {Title}", tab.Title);
+                    content = null;
+                }
+                if (_disposed || generation != _generation) return;
+                Tabs.Add(new TabModel(tab.Title ?? "Details", content ?? "Content unavailable. Refresh the package sources to retry."));
             }
 
+        if (_disposed || generation != _generation) return;
+        if (!Tabs.Any(x => x.Title.Equals("License", StringComparison.OrdinalIgnoreCase)) && !string.IsNullOrWhiteSpace(package.License))
+            Tabs.Add(new TabModel("License", package.License));
         IsTabsResolved = true;
     }
 
     private async Task CheckSelectedVersionCompatibilityAsync()
     {
-        if (SelectedVersionModel == null) return;
-        if (PackageState.Package.Id == null) return;
-
-        if (SelectedVersionModel.CompatibilityReport == null)
-            SelectedVersionModel.CompatibilityReport =
-                await _packageService.CheckCompatibilityAsync(PackageState.Package.Id!, SelectedVersionModel.Version);
+        var selected = SelectedVersionModel;
+        var id = PackageState.Package.Id;
+        IsCompatibilityChecking = selected != null && selected.CompatibilityReport == null;
+        if (selected == null || id == null || selected.CompatibilityReport != null) return;
+        try { selected.CompatibilityReport = await _packageService.CheckCompatibilityAsync(id, selected.Version); }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Could not preview package compatibility for {PackageId}", id);
+            // The service performs mandatory compatibility validation again before installation.
+            if (ReferenceEquals(selected, SelectedVersionModel)) OperationMessage = "Compatibility preview unavailable. Installation will validate compatibility before making changes.";
+        }
+        finally
+        {
+            if (ReferenceEquals(selected, SelectedVersionModel)) IsCompatibilityChecking = false;
+        }
     }
 
     private async Task AskForRestartAsync(Control? owner)
     {
-        var ownerWindow = TopLevel.GetTopLevel(owner) as Window;
+        var ownerWindow = owner == null ? null : TopLevel.GetTopLevel(owner) as Window;
 
         var result = await _windowService.ShowYesNoAsync(
             "Restart now?",

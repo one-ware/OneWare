@@ -14,12 +14,23 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 {
     private readonly IPackageService _packageService;
+    private readonly IWindowService? _windowService;
     private CancellationTokenSource? _installCts;
 
-    public PackageQuickInstallViewModel(IPackageState package, IPackageService packageService)
+    public PackageQuickInstallViewModel(IPackageState package, IPackageService packageService, IWindowService? windowService = null)
     {
         Package = package;
         _packageService = packageService;
+        _windowService = windowService;
+        InstallCommand = new AsyncRelayCommand<FlexibleWindow>(InstallAsync, _ => !IsInstalling);
+        CancelCommand = new RelayCommand<FlexibleWindow>(window =>
+        {
+            if (IsInstalling)
+            {
+                _installCts?.Cancel();
+            }
+            else window?.Close();
+        });
         
         Title = $"{(package.Status is PackageStatus.UpdateAvailable ? "Update" : "Install")} {Package.Package.Name}";
 
@@ -57,41 +68,38 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
     public bool IsInstalling
     {
         get;
-        private set => SetProperty(ref field, value);
+        private set
+        {
+            if (SetProperty(ref field, value)) InstallCommand.NotifyCanExecuteChanged();
+        }
     }
 
-    public RelayCommand<FlexibleWindow> CancelCommand => new(window =>
-    {
-        if (IsInstalling)
-        {
-            _installCts?.Cancel();
-            _packageService.CancelInstall(Package.Package.Id!);
-        }
-        else
-        {
-            window?.Close();
-        }
-    });
+    public string? ResultMessage { get; private set => SetProperty(ref field, value); }
+    public RelayCommand<FlexibleWindow> CancelCommand { get; }
+    public AsyncRelayCommand<FlexibleWindow> InstallCommand { get; }
 
-    public AsyncRelayCommand<FlexibleWindow> InstallCommand => new(async window =>
+    public override bool OnWindowClosing(FlexibleWindow window)
+    {
+        if (Success || !IsInstalling) return base.OnWindowClosing(window);
+        _installCts?.Cancel();
+        return false; // Keep partial completion/cancellation visible until the operation returns.
+    }
+
+    private async Task InstallAsync(FlexibleWindow? window)
     {
         if (IsInstalling) return;
 
         _installCts = new CancellationTokenSource();
+        ResultMessage = null;
         IsInstalling = true;
 
         try
         {
-            var result = await _packageService.InstallAsync(Package.Package, null, false, false, _installCts.Token);
+            var result = await PackageOperationReview.RunAsync(_packageService,
+                _windowService ?? ContainerLocator.Container.Resolve<IWindowService>(), [new(Package.Package.Id!)], window?.Host, _installCts.Token);
 
             Success = result.Status is PackageInstallResultReason.AlreadyInstalled or PackageInstallResultReason.Installed;
-
-            if (!Success && !_installCts.IsCancellationRequested)
-            {
-                await ContainerLocator.Container.Resolve<IWindowService>().ShowMessageAsync("Installation failed",
-                    result.CompatibilityRecord?.Report ?? "Please try again later or check for OneWare Studio updates",
-                    MessageBoxIcon.Error);
-            }
+            ResultMessage = PackageOperationReview.DescribeResult(result);
             if (Success)
                 window?.Close();
         }
@@ -101,15 +109,14 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
             _installCts?.Dispose();
             _installCts = null;
         }
-    });
+    }
 
     private async Task ResolveAsync()
     {
         IsLoading = true;
 
-        LicenseText = await _packageService.DownloadLicenseAsync(Package.Package);
-        Icon = await _packageService.DownloadPackageIconAsync(Package.Package);
-
-        IsLoading = false;
+        try { Icon = await _packageService.DownloadPackageIconAsync(Package.Package); }
+        catch { /* Optional imagery must not block the operation review. */ }
+        finally { IsLoading = false; }
     }
 }

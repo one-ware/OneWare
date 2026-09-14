@@ -9,6 +9,16 @@ public sealed class OneWareModuleManager
     private readonly OneWareModuleCatalog _catalog;
     private readonly HashSet<string> _initialized = new(StringComparer.OrdinalIgnoreCase);
     private ILogger? _logger;
+    private readonly Dictionary<string, string[]> _packageModules = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string[]> _packageDependencies = new(StringComparer.OrdinalIgnoreCase);
+
+    public void RegisterPackageModules(string packageId, IEnumerable<IOneWareModule> modules, IEnumerable<string> dependencies)
+    {
+        var ids = modules.Select(x => x.Id).ToArray();
+        _packageModules[packageId] = ids;
+        var dependencyModules = dependencies.SelectMany(id => _packageModules.GetValueOrDefault(id) ?? []).Distinct().ToArray();
+        foreach (var id in ids) _packageDependencies[id] = dependencyModules;
+    }
 
     public OneWareModuleManager(OneWareModuleCatalog catalog)
     {
@@ -78,7 +88,7 @@ public sealed class OneWareModuleManager
         foreach (var module in moduleList) indegree.TryAdd(module.Id, 0);
 
         foreach (var module in moduleList)
-        foreach (var dependency in module.Dependencies ?? [])
+        foreach (var dependency in (module.Dependencies ?? []).Concat(_packageDependencies.GetValueOrDefault(module.Id) ?? []).Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!moduleById.ContainsKey(dependency))
             {

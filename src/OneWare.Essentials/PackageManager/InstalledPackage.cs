@@ -22,4 +22,9 @@ public class InstalledPackage(
     public string? License { get; } = license;
 
     public string InstalledVersion { get; } = installedVersion;
+
+    // Null means legacy/unknown metadata, not an assertion of no dependencies.
+    public PackageDependency[]? Dependencies { get; init; }
+    public Dictionary<string, string>? ResolvedDependencies { get; init; }
+    public string? Source { get; init; }
 }

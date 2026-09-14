@@ -217,6 +217,8 @@ public class PackageManagerModule : OneWareModuleBase
         services.AddSingleton<LibraryPackageInstaller>();
         services.AddSingleton<GenericPackageInstaller>();
         services.AddSingleton<IPackageService, PackageService>();
+        services.AddSingleton<IPackageOperationService>(provider => (IPackageOperationService)provider.Resolve<IPackageService>());
+        services.AddSingleton<IPackageDiscoveryService>(provider => (IPackageDiscoveryService)provider.Resolve<IPackageService>());
         services.AddSingleton<IConfigurationProfileService, ConfigurationProfileService>();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<IPackageWindowService>(provider => provider.Resolve<PackageManagerViewModel>());

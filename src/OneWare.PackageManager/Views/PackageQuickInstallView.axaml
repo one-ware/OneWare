@@ -51,42 +51,27 @@
                     HorizontalAlignment="Right">
             <Button Command="{Binding CancelCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    IsEnabled="{Binding !IsLoading}"
-                    IsVisible="{Binding IsInstalling}"
                     Height="35"
                     Padding="20 0">
                 <TextBlock Text="Cancel" />
             </Button>
             <Button Command="{Binding InstallCommand}"
                     CommandParameter="{Binding #PackageQuickInstallViewView}"
-                    IsEnabled="{Binding !IsLoading}"
                     Classes="PrimaryButton"
                     Height="35"
                     Padding="20 0">
-                <Panel>
-                    <TextBlock Text="Install"
-                               IsVisible="{Binding !Package.Package.AcceptLicenseBeforeDownload}" />
-                    <TextBlock Text="Accept License and Install"
-                               IsVisible="{Binding Package.Package.AcceptLicenseBeforeDownload}" />
-                </Panel>
+                <TextBlock Text="Review changes…" />
             </Button>
         </StackPanel>
 
         <!-- Content Section -->
-        <Panel>
-            <!-- Loading Spinner -->
-            <Border CornerRadius="8" Padding="30"
-                    IsVisible="{Binding IsLoading}">
-                <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <controls:Spinner Width="40" Height="40" />
-                    <TextBlock Text="Loading plugin information..."
-                               HorizontalAlignment="Center"
-                               Opacity="0.7" />
-                </StackPanel>
-            </Border>
-
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,12" IsVisible="{Binding IsInstalling}">
+                <controls:Spinner Width="20" Height="20" />
+                <TextBlock Text="Reviewing or applying package changes…" TextWrapping="Wrap" />
+            </StackPanel>
             <!-- Content when loaded -->
-            <Border IsVisible="{Binding !IsLoading}"
+            <Border
                     CornerRadius="8" Padding="3">
                 <Grid RowDefinitions="Auto, *" RowSpacing="15">
 
@@ -125,20 +110,22 @@
                     <!-- No License Text -->
                     <StackPanel Grid.Row="1" Spacing="8" HorizontalAlignment="Center"
                                 IsVisible="{Binding !HasLicense}">
-                        <TextBlock Text="Ready to install"
+                        <TextBlock Text="Review before installing"
                                    FontSize="16"
                                    HorizontalAlignment="Center"
                                    Opacity="0.7" />
-                        <TextBlock Text="Click Install to add this plugin to your application"
+                        <TextBlock Text="Review the package changes and any required dependency licenses before installation."
                                    HorizontalAlignment="Center"
                                    Opacity="0.5"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center" />
+                        <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap"
+                                   IsVisible="{Binding ResultMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
                     </StackPanel>
 
                 </Grid>
             </Border>
-        </Panel>
+        </DockPanel>
 
 
     </DockPanel>

@@ -1,12 +1,16 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Essentials.PackageManager.Compatibility;
 
 public class PluginCompatibilityChecker
 {
-    public static CompatibilityReport CheckCompatibilityPath(string path)
+    public static CompatibilityReport CheckCompatibilityPath(string path) => CheckCompatibilityPath(path, null);
+
+    public static CompatibilityReport CheckCompatibilityPath(string path,
+        IReadOnlyDictionary<string, AssemblyName>? providedAssemblies)
     {
         try
         {
@@ -18,7 +22,7 @@ public class PluginCompatibilityChecker
                 return new CompatibilityReport(false, []);
             }
 
-            return CheckCompatibility(File.ReadAllText(depFilePath));
+            return CheckCompatibility(File.ReadAllText(depFilePath), providedAssemblies);
         }
         catch (Exception e)
         {
@@ -27,7 +31,10 @@ public class PluginCompatibilityChecker
         }
     }
 
-    public static CompatibilityReport CheckCompatibility(string? deps)
+    public static CompatibilityReport CheckCompatibility(string? deps) => CheckCompatibility(deps, null);
+
+    public static CompatibilityReport CheckCompatibility(string? deps,
+        IReadOnlyDictionary<string, AssemblyName>? providedAssemblies)
     {
         try
         {
@@ -43,6 +50,9 @@ public class PluginCompatibilityChecker
             var depsList = deps.Trim().Split('\n');
 
             var coreDeps = GetReferencedAssembliesRecursive(Assembly.GetEntryAssembly()!);
+            // Declared providers may fill missing plugin assemblies, never override core requirements.
+            foreach (var (name, assembly) in providedAssemblies ?? new Dictionary<string, AssemblyName>())
+                coreDeps.TryAdd(name, assembly);
 
             foreach (var dep in depsList)
             {
@@ -136,6 +146,39 @@ public class PluginCompatibilityChecker
         }
 
         return string.Join('.', parts);
+    }
+
+    public static IReadOnlyDictionary<string, AssemblyName> ReadProvidedAssemblies(IEnumerable<string> paths)
+    {
+        var assemblies = new Dictionary<string, AssemblyName>(StringComparer.Ordinal);
+        foreach (var path in paths.Distinct())
+        {
+            if (!Directory.Exists(path)) throw new DirectoryNotFoundException($"Declared dependency directory missing: {path}");
+            foreach (var file in Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories)
+                         .Where(file => ShouldProbePluginAssembly(path, file)).OrderBy(file => file, StringComparer.Ordinal))
+            {
+                AssemblyName name;
+                try { name = AssemblyName.GetAssemblyName(file); }
+                catch (BadImageFormatException) { continue; }
+                if (name.Name == null) continue;
+                if (assemblies.TryGetValue(name.Name, out var existing) && existing.FullName != name.FullName)
+                    throw new InvalidOperationException($"Conflicting dependency assembly providers for {name.Name}.");
+                assemblies[name.Name] = name;
+            }
+        }
+        return assemblies;
+    }
+
+    // Keep provider discovery identical to the loader, especially for RID-specific managed assets.
+    public static bool ShouldProbePluginAssembly(string pluginPath, string filePath)
+    {
+        var segments = Path.GetRelativePath(pluginPath, filePath)
+            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (segments.Length < 2 || !segments[0].Equals("runtimes", StringComparison.OrdinalIgnoreCase))
+            return true;
+        return segments.Length >= 4 &&
+               segments[1].Equals(PlatformHelper.PlatformIdentifier, StringComparison.OrdinalIgnoreCase) &&
+               segments[2].Equals("lib", StringComparison.OrdinalIgnoreCase);
     }
 
     private static Version NormalizeVersion(Version version)

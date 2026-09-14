@@ -1,104 +1,109 @@
+using System.ComponentModel;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Services;
 using OneWare.PackageManager.ViewModels;
+using OneWare.Settings.ViewModels;
+using OneWare.Settings.Views;
 
 namespace OneWare.PackageManager.Views;
 
 public partial class PackageManagerView : FlexibleWindow
 {
-    private PackageViewModel? _lastSelectedPackage;
-    private ScrollViewer? _pluginListScrollViewer;
+    private PackageManagerViewModel? _viewModel;
+    private Vector _browseOffset;
+    private bool _showingDetails;
 
     public PackageManagerView()
     {
         InitializeComponent();
-
-        PluginList.SelectionChanged += PluginList_OnSelectionChanged;
-    }
-
-    private void PackageSeparatorButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button button)
-            return;
-
-        if (DataContext is not PackageManagerViewModel viewModel)
-            return;
-
-        var separators = viewModel.SelectedCategory?.VisibleSeparators;
-        if (separators == null || separators.Count == 0)
-            return;
-
-        var flyout = new MenuFlyout();
-
-        foreach (var separator in separators)
+        DataContextChanged += (_, _) => ObserveViewModel();
+        AttachedToVisualTree += (_, _) => ObserveViewModel();
+        DetachedFromVisualTree += (_, _) =>
         {
-            var menuItem = new MenuItem
+            if (_viewModel != null) _viewModel.PropertyChanged -= ViewModel_OnPropertyChanged;
+            _viewModel = null;
+        };
+        KeyDown += (_, args) =>
+        {
+            if (args.Key == Key.F && args.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
-                Header = separator.Text
-            };
-
-            menuItem.Click += (_, _) => ScrollToSeparator(separator);
-            flyout.Items.Add(menuItem);
-        }
-
-        flyout.ShowAt(button);
+                if (DataContext is PackageManagerViewModel vm) vm.SelectedPackage = null;
+                Dispatcher.UIThread.Post(() => PackageSearch.Focus(), DispatcherPriority.Loaded);
+                args.Handled = true;
+            }
+            else if (args.Key == Key.Left && args.KeyModifiers.HasFlag(KeyModifiers.Alt) && DataContext is PackageManagerViewModel { IsDetails: true } vm)
+            {
+                vm.BackCommand.Execute(null);
+                args.Handled = true;
+            }
+        };
     }
 
-    private void PluginList_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void ObserveViewModel()
     {
-        if (PluginList.SelectedItem is PackageViewModel packageViewModel)
-        {
-            _lastSelectedPackage = packageViewModel;
-            return;
-        }
-
-        if (PluginList.SelectedItem is not PackageSeparatorViewModel)
-            return;
-
-        Dispatcher.UIThread.Post(() => PluginList.SelectedItem = _lastSelectedPackage, DispatcherPriority.Input);
+        if (_viewModel != null) _viewModel.PropertyChanged -= ViewModel_OnPropertyChanged;
+        _viewModel = DataContext as PackageManagerViewModel;
+        _showingDetails = _viewModel?.IsDetails == true;
+        if (_viewModel != null) _viewModel.PropertyChanged += ViewModel_OnPropertyChanged;
     }
 
-    private void ScrollToSeparator(PackageSeparatorViewModel separator)
+    private void ViewModel_OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
-        Dispatcher.UIThread.Post(() =>
+        if (args.PropertyName != nameof(PackageManagerViewModel.IsDetails) || _viewModel == null) return;
+        var details = _viewModel.IsDetails;
+        if (details == _showingDetails) return;
+        _showingDetails = details;
+        var scroll = PluginList.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+        if (details)
         {
-            ScrollSeparatorContainerToTop(separator);
-        }, DispatcherPriority.Background);
+            _browseOffset = scroll?.Offset ?? default;
+            Dispatcher.UIThread.Post(() => BackButton.Focus(), DispatcherPriority.Loaded);
+        }
+        else
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_viewModel?.IsDetails != false) return;
+                PluginList.Focus();
+                if (scroll != null) scroll.Offset = _browseOffset;
+            }, DispatcherPriority.Loaded);
     }
 
-    private void ScrollSeparatorContainerToTop(PackageSeparatorViewModel separator)
+    private void Details_OnClick(object? sender, RoutedEventArgs args)
     {
-        var separatorContainer = PluginList.ContainerFromItem(separator) as Control;
-        if (separatorContainer == null)
-        {
-            PluginList.ScrollIntoView(separator);
-            separatorContainer = PluginList.ContainerFromItem(separator) as Control;
-        }
-
-        if (separatorContainer == null)
-            return;
-
-        var scrollViewer = GetPluginListScrollViewer();
-        if (scrollViewer == null)
-        {
-            separatorContainer.BringIntoView();
-            return;
-        }
-
-        var maxOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-        var targetOffset = Math.Clamp(separatorContainer.Bounds.Top, 0, maxOffset);
-        scrollViewer.Offset = scrollViewer.Offset.WithY(targetOffset);
+        if (DataContext is PackageManagerViewModel vm && sender is Control { DataContext: PackageViewModel package })
+            vm.SelectedPackage = package;
     }
 
-    private ScrollViewer? GetPluginListScrollViewer()
+    private void PluginList_OnDoubleTapped(object? sender, TappedEventArgs args)
     {
-        if (_pluginListScrollViewer != null)
-            return _pluginListScrollViewer;
+        if (args.Source is Control source && (source is Button || source.GetVisualAncestors().OfType<Button>().Any())) return;
+        OpenSelectedPackage();
+    }
 
-        _pluginListScrollViewer = PluginList.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-        return _pluginListScrollViewer;
+    private void PluginList_OnKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (args.Key != Key.Enter || args.Source is Button) return;
+        OpenSelectedPackage();
+        args.Handled = true;
+    }
+
+    private void OpenSelectedPackage()
+    {
+        if (DataContext is PackageManagerViewModel vm && PluginList.SelectedItem is PackageViewModel package)
+            vm.SelectedPackage = package;
+    }
+
+    private void Sources_OnClick(object? sender, RoutedEventArgs args)
+    {
+        var container = ContainerLocator.Container;
+        var settings = new ApplicationSettingsViewModel(container.Resolve<ISettingsService>(), container.Resolve<IPaths>(), container.Resolve<IWindowService>());
+        settings.SelectedPage = settings.SettingPages.FirstOrDefault(x => x.Header == "Package Manager");
+        _ = container.Resolve<IWindowService>().ShowDialogAsync(new ApplicationSettingsView { DataContext = settings }, Host);
     }
 }

@@ -49,16 +49,23 @@ public class PluginPackageInstaller : PackageInstallerBase
 
     public override Task<PackageInstallerResult> InstallAsync(PackageInstallContext context,
         CancellationToken cancellationToken = default)
+        => InstallWithDependenciesAsync(context, new Dictionary<string, string>(), cancellationToken);
+
+    public Task<PackageInstallerResult> InstallWithDependenciesAsync(PackageInstallContext context,
+        IReadOnlyDictionary<string, string> dependencyPaths, CancellationToken cancellationToken = default)
     {
         if (context.Package.Id != null && _restartRequired.Contains(context.Package.Id))
         {
             return Task.FromResult(new PackageInstallerResult(PackageStatus.NeedRestart));
         }
 
-        var plugin = _pluginService.AddPlugin(context.ExtractionPath);
+        var plugin = _pluginService is IPluginDependencyService dependencyService
+            ? dependencyService.AddPlugin(context.ExtractionPath, dependencyPaths)
+            : dependencyPaths.Count == 0 ? _pluginService.AddPlugin(context.ExtractionPath)
+            : throw new InvalidOperationException("The plugin loader does not support declared dependencies.");
         var warning = plugin != null && !plugin.IsCompatible ? plugin.CompatibilityReport : null;
 
-        return Task.FromResult(new PackageInstallerResult(PackageStatus.Installed, warning));
+        return Task.FromResult(new PackageInstallerResult(plugin?.IsCompatible == true ? PackageStatus.Installed : PackageStatus.Unavailable, warning));
     }
 
     public override Task<PackageInstallerResult> RemoveAsync(PackageInstallContext context,
@@ -72,11 +79,9 @@ public class PluginPackageInstaller : PackageInstallerBase
         if (plugin != null)
         {
             _pluginService.RemovePlugin(plugin);
-            if (plugin.IsCompatible)
-            {
-                _restartRequired.Add(id);
-                return Task.FromResult(new PackageInstallerResult(PackageStatus.NeedRestart));
-            }
+            // A failed module registration may already have loaded assemblies, too.
+            _restartRequired.Add(id);
+            return Task.FromResult(new PackageInstallerResult(PackageStatus.NeedRestart));
         }
 
         return Task.FromResult(new PackageInstallerResult(PackageStatus.Available));
