@@ -152,32 +152,10 @@ public class CompareGitViewModel : Document, IWaitForContent
                     .TakeWhile(x => !x.StartsWith("diff --git a"))
                     .ToList();
 
-                chunks = ResolveDiffSections(hunkElements);
+                var sections = ResolveDiffSections(hunkElements);
 
-                var addIndexLeft = new List<int>();
-                var addIndexRight = new List<int>();
-                var deleteIndexLeft = new List<int>();
-                var deleteIndexRight = new List<int>();
-                foreach (var chunk in chunks)
+                foreach (var chunk in sections)
                 {
-                    foreach (var right in chunk.RightDiff)
-                    {
-                        if (right.Style == DiffContext.Added)
-                            addIndexRight.Add(chunk.RightDiff.IndexOf(right) + 1);
-
-                        if (right.Style == DiffContext.Deleted)
-                            deleteIndexRight.Add(chunk.RightDiff.IndexOf(right) + 1);
-                    }
-
-                    foreach (var left in chunk.LeftDiff)
-                    {
-                        if (left.Style == DiffContext.Added)
-                            addIndexLeft.Add(chunk.LeftDiff.IndexOf(left) + 1);
-
-                        if (left.Style == DiffContext.Deleted)
-                            deleteIndexLeft.Add(chunk.LeftDiff.IndexOf(left) + 1);
-                    }
-
                     //Generate line differences
                     for (var i = 0; i < chunk.RightDiff.Count && i < chunk.LeftDiff.Count; i++)
                     {
@@ -195,6 +173,8 @@ public class CompareGitViewModel : Document, IWaitForContent
                         }
                     }
                 }
+
+                chunks.AddRange(sections);
             }
 
             return chunks;
