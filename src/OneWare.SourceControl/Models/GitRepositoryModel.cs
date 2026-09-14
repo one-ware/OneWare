@@ -13,7 +13,7 @@ using OneWare.SourceControl.ViewModels;
 
 namespace OneWare.SourceControl.Models;
 
-public class GitRepositoryModel : ObservableObject
+public class GitRepositoryModel : ObservableObject, IDisposable
 {
     private Branch? _headBranch;
 
@@ -27,6 +27,7 @@ public class GitRepositoryModel : ObservableObject
     {
         Project = project;
         Repository = repository;
+        WorkingPath = repository.Info.WorkingDirectory;
     }
 
     public IProjectRoot Project { get; private set; }
@@ -64,23 +65,28 @@ public class GitRepositoryModel : ObservableObject
 
     public ObservableCollection<MenuItemModel> AvailableBranchesMenu { get; } = new();
 
-    public void Refresh(SourceControlViewModel sourceControlViewModel)
+    public async Task RefreshAsync(SourceControlViewModel sourceControlViewModel)
     {
         var changes = new List<SourceControlFileModel>();
         var stagedChanges = new List<SourceControlFileModel>();
         var mergeChanges = new List<SourceControlFileModel>();
 
-        var projectExplorerService = ContainerLocator.Container.Resolve<IProjectExplorerService>();
-
         try
         {
-            HeadBranch = Repository.Head;
+            // Scan the worktree off the UI thread; publish observable state only after it completes.
+            var snapshot = await Task.Run(() => (
+                Head: Repository.Head,
+                Branches: Repository.Branches.ToArray(),
+                Status: Repository.RetrieveStatus(new StatusOptions()).ToArray(),
+                Behind: Repository.Head.TrackingDetails.BehindBy ?? 0,
+                Ahead: Repository.Head.TrackingDetails.AheadBy ?? 0));
+            HeadBranch = snapshot.Head;
 
             var branchesMenu = new List<MenuItemModel>();
 
-            foreach (var branch in Repository.Branches)
+            foreach (var branch in snapshot.Branches)
             {
-                var menuItem = new MenuItemModel("BranchName")
+                var menuItem = new MenuItemModel(branch.CanonicalName)
                 {
                     Header = branch.FriendlyName,
                     Command = new RelayCommand(() => sourceControlViewModel.ChangeBranch(branch))
@@ -117,11 +123,11 @@ public class GitRepositoryModel : ObservableObject
                 },
                 (a, b) =>
                 {
-                    if (a.Name == "New Branch...") return -1;
-                    if (b.Name == "New Branch...") return 1;
+                    if (a.Name == "NewBranch") return 1;
+                    if (b.Name == "NewBranch") return -1;
 
-                    var aTracking = a.Name.StartsWith("origin/");
-                    var bTracking = b.Name.StartsWith("origin/");
+                    var aTracking = a.Name.StartsWith("refs/remotes/", StringComparison.Ordinal);
+                    var bTracking = b.Name.StartsWith("refs/remotes/", StringComparison.Ordinal);
 
                     return aTracking switch
                     {
@@ -131,7 +137,7 @@ public class GitRepositoryModel : ObservableObject
                     };
                 });
 
-            foreach (var item in Repository.RetrieveStatus(new StatusOptions()))
+            foreach (var item in snapshot.Status)
             {
                 var fullPath = Path.Combine(Repository.Info.WorkingDirectory, item.FilePath);
 
@@ -139,6 +145,12 @@ public class GitRepositoryModel : ObservableObject
                 {
                     FileIcon = sourceControlViewModel.FileIconService.GetFileIconModel(Path.GetExtension(fullPath))
                 };
+
+                if (item.State.HasFlag(FileStatus.Conflicted))
+                {
+                    mergeChanges.Add(sModel);
+                    continue;
+                }
 
                 if (item.State.HasFlag(FileStatus.TypeChangeInIndex) ||
                     item.State.HasFlag(FileStatus.RenamedInIndex) ||
@@ -154,15 +166,15 @@ public class GitRepositoryModel : ObservableObject
                     item.State.HasFlag(FileStatus.ModifiedInWorkdir))
                     changes.Add(sModel);
 
-                if (item.State.HasFlag(FileStatus.Conflicted)) mergeChanges.Add(sModel);
             }
 
-            PullCommits = Repository?.Head.TrackingDetails.BehindBy ?? 0;
-            PushCommits = Repository?.Head.TrackingDetails.AheadBy ?? 0;
+            PullCommits = snapshot.Behind;
+            PushCommits = snapshot.Ahead;
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
+            return;
         }
 
         StagedChanges.Merge(stagedChanges, (a, b) =>
@@ -201,4 +213,6 @@ public class GitRepositoryModel : ObservableObject
             return false;
         }, (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
     }
+
+    public void Dispose() => Repository.Dispose();
 }

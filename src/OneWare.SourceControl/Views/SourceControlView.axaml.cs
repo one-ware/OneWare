@@ -24,7 +24,8 @@ public partial class SourceControlView : UserControl
 
     public void OnStagedChangeDoubleTap(object? sender, RoutedEventArgs e)
     {
-        if (StagedChangeListBox.SelectedItem is SourceControlFileModel scm) _ = AutoOpenAsync(scm);
+        if (StagedChangeListBox.SelectedItem is SourceControlFileModel scm && DataContext is SourceControlViewModel vm)
+            vm.CompareStagedAndSwitch(scm.Status.FilePath);
     }
 
     public void OnMergeChangeDoubleTap(object? sender, RoutedEventArgs e)
@@ -34,12 +35,8 @@ public partial class SourceControlView : UserControl
 
     public async Task AutoOpenAsync(SourceControlFileModel scm)
     {
-        if (!(DataContext is SourceControlViewModel vm)) return;
-        if (scm.Status.State == FileStatus.ModifiedInWorkdir || scm.Status.State == FileStatus.ModifiedInIndex)
-            vm.CompareAndSwitch(scm.Status.FilePath);
-        else if (scm.Status.State == FileStatus.DeletedFromWorkdir) await vm.OpenHeadFileAsync(scm.Status.FilePath);
-        else if (scm.Status.State == FileStatus.NewInWorkdir || scm.Status.State == FileStatus.NewInIndex)
-            await vm.OpenFileAsync(scm.Status.FilePath);
-        else if (scm.Status.State == FileStatus.Conflicted) await vm.OpenFileAsync(scm.Status.FilePath);
+        if (DataContext is not SourceControlViewModel vm || vm.IsLoading) return;
+        if (scm.Status.State.HasFlag(FileStatus.Conflicted)) await vm.OpenFileAsync(scm.Status.FilePath);
+        else vm.CompareAndSwitch(scm.Status.FilePath);
     }
 }
