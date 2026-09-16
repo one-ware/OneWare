@@ -6,7 +6,8 @@
         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
         xmlns:controls1="clr-namespace:Dock.Model.Controls;assembly=Dock.Model"
-        xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials">
+        xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+        xmlns:commands="clr-namespace:OneWare.Essentials.Commands;assembly=OneWare.Essentials">
 
     <Styles.Resources>
 
@@ -30,6 +31,15 @@
         
 
         <ContextMenu x:Key="DocumentTabStripItemContextMenu" x:DataType="core:IDockable">
+            <MenuItem Header="Copy Path"
+                      Command="{x:Static commands:DocumentCommands.CopyPath}"
+                      CommandParameter="{Binding}"
+                      IsVisible="{Binding $parent[ContextMenu].((viewModels:ExtendedDocument)DataContext).FullPath,
+                                          Converter={x:Static ObjectConverters.IsNotNull},
+                                          FallbackValue={x:False}}" />
+            <Separator IsVisible="{Binding $parent[ContextMenu].((viewModels:ExtendedDocument)DataContext).FullPath,
+                                          Converter={x:Static ObjectConverters.IsNotNull},
+                                          FallbackValue={x:False}}" />
             <MenuItem Header="{DynamicResource DocumentTabStripItemFloatString}"
                       Command="{Binding Owner.Factory.FloatDockable}"
                       CommandParameter="{Binding}">

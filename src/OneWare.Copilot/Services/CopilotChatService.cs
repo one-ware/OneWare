@@ -817,9 +817,9 @@ public sealed class CopilotChatService(
 
     private void RefreshActiveFileAttachment(bool focusChanged)
     {
-        var editor = mainDockService.CurrentDocument as IEditor;
+        var currentDocument = mainDockService.CurrentDocument;
 
-        if (!ReferenceEquals(editor, _trackedEditor))
+        if (currentDocument is IEditor editor && !ReferenceEquals(currentDocument, _trackedEditor))
         {
             if (_trackedEditor != null)
                 _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
@@ -833,18 +833,18 @@ public sealed class CopilotChatService(
             if (focusChanged) _activeFileDismissed = false;
         }
 
-        ActiveFileAttachment = _activeFileDismissed ? null : BuildActiveFileAttachment(editor);
+        ActiveFileAttachment = _activeFileDismissed ? null : BuildActiveFileAttachment(currentDocument);
     }
 
-    private CopilotAttachmentViewModel? BuildActiveFileAttachment(IEditor? editor)
+    private CopilotAttachmentViewModel? BuildActiveFileAttachment(IExtendedDocument? document)
     {
-        if (editor == null || string.IsNullOrEmpty(editor.FullPath)) return null;
+        if (document == null || string.IsNullOrEmpty(document.FullPath)) return null;
 
-        var name = Path.GetFileName(editor.FullPath);
-        var selection = TryGetSelection(editor, out var selectionText);
+        var name = Path.GetFileName(document.FullPath);
+        var selection = TryGetSelection(document, out var selectionText);
 
         return new CopilotAttachmentViewModel(
-            editor.FullPath,
+            document.FullPath,
             name,
             isActiveFile: true,
             RemoveAttachment,
@@ -852,10 +852,12 @@ public sealed class CopilotChatService(
             selectionText);
     }
 
-    private static CopilotAttachmentViewModel.SelectionRange? TryGetSelection(IEditor editor, out string? selectionText)
+    private static CopilotAttachmentViewModel.SelectionRange? TryGetSelection(IExtendedDocument document, out string? selectionText)
     {
         selectionText = null;
 
+        if(document is not IEditor editor) return null;
+        
         var textArea = editor.Editor.TextArea;
         if (textArea.Selection.IsEmpty) return null;
 
