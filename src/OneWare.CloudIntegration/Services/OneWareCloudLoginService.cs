@@ -19,7 +19,7 @@ using RestSharp;
 
 namespace OneWare.CloudIntegration.Services;
 
-public sealed class OneWareCloudLoginService
+public sealed class OneWareCloudLoginService : IOneWareCloudAccess
 {
     private readonly IHttpService _httpService;
     private readonly Dictionary<string, JwtSecurityToken> _jwtBearerTokenCache = new();
@@ -65,6 +65,20 @@ public sealed class OneWareCloudLoginService
     }
 
     public bool OfficialCloudIsUsed => _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey).EqualUrls(OneWareCloudIntegrationModule.OfficialHost);
+
+    public string BaseUrl =>
+        _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey).TrimEnd('/');
+
+    public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var (token, status) = await GetLoggedInJwtTokenAsync();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (token is null || string.IsNullOrWhiteSpace(token.RawData))
+            throw new InvalidOperationException($"OneWare Cloud authentication failed ({(int)status} {status}).");
+
+        return token.RawData;
+    }
 
     public RestClient GetRestClient()
     {

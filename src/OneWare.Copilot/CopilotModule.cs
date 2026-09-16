@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Copilot.Services;
 using OneWare.Copilot.Views;
@@ -16,6 +17,20 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
     public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
     public const string CopilotAutoTierSettingKey = "AI_Chat_Copilot_AutoTier";
+    public const string CopilotProviderSettingKey = "AI_Chat_Copilot_Provider";
+    public const string CopilotByokEndpointSettingKey = "AI_Chat_Copilot_BYOK_Endpoint";
+    public const string CopilotByokApiKeyEnvironmentVariableSettingKey =
+        "AI_Chat_Copilot_BYOK_ApiKeyEnvironmentVariable";
+    public const string CopilotByokModelSettingKey = "AI_Chat_Copilot_BYOK_Model";
+    public const string CopilotByokWireApiSettingKey = "AI_Chat_Copilot_BYOK_WireApi";
+    public const string CopilotByokSelectedModelSettingKey = "AI_Chat_Copilot_BYOK_SelectedModel";
+
+    public const string ProviderGitHubCopilot = "GitHub Copilot";
+    public const string ProviderOneWareCloud = "OneWare Cloud";
+    public const string ProviderOpenAiCompatible = "OpenAI Compatible (BYOK)";
+    public const string ProviderAnthropic = "Anthropic (BYOK)";
+    public const string WireApiCompletions = "completions";
+    public const string WireApiResponses = "responses";
 
     /// <summary>
     /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
@@ -168,8 +183,59 @@ public class CopilotModule : OneWareModuleBase
     public override void Initialize(IServiceProvider serviceProvider)
     {
         serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
-        
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
+
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotProviderSettingKey,
+            new ComboBoxSetting("Model Provider", ProviderOneWareCloud,
+                [ProviderOneWareCloud, ProviderGitHubCopilot, ProviderOpenAiCompatible, ProviderAnthropic])
+            {
+                HoverDescription =
+                    "OneWare Cloud uses your signed-in cloud account and consumes plan credits. GitHub Copilot " +
+                    "uses your Copilot account. BYOK connects directly to the configured provider."
+            });
+
+        var byokVisible = settingsService.GetSettingObservable<string>(CopilotProviderSettingKey)
+            .Select(provider => provider is ProviderOpenAiCompatible or ProviderAnthropic);
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotByokEndpointSettingKey,
+            new TextBoxSetting("BYOK Endpoint", "", "http://localhost:11434/v1")
+            {
+                HoverDescription =
+                    "Provider API base URL. Leave blank for http://localhost:11434/v1 (OpenAI-compatible) " +
+                    "or https://api.anthropic.com (Anthropic).",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
+            CopilotByokApiKeyEnvironmentVariableSettingKey,
+            new TextBoxSetting("API Key Environment Variable", "", "OPENAI_API_KEY")
+            {
+                HoverDescription =
+                    "Optional environment variable containing the API key. The key itself is never saved in " +
+                    "OneWare settings or Copilot session files.",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotByokModelSettingKey,
+            new TextBoxSetting("Model Override", "", "qwen2.5-coder:7b")
+            {
+                HoverDescription =
+                    "Optional model ID. Leave blank to discover models from the provider's /models endpoint.",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotByokWireApiSettingKey,
+            new ComboBoxSetting("OpenAI Wire API", WireApiCompletions,
+                [WireApiCompletions, WireApiResponses])
+            {
+                HoverDescription =
+                    "Use completions for Ollama and broad OpenAI compatibility. Use responses for providers " +
+                    "that implement the OpenAI Responses API. Ignored for Anthropic.",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
             new FilePathSetting("Copilot CLI Path", "", null,
                 serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
                 PlatformHelper.ExeFile)
@@ -177,7 +243,7 @@ public class CopilotModule : OneWareModuleBase
                 HoverDescription = "Path for Copilot CLI"
             });
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
             CopilotApprovalModeSettingKey,
             new ComboBoxSetting("Approval Mode",
                 CopilotChatService.ApprovalModeDefault,
@@ -195,7 +261,7 @@ public class CopilotModule : OneWareModuleBase
                     "(the agent is told you are unavailable and decides what is best)."
             });
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
             CopilotContextTierSettingKey,
             new ComboBoxSetting("Context Length",
                 CopilotChatService.ContextTierDefault,
@@ -218,7 +284,7 @@ public class CopilotModule : OneWareModuleBase
         //         HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
         //     });
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
             CopilotAutoTierSettingKey,
             new ComboBoxSetting("Auto Routing",
                 CopilotChatService.AutoTierDefault,
@@ -237,9 +303,10 @@ public class CopilotModule : OneWareModuleBase
                     "Intelligence: prefer the most capable models."
             });
 
-        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, DefaultModelId);
+        settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);
+        settingsService.Register(CopilotByokSelectedModelSettingKey, "");
 
-        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedReasoningEffortSettingKey, "");
+        settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");
 
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());

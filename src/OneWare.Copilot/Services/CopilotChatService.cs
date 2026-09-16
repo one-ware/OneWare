@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia;
@@ -42,7 +44,8 @@ public sealed class CopilotChatService(
     IPackageWindowService packageWindowService,
     IWindowService windowService,
     IMainDockService mainDockService,
-    IPaths paths)
+    IPaths paths,
+    IOneWareCloudAccess? cloudAccess = null)
     : ObservableObject, IChatServiceWithSessions
 {
     private CopilotClient? _client;
@@ -50,8 +53,13 @@ public sealed class CopilotChatService(
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private string? _requestedSessionId;
+    private ByokConfiguration? _byokConfiguration;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
     private readonly HashSet<string> _sessionApprovedTools = new();
+    private static readonly HttpClient ByokHttpClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(15)
+    };
 
     // Usage tracking
     public long LastInputTokens
@@ -202,6 +210,10 @@ public sealed class CopilotChatService(
         return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
     }
 
+    private string GetSelectedModelSettingKey() => _byokConfiguration == null
+        ? CopilotModule.CopilotSelectedModelSettingKey
+        : CopilotModule.CopilotByokSelectedModelSettingKey;
+
     public ModelInfo? SelectedModel
     {
         get;
@@ -210,7 +222,7 @@ public sealed class CopilotChatService(
             var oldValue = field;
             if (SetProperty(ref field, value) && value != null)
             {
-                settingsService.SetSettingValue(CopilotModule.CopilotSelectedModelSettingKey, value.Id);
+                settingsService.SetSettingValue(GetSelectedModelSettingKey(), value.Id);
                 RefreshReasoningEfforts(value);
                 RefreshContextSizes(value);
                 RefreshAutoTier(value);
@@ -582,6 +594,18 @@ public sealed class CopilotChatService(
 
     public string Name { get; } = "Copilot";
 
+    public bool UsesGitHubAuthentication
+    {
+        get;
+        private set
+        {
+            if (!SetProperty(ref field, value)) return;
+            OnPropertyChanged(nameof(IsByok));
+        }
+    } = true;
+
+    public bool IsByok => !UsesGitHubAuthentication;
+
     public string? CurrentSessionId
     {
         get;
@@ -687,6 +711,22 @@ public sealed class CopilotChatService(
                 ? DescribeAuthSource(AccountAuthType)
                 : $"{AccountLogin} ({DescribeAuthSource(AccountAuthType)})"
             : null;
+    }
+
+    private void ApplyByokStatus(ByokConfiguration configuration)
+    {
+        UsesGitHubAuthentication = false;
+        IsAuthenticated = false;
+        AccountLogin = null;
+        AccountAuthType = "byok";
+        CanSignOut = false;
+        AccountStatusText = $"{configuration.DisplayName} · {configuration.BaseUrl}";
+    }
+
+    private void ApplyGitHubProviderStatus()
+    {
+        UsesGitHubAuthentication = true;
+        ApplyAuthStatus(null);
     }
 
     private static bool IsRemovableAuth(string? authType) =>
@@ -1010,6 +1050,7 @@ public sealed class CopilotChatService(
 
     private async Task<bool> AuthenticateAsync(Control? owner)
     {
+        if (GetByokConfiguration() != null) return true;
         if (_client == null) return false;
 
         try
@@ -1079,6 +1120,12 @@ public sealed class CopilotChatService(
         {
             await DisposeAsync();
 
+            _byokConfiguration = GetByokConfiguration();
+            if (_byokConfiguration == null)
+                ApplyGitHubProviderStatus();
+            else
+                ApplyByokStatus(_byokConfiguration);
+
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
@@ -1088,7 +1135,8 @@ public sealed class CopilotChatService(
                 return false;
             }
 
-            if (packageService.IsLoaded || await packageService.RefreshAsync(false))
+            if (_byokConfiguration == null &&
+                (packageService.IsLoaded || await packageService.RefreshAsync(false)))
             {
                 if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
                     state.Status is PackageStatus.UpdateAvailable)
@@ -1101,37 +1149,51 @@ public sealed class CopilotChatService(
                 }
             }
 
-            _client = new CopilotClient(new CopilotClientOptions()
+            var clientOptions = new CopilotClientOptions
             {
                 WorkingDirectory = paths.ProjectsDirectory,
                 ClientInfo = BuildClientInfo(),
-                Connection = RuntimeConnection.ForStdio(cliPath, [])
-            });
+                Connection = RuntimeConnection.ForStdio(cliPath, []),
+                UseLoggedInUser = _byokConfiguration == null
+            };
 
-            bool isAuthenticated;
-            try
+            if (_byokConfiguration != null)
             {
-                var authStatus = await _client.GetAuthStatusAsync();
-                isAuthenticated = authStatus.IsAuthenticated;
-                ApplyAuthStatus(authStatus);
-            }
-            catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
-                                         ex.Message.Contains("401"))
-            {
-                // Treat 401 authentication errors as unauthenticated
-                ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                    "Authentication check failed with 401, treating as unauthenticated.");
-                isAuthenticated = false;
-                ApplyAuthStatus(null);
+                clientOptions.Mode = CopilotClientMode.Empty;
+                clientOptions.BaseDirectory = GetByokDataDirectory(_byokConfiguration);
+                clientOptions.OnListModels = cancellationToken =>
+                    ListByokModelsAsync(_byokConfiguration, cancellationToken);
             }
 
-            if (!isAuthenticated)
+            _client = new CopilotClient(clientOptions);
+
+            if (_byokConfiguration == null)
             {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
-                EventReceived?.Invoke(this, new ChatButtonEvent(
-                    "Not Authenticated to Copilot CLI.", "Login with GitHub",
-                    new AsyncRelayCommand<Control?>(AuthenticateAsync)));
-                return false;
+                bool isAuthenticated;
+                try
+                {
+                    var authStatus = await _client.GetAuthStatusAsync();
+                    isAuthenticated = authStatus.IsAuthenticated;
+                    ApplyAuthStatus(authStatus);
+                }
+                catch (IOException ex) when (ex.InnerException?.GetType().Name == "RemoteInvocationException" &&
+                                             ex.Message.Contains("401"))
+                {
+                    // Treat 401 authentication errors as unauthenticated
+                    ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
+                        "Authentication check failed with 401, treating as unauthenticated.");
+                    isAuthenticated = false;
+                    ApplyAuthStatus(null);
+                }
+
+                if (!isAuthenticated)
+                {
+                    StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
+                    EventReceived?.Invoke(this, new ChatButtonEvent(
+                        "Not Authenticated to Copilot CLI.", "Login with GitHub",
+                        new AsyncRelayCommand<Control?>(AuthenticateAsync)));
+                    return false;
+                }
             }
 
             StatusChanged?.Invoke(this, new StatusEvent(false, $"Starting Copilot..."));
@@ -1147,7 +1209,7 @@ public sealed class CopilotChatService(
             RefreshFilteredModels();
 
             var selectedModelSetting =
-                settingsService.GetSettingValue<string>(CopilotModule.CopilotSelectedModelSettingKey);
+                settingsService.GetSettingValue<string>(GetSelectedModelSettingKey());
             SelectedModel = ResolveModel(selectedModelSetting) ??
                             ResolveModel(CopilotModule.DefaultModelId) ??
                             Models.FirstOrDefault();
@@ -1179,6 +1241,195 @@ public sealed class CopilotChatService(
         IntegrationVersion = typeof(CopilotChatService).Assembly.GetName().Version?.ToString()
     };
 
+    private sealed record ByokConfiguration(
+        string DisplayName,
+        string Type,
+        string BaseUrl,
+        string ApiKeyEnvironmentVariable,
+        string ModelOverride,
+        string WireApi,
+        bool UsesOneWareCloud = false);
+
+    private ByokConfiguration? GetByokConfiguration()
+    {
+        var provider = settingsService.GetSettingValue<string>(CopilotModule.CopilotProviderSettingKey);
+        if (provider == CopilotModule.ProviderGitHubCopilot) return null;
+
+        if (provider == CopilotModule.ProviderOneWareCloud)
+        {
+            if (cloudAccess is null)
+                throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
+            if (!Uri.TryCreate(cloudAccess.BaseUrl, UriKind.Absolute, out var cloudUri) ||
+                cloudUri.Scheme is not ("http" or "https"))
+                throw new InvalidOperationException("The OneWare Cloud URL is invalid.");
+
+            return new ByokConfiguration(
+                provider,
+                "openai",
+                $"{cloudAccess.BaseUrl.TrimEnd('/')}/api/copilot/v1",
+                string.Empty,
+                string.Empty,
+                CopilotModule.WireApiResponses,
+                true);
+        }
+
+        var configuredEndpoint =
+            settingsService.GetSettingValue<string>(CopilotModule.CopilotByokEndpointSettingKey).Trim();
+        var (type, defaultEndpoint) = provider switch
+        {
+            CopilotModule.ProviderOpenAiCompatible => ("openai", "http://localhost:11434/v1"),
+            CopilotModule.ProviderAnthropic => ("anthropic", "https://api.anthropic.com"),
+            _ => throw new InvalidOperationException($"Unsupported model provider '{provider}'.")
+        };
+
+        var baseUrl = string.IsNullOrWhiteSpace(configuredEndpoint) ? defaultEndpoint : configuredEndpoint;
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var endpoint) ||
+            endpoint.Scheme is not ("http" or "https"))
+            throw new InvalidOperationException(
+                $"The BYOK endpoint '{baseUrl}' must be an absolute HTTP or HTTPS URL.");
+
+        return new ByokConfiguration(
+            provider,
+            type,
+            baseUrl.TrimEnd('/'),
+            settingsService
+                .GetSettingValue<string>(CopilotModule.CopilotByokApiKeyEnvironmentVariableSettingKey).Trim(),
+            settingsService.GetSettingValue<string>(CopilotModule.CopilotByokModelSettingKey).Trim(),
+            settingsService.GetSettingValue<string>(CopilotModule.CopilotByokWireApiSettingKey));
+    }
+
+    private GitHub.Copilot.ProviderConfig? BuildProviderConfig()
+    {
+        if (_byokConfiguration == null) return null;
+
+        var provider = new GitHub.Copilot.ProviderConfig
+        {
+            Type = _byokConfiguration.Type,
+            BaseUrl = _byokConfiguration.BaseUrl,
+            ApiKey = ResolveByokApiKey(_byokConfiguration)
+        };
+
+        if (_byokConfiguration.UsesOneWareCloud)
+            provider.BearerTokenProvider = _ => cloudAccess!.GetAccessTokenAsync();
+
+        if (_byokConfiguration.Type == "openai")
+            provider.WireApi = _byokConfiguration.WireApi;
+
+        return provider;
+    }
+
+    private static string? ResolveByokApiKey(ByokConfiguration configuration)
+    {
+        if (string.IsNullOrWhiteSpace(configuration.ApiKeyEnvironmentVariable)) return null;
+
+        var apiKey = Environment.GetEnvironmentVariable(configuration.ApiKeyEnvironmentVariable);
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException(
+                $"Environment variable '{configuration.ApiKeyEnvironmentVariable}' does not contain a BYOK API key.");
+
+        return apiKey;
+    }
+
+    private string GetByokDataDirectory(ByokConfiguration configuration)
+    {
+        var identity = Encoding.UTF8.GetBytes($"{configuration.Type}\n{configuration.BaseUrl}");
+        var providerHash = Convert.ToHexString(SHA256.HashData(identity))[..16].ToLowerInvariant();
+        var directory = Path.Combine(paths.AppDataDirectory, "Copilot", "BYOK", providerHash);
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
+
+    private async Task<IList<ModelInfo>> ListByokModelsAsync(ByokConfiguration configuration,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(configuration.ModelOverride))
+            return [CreateByokModel(configuration.ModelOverride, configuration.ModelOverride)];
+
+        var modelsUrl = configuration.Type == "anthropic" &&
+                        !configuration.BaseUrl.EndsWith("/v1", StringComparison.OrdinalIgnoreCase)
+            ? $"{configuration.BaseUrl}/v1/models"
+            : $"{configuration.BaseUrl}/models";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, modelsUrl);
+        var apiKey = ResolveByokApiKey(configuration);
+        if (configuration.UsesOneWareCloud)
+        {
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer", await cloudAccess!.GetAccessTokenAsync(cancellationToken));
+        }
+        else if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            if (configuration.Type == "anthropic")
+            {
+                request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+                request.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
+            }
+            else
+            {
+                request.Headers.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+            }
+        }
+
+        using var response = await ByokHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                $"Could not list models from {configuration.DisplayName}: " +
+                $"{(int)response.StatusCode} {response.ReasonPhrase}. Configure a Model Override if this endpoint " +
+                "does not support model discovery.");
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var document = await JsonDocument.ParseAsync(content, cancellationToken: cancellationToken);
+        if (!document.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)
+            throw new InvalidOperationException(
+                $"The model response from {configuration.DisplayName} did not contain a data array.");
+
+        var models = new List<ModelInfo>();
+        foreach (var item in data.EnumerateArray())
+        {
+            if (!item.TryGetProperty("id", out var idProperty)) continue;
+            var id = idProperty.GetString();
+            if (string.IsNullOrWhiteSpace(id)) continue;
+
+            var name = item.TryGetProperty("display_name", out var displayNameProperty)
+                ? displayNameProperty.GetString()
+                : item.TryGetProperty("name", out var nameProperty)
+                    ? nameProperty.GetString()
+                    : null;
+            models.Add(CreateByokModel(id, string.IsNullOrWhiteSpace(name) ? id : name));
+        }
+
+        if (models.Count == 0)
+            throw new InvalidOperationException(
+                $"{configuration.DisplayName} returned no models. Configure a Model Override to use a known model ID.");
+
+        return models
+            .DistinctBy(model => model.Id, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(model => model.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static ModelInfo CreateByokModel(string id, string name) => new()
+    {
+        Id = id,
+        Name = name,
+        Capabilities = new GitHub.Copilot.ModelCapabilities
+        {
+            Limits = new ModelLimits
+            {
+                MaxContextWindowTokens = 0,
+                MaxPromptTokens = 0
+            },
+            Supports = new ModelSupports
+            {
+                ReasoningEffort = false,
+                Vision = false
+            }
+        }
+    };
+
     private async Task InitializeSessionAsync()
     {
         if (_client == null) return;
@@ -1203,6 +1454,7 @@ public sealed class CopilotChatService(
             var sessionConfig = new SessionConfig
             {
                 Model = SelectedModel.Id,
+                Provider = BuildProviderConfig(),
                 ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null,
                 ContextTier = ResolveContextTier(),
                 Streaming = true,
@@ -1234,6 +1486,7 @@ public sealed class CopilotChatService(
             _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
             {
                 Streaming = true,
+                Provider = BuildProviderConfig(),
                 ContextTier = ResolveContextTier(),
                 IncludeSubAgentStreamingEvents = false,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
