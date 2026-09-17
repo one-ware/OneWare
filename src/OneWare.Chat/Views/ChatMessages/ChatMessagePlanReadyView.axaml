@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessagePlanReadyView"
+             x:DataType="chatMessages:ChatMessagePlanReadyViewModel">
+
+    <Border Background="{DynamicResource ThemeBackgroundBrush}"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+            BorderThickness="1" CornerRadius="4" Padding="8 6">
+        <StackPanel Spacing="6">
+
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Image Source="{DynamicResource Material.FormatListBulletedType}" Width="14" Height="14"
+                       VerticalAlignment="Center" />
+                <TextBlock Text="Plan ready" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" IsVisible="{Binding HasSummary}"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+
+            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding PlanMarkdown}" />
+
+            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsAnswered}">
+                <Button Height="NaN"
+                        Classes="RoundButton PrimaryButton"
+                        Command="{Binding StartImplementation}"
+                        Padding="5 3"
+                        ToolTip.Tip="Switches to Agent mode and carries the plan out"
+                        Content="{Binding Event.StartImplementationButtonText}" />
+
+                <Button Height="NaN"
+                        Classes="RoundButton"
+                        Command="{Binding UpdatePlan}"
+                        Padding="5 3"
+                        ToolTip.Tip="Stays in Plan mode so you can have the plan changed"
+                        Content="{Binding Event.UpdatePlanButtonText}" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding AnswerText}" FontSize="11" IsVisible="{Binding IsAnswered}"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+
+        </StackPanel>
+    </Border>
+
+</UserControl>

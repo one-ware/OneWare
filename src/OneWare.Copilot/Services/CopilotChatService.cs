@@ -42,7 +42,8 @@ public sealed class CopilotChatService(
     IPackageWindowService packageWindowService,
     IWindowService windowService,
     IMainDockService mainDockService,
-    IPaths paths)
+    IPaths paths,
+    IChatAgentService agentService)
     : ObservableObject, IChatServiceWithSessions
 {
     private CopilotClient? _client;
@@ -51,6 +52,8 @@ public sealed class CopilotChatService(
     private IDisposable? _subscription;
     private string? _requestedSessionId;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
+    private readonly List<PendingPlanRequest> _pendingPlanRequests = new();
+
     private readonly HashSet<string> _sessionApprovedTools = new();
 
     // Usage tracking
@@ -195,6 +198,17 @@ public sealed class CopilotChatService(
 
         var normalized = NormalizeModelId(modelId);
         return Models.FirstOrDefault(x => NormalizeModelId(x.Id) == normalized);
+    }
+
+    /// <summary>
+    /// Turns a model id from the runtime into the name the user knows from the model picker, and
+    /// keeps the raw id when the model is not in the list (e.g. models only sub-agents may use).
+    /// </summary>
+    private string? DescribeModel(string? modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId)) return null;
+
+        return ResolveModel(modelId)?.Name ?? modelId;
     }
 
     private static string NormalizeModelId(string modelId)
@@ -551,6 +565,9 @@ public sealed class CopilotChatService(
         var session = _session;
         var model = SelectedModel;
         if (session == null || model == null) return;
+
+        // The user's choice wins over a model an agent pinned earlier.
+        _appliedAgentModelId = null;
 
         var options = new SetModelOptions
         {
@@ -1197,6 +1214,9 @@ public sealed class CopilotChatService(
         var sessionId = _requestedSessionId;
         _requestedSessionId = null;
 
+        // Plugins can register tools at any time, so the cache is rebuilt per session.
+        _clientToolNames = null;
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
@@ -1206,8 +1226,9 @@ public sealed class CopilotChatService(
                 ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null,
                 ContextTier = ResolveContextTier(),
                 Streaming = true,
-                // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
-                IncludeSubAgentStreamingEvents = false,
+                // The chat UI renders sub-agents in their own block, so their deltas are needed
+                // to show progress while they work.
+                IncludeSubAgentStreamingEvents = true,
                 SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
                 // Restrict the session to OneWare's own tools plus the session-isolated built-ins
@@ -1221,6 +1242,7 @@ public sealed class CopilotChatService(
                 ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
+                OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
                 Hooks = new SessionHooks
                 {
                     OnPreToolUse = OnPreToolUseAsync
@@ -1235,7 +1257,7 @@ public sealed class CopilotChatService(
             {
                 Streaming = true,
                 ContextTier = ResolveContextTier(),
-                IncludeSubAgentStreamingEvents = false,
+                IncludeSubAgentStreamingEvents = true,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
@@ -1244,6 +1266,7 @@ public sealed class CopilotChatService(
                 EnableSkills = true,
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
+                OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
                 Hooks = new SessionHooks
                 {
                     OnPreToolUse = OnPreToolUseAsync
@@ -1431,7 +1454,24 @@ public sealed class CopilotChatService(
 
         if (_session == null) return;
 
-        var options = new MessageOptions { Prompt = prompt };
+        var agent = agentService.SelectedAgent;
+
+        var options = new MessageOptions
+        {
+            Prompt = ApplyAgentInstructions(prompt, agent),
+            AgentMode = agent?.TurnMode switch
+            {
+                ChatAgentTurnMode.Plan => AgentMode.Plan,
+                ChatAgentTurnMode.Interactive => AgentMode.Interactive,
+                _ => null
+            }
+        };
+
+        // The instructions are only for the model; the timeline keeps showing what the user wrote.
+        if (!string.Equals(options.Prompt, prompt, StringComparison.Ordinal)) options.DisplayPrompt = prompt;
+
+        await ApplyAgentModelAsync(agent).ConfigureAwait(false);
+
         var attachments = CollectAttachments();
         if (attachments != null) options.Attachments = attachments;
 
@@ -1443,6 +1483,10 @@ public sealed class CopilotChatService(
         };
         if (sdkMode != null) options.Mode = sdkMode;
 
+        // A new turn has nothing to do with the model of the previous one; without this a turn that
+        // ends before any request was billed (e.g. an abort) would report a stale model.
+        if (mode == ChatSendMode.Send) _lastTurnModel = null;
+
         await _session.SendAsync(options).ConfigureAwait(false);
 
         Dispatcher.UIThread.Post(ClearAttachmentsAfterSend);
@@ -1451,7 +1495,9 @@ public sealed class CopilotChatService(
     public async Task AbortAsync()
     {
         ReleasePendingInputRequests();
+        ReleasePendingPlanRequests();
         toolProvider.CancelActiveFunctions();
+        DropForegroundSubAgents();
         if (_session == null) return;
         await _session.AbortAsync();
     }
@@ -1473,6 +1519,7 @@ public sealed class CopilotChatService(
     public async Task NewChatAsync()
     {
         ReleasePendingInputRequests();
+        ReleasePendingPlanRequests();
         lock (_sessionApprovedTools)
             _sessionApprovedTools.Clear();
         _requestedSessionId = null;
@@ -1505,6 +1552,7 @@ public sealed class CopilotChatService(
     public async ValueTask DisposeAsync()
     {
         ReleasePendingInputRequests();
+        ReleasePendingPlanRequests();
 
         if (_attachmentTrackingInitialized)
         {
@@ -1558,12 +1606,18 @@ public sealed class CopilotChatService(
             _session = null;
         }
 
+        _appliedAgentModelId = null;
+
+        lock (_subAgents)
+            _subAgents.Clear();
+
         CurrentSessionId = null;
         ResetUsageStats();
     }
 
     private void ResetUsageStats()
     {
+        _lastTurnModel = null;
         LastInputTokens = 0;
         LastOutputTokens = 0;
         LastReasoningTokens = null;
@@ -1580,33 +1634,85 @@ public sealed class CopilotChatService(
 
     private void HandleSessionEvent(SessionEvent evt)
     {
+        // Tool events name both the sub-agent instance and the task call that spawned it, which is
+        // the only authoritative pairing of the two the runtime provides.
+        BindAgentInstance(evt.AgentId, evt switch
+        {
+            ToolExecutionStartEvent start => start.Data.ParentToolCallId,
+            ToolExecutionCompleteEvent complete => complete.Data.ParentToolCallId,
+            AssistantMessageEvent message => message.Data.ParentToolCallId,
+            AssistantMessageDeltaEvent delta => delta.Data.ParentToolCallId,
+            AssistantUsageEvent usage => usage.Data.ParentToolCallId,
+            _ => null
+        });
+
+        // Sub-agent lifecycle events name their run through the tool call id and must never take part
+        // in instance guessing: their AgentId belongs to the starting/ending run itself, not to the
+        // block the event should be shown in.
+        var agentId = evt is SubagentStartedEvent or SubagentCompletedEvent or SubagentFailedEvent
+            ? null
+            : ResolveSubAgentId(evt);
+
         switch (evt)
         {
+            case SubagentStartedEvent x:
+            {
+                HandleSubAgentStarted(x);
+                break;
+            }
+            case SubagentCompletedEvent x:
+            {
+                CompleteSubAgent(x.Data.ToolCallId, true, null, x.Data.Cancelled == true,
+                    x.Data.Duration, x.Data.TotalTokens, x.Data.TotalToolCalls);
+                break;
+            }
+            case SubagentFailedEvent x:
+            {
+                CompleteSubAgent(x.Data.ToolCallId, false, x.Data.Error, false,
+                    x.Data.Duration, x.Data.TotalTokens, x.Data.TotalToolCalls);
+                break;
+            }
             case AssistantMessageDeltaEvent x:
             {
-                EventReceived?.Invoke(this,
-                    new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId));
+                EventReceived?.Invoke(this, new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId)
+                {
+                    AgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId)
+                });
                 break;
             }
             case AssistantMessageEvent x:
             {
-                EventReceived?.Invoke(this,
-                    new ChatMessageEvent(x.Data.Content, x.Data.MessageId));
+                EventReceived?.Invoke(this, new ChatMessageEvent(x.Data.Content, x.Data.MessageId)
+                {
+                    AgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId),
+                    Model = DescribeModel(x.Data.Model)
+                });
                 break;
             }
             case AssistantReasoningDeltaEvent x:
             {
                 EventReceived?.Invoke(this,
-                    new ChatReasoningDeltaEvent(x.Data.DeltaContent, x.Data.ReasoningId));
+                    new ChatReasoningDeltaEvent(x.Data.DeltaContent, x.Data.ReasoningId) { AgentId = agentId });
                 break;
             }
             case AssistantReasoningEvent x:
             {
                 EventReceived?.Invoke(this,
-                    new ChatReasoningEvent(x.Data.Content, x.Data.ReasoningId));
+                    new ChatReasoningEvent(x.Data.Content, x.Data.ReasoningId) { AgentId = agentId });
                 break;
             }
-            case UserMessageEvent x:
+            case ToolExecutionCompleteEvent x:
+            {
+                var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
+                if (toolAgentId == null) break;
+
+                EventReceived?.Invoke(this, new ChatToolExecutionCompleteEvent(
+                    x.Data.ToolCallId,
+                    x.Data.Success,
+                    x.Data.Error?.Message ?? Truncate(x.Data.Result?.Content)) { AgentId = toolAgentId });
+                break;
+            }
+            case UserMessageEvent x when agentId == null:
             {
                 // The backend injects the content of loaded skills into the user message. That
                 // content is meant for the model, so report it as a skill indicator and only show
@@ -1622,16 +1728,23 @@ public sealed class CopilotChatService(
             }
             case ToolExecutionStartEvent x:
             {
+                var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
+
                 EventReceived?.Invoke(this,
-                    new ChatToolExecutionStartEvent(x.Data.ToolName));
+                    new ChatToolExecutionStartEvent(x.Data.ToolName, x.Data.ToolCallId, IsClientTool(x.Data.ToolName))
+                    {
+                        AgentId = toolAgentId,
+                        Detail = DescribeToolArguments(x.Data)
+                    });
                 break;
             }
             case SessionErrorEvent error:
                 EventReceived?.Invoke(this,
-                    new ChatErrorEvent(error.Data.Message));
+                    new ChatErrorEvent(error.Data.Message) { AgentId = agentId });
                 break;
-            case SessionIdleEvent:
-                EventReceived?.Invoke(this, new ChatIdleEvent());
+            case SessionIdleEvent when agentId == null:
+                DropForegroundSubAgents();
+                EventReceived?.Invoke(this, new ChatIdleEvent { Model = _lastTurnModel });
                 break;
             case AssistantUsageEvent usage:
                 UpdateUsageFromAssistantEvent(usage.Data);
@@ -1656,6 +1769,229 @@ public sealed class CopilotChatService(
                 SyncAutoTierFromSession(failed.Data.EffectiveAutoTier);
                 break;
         }
+    }
+
+    // ── Sub-agents ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Running sub-agents by block id. The block id is the tool call id of the <c>task</c> call that
+    /// spawned the sub-agent, because that is the only id present on every <c>subagent.*</c> event
+    /// and on the tool events of the sub-agent (as <c>parentToolCallId</c>).
+    /// </summary>
+    private readonly Dictionary<string, SubAgentRun> _subAgents = new(StringComparer.Ordinal);
+
+    private sealed class SubAgentRun(string id, bool isBackground)
+    {
+        public string Id { get; } = id;
+
+        /// <summary>Background sub-agents keep running after the turn that spawned them ended.</summary>
+        public bool IsBackground { get; } = isBackground;
+
+        /// <summary>Runtime agent instance id, used to attribute streaming events to this run.</summary>
+        public string? AgentInstanceId { get; set; }
+    }
+
+    private void HandleSubAgentStarted(SubagentStartedEvent evt)
+    {
+        var id = evt.Data.ToolCallId;
+        if (string.IsNullOrWhiteSpace(id)) return;
+
+        var isBackground =
+            string.Equals(evt.Data.ExecutionMode, "background", StringComparison.OrdinalIgnoreCase);
+        var run = new SubAgentRun(id, isBackground);
+        string? parentId;
+
+        lock (_subAgents)
+        {
+            // Only the spawner nests this run into another block; it is absent when the main agent
+            // started it. Everything else would nest concurrently started siblings into each other.
+            // The spawner is named by the id it answers to, or by the task call that created it.
+            parentId = FindSubAgentByInstanceId(evt.Data.ParentId)?.Id
+                       ?? (evt.Data.ParentId != null && _subAgents.ContainsKey(evt.Data.ParentId)
+                           ? evt.Data.ParentId
+                           : null);
+
+            // The remaining id identifies the new run, which makes its streaming events attributable
+            // right away instead of only from its first tool call on.
+            if (!string.IsNullOrWhiteSpace(evt.AgentId) &&
+                !string.Equals(evt.AgentId, evt.Data.ParentId, StringComparison.Ordinal) &&
+                // An id another run already answers to belongs to that run, not to this one.
+                FindSubAgentByInstanceId(evt.AgentId) == null)
+            {
+                run.AgentInstanceId = evt.AgentId;
+            }
+
+            _subAgents[id] = run;
+        }
+
+        var displayName = FirstNonEmpty(evt.Data.AgentDisplayName, evt.Data.AgentName, evt.Data.AgentType, "Agent")!;
+
+        EventReceived?.Invoke(this, new ChatSubAgentStartedEvent(id, displayName)
+        {
+            Description = evt.Data.AgentDescription,
+            Model = DescribeModel(evt.Data.Model),
+            IsBackground = isBackground,
+            ParentSubAgentId = parentId,
+            AgentId = parentId
+        });
+    }
+
+    private void CompleteSubAgent(string? toolCallId, bool success, string? error, bool cancelled,
+        TimeSpan? duration, long? totalTokens, long? totalToolCalls)
+    {
+        if (string.IsNullOrWhiteSpace(toolCallId)) return;
+
+        lock (_subAgents)
+            _subAgents.Remove(toolCallId);
+
+        EventReceived?.Invoke(this, new ChatSubAgentCompletedEvent(toolCallId, success)
+        {
+            Error = error,
+            Cancelled = cancelled,
+            Duration = duration,
+            TotalTokens = totalTokens,
+            TotalToolCalls = totalToolCalls
+        });
+    }
+
+    /// <summary>
+    /// Learns which runtime agent instance a sub-agent run is executed by. The lifecycle events only
+    /// carry the tool call id, so the pairing has to come from an event that carries both.
+    /// </summary>
+    private void BindAgentInstance(string? agentInstanceId, string? toolCallId)
+    {
+        if (string.IsNullOrWhiteSpace(agentInstanceId) || string.IsNullOrWhiteSpace(toolCallId)) return;
+
+        lock (_subAgents)
+        {
+            if (!_subAgents.TryGetValue(toolCallId, out var run)) return;
+            if (string.Equals(run.AgentInstanceId, agentInstanceId, StringComparison.Ordinal)) return;
+
+            // Take the id away from a run it was only guessed for.
+            var previous = FindSubAgentByInstanceId(agentInstanceId);
+            if (previous != null) previous.AgentInstanceId = null;
+
+            run.AgentInstanceId = agentInstanceId;
+        }
+    }
+
+    /// <summary>
+    /// Maps the runtime agent instance id of an event to the sub-agent block it belongs to.
+    /// Returns null for events of the main agent.
+    /// </summary>
+    private string? ResolveSubAgentId(SessionEvent evt)
+    {
+        if (string.IsNullOrWhiteSpace(evt.AgentId)) return null;
+
+        lock (_subAgents)
+        {
+            var known = FindSubAgentByInstanceId(evt.AgentId);
+            if (known != null) return known.Id;
+
+            // Only one run can be meant when exactly one is still waiting for its instance id.
+            // With several unidentified runs the event is dropped instead of risking a wrong block.
+            var unbound = _subAgents.Values.Where(x => x.AgentInstanceId == null).ToList();
+            if (unbound.Count != 1) return null;
+
+            unbound[0].AgentInstanceId = evt.AgentId;
+            return unbound[0].Id;
+        }
+    }
+
+    /// <summary>
+    /// Forgets sub-agents that cannot outlive the finished turn. Without this a run that never
+    /// reported completion (e.g. after an abort) would keep taking events from later sub-agents.
+    /// </summary>
+    private void DropForegroundSubAgents()
+    {
+        lock (_subAgents)
+        {
+            foreach (var id in _subAgents.Where(x => !x.Value.IsBackground).Select(x => x.Key).ToArray())
+                _subAgents.Remove(id);
+        }
+    }
+
+    /// <summary>
+    /// Tool events name their spawning <c>task</c> call, which is exactly the sub-agent block id.
+    /// </summary>
+    private string? ResolveToolAgentId(string? parentToolCallId, string? agentId)
+    {
+        if (!string.IsNullOrWhiteSpace(parentToolCallId))
+        {
+            lock (_subAgents)
+            {
+                if (_subAgents.ContainsKey(parentToolCallId)) return parentToolCallId;
+            }
+        }
+
+        return agentId;
+    }
+
+    private SubAgentRun? FindSubAgentByInstanceId(string? agentInstanceId)
+    {
+        if (string.IsNullOrWhiteSpace(agentInstanceId)) return null;
+
+        return _subAgents.Values.FirstOrDefault(x =>
+            string.Equals(x.AgentInstanceId, agentInstanceId, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Names of the tools OneWare executes itself, cached because it is checked for every tool event
+    /// and building the tool list is not free. Refreshed whenever a session is created.
+    /// </summary>
+    private HashSet<string>? _clientToolNames;
+
+    private bool IsClientTool(string? toolName)
+    {
+        if (string.IsNullOrWhiteSpace(toolName)) return false;
+
+        var names = _clientToolNames ??= toolProvider.GetTools()
+            .Select(x => x.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        return names.Contains(toolName);
+    }
+
+    /// <summary>
+    /// Compact, human readable summary of what a tool was called with, used as the first line of a
+    /// sub-agent tool entry.
+    /// </summary>
+    private static string? DescribeToolArguments(ToolExecutionStartData data)
+    {
+        if (data.ShellToolInfo?.DisplayCommand is { Length: > 0 } command)
+            return Truncate(command, 400);
+
+        if (data.Arguments is not { ValueKind: JsonValueKind.Object } arguments) return null;
+
+        var parts = new List<string>();
+        foreach (var property in arguments.EnumerateObject())
+        {
+            var value = property.Value.ValueKind switch
+            {
+                JsonValueKind.String => property.Value.GetString(),
+                JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => property.Value.ToString(),
+                _ => null
+            };
+
+            if (string.IsNullOrWhiteSpace(value)) continue;
+
+            parts.Add($"{property.Name}: {Truncate(value, 200)}");
+            if (parts.Count == 3) break;
+        }
+
+        return parts.Count == 0 ? null : string.Join('\n', parts);
+    }
+
+    private static string? Truncate(string? text, int maxLength = 4000)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength) return text;
+
+        return text[..maxLength] + "…";
+    }
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        return values.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
     }
 
     /// <summary>
@@ -1705,8 +2041,19 @@ public sealed class CopilotChatService(
         return stripped.Trim();
     }
 
+    /// <summary>
+    /// Model of the most recent request of the main agent. With auto routing the answering model is
+    /// only known from the usage report, so it is remembered for the end of the turn.
+    /// </summary>
+    private string? _lastTurnModel;
+
     private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
     {
+        // Requests of sub-agents name the task call they belong to and must not be mistaken for the
+        // model of the main conversation.
+        if (string.IsNullOrWhiteSpace(data.ParentToolCallId))
+            _lastTurnModel = DescribeModel(data.Model);
+
         LastInputTokens = data.InputTokens ?? 0;
         LastOutputTokens = data.OutputTokens ?? 0;
         LastReasoningTokens = data.ReasoningTokens is > 0 ? data.ReasoningTokens : null;
@@ -1751,10 +2098,194 @@ public sealed class CopilotChatService(
         }
     }
 
+    // ── Chat agents ("Agent", "Plan", "Ask" and custom agents) ────────────
+
+    /// <summary>
+    /// Model the session currently runs on, which is the model an agent pinned while such an agent is
+    /// selected, and the user's model otherwise.
+    /// </summary>
+    private string? _appliedAgentModelId;
+
+    /// <summary>
+    /// Applies the model an agent pinned for the upcoming turn. The user's model selection stays
+    /// untouched, so deselecting the agent restores it with the next message.
+    /// </summary>
+    private async Task ApplyAgentModelAsync(ChatAgentDefinition? agent)
+    {
+        var session = _session;
+        var userModel = SelectedModel;
+        if (session == null || userModel == null) return;
+
+        var pinned = string.IsNullOrWhiteSpace(agent?.Model)
+            ? null
+            : Models.FirstOrDefault(x => string.Equals(x.Id, agent!.Model, StringComparison.OrdinalIgnoreCase))
+              ?? Models.FirstOrDefault(x => string.Equals(x.Name, agent!.Model, StringComparison.OrdinalIgnoreCase));
+
+        var target = pinned ?? userModel;
+
+        // Nothing to do while the session already runs the right model: it is set up with the user's
+        // model, and only this method ever changes it for an agent.
+        if (_appliedAgentModelId == null && pinned == null) return;
+        if (string.Equals(_appliedAgentModelId, target.Id, StringComparison.Ordinal)) return;
+
+        var effort = pinned != null && !string.IsNullOrWhiteSpace(agent!.ReasoningEffort)
+            ? agent.ReasoningEffort
+            : ShowReasoningEffort
+                ? SelectedReasoningEffort
+                : null;
+
+        try
+        {
+            await session.SetModelAsync(target.Id, new SetModelOptions { ReasoningEffort = effort });
+            _appliedAgentModelId = pinned == null ? null : target.Id;
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                .LogError(ex, "Failed to apply the model {Model} of the selected chat agent.", target.Id);
+        }
+    }
+
+    /// <summary>
+    /// Prefixes the prompt with the instructions of the selected agent, so they apply to this turn
+    /// regardless of how long ago the agent was selected.
+    /// </summary>
+    private static string ApplyAgentInstructions(string prompt, ChatAgentDefinition? agent)
+    {
+        if (agent?.Instructions is not { Length: > 0 } instructions) return prompt;
+
+        return $"""
+                <chat-mode name="{agent.DisplayName}">
+                {instructions.Trim()}
+                </chat-mode>
+
+                {prompt}
+                """;
+    }
+
+    /// <summary>
+    /// Returns why the selected agent must not call the given tool, or <see langword="null"/> if it
+    /// may. Only OneWare tools can reach the workspace or the IDE — backend built-ins that touch the
+    /// host are already kept out of the session by <see cref="BuildAvailableTools"/> — so a read-only
+    /// agent is enforced by blocking every OneWare tool that is not marked read-only.
+    /// </summary>
+    private string? GetAgentToolDenyReason(string toolName)
+    {
+        var agent = agentService.SelectedAgent;
+        if (agent == null) return null;
+
+        // Only tools OneWare provides are restricted: the session built-ins (task/skill delegation,
+        // planning bookkeeping, …) are what the agent works with and are never named in a tool list.
+        var isOneWareTool = toolProvider.IsFunctionReadOnly(toolName);
+        if (isOneWareTool == null) return null;
+
+        if (agent.Tools != null && !agent.Tools.Contains(toolName, StringComparer.OrdinalIgnoreCase))
+            return $"The {agent.DisplayName} agent is not allowed to use '{toolName}'.";
+
+        if (agent.IsReadOnly && isOneWareTool == false)
+            return $"'{toolName}' changes the workspace, which is not allowed in {agent.DisplayName} mode. " +
+                   "Report what you would change instead, or ask the user to switch to Agent mode.";
+
+        return null;
+    }
+
+    /// <summary>
+    /// The model finished planning and asks to start implementing. The user decides: either the plan
+    /// is carried out — which also leaves the read-only agent, because that agent, not the model,
+    /// controls what the chat may do — or planning continues.
+    /// </summary>
+    private Task<ExitPlanModeResult> OnExitPlanModeRequestAsync(ExitPlanModeRequest request,
+        ExitPlanModeInvocation invocation)
+    {
+        var agent = agentService.SelectedAgent;
+        if (agent is not { IsReadOnly: true }) return Task.FromResult(new ExitPlanModeResult { Approved = true });
+
+        var pending = new PendingPlanRequest();
+
+        lock (_pendingPlanRequests)
+            _pendingPlanRequests.Add(pending);
+
+        var startCommand = new RelayCommand<Control?>(_ =>
+        {
+            // The choice only counts if it is still the one the runtime is waiting for; an aborted
+            // turn must not pull the user out of the planning agent.
+            if (!CompletePlanRequest(pending, new ExitPlanModeResult
+                {
+                    Approved = true,
+                    // The action decides the approval posture of what follows, so it must match what
+                    // OneWare is configured for — never what the model recommended.
+                    SelectedAction = IsAutopilot ? "autopilot" : "interactive"
+                })) return;
+
+            // Without leaving the read-only agent every edit of the implementation would be denied.
+            agentService.SelectAgent(BuiltInChatAgents.Agent);
+        });
+
+        var updateCommand = new RelayCommand<Control?>(_ => CompletePlanRequest(pending,
+            new ExitPlanModeResult
+            {
+                Approved = false,
+                Feedback = "The user wants to refine the plan first. Stay in planning, ask what should " +
+                           "change, and do not implement anything yet."
+            }));
+
+        pending.Event = new ChatPlanReadyEvent(request.Summary, request.PlanContent, startCommand, updateCommand);
+        EventReceived?.Invoke(this, pending.Event);
+
+        return pending.Source.Task;
+    }
+
+    private bool CompletePlanRequest(PendingPlanRequest pending, ExitPlanModeResult result)
+    {
+        lock (_pendingPlanRequests)
+            _pendingPlanRequests.Remove(pending);
+
+        return pending.Source.TrySetResult(result);
+    }
+
+    /// <summary>
+    /// Answers plan decisions nobody can make any more (the turn was aborted or the session is gone)
+    /// by keeping the chat in planning, so the runtime is never left waiting, and withdraws the offer
+    /// from the chat so a late click cannot change the chat agent for nothing.
+    /// </summary>
+    private void ReleasePendingPlanRequests()
+    {
+        List<PendingPlanRequest> pending;
+        lock (_pendingPlanRequests)
+        {
+            pending = new List<PendingPlanRequest>(_pendingPlanRequests);
+            _pendingPlanRequests.Clear();
+        }
+
+        foreach (var request in pending)
+        {
+            request.Source.TrySetResult(new ExitPlanModeResult { Approved = false });
+            request.Event?.Expire();
+        }
+    }
+
+    /// <summary>A plan decision the runtime is waiting for, together with the block that offers it.</summary>
+    private sealed class PendingPlanRequest
+    {
+        public TaskCompletionSource<ExitPlanModeResult> Source { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public ChatPlanReadyEvent? Event { get; set; }
+    }
+
     // ── OnPreToolUse — returns "ask" to escalate to OnPermissionRequest ────────
 
     private Task<PreToolUseHookOutput?> OnPreToolUseAsync(PreToolUseHookInput input, HookInvocation invocation)
     {
+        // The selected agent restricts which tools may run, no matter how permissions are configured.
+        var denyReason = GetAgentToolDenyReason(input.ToolName);
+        if (denyReason != null)
+            return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput
+            {
+                PermissionDecision = "deny",
+                PermissionDecisionReason = denyReason
+            });
+
         // Bypass Approval / Autopilot: auto-approve all permission requests without prompting
         if (IsApprovalBypassed)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });

@@ -329,6 +329,12 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `SelectedChatService`: currently selected provider.
 - `SaveState()`: persist selection.
 
+#### `IChatAgentService` (src/OneWare.Essentials/Services/IChatAgentService.cs)
+
+- `Agents` / `SelectedAgent`: the agents offered in the chat agent picker and the selected one.
+- `RegisterAgent(ChatAgentDefinition)`: add a selectable agent (see "Chat agents").
+- `Refresh()`: re-read the markdown agents of the active project.
+
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
 - `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
@@ -338,6 +344,8 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `GetTools()`: return the registered tools for chat or automation.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
+- Set `OneWareAiFunction.IsReadOnly` on tools that only read state, so read-only chat agents
+  (`Plan`, `Ask`) may use them. Everything else is blocked for those agents.
 - Set `OneWareAiFunction.InvocationHandler` when a tool needs an
   `AiFunctionInvocationContext` for invocation-scoped progress reporting. Keep `Handler` as the
   typed delegate used to generate the tool schema.
@@ -546,6 +554,10 @@ Key points:
 - Use `EventReceived` to stream chat content and `StatusChanged` to report activity or errors.
 - Set `BottomUiExtension` to a custom `Avalonia.Controls.Control` if you need extra UI (model
   selector, provider settings, etc.).
+- Report which AI answered: set `ChatMessageEvent.Model` to the display name of the model that
+  wrote the message, and `ChatIdleEvent.Model` for turns whose messages carry no model. The chat
+  shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
+  for a delegated task, shown in the header of its block.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
 
 Skeleton example:
@@ -662,10 +674,67 @@ Optional members: `Tools` (restrict the agent to specific tool names), `Model` a
 `ReasoningEffort` (overrides for this agent), and `Infer = false` if the main agent must not
 delegate to it on its own.
 
-There is no agent picker in the chat UI. An agent is used either automatically — the main agent
-delegates when the request matches the `Description` — or because the user names it (*"use the
-OneAI dataset agent to …"*). Write the `Description` for the first case: state *when* to use the
-agent, not what it is.
+Agents registered this way are *delegation targets*: they are used either automatically — the main
+agent delegates when the request matches the `Description` — or because the user names it (*"use
+the OneAI dataset agent to …"*). Write the `Description` for the first case: state *when* to use
+the agent, not what it is. Their work is shown in the chat as a collapsible sub-agent block.
+
+To add an agent the **user selects** for the whole conversation, use `IChatAgentService` instead
+(see "Chat agents").
+
+### Chat agents
+
+`IChatAgentService` (src/OneWare.Essentials/Services/IChatAgentService.cs) holds the agents offered
+in the picker below the chat input. OneWare ships three built-ins:
+
+| Agent | Behaviour |
+| --- | --- |
+| `agent` | Full access: researches, edits files and runs tools |
+| `plan` | Runs the turn in plan mode and works out a plan; workspace changes are blocked |
+| `ask` | Answers questions; workspace changes are blocked |
+
+The selected agent applies to every message sent while it is active: its `Instructions` are added
+to the turn, `TurnMode` selects interactive or plan mode, and `IsReadOnly`/`Tools` are enforced
+before a tool runs — a blocked tool call is denied, not just hidden from the model.
+
+When a planning turn ends, the chat shows a **Plan ready** block with two choices: *Start
+implementation* switches to the `agent` mode and lets the plan be carried out, *Update plan* keeps
+planning. Chat services can raise that block themselves with `ChatPlanReadyEvent`; otherwise the
+chat adds it at the end of a turn of a `ChatAgentTurnMode.Plan` agent.
+
+Register an agent from a module:
+
+```csharp
+serviceProvider.Resolve<IChatAgentService>().RegisterAgent(new ChatAgentDefinition
+{
+    Id = "fpga-bringup",
+    DisplayName = "FPGA Bring-up",
+    Description = "Walks through pin planning, constraints and the first bitstream.",
+    Instructions = "You guide the user through bringing up a new FPGA board. ...",
+    Tools = ["readFile", "getActiveProject", "getAllErrors"]
+});
+```
+
+Users can add agents without writing code by dropping a markdown file into `.github/agents/` of the
+project (or into `<AppData>/Agents/` to have it available everywhere). The front matter is optional;
+the body is used as the instructions:
+
+```markdown
+---
+name: release-notes
+displayName: Release Notes
+description: Summarizes what changed since the last tag.
+mode: plan            # "plan" or omitted for interactive
+readOnly: true
+tools: [readFile, getActiveProject]
+model: claude-haiku-4.5
+reasoningEffort: low
+---
+
+Summarize the changes since the last release tag, grouped by area.
+```
+
+File agents are re-read whenever the active project changes or a new chat is started.
 
 ### Skills
 

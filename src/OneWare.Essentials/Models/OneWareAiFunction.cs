@@ -31,6 +31,13 @@ public interface IOneWareAiFunction
     /// </summary>
     Func<AiFunctionInvocationContext, AIFunctionArguments, CancellationToken, ValueTask<object?>>?
         InvocationHandler => null;
+
+    /// <summary>
+    /// Whether the function only reads state. Read-only agents (e.g. the built-in <c>Ask</c> and
+    /// <c>Plan</c> agents) may call these functions; everything else is blocked for them, so a
+    /// function that changes files, the IDE or the system must leave this <see langword="false"/>.
+    /// </summary>
+    bool IsReadOnly => false;
 }
 
 public sealed class AiFunctionInvocationContext(string id, Action<string> reportProgress)
@@ -54,4 +61,7 @@ public sealed class OneWareAiFunction : IOneWareAiFunction
     /// <inheritdoc />
     public Func<AiFunctionInvocationContext, AIFunctionArguments, CancellationToken, ValueTask<object?>>?
         InvocationHandler { get; init; }
+
+    /// <inheritdoc />
+    public bool IsReadOnly { get; init; }
 }

@@ -503,46 +503,49 @@
 
         <Border Grid.Row="2" Margin="10 6 10 8"
             IsEnabled="{Binding !IsLoading}"
-                Background="{DynamicResource ThemeControlMidBrush}"
+                Background="{DynamicResource EditorInputSurfaceBrush}"
                 Classes="RoundBorder">
             <Grid RowDefinitions="Auto, Auto">
                 <TextBox
                     IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Text="{Binding CommitMessage}" Name="CommitMessageBox"
                     BorderThickness="0" Background="Transparent"
-                    Watermark="Describe your changes..." Padding="8 8 8 6"
+                    Watermark="Describe your changes..." Padding="10 10 10 8"
                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="52"
                     VerticalContentAlignment="Top" />
 
-                <DockPanel Grid.Row="1" Height="24" Margin="6 2 6 6" LastChildFill="False">
-                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
-                               Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
-                               Text="{Binding ActiveRepository.HeadBranch.FriendlyName, FallbackValue=No repository}" />
+                <Border Grid.Row="1" Background="{DynamicResource EditorInputFooterBrush}"
+                        BorderThickness="0 1 0 0" Padding="6 4">
+                    <DockPanel Height="24" LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                                   Text="{Binding ActiveRepository.HeadBranch.FriendlyName, FallbackValue=No repository}" />
 
-                    <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
-                            Classes="RoundButton PrimaryButton" Padding="8 0"
-                            IsEnabled="{Binding #CommitMessageBox.Text.Length}"
-                            CommandParameter="{x:True}"
-                            IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:True}}"
-                            ToolTip.Tip="Commit staged changes">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
-                            <TextBlock Text="Commit Staged" />
-                        </StackPanel>
-                    </Button>
+                        <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
+                                Classes="RoundButton PrimaryButton" Padding="8 0"
+                                IsEnabled="{Binding #CommitMessageBox.Text.Length}"
+                                CommandParameter="{x:True}"
+                                IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:True}}"
+                                ToolTip.Tip="Commit staged changes">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                                <TextBlock Text="Commit Staged" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
-                            Classes="RoundButton PrimaryButton" Padding="8 0"
-                            IsEnabled="{Binding #CommitMessageBox.Text.Length}"
-                            CommandParameter="{x:False}"
-                            IsVisible="{Binding !ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}"
-                            ToolTip.Tip="Stage all changes and commit">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
-                            <TextBlock Text="Commit" />
-                        </StackPanel>
-                    </Button>
-                </DockPanel>
+                        <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
+                                Classes="RoundButton PrimaryButton" Padding="8 0"
+                                IsEnabled="{Binding #CommitMessageBox.Text.Length}"
+                                CommandParameter="{x:False}"
+                                IsVisible="{Binding !ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}"
+                                ToolTip.Tip="Stage all changes and commit">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                                <TextBlock Text="Commit" />
+                            </StackPanel>
+                        </Button>
+                    </DockPanel>
+                </Border>
             </Grid>
         </Border>
     </Grid>
