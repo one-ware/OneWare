@@ -32,6 +32,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly string _statePath;
     private readonly string _historyRootPath;
 
+    /// <summary>
+    /// Assistant messages of the running turn, in order, outside of sub-agent blocks. Only these may
+    /// be labelled with the model when the turn ends.
+    /// </summary>
+    private List<ChatMessageAssistantViewModel> _turnAssistantMessages = [];
+
     private readonly Dictionary<string, ChatMessageAssistantViewModel> _assistantMessagesById =
         new(StringComparer.Ordinal);
 
@@ -444,6 +450,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         _cancelledQueuedMessages.Clear();
         WorkingStatusText = DefaultWorkingStatus;
         _assistantMessagesById.Clear();
+        _turnAssistantMessages.Clear();
         _assistantReasoningById.Clear();
         _notConnectedMessage = null;
     }
@@ -725,6 +732,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
         {
             Messages.Remove(initMessage);
+            _turnAssistantMessages.Remove(initMessage);
         }
 
         if (!string.IsNullOrWhiteSpace(messageId))
@@ -735,19 +743,27 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             var created = new ChatMessageAssistantViewModel(messageId);
             AddMessage(created, agentId);
             _assistantMessagesById[messageId] = created;
+            if (agentId == null) _turnAssistantMessages.Add(created);
             return created;
         }
 
         var activeAssistantMessage = new ChatMessageAssistantViewModel(messageId);
         AddMessage(activeAssistantMessage, agentId);
+        if (agentId == null) _turnAssistantMessages.Add(activeAssistantMessage);
 
         return activeAssistantMessage;
     }
 
-    private void FinishTurn()
+    /// <param name="model">
+    /// Model that answered the turn, when the chat service reports it. Used for messages that did
+    /// not carry the information themselves.
+    /// </param>
+    private void FinishTurn(string? model = null)
     {
         Dispatcher.UIThread.Post(() =>
         {
+            ShowModelOfLastAnswer(model);
+
             foreach (var message in EnumerateAllMessages())
             {
                 switch (message)
@@ -786,6 +802,28 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             // throttled auto save.
             SaveState();
         });
+    }
+
+    /// <summary>
+    /// Attributes the answer to the model that produced it, on the last message of the finished turn
+    /// only. Earlier turns keep their own attribution, and messages inside a sub-agent block are left
+    /// alone because that block names its own model.
+    /// </summary>
+    private void ShowModelOfLastAnswer(string? model)
+    {
+        var turnMessages = _turnAssistantMessages;
+        _turnAssistantMessages = [];
+
+        var last = turnMessages.LastOrDefault();
+        if (last == null) return;
+
+        if (string.IsNullOrWhiteSpace(last.Model)) last.Model = model;
+        if (string.IsNullOrWhiteSpace(last.Model)) return;
+
+        // Intermediate messages of the same turn stay unlabelled, so the turn ends with a single
+        // "answered by" line.
+        foreach (var message in turnMessages)
+            message.ShowModel = ReferenceEquals(message, last);
     }
 
     /// <summary>
@@ -862,6 +900,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantMessage(x.MessageId, x.AgentId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
+                    if (!string.IsNullOrWhiteSpace(x.Model)) message.Model = x.Model;
                     NotifyContentAdded();
                 });
                 break;
@@ -1016,9 +1055,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 });
                 break;
             }
-            case ChatIdleEvent:
+            case ChatIdleEvent x:
             {
-                FinishTurn();
+                FinishTurn(x.Model);
                 break;
             }
             case ChatClearMessagesEvent:
@@ -1030,6 +1069,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     _pendingLocalMessages.Clear();
                     _cancelledQueuedMessages.Clear();
                     _assistantMessagesById.Clear();
+                    _turnAssistantMessages.Clear();
                     _assistantReasoningById.Clear();
                     _subAgents.Clear();
                     _pendingSubAgentTools.Clear();
@@ -1078,6 +1118,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             _pendingLocalMessages.Clear();
             _cancelledQueuedMessages.Clear();
             _assistantMessagesById.Clear();
+            _turnAssistantMessages.Clear();
             _assistantReasoningById.Clear();
             IsBusy = false;
             WorkingStatusText = DefaultWorkingStatus;
@@ -1544,7 +1585,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             case ChatMessageAssistantViewModel assistant:
                 return new ChatMessageState(ChatMessageKind.Assistant)
                 {
-                    Content = assistant.Content
+                    Content = assistant.Content,
+                    Model = assistant.Model,
+                    ShowModel = assistant.ShowModel
                 };
             case ChatMessageReasoningViewModel reasoning:
                 return new ChatMessageState(ChatMessageKind.Reasoning)
@@ -1574,7 +1617,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     Id = subAgent.Id,
                     Message = subAgent.DisplayName,
                     Content = subAgent.Description,
-                    ToolName = subAgent.Model,
+                    Model = subAgent.Model,
                     ToolOutput = subAgent.StatusText,
                     IsSuccessful = subAgent.IsSuccessful,
                     Children = subAgent.Items.Select(BuildMessageState).OfType<ChatMessageState>().ToList()
@@ -1595,7 +1638,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 message = new ChatMessageAssistantViewModel
                 {
                     Content = state.Content ?? string.Empty,
-                    IsStreaming = false
+                    IsStreaming = false,
+                    Model = state.Model,
+                    ShowModel = state.ShowModel
                 };
                 return true;
             case ChatMessageKind.Reasoning:
@@ -1639,7 +1684,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     state.Message)
                 {
                     Description = state.Content,
-                    Model = state.ToolName,
+                    // Sessions written before the dedicated field kept the model in ToolName.
+                    Model = state.Model ?? state.ToolName,
                     IsRunning = false,
                     IsExpanded = false,
                     IsSuccessful = state.IsSuccessful,
@@ -1724,6 +1770,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         Messages.Clear();
         _assistantMessagesById.Clear();
+        _turnAssistantMessages.Clear();
         _assistantReasoningById.Clear();
         _subAgents.Clear();
         _pendingSubAgentTools.Clear();
@@ -1733,6 +1780,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         Messages.Clear();
         _assistantMessagesById.Clear();
+        _turnAssistantMessages.Clear();
         _assistantReasoningById.Clear();
         _subAgents.Clear();
         _pendingSubAgentTools.Clear();
@@ -2053,6 +2101,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         public string? ToolName { get; set; }
         public string? ToolOutput { get; set; }
         public string? SkillName { get; set; }
+
+        /// <summary>Model that produced the message, or that a sub-agent ran with.</summary>
+        public string? Model { get; set; }
+
+        /// <summary>Whether the message is the one that ended its turn and therefore names its model.</summary>
+        public bool ShowModel { get; set; }
         public bool IsSuccessful { get; set; }
 
         /// <summary>Messages nested inside a sub-agent block.</summary>

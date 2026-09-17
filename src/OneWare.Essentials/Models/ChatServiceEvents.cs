@@ -28,6 +28,9 @@ public sealed class ChatMessageEvent(string content, string? messageId = null)
     public string Content { get; } = content;
     
     public string? MessageId { get; } = messageId;
+
+    /// <summary>Display name of the model that produced this message, when the service reports it.</summary>
+    public string? Model { get; init; }
 }
 
 public sealed class ChatReasoningDeltaEvent(string content, string? reasoningId = null)
@@ -232,6 +235,12 @@ public sealed class ChatPlanReadyEvent(
 public sealed class ChatIdleEvent()
     : ChatEvent()
 {
+    /// <summary>
+    /// Display name of the model that produced the last response of the turn, when the service
+    /// reports it. Lets the chat show which AI finished the turn even when the final message
+    /// carried no model information.
+    /// </summary>
+    public string? Model { get; init; }
 }
 
 /// <summary>

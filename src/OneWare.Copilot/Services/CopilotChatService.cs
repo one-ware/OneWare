@@ -200,6 +200,17 @@ public sealed class CopilotChatService(
         return Models.FirstOrDefault(x => NormalizeModelId(x.Id) == normalized);
     }
 
+    /// <summary>
+    /// Turns a model id from the runtime into the name the user knows from the model picker, and
+    /// keeps the raw id when the model is not in the list (e.g. models only sub-agents may use).
+    /// </summary>
+    private string? DescribeModel(string? modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId)) return null;
+
+        return ResolveModel(modelId)?.Name ?? modelId;
+    }
+
     private static string NormalizeModelId(string modelId)
     {
         return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
@@ -1472,6 +1483,10 @@ public sealed class CopilotChatService(
         };
         if (sdkMode != null) options.Mode = sdkMode;
 
+        // A new turn has nothing to do with the model of the previous one; without this a turn that
+        // ends before any request was billed (e.g. an abort) would report a stale model.
+        if (mode == ChatSendMode.Send) _lastTurnModel = null;
+
         await _session.SendAsync(options).ConfigureAwait(false);
 
         Dispatcher.UIThread.Post(ClearAttachmentsAfterSend);
@@ -1602,6 +1617,7 @@ public sealed class CopilotChatService(
 
     private void ResetUsageStats()
     {
+        _lastTurnModel = null;
         LastInputTokens = 0;
         LastOutputTokens = 0;
         LastReasoningTokens = null;
@@ -1656,8 +1672,11 @@ public sealed class CopilotChatService(
             }
             case AssistantMessageEvent x:
             {
-                EventReceived?.Invoke(this,
-                    new ChatMessageEvent(x.Data.Content, x.Data.MessageId) { AgentId = agentId });
+                EventReceived?.Invoke(this, new ChatMessageEvent(x.Data.Content, x.Data.MessageId)
+                {
+                    AgentId = agentId,
+                    Model = DescribeModel(x.Data.Model)
+                });
                 break;
             }
             case AssistantReasoningDeltaEvent x:
@@ -1715,7 +1734,7 @@ public sealed class CopilotChatService(
                 break;
             case SessionIdleEvent when agentId == null:
                 DropForegroundSubAgents();
-                EventReceived?.Invoke(this, new ChatIdleEvent());
+                EventReceived?.Invoke(this, new ChatIdleEvent { Model = _lastTurnModel });
                 break;
             case AssistantUsageEvent usage:
                 UpdateUsageFromAssistantEvent(usage.Data);
@@ -1785,7 +1804,7 @@ public sealed class CopilotChatService(
         EventReceived?.Invoke(this, new ChatSubAgentStartedEvent(id, displayName)
         {
             Description = evt.Data.AgentDescription,
-            Model = evt.Data.Model,
+            Model = DescribeModel(evt.Data.Model),
             IsBackground = isBackground,
             ParentSubAgentId = parentId,
             AgentId = parentId
@@ -1997,8 +2016,19 @@ public sealed class CopilotChatService(
         return stripped.Trim();
     }
 
+    /// <summary>
+    /// Model of the most recent request of the main agent. With auto routing the answering model is
+    /// only known from the usage report, so it is remembered for the end of the turn.
+    /// </summary>
+    private string? _lastTurnModel;
+
     private void UpdateUsageFromAssistantEvent(AssistantUsageData data)
     {
+        // Requests of sub-agents name the task call they belong to and must not be mistaken for the
+        // model of the main conversation.
+        if (string.IsNullOrWhiteSpace(data.ParentToolCallId))
+            _lastTurnModel = DescribeModel(data.Model);
+
         LastInputTokens = data.InputTokens ?? 0;
         LastOutputTokens = data.OutputTokens ?? 0;
         LastReasoningTokens = data.ReasoningTokens is > 0 ? data.ReasoningTokens : null;

@@ -20,6 +20,10 @@
                     <TextBlock Text=" (background)" VerticalAlignment="Center"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                IsVisible="{Binding IsBackground}" />
+                    <TextBlock Text="{Binding Model, StringFormat=' · {0}'}" VerticalAlignment="Center"
+                               FontSize="11" ToolTip.Tip="Model this agent runs with"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                               IsVisible="{Binding HasModel}" />
                     <Panel IsVisible="{Binding IsFinished}" VerticalAlignment="Center">
                         <TextBlock Text=" ✓" Foreground="Lime" IsVisible="{Binding IsSuccessful}" />
                         <TextBlock Text=" x" Foreground="Red" IsVisible="{Binding !IsSuccessful}" />

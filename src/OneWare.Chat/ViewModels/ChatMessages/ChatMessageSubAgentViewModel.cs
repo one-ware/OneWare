@@ -36,8 +36,13 @@ public class ChatMessageSubAgentViewModel : ObservableObject, IChatMessage, IEst
     public string? Model
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(HasModel));
+        }
     }
+
+    public bool HasModel => !string.IsNullOrWhiteSpace(Model);
 
     [DataMember]
     public bool IsBackground

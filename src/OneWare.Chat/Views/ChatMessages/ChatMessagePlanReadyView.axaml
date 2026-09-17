@@ -19,12 +19,10 @@
                 <TextBlock Text="Plan ready" FontWeight="SemiBold" VerticalAlignment="Center" />
             </StackPanel>
 
-            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap"
+            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" IsVisible="{Binding HasSummary}"
                        Foreground="{DynamicResource ThemeForegroundLowBrush}" />
 
-            <Expander IsVisible="{Binding HasPlanContent}" Header="Plan details" Padding="0 4 0 0">
-                <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Event.PlanContent}" />
-            </Expander>
+            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding PlanMarkdown}" />
 
             <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsAnswered}">
                 <Button Height="NaN"

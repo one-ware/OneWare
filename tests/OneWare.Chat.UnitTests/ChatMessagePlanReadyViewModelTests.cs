@@ -33,7 +33,21 @@ public class ChatMessagePlanReadyViewModelTests
         Assert.Equal(0, counts[1]);
         Assert.True(message.IsAnswered);
         Assert.Equal("Implementation started", message.AnswerText);
-        Assert.True(message.HasPlanContent);
+        Assert.Equal("1. Do the thing", message.PlanMarkdown);
+        Assert.Equal("Plan is ready.", message.Summary);
+    }
+
+    [Fact]
+    public void PlanMarkdown_FallsBackToTheSummaryWhenNoPlanContentIsReported()
+    {
+        var planEvent = new ChatPlanReadyEvent("## Plan\n\n1. Do the thing", null,
+            new RelayCommand<Control?>(_ => { }), new RelayCommand<Control?>(_ => { }));
+
+        var message = new ChatMessagePlanReadyViewModel(planEvent);
+
+        Assert.Equal("## Plan\n\n1. Do the thing", message.PlanMarkdown);
+        Assert.Null(message.Summary);
+        Assert.False(message.HasSummary);
     }
 
     [Fact]

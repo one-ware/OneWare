@@ -554,6 +554,10 @@ Key points:
 - Use `EventReceived` to stream chat content and `StatusChanged` to report activity or errors.
 - Set `BottomUiExtension` to a custom `Avalonia.Controls.Control` if you need extra UI (model
   selector, provider settings, etc.).
+- Report which AI answered: set `ChatMessageEvent.Model` to the display name of the model that
+  wrote the message, and `ChatIdleEvent.Model` for turns whose messages carry no model. The chat
+  shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
+  for a delegated task, shown in the header of its block.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
 
 Skeleton example:

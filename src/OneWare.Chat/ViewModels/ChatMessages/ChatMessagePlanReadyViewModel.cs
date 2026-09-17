@@ -27,9 +27,23 @@ public class ChatMessagePlanReadyViewModel : ObservableObject, IChatMessage
 
     public ChatPlanReadyEvent Event { get; }
 
-    public string Summary => string.IsNullOrWhiteSpace(Event.Summary) ? "The plan is ready." : Event.Summary;
+    /// <summary>
+    /// The plan as markdown. Backends do not agree on where the plan text is: some fill
+    /// <see cref="ChatPlanReadyEvent.PlanContent"/>, others write the whole plan into the summary,
+    /// so whichever carries it is rendered.
+    /// </summary>
+    public string PlanMarkdown => FirstNonEmpty(Event.PlanContent, Event.Summary) ?? "The plan is ready.";
 
-    public bool HasPlanContent => !string.IsNullOrWhiteSpace(Event.PlanContent);
+    /// <summary>Summary line above the plan, shown only when it is not the plan text itself.</summary>
+    public string? Summary => string.IsNullOrWhiteSpace(Event.PlanContent) ? null : Trim(Event.Summary);
+
+    public bool HasSummary => Summary != null;
+
+    private static string? FirstNonEmpty(params string?[] values) =>
+        values.Select(Trim).FirstOrDefault(x => x != null);
+
+    private static string? Trim(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     /// <summary>Whether the choice was made or has been withdrawn.</summary>
     public bool IsAnswered
