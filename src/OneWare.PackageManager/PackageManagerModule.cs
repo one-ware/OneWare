@@ -50,31 +50,31 @@ public class PackageManagerModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.23.2",
+                Version = "1.28.0",
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Linux/1.28.0"
                     },
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.28.0"
                     },
                 ]
             }
         ]
     };
 
-    public static readonly Package OnnxRuntimeDirectMlPackage = new()
+    public static readonly Package OnnxRuntimeWindowsMlPackage = new()
     {
         Category = "ONNX Runtimes",
-        Id = "onnxruntime-directml",
+        Id = "onnxruntime-windowsml",
         Type = "OnnxRuntime",
-        Name = "ONNX Runtime DirectML",
-        Description = "ONNX Runtime with DirectML for Windows",
+        Name = "ONNX Runtime Windows ML",
+        Description = "Windows ML runtime with DirectML GPU acceleration for Windows",
         License = "MIT",
         IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
@@ -82,7 +82,60 @@ public class PackageManagerModule : OneWareModuleBase
             new PackageLink
             {
                 Name = "NuGet",
-                Url = "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.DirectML/1.23.0"
+                Url = "https://www.nuget.org/packages/Microsoft.Windows.AI.MachineLearning"
+            },
+            new PackageLink
+            {
+                Name = "GitHub",
+                Url = "https://github.com/microsoft/windowsml"
+            }
+        ],
+        Tabs =
+        [
+            new PackageTab
+            {
+                Title = "License",
+                ContentUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/main/LICENSE"
+            }
+        ],
+        Versions =
+        [
+            new PackageVersion
+            {
+                // Windows ML 2.5.77-rc bundles ONNX Runtime 1.28.0, matching OnnxRuntimeVersion.
+                Version = "2.5.77-rc",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.Windows.AI.MachineLearning/2.5.77-rc"
+                    },
+                    new PackageTarget
+                    {
+                        Target = "win-arm64",
+                        Url = "https://www.nuget.org/api/v2/package/Microsoft.Windows.AI.MachineLearning/2.5.77-rc"
+                    }
+                ]
+            }
+        ]
+    };
+
+    public static readonly Package OnnxRuntimeOpenVinoPackage = new()
+    {
+        Category = "ONNX Runtimes",
+        Id = "onnxruntime-ep-openvino",
+        Type = "OnnxRuntime",
+        Name = "ONNX Runtime OpenVINO",
+        Description = "OpenVINO execution provider plugin for Intel CPUs, GPUs and NPUs",
+        License = "MIT",
+        IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
+        Links =
+        [
+            new PackageLink
+            {
+                Name = "NuGet",
+                Url = "https://www.nuget.org/packages/Intel.ML.OnnxRuntime.EP.OpenVINO"
             },
             new PackageLink
             {
@@ -102,60 +155,18 @@ public class PackageManagerModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.23.0",
+                Version = "1.7.0",
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.23.0"
+                        Url = "https://www.nuget.org/api/v2/package/Intel.ML.OnnxRuntime.EP.OpenVINO/1.7.0"
                     },
                     new PackageTarget
                     {
-                        Target = "win-arm64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.23.0"
-                    }
-                ]
-            }
-        ]
-    };
-
-    public static readonly Package OnnxRuntimeOpenVinoPackage = new()
-    {
-        Category = "ONNX Runtimes",
-        Id = "onnxruntime-openvino",
-        Type = "OnnxRuntime",
-        Name = "ONNX Runtime OpenVINO",
-        Description = "ONNX Runtime with OpenVINO execution provider",
-        License = "MIT",
-        IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
-        Links =
-        [
-            new PackageLink
-            {
-                Name = "GitHub",
-                Url = "https://github.com/microsoft/onnxruntime"
-            }
-        ],
-        Tabs =
-        [
-            new PackageTab
-            {
-                Title = "License",
-                ContentUrl = "https://raw.githubusercontent.com/microsoft/onnxruntime/main/LICENSE"
-            }
-        ],
-        Versions =
-        [
-            new PackageVersion
-            {
-                Version = "1.23.0",
-                Targets =
-                [
-                    new PackageTarget
-                    {
-                        Target = "win-x64",
-                        Url = "https://www.nuget.org/api/v2/package/Intel.ML.OnnxRuntime.OpenVino/1.23.0"
+                        Target = "linux-x64",
+                        Url = "https://www.nuget.org/api/v2/package/Intel.ML.OnnxRuntime.EP.OpenVINO/1.7.0"
                     }
                 ]
             }
@@ -165,18 +176,23 @@ public class PackageManagerModule : OneWareModuleBase
     public static readonly Package OnnxRuntimeQnnPackage = new()
     {
         Category = "ONNX Runtimes",
-        Id = "onnxruntime-qnn",
+        Id = "onnxruntime-ep-qnn",
         Type = "OnnxRuntime",
         Name = "ONNX Runtime QNN",
-        Description = "ONNX Runtime with Qualcomm QNN execution provider",
+        Description = "Qualcomm QNN execution provider plugin for Snapdragon NPUs",
         License = "MIT",
         IconUrl = "https://raw.githubusercontent.com/hendrikmennen/SAM3-TENSORRT-PYTHON/refs/heads/main/ORT_icon_for_light_bg.png",
         Links =
         [
             new PackageLink
             {
+                Name = "NuGet",
+                Url = "https://www.nuget.org/packages/Qualcomm.ML.OnnxRuntime.QNN"
+            },
+            new PackageLink
+            {
                 Name = "GitHub",
-                Url = "https://github.com/microsoft/onnxruntime"
+                Url = "https://github.com/onnxruntime/onnxruntime-qnn"
             }
         ],
         Tabs =
@@ -191,13 +207,18 @@ public class PackageManagerModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.23.2",
+                Version = "2.6.0",
                 Targets =
                 [
                     new PackageTarget
                     {
                         Target = "win-arm64",
-                        Url = "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.QNN/1.23.2"
+                        Url = "https://www.nuget.org/api/v2/package/Qualcomm.ML.OnnxRuntime.QNN/2.6.0"
+                    },
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        Url = "https://www.nuget.org/api/v2/package/Qualcomm.ML.OnnxRuntime.QNN/2.6.0"
                     }
                 ]
             }
@@ -235,12 +256,12 @@ public class PackageManagerModule : OneWareModuleBase
             packageService.RegisterPackage(OnnxRuntimeNvidiaPackage);
         
         if(PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.WinArm64)
-            packageService.RegisterPackage(OnnxRuntimeDirectMlPackage);
+            packageService.RegisterPackage(OnnxRuntimeWindowsMlPackage);
         
-        if(PlatformHelper.Platform is PlatformId.WinX64)
+        if(PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.LinuxX64)
             packageService.RegisterPackage(OnnxRuntimeOpenVinoPackage);
         
-        if(PlatformHelper.Platform is PlatformId.WinArm64)
+        if(PlatformHelper.Platform is PlatformId.WinX64 or PlatformId.WinArm64)
             packageService.RegisterPackage(OnnxRuntimeQnnPackage);
 
         var windowService = serviceProvider.Resolve<IWindowService>();

@@ -12,6 +12,9 @@ public class OnnxRuntimeService : IOnnxRuntimeService
     private readonly ISettingsService _settingsService;
     private readonly OnnxRuntimeBootstrapper _bootstrapper;
     private readonly ILogger _logger;
+    private readonly Lock _pluginRegistrationSync = new();
+    private bool _pluginRegistrationAttempted;
+    private bool _pluginRegistered;
 
     public OnnxRuntimeService(OnnxRuntimeBootstrapper bootstrapper, ILogger logger, ISettingsService settingsService)
     {
@@ -110,7 +113,15 @@ public class OnnxRuntimeService : IOnnxRuntimeService
                     break;
                 
                 case OnnxExecutionProvider.OpenVino:
-                    so.AppendExecutionProvider_OpenVINO(GetOpenVinoDevice());
+                    if (!TryAppendPluginExecutionProvider(so, "OpenVINOExecutionProvider",
+                            new Dictionary<string, string> { ["device_type"] = GetOpenVinoDevice() }))
+                        so.AppendExecutionProvider_OpenVINO(GetOpenVinoDevice());
+                    break;
+
+                case OnnxExecutionProvider.Qnn:
+                    if (!TryAppendPluginExecutionProvider(so, "QNNExecutionProvider",
+                            new Dictionary<string, string>()))
+                        so.AppendExecutionProvider("QNN");
                     break;
             }
         }
@@ -122,6 +133,60 @@ public class OnnxRuntimeService : IOnnxRuntimeService
         _logger.LogInformation("Created ONNX Runtime provider '{Provider}'.", provider.ToString());
 
         return so;
+    }
+
+    /// <summary>
+    ///     Registers a side-loaded plugin execution provider with ONNX Runtime and appends the devices it
+    ///     exposes to the session options. Plugin providers replaced the frozen combined-build packages
+    ///     (OpenVINO, QNN) and are additive to the active runtime.
+    /// </summary>
+    private bool TryAppendPluginExecutionProvider(SessionOptions sessionOptions, string providerName,
+        Dictionary<string, string> providerOptions)
+    {
+        if (!string.Equals(_bootstrapper.PluginExecutionProviderName, providerName, StringComparison.Ordinal))
+            return false;
+
+        if (!EnsurePluginExecutionProviderRegistered()) return false;
+
+        var env = OrtEnv.Instance();
+        var devices = env.GetEpDevices()
+            .Where(x => string.Equals(x.EpName, providerName, StringComparison.Ordinal))
+            .ToArray();
+
+        if (devices.Length == 0)
+        {
+            _logger.LogWarning("Plugin execution provider '{Provider}' did not expose any devices.", providerName);
+            return false;
+        }
+
+        sessionOptions.AppendExecutionProvider(env, devices, providerOptions);
+        return true;
+    }
+
+    private bool EnsurePluginExecutionProviderRegistered()
+    {
+        lock (_pluginRegistrationSync)
+        {
+            if (_pluginRegistrationAttempted) return _pluginRegistered;
+            _pluginRegistrationAttempted = true;
+
+            var name = _bootstrapper.PluginExecutionProviderName;
+            var path = _bootstrapper.PluginExecutionProviderLibraryPath;
+            if (name == null || path == null) return false;
+
+            try
+            {
+                OrtEnv.Instance().RegisterExecutionProviderLibrary(name, path);
+                _pluginRegistered = true;
+                _logger.LogInformation("Registered ONNX Runtime plugin execution provider '{Provider}'.", name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to register ONNX Runtime plugin execution provider '{Provider}'.", name);
+            }
+
+            return _pluginRegistered;
+        }
     }
 
     private string GetOpenVinoDevice()
