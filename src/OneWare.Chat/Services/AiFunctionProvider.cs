@@ -260,6 +260,17 @@ public class AiFunctionProvider(
         return $"\"{escaped}\"";
     }
 
+    public bool? IsFunctionReadOnly(string functionName)
+    {
+        EnsureBuiltInsRegistered();
+        lock (_registrationLock)
+        {
+            return _registeredFunctions
+                .FirstOrDefault(f => string.Equals(f.Name, functionName, StringComparison.Ordinal))
+                ?.IsReadOnly;
+        }
+    }
+
     public Func<AIFunctionArguments, string?>? GetConfirmationCheck(string functionName)
     {
         EnsureBuiltInsRegistered();

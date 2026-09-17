@@ -79,6 +79,13 @@ public interface IAiFunctionProvider
     IReadOnlyCollection<string> GetSkillDirectories() => [];
 
     /// <summary>
+    /// Returns whether the named function is registered and marked
+    /// <see cref="IOneWareAiFunction.IsReadOnly"/>. Returns <see langword="null"/> for tools that are
+    /// not provided by OneWare (e.g. built-in tools of the AI backend).
+    /// </summary>
+    bool? IsFunctionReadOnly(string functionName) => null;
+
+    /// <summary>
     /// Returns the <see cref="IOneWareAiFunction.ConfirmationCheck"/> delegate for the named function,
     /// or <see langword="null"/> if the function has no check or is not registered.
     /// </summary>

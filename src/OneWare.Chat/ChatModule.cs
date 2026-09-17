@@ -21,6 +21,9 @@ public class ChatModule : OneWareModuleBase
         services.AddSingleton<IChatManagerService>(provider => provider.Resolve<ChatViewModel>());
 
         services.AddSingleton<AiFileEditService>();
+
+        services.AddSingleton<ChatAgentService>();
+        services.AddSingleton<IChatAgentService>(provider => provider.Resolve<ChatAgentService>());
     }
 
     public override void Initialize(IServiceProvider serviceProvider)

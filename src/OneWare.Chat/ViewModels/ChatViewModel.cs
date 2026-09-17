@@ -93,8 +93,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     public ChatViewModel(IAiFunctionProvider aiFunctionProvider, IMainDockService mainDockService,
         AiFileEditService aiFileEditService, IPaths paths, ISettingsService settingsService,
-        IApplicationStateService applicationStateService) : base(IconKey)
+        IApplicationStateService applicationStateService, IChatAgentService chatAgentService) : base(IconKey)
     {
+        AgentService = chatAgentService;
         Id = "AI_Chat";
         Title = "AI Chat";
 
@@ -239,6 +240,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     } = DefaultWorkingStatus;
 
     public ObservableCollection<IChatService> ChatServices { get; } = [];
+
+    /// <summary>
+    /// Selectable chat agents ("Agent", "Plan", "Ask" and custom ones), bound by the agent selector.
+    /// </summary>
+    public IChatAgentService AgentService { get; }
 
     public ObservableCollection<ChatSessionHistoryItem> SessionHistory { get; } = [];
 
@@ -411,6 +417,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private async Task NewChatAsync()
     {
+        // Agent files may have been added or edited since the last chat started.
+        AgentService.Refresh();
+
         if (SelectedChatService != null)
         {
             StoreCurrentMessages(SelectedChatService.Name, SelectedChatService);

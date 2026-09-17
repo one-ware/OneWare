@@ -42,7 +42,8 @@ public sealed class CopilotChatService(
     IPackageWindowService packageWindowService,
     IWindowService windowService,
     IMainDockService mainDockService,
-    IPaths paths)
+    IPaths paths,
+    IChatAgentService agentService)
     : ObservableObject, IChatServiceWithSessions
 {
     private CopilotClient? _client;
@@ -551,6 +552,9 @@ public sealed class CopilotChatService(
         var session = _session;
         var model = SelectedModel;
         if (session == null || model == null) return;
+
+        // The user's choice wins over a model an agent pinned earlier.
+        _appliedAgentModelId = null;
 
         var options = new SetModelOptions
         {
@@ -1225,6 +1229,7 @@ public sealed class CopilotChatService(
                 ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
+                OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
                 Hooks = new SessionHooks
                 {
                     OnPreToolUse = OnPreToolUseAsync
@@ -1248,6 +1253,7 @@ public sealed class CopilotChatService(
                 EnableSkills = true,
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
+                OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
                 Hooks = new SessionHooks
                 {
                     OnPreToolUse = OnPreToolUseAsync
@@ -1435,7 +1441,24 @@ public sealed class CopilotChatService(
 
         if (_session == null) return;
 
-        var options = new MessageOptions { Prompt = prompt };
+        var agent = agentService.SelectedAgent;
+
+        var options = new MessageOptions
+        {
+            Prompt = ApplyAgentInstructions(prompt, agent),
+            AgentMode = agent?.TurnMode switch
+            {
+                ChatAgentTurnMode.Plan => AgentMode.Plan,
+                ChatAgentTurnMode.Interactive => AgentMode.Interactive,
+                _ => null
+            }
+        };
+
+        // The instructions are only for the model; the timeline keeps showing what the user wrote.
+        if (!string.Equals(options.Prompt, prompt, StringComparison.Ordinal)) options.DisplayPrompt = prompt;
+
+        await ApplyAgentModelAsync(agent).ConfigureAwait(false);
+
         var attachments = CollectAttachments();
         if (attachments != null) options.Attachments = attachments;
 
@@ -1562,6 +1585,8 @@ public sealed class CopilotChatService(
             await _session.DisposeAsync();
             _session = null;
         }
+
+        _appliedAgentModelId = null;
 
         lock (_subAgents)
             _subAgents.Clear();
@@ -2013,10 +2038,128 @@ public sealed class CopilotChatService(
         }
     }
 
+    // ── Chat agents ("Agent", "Plan", "Ask" and custom agents) ────────────
+
+    /// <summary>
+    /// Model the session currently runs on, which is the model an agent pinned while such an agent is
+    /// selected, and the user's model otherwise.
+    /// </summary>
+    private string? _appliedAgentModelId;
+
+    /// <summary>
+    /// Applies the model an agent pinned for the upcoming turn. The user's model selection stays
+    /// untouched, so deselecting the agent restores it with the next message.
+    /// </summary>
+    private async Task ApplyAgentModelAsync(ChatAgentDefinition? agent)
+    {
+        var session = _session;
+        var userModel = SelectedModel;
+        if (session == null || userModel == null) return;
+
+        var pinned = string.IsNullOrWhiteSpace(agent?.Model)
+            ? null
+            : Models.FirstOrDefault(x => string.Equals(x.Id, agent!.Model, StringComparison.OrdinalIgnoreCase))
+              ?? Models.FirstOrDefault(x => string.Equals(x.Name, agent!.Model, StringComparison.OrdinalIgnoreCase));
+
+        var target = pinned ?? userModel;
+
+        // Nothing to do while the session already runs the right model: it is set up with the user's
+        // model, and only this method ever changes it for an agent.
+        if (_appliedAgentModelId == null && pinned == null) return;
+        if (string.Equals(_appliedAgentModelId, target.Id, StringComparison.Ordinal)) return;
+
+        var effort = pinned != null && !string.IsNullOrWhiteSpace(agent!.ReasoningEffort)
+            ? agent.ReasoningEffort
+            : ShowReasoningEffort
+                ? SelectedReasoningEffort
+                : null;
+
+        try
+        {
+            await session.SetModelAsync(target.Id, new SetModelOptions { ReasoningEffort = effort });
+            _appliedAgentModelId = pinned == null ? null : target.Id;
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                .LogError(ex, "Failed to apply the model {Model} of the selected chat agent.", target.Id);
+        }
+    }
+
+    /// <summary>
+    /// Prefixes the prompt with the instructions of the selected agent, so they apply to this turn
+    /// regardless of how long ago the agent was selected.
+    /// </summary>
+    private static string ApplyAgentInstructions(string prompt, ChatAgentDefinition? agent)
+    {
+        if (agent?.Instructions is not { Length: > 0 } instructions) return prompt;
+
+        return $"""
+                <chat-mode name="{agent.DisplayName}">
+                {instructions.Trim()}
+                </chat-mode>
+
+                {prompt}
+                """;
+    }
+
+    /// <summary>
+    /// Returns why the selected agent must not call the given tool, or <see langword="null"/> if it
+    /// may. Only OneWare tools can reach the workspace or the IDE — backend built-ins that touch the
+    /// host are already kept out of the session by <see cref="BuildAvailableTools"/> — so a read-only
+    /// agent is enforced by blocking every OneWare tool that is not marked read-only.
+    /// </summary>
+    private string? GetAgentToolDenyReason(string toolName)
+    {
+        var agent = agentService.SelectedAgent;
+        if (agent == null) return null;
+
+        // Only tools OneWare provides are restricted: the session built-ins (task/skill delegation,
+        // planning bookkeeping, …) are what the agent works with and are never named in a tool list.
+        var isOneWareTool = toolProvider.IsFunctionReadOnly(toolName);
+        if (isOneWareTool == null) return null;
+
+        if (agent.Tools != null && !agent.Tools.Contains(toolName, StringComparer.OrdinalIgnoreCase))
+            return $"The {agent.DisplayName} agent is not allowed to use '{toolName}'.";
+
+        if (agent.IsReadOnly && isOneWareTool == false)
+            return $"'{toolName}' changes the workspace, which is not allowed in {agent.DisplayName} mode. " +
+                   "Report what you would change instead, or ask the user to switch to Agent mode.";
+
+        return null;
+    }
+
+    /// <summary>
+    /// The model asks to leave plan mode and start implementing. The selected agent — not the model
+    /// — decides what the chat may do, so this is refused while a read-only agent is active.
+    /// </summary>
+    private Task<ExitPlanModeResult> OnExitPlanModeRequestAsync(ExitPlanModeRequest request,
+        ExitPlanModeInvocation invocation)
+    {
+        var agent = agentService.SelectedAgent;
+        if (agent is not { IsReadOnly: true }) return Task.FromResult(new ExitPlanModeResult { Approved = true });
+
+        return Task.FromResult(new ExitPlanModeResult
+        {
+            Approved = false,
+            Feedback = $"The chat is in {agent.DisplayName} mode. Present the plan and let the user " +
+                       "switch to Agent mode to implement it."
+        });
+    }
+
     // ── OnPreToolUse — returns "ask" to escalate to OnPermissionRequest ────────
 
     private Task<PreToolUseHookOutput?> OnPreToolUseAsync(PreToolUseHookInput input, HookInvocation invocation)
     {
+        // The selected agent restricts which tools may run, no matter how permissions are configured.
+        var denyReason = GetAgentToolDenyReason(input.ToolName);
+        if (denyReason != null)
+            return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput
+            {
+                PermissionDecision = "deny",
+                PermissionDecisionReason = denyReason
+            });
+
         // Bypass Approval / Autopilot: auto-approve all permission requests without prompting
         if (IsApprovalBypassed)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });

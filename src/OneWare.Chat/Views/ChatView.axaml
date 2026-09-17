@@ -7,6 +7,7 @@
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Chat.Behaviors"
              xmlns:behaviors1="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
@@ -338,6 +339,49 @@
                     </Button.Flyout>
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
+                                   FontSize="11" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                               Height="8" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Agent selector: Agent / Plan / Ask and custom agents -->
+                <Button Name="AgentMenuButton" DockPanel.Dock="Left" VerticalAlignment="Center"
+                        ToolTip.Tip="{Binding AgentService.SelectedAgent.Description}">
+                    <Button.Flyout>
+                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                                Placement="Top">
+                            <ListBox ItemsSource="{Binding AgentService.Agents}"
+                                     SelectedItem="{Binding AgentService.SelectedAgent}" BorderThickness="0"
+                                     MinWidth="200" MaxHeight="320">
+                                <Interaction.Behaviors>
+                                    <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                        <HideFlyoutAction Flyout="{Binding #AgentMenuButton.Flyout}" />
+                                    </behaviors1:PointerPressedHandledEventTrigger>
+                                </Interaction.Behaviors>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ChatAgentDefinition">
+                                        <StackPanel Spacing="1" MaxWidth="260"
+                                                    ToolTip.Tip="{Binding Description}">
+                                            <TextBlock Text="{Binding DisplayName}" />
+                                            <TextBlock Text="{Binding Description}" FontSize="10"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       IsVisible="{Binding Description, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ListBox>
+                        </Flyout>
+                    </Button.Flyout>
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="{Binding AgentService.SelectedAgent.DisplayName, FallbackValue=Agent}"
                                    FontSize="11" VerticalAlignment="Center"
                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                         <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
