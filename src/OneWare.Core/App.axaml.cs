@@ -156,8 +156,10 @@ public class App : Application
 
         settingsService.RegisterSettingCategory("Languages", 0, "FluentIcons.ProofreadLanguageRegular");
         
+        var onnxRuntimeOptions = OnnxRuntimeBootstrapper.GetOnnxRuntimeOptions(paths);
+
         settingsService.RegisterSetting("Tools", "ONNX Runtime", OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey,
-            new ComboBoxSetting("Runtime (restart required)", "onnxruntime-builtin", OnnxRuntimeBootstrapper.GetOnnxRuntimeOptions(paths).Cast<object>().ToArray())
+            new ComboBoxSetting("Runtime (restart required)", "onnxruntime-builtin", onnxRuntimeOptions.Cast<object>().ToArray())
             {
                 MarkdownDocumentation = """
                                         **This setting requires a restart to be effective**
@@ -167,6 +169,10 @@ public class App : Application
                                         - Every runtime offers different execution providers.
                                         """
             });
+
+        // The selected runtime can be uninstalled or removed as unsupported between sessions.
+        if (!onnxRuntimeOptions.Contains(settingsService.GetSettingValue<string>(OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey)))
+            settingsService.SetSettingValue(OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey, "onnxruntime-builtin");
 
         var onnxRuntimeBootstrapper = Services.Resolve<OnnxRuntimeBootstrapper>();
         var selectedRuntime = settingsService.GetSettingValue<string>(OnnxRuntimeBootstrapper.SettingSelectedRuntimeKey);
