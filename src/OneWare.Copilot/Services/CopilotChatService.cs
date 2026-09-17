@@ -1197,6 +1197,9 @@ public sealed class CopilotChatService(
         var sessionId = _requestedSessionId;
         _requestedSessionId = null;
 
+        // Plugins can register tools at any time, so the cache is rebuilt per session.
+        _clientToolNames = null;
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
@@ -1206,8 +1209,9 @@ public sealed class CopilotChatService(
                 ReasoningEffort = ShowReasoningEffort ? SelectedReasoningEffort : null,
                 ContextTier = ResolveContextTier(),
                 Streaming = true,
-                // Only stream root-agent deltas; the chat UI does not differentiate sub-agents.
-                IncludeSubAgentStreamingEvents = false,
+                // The chat UI renders sub-agents in their own block, so their deltas are needed
+                // to show progress while they work.
+                IncludeSubAgentStreamingEvents = true,
                 SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
                 // Restrict the session to OneWare's own tools plus the session-isolated built-ins
@@ -1235,7 +1239,7 @@ public sealed class CopilotChatService(
             {
                 Streaming = true,
                 ContextTier = ResolveContextTier(),
-                IncludeSubAgentStreamingEvents = false,
+                IncludeSubAgentStreamingEvents = true,
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
@@ -1452,6 +1456,7 @@ public sealed class CopilotChatService(
     {
         ReleasePendingInputRequests();
         toolProvider.CancelActiveFunctions();
+        DropForegroundSubAgents();
         if (_session == null) return;
         await _session.AbortAsync();
     }
@@ -1558,6 +1563,9 @@ public sealed class CopilotChatService(
             _session = null;
         }
 
+        lock (_subAgents)
+            _subAgents.Clear();
+
         CurrentSessionId = null;
         ResetUsageStats();
     }
@@ -1580,33 +1588,72 @@ public sealed class CopilotChatService(
 
     private void HandleSessionEvent(SessionEvent evt)
     {
+        // Tool events name both the sub-agent instance and the task call that spawned it, which is
+        // the only authoritative pairing of the two the runtime provides.
+        BindAgentInstance(evt.AgentId, evt switch
+        {
+            ToolExecutionStartEvent start => start.Data.ParentToolCallId,
+            ToolExecutionCompleteEvent complete => complete.Data.ParentToolCallId,
+            _ => null
+        });
+
+        var agentId = ResolveSubAgentId(evt);
+
         switch (evt)
         {
+            case SubagentStartedEvent x:
+            {
+                HandleSubAgentStarted(x);
+                break;
+            }
+            case SubagentCompletedEvent x:
+            {
+                CompleteSubAgent(x.Data.ToolCallId, true, null, x.Data.Cancelled == true,
+                    x.Data.Duration, x.Data.TotalTokens, x.Data.TotalToolCalls);
+                break;
+            }
+            case SubagentFailedEvent x:
+            {
+                CompleteSubAgent(x.Data.ToolCallId, false, x.Data.Error, false,
+                    x.Data.Duration, x.Data.TotalTokens, x.Data.TotalToolCalls);
+                break;
+            }
             case AssistantMessageDeltaEvent x:
             {
                 EventReceived?.Invoke(this,
-                    new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId));
+                    new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId) { AgentId = agentId });
                 break;
             }
             case AssistantMessageEvent x:
             {
                 EventReceived?.Invoke(this,
-                    new ChatMessageEvent(x.Data.Content, x.Data.MessageId));
+                    new ChatMessageEvent(x.Data.Content, x.Data.MessageId) { AgentId = agentId });
                 break;
             }
             case AssistantReasoningDeltaEvent x:
             {
                 EventReceived?.Invoke(this,
-                    new ChatReasoningDeltaEvent(x.Data.DeltaContent, x.Data.ReasoningId));
+                    new ChatReasoningDeltaEvent(x.Data.DeltaContent, x.Data.ReasoningId) { AgentId = agentId });
                 break;
             }
             case AssistantReasoningEvent x:
             {
                 EventReceived?.Invoke(this,
-                    new ChatReasoningEvent(x.Data.Content, x.Data.ReasoningId));
+                    new ChatReasoningEvent(x.Data.Content, x.Data.ReasoningId) { AgentId = agentId });
                 break;
             }
-            case UserMessageEvent x:
+            case ToolExecutionCompleteEvent x:
+            {
+                var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
+                if (toolAgentId == null) break;
+
+                EventReceived?.Invoke(this, new ChatToolExecutionCompleteEvent(
+                    x.Data.ToolCallId,
+                    x.Data.Success,
+                    x.Data.Error?.Message ?? Truncate(x.Data.Result?.Content)) { AgentId = toolAgentId });
+                break;
+            }
+            case UserMessageEvent x when agentId == null:
             {
                 // The backend injects the content of loaded skills into the user message. That
                 // content is meant for the model, so report it as a skill indicator and only show
@@ -1622,15 +1669,22 @@ public sealed class CopilotChatService(
             }
             case ToolExecutionStartEvent x:
             {
+                var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
+
                 EventReceived?.Invoke(this,
-                    new ChatToolExecutionStartEvent(x.Data.ToolName));
+                    new ChatToolExecutionStartEvent(x.Data.ToolName, x.Data.ToolCallId, IsClientTool(x.Data.ToolName))
+                    {
+                        AgentId = toolAgentId,
+                        Detail = DescribeToolArguments(x.Data)
+                    });
                 break;
             }
             case SessionErrorEvent error:
                 EventReceived?.Invoke(this,
-                    new ChatErrorEvent(error.Data.Message));
+                    new ChatErrorEvent(error.Data.Message) { AgentId = agentId });
                 break;
-            case SessionIdleEvent:
+            case SessionIdleEvent when agentId == null:
+                DropForegroundSubAgents();
                 EventReceived?.Invoke(this, new ChatIdleEvent());
                 break;
             case AssistantUsageEvent usage:
@@ -1656,6 +1710,214 @@ public sealed class CopilotChatService(
                 SyncAutoTierFromSession(failed.Data.EffectiveAutoTier);
                 break;
         }
+    }
+
+    // ── Sub-agents ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Running sub-agents by block id. The block id is the tool call id of the <c>task</c> call that
+    /// spawned the sub-agent, because that is the only id present on every <c>subagent.*</c> event
+    /// and on the tool events of the sub-agent (as <c>parentToolCallId</c>).
+    /// </summary>
+    private readonly Dictionary<string, SubAgentRun> _subAgents = new(StringComparer.Ordinal);
+
+    private sealed class SubAgentRun(string id, bool isBackground)
+    {
+        public string Id { get; } = id;
+
+        /// <summary>Background sub-agents keep running after the turn that spawned them ended.</summary>
+        public bool IsBackground { get; } = isBackground;
+
+        /// <summary>Runtime agent instance id, used to attribute streaming events to this run.</summary>
+        public string? AgentInstanceId { get; set; }
+    }
+
+    private void HandleSubAgentStarted(SubagentStartedEvent evt)
+    {
+        var id = evt.Data.ToolCallId;
+        if (string.IsNullOrWhiteSpace(id)) return;
+
+        var isBackground =
+            string.Equals(evt.Data.ExecutionMode, "background", StringComparison.OrdinalIgnoreCase);
+        var run = new SubAgentRun(id, isBackground);
+        string? parentId;
+
+        lock (_subAgents)
+        {
+            // The started event is emitted by the spawning agent, so its agentId identifies the
+            // parent (absent for the main agent) and never the new sub-agent itself.
+            parentId = FindSubAgentByInstanceId(evt.AgentId)?.Id;
+            _subAgents[id] = run;
+        }
+
+        var displayName = FirstNonEmpty(evt.Data.AgentDisplayName, evt.Data.AgentName, evt.Data.AgentType, "Agent")!;
+
+        EventReceived?.Invoke(this, new ChatSubAgentStartedEvent(id, displayName)
+        {
+            Description = evt.Data.AgentDescription,
+            Model = evt.Data.Model,
+            IsBackground = isBackground,
+            ParentSubAgentId = parentId,
+            AgentId = parentId
+        });
+    }
+
+    private void CompleteSubAgent(string? toolCallId, bool success, string? error, bool cancelled,
+        TimeSpan? duration, long? totalTokens, long? totalToolCalls)
+    {
+        if (string.IsNullOrWhiteSpace(toolCallId)) return;
+
+        lock (_subAgents)
+            _subAgents.Remove(toolCallId);
+
+        EventReceived?.Invoke(this, new ChatSubAgentCompletedEvent(toolCallId, success)
+        {
+            Error = error,
+            Cancelled = cancelled,
+            Duration = duration,
+            TotalTokens = totalTokens,
+            TotalToolCalls = totalToolCalls
+        });
+    }
+
+    /// <summary>
+    /// Learns which runtime agent instance a sub-agent run is executed by. The lifecycle events only
+    /// carry the tool call id, so the pairing has to come from an event that carries both.
+    /// </summary>
+    private void BindAgentInstance(string? agentInstanceId, string? toolCallId)
+    {
+        if (string.IsNullOrWhiteSpace(agentInstanceId) || string.IsNullOrWhiteSpace(toolCallId)) return;
+
+        lock (_subAgents)
+        {
+            if (!_subAgents.TryGetValue(toolCallId, out var run)) return;
+            if (string.Equals(run.AgentInstanceId, agentInstanceId, StringComparison.Ordinal)) return;
+
+            // Take the id away from a run it was only guessed for.
+            var previous = FindSubAgentByInstanceId(agentInstanceId);
+            if (previous != null) previous.AgentInstanceId = null;
+
+            run.AgentInstanceId = agentInstanceId;
+        }
+    }
+
+    /// <summary>
+    /// Maps the runtime agent instance id of an event to the sub-agent block it belongs to.
+    /// Returns null for events of the main agent.
+    /// </summary>
+    private string? ResolveSubAgentId(SessionEvent evt)
+    {
+        if (string.IsNullOrWhiteSpace(evt.AgentId)) return null;
+
+        lock (_subAgents)
+        {
+            var known = FindSubAgentByInstanceId(evt.AgentId);
+            if (known != null) return known.Id;
+
+            // Only one run can be meant when exactly one is still waiting for its instance id.
+            // With several unidentified runs the event is dropped instead of risking a wrong block.
+            var unbound = _subAgents.Values.Where(x => x.AgentInstanceId == null).ToList();
+            if (unbound.Count != 1) return null;
+
+            unbound[0].AgentInstanceId = evt.AgentId;
+            return unbound[0].Id;
+        }
+    }
+
+    /// <summary>
+    /// Forgets sub-agents that cannot outlive the finished turn. Without this a run that never
+    /// reported completion (e.g. after an abort) would keep taking events from later sub-agents.
+    /// </summary>
+    private void DropForegroundSubAgents()
+    {
+        lock (_subAgents)
+        {
+            foreach (var id in _subAgents.Where(x => !x.Value.IsBackground).Select(x => x.Key).ToArray())
+                _subAgents.Remove(id);
+        }
+    }
+
+    /// <summary>
+    /// Tool events name their spawning <c>task</c> call, which is exactly the sub-agent block id.
+    /// </summary>
+    private string? ResolveToolAgentId(string? parentToolCallId, string? agentId)
+    {
+        if (!string.IsNullOrWhiteSpace(parentToolCallId))
+        {
+            lock (_subAgents)
+            {
+                if (_subAgents.ContainsKey(parentToolCallId)) return parentToolCallId;
+            }
+        }
+
+        return agentId;
+    }
+
+    private SubAgentRun? FindSubAgentByInstanceId(string? agentInstanceId)
+    {
+        if (string.IsNullOrWhiteSpace(agentInstanceId)) return null;
+
+        return _subAgents.Values.FirstOrDefault(x =>
+            string.Equals(x.AgentInstanceId, agentInstanceId, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Names of the tools OneWare executes itself, cached because it is checked for every tool event
+    /// and building the tool list is not free. Refreshed whenever a session is created.
+    /// </summary>
+    private HashSet<string>? _clientToolNames;
+
+    private bool IsClientTool(string? toolName)
+    {
+        if (string.IsNullOrWhiteSpace(toolName)) return false;
+
+        var names = _clientToolNames ??= toolProvider.GetTools()
+            .Select(x => x.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        return names.Contains(toolName);
+    }
+
+    /// <summary>
+    /// Compact, human readable summary of what a tool was called with, used as the first line of a
+    /// sub-agent tool entry.
+    /// </summary>
+    private static string? DescribeToolArguments(ToolExecutionStartData data)
+    {
+        if (data.ShellToolInfo?.DisplayCommand is { Length: > 0 } command)
+            return Truncate(command, 400);
+
+        if (data.Arguments is not { ValueKind: JsonValueKind.Object } arguments) return null;
+
+        var parts = new List<string>();
+        foreach (var property in arguments.EnumerateObject())
+        {
+            var value = property.Value.ValueKind switch
+            {
+                JsonValueKind.String => property.Value.GetString(),
+                JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => property.Value.ToString(),
+                _ => null
+            };
+
+            if (string.IsNullOrWhiteSpace(value)) continue;
+
+            parts.Add($"{property.Name}: {Truncate(value, 200)}");
+            if (parts.Count == 3) break;
+        }
+
+        return parts.Count == 0 ? null : string.Join('\n', parts);
+    }
+
+    private static string? Truncate(string? text, int maxLength = 4000)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength) return text;
+
+        return text[..maxLength] + "…";
+    }
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        return values.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
     }
 
     /// <summary>

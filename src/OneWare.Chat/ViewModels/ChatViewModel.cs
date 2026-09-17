@@ -37,6 +37,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private readonly Dictionary<string, ChatMessageReasoningViewModel> _assistantReasoningById =
         new(StringComparer.Ordinal);
+
+    /// <summary>Sub-agent blocks by id, for as long as their events can still arrive.</summary>
+    private readonly Dictionary<string, ChatMessageSubAgentViewModel> _subAgents = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Tool calls a sub-agent started that OneWare executes itself, keyed by the tool call id. They
+    /// are reported twice — once by the chat service (with the sub-agent it belongs to) and once by
+    /// the function provider (with the live output and a stop button) — and are matched up here so
+    /// the running tool is shown inside its sub-agent block instead of the main flow.
+    /// </summary>
+    private readonly Dictionary<string, ChatMessageSubAgentViewModel> _pendingSubAgentTools =
+        new(StringComparer.Ordinal);
     
     private readonly Dictionary<string, string> _selectedSessionByService = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
@@ -648,16 +660,32 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Messages.Add(message);
     }
 
-    private void AddErrorMessage(string? message)
+    /// <summary>
+    /// Adds a message to the conversation, or into the block of the sub-agent it belongs to.
+    /// </summary>
+    private void AddMessage(IChatMessage message, string? agentId)
+    {
+        if (agentId != null && _subAgents.TryGetValue(agentId, out var subAgent))
+        {
+            subAgent.Items.Add(message);
+            RequestSaveState();
+            return;
+        }
+
+        AddMessage(message);
+    }
+
+    private void AddErrorMessage(string? message, string? agentId = null)
     {
         var errorMessage = string.IsNullOrWhiteSpace(message)
             ? "An unexpected error occurred."
             : message;
 
-        AddMessage(new ChatMessageErrorViewModel(errorMessage));
+        AddMessage(new ChatMessageErrorViewModel(errorMessage), agentId);
     }
 
-    private ChatMessageReasoningViewModel GetOrCreateAssistantReasoningMessage(string? reasoningId)
+    private ChatMessageReasoningViewModel GetOrCreateAssistantReasoningMessage(string? reasoningId,
+        string? agentId = null)
     {
         if (!string.IsNullOrWhiteSpace(reasoningId))
         {
@@ -665,18 +693,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 return existing;
 
             var created = new ChatMessageReasoningViewModel(reasoningId);
-            AddMessage(created);
+            AddMessage(created, agentId);
             _assistantReasoningById[reasoningId] = created;
             return created;
         }
 
         var activeReasoning = new ChatMessageReasoningViewModel(reasoningId);
-        AddMessage(activeReasoning);
+        AddMessage(activeReasoning, agentId);
 
         return activeReasoning;
     }
 
-    private ChatMessageAssistantViewModel GetOrCreateAssistantMessage(string? messageId)
+    private ChatMessageAssistantViewModel GetOrCreateAssistantMessage(string? messageId, string? agentId = null)
     {
         if (Messages.LastOrDefault() is ChatMessageAssistantViewModel { MessageId: "init" } initMessage)
         {
@@ -689,13 +717,13 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 return existing;
 
             var created = new ChatMessageAssistantViewModel(messageId);
-            AddMessage(created);
+            AddMessage(created, agentId);
             _assistantMessagesById[messageId] = created;
             return created;
         }
 
         var activeAssistantMessage = new ChatMessageAssistantViewModel(messageId);
-        AddMessage(activeAssistantMessage);
+        AddMessage(activeAssistantMessage, agentId);
 
         return activeAssistantMessage;
     }
@@ -704,11 +732,33 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         Dispatcher.UIThread.Post(() =>
         {
-            foreach (var message in Messages.OfType<ChatMessageAssistantViewModel>())
-                message.IsStreaming = false;
+            foreach (var message in EnumerateAllMessages())
+            {
+                switch (message)
+                {
+                    case ChatMessageAssistantViewModel assistant:
+                        assistant.IsStreaming = false;
+                        break;
+                    case ChatMessageReasoningViewModel reasoning:
+                        reasoning.IsStreaming = false;
+                        break;
+                    // A background sub-agent outlives the turn that started it, so it keeps
+                    // running (and receiving events) until its own completion event arrives.
+                    case ChatMessageSubAgentViewModel { IsRunning: true, IsBackground: false } subAgent:
+                        // The turn ended without a completion event (e.g. after an abort).
+                        FinishRunningItems(subAgent);
+                        subAgent.IsRunning = false;
+                        subAgent.IsExpanded = false;
+                        subAgent.StatusText = "Stopped";
+                        break;
+                }
+            }
 
-            foreach (var message in Messages.OfType<ChatMessageReasoningViewModel>())
-                message.IsStreaming = false;
+            foreach (var id in _subAgents.Where(x => !x.Value.IsRunning).Select(x => x.Key).ToArray())
+                _subAgents.Remove(id);
+
+            foreach (var claim in _pendingSubAgentTools.Where(x => !x.Value.IsRunning).Select(x => x.Key).ToArray())
+                _pendingSubAgentTools.Remove(claim);
 
             IsBusy = false;
             // Safety: never let the steering indicator stick past the end of a turn.
@@ -720,6 +770,25 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         });
     }
 
+    /// <summary>All messages of the conversation, including those nested in sub-agent blocks.</summary>
+    private IEnumerable<IChatMessage> EnumerateAllMessages()
+    {
+        return EnumerateMessages(Messages);
+    }
+
+    private static IEnumerable<IChatMessage> EnumerateMessages(IEnumerable<IChatMessage> messages)
+    {
+        foreach (var message in messages.ToArray())
+        {
+            yield return message;
+
+            if (message is not ChatMessageSubAgentViewModel subAgent) continue;
+
+            foreach (var nested in EnumerateMessages(subAgent.Items))
+                yield return nested;
+        }
+    }
+
     private void OnEventReceived(object? sender, ChatEvent e)
     {
         switch (e)
@@ -729,9 +798,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 if (string.IsNullOrWhiteSpace(x.Content)) break;
                 Dispatcher.UIThread.Post(() =>
                 {
-                    var message = GetOrCreateAssistantMessage(x.MessageId);
+                    var message = GetOrCreateAssistantMessage(x.MessageId, x.AgentId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
+                    SetSubAgentStatus(x.AgentId, "Responding…");
                     NotifyContentAdded();
                 });
                 break;
@@ -741,7 +811,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 if (string.IsNullOrWhiteSpace(x.Content)) break;
                 Dispatcher.UIThread.Post(() =>
                 {
-                    var message = GetOrCreateAssistantMessage(x.MessageId);
+                    var message = GetOrCreateAssistantMessage(x.MessageId, x.AgentId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
                     NotifyContentAdded();
@@ -752,9 +822,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
+                    var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId, x.AgentId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
+                    SetSubAgentStatus(x.AgentId, "Thinking…");
                     NotifyContentAdded();
                 });
                 break;
@@ -763,22 +834,54 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId);
+                    var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId, x.AgentId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
                     NotifyContentAdded();
                 });
                 break;
             }
-            case ChatToolExecutionStartEvent:
+            case ChatSubAgentStartedEvent x:
             {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddSubAgent(x);
+                    NotifyContentAdded();
+                });
+                break;
+            }
+            case ChatSubAgentCompletedEvent x:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    CompleteSubAgent(x);
+                    NotifyContentAdded();
+                });
+                break;
+            }
+            case ChatToolExecutionStartEvent x:
+            {
+                // Tool calls of the main agent are rendered from the function provider events,
+                // which also carry the live output and a stop button.
+                if (x.AgentId == null) break;
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    StartSubAgentTool(x);
+                    NotifyContentAdded();
+                });
+                break;
+            }
+            case ChatToolExecutionCompleteEvent x:
+            {
+                Dispatcher.UIThread.Post(() => CompleteSubAgentTool(x));
                 break;
             }
             case ChatSkillLoadedEvent x:
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AddMessage(new ChatMessageSkillViewModel(x.SkillName, x.Content));
+                    AddMessage(new ChatMessageSkillViewModel(x.SkillName, x.Content), x.AgentId);
                     NotifyContentAdded();
                 });
                 break;
@@ -850,7 +953,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AddErrorMessage(x.Message);
+                    AddErrorMessage(x.Message, x.AgentId);
                     NotifyContentAdded();
                 });
                 break;
@@ -870,6 +973,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     _cancelledQueuedMessages.Clear();
                     _assistantMessagesById.Clear();
                     _assistantReasoningById.Clear();
+                    _subAgents.Clear();
+                    _pendingSubAgentTools.Clear();
                     _notConnectedMessage = null;
                     if (SelectedChatService != null)
                         UpdateSelectedSessionFromService(SelectedChatService);
@@ -968,18 +1073,30 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         var newMessage = new ChatMessageToolViewModel(function.Id, function.FunctionName)
         {
             IsToolRunning = true,
-            ToolOutput = $"{function.Detail}"
+            ToolOutput = $"{function.Detail}",
+            SourceToolCallId = function.ToolCallId
         };
         newMessage.StopCommand = new RelayCommand(
             () => _aiFunctionProvider.CancelFunction(newMessage.Id),
             () => newMessage.IsToolRunning);
-        AddMessage(newMessage);
+
+        var subAgent = DequeueSubAgentToolClaim(function.ToolCallId);
+        if (subAgent != null)
+        {
+            subAgent.Items.Add(newMessage);
+            subAgent.StatusText = function.FunctionName;
+        }
+        else
+        {
+            AddMessage(newMessage);
+        }
+
         NotifyContentAdded();
     }
 
     private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)
     {
-        var toolFinished = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.Id == function.Id);
+        var toolFinished = FindToolMessage(function.Id);
         if (toolFinished == null) return;
 
         toolFinished.IsToolRunning = false;
@@ -997,11 +1114,146 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private void OnFunctionProgress(object? sender, AiFunctionProgressEvent progress)
     {
-        var tool = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x => x.Id == progress.Id);
+        var tool = FindToolMessage(progress.Id);
         if (tool == null || !tool.IsToolRunning) return;
 
         tool.ToolOutput = progress.Output;
         RequestSaveState();
+    }
+
+    // ── Sub-agents ────────────────────────────────────────────────────────────
+
+    private void AddSubAgent(ChatSubAgentStartedEvent started)
+    {
+        var subAgent = new ChatMessageSubAgentViewModel(started.Id, started.DisplayName)
+        {
+            Description = started.Description,
+            Model = started.Model,
+            IsBackground = started.IsBackground,
+            StatusText = started.IsBackground ? "Running in background…" : "Working…"
+        };
+
+        // A nested sub-agent belongs into the block of the agent that spawned it.
+        AddMessage(subAgent, started.ParentSubAgentId);
+        _subAgents[started.Id] = subAgent;
+    }
+
+    private void CompleteSubAgent(ChatSubAgentCompletedEvent completed)
+    {
+        if (!_subAgents.Remove(completed.Id, out var subAgent)) return;
+
+        FinishRunningItems(subAgent);
+        subAgent.Complete(completed);
+    }
+
+    /// <summary>Stops spinners of nested entries that never reported a result of their own.</summary>
+    private static void FinishRunningItems(ChatMessageSubAgentViewModel subAgent)
+    {
+        foreach (var item in subAgent.Items.ToArray())
+        {
+            switch (item)
+            {
+                case ChatMessageToolViewModel { IsToolRunning: true } tool:
+                    tool.IsToolRunning = false;
+                    tool.StopCommand = null;
+                    break;
+                case ChatMessageAssistantViewModel assistant:
+                    assistant.IsStreaming = false;
+                    break;
+                case ChatMessageReasoningViewModel reasoning:
+                    reasoning.IsStreaming = false;
+                    break;
+            }
+        }
+    }
+
+    private void SetSubAgentStatus(string? agentId, string status)
+    {
+        if (agentId == null) return;
+        if (!_subAgents.TryGetValue(agentId, out var subAgent)) return;
+
+        subAgent.StatusText = status;
+    }
+
+    /// <summary>
+    /// A tool call a sub-agent started. Tools OneWare executes itself are only announced here and
+    /// rendered once the function provider reports them, so they keep their live output.
+    /// </summary>
+    private void StartSubAgentTool(ChatToolExecutionStartEvent start)
+    {
+        if (start.AgentId == null || !_subAgents.TryGetValue(start.AgentId, out var subAgent)) return;
+
+        subAgent.StatusText = start.Tool;
+
+        if (string.IsNullOrWhiteSpace(start.ToolCallId)) return;
+
+        if (start.IsClientTool)
+        {
+            // The tool call can already be shown in the main flow when the function provider
+            // reported it before this event arrived.
+            if (!TryAdoptRunningTool(subAgent, start.ToolCallId))
+                _pendingSubAgentTools[start.ToolCallId] = subAgent;
+
+            return;
+        }
+
+        subAgent.Items.Add(new ChatMessageToolViewModel(start.ToolCallId, start.Tool)
+        {
+            IsToolRunning = true,
+            ToolOutput = start.Detail,
+            SourceToolCallId = start.ToolCallId
+        });
+    }
+
+    private void CompleteSubAgentTool(ChatToolExecutionCompleteEvent complete)
+    {
+        var tool = FindToolMessage(complete.ToolCallId);
+        if (tool == null || !tool.IsToolRunning) return;
+
+        tool.IsToolRunning = false;
+        tool.StopCommand = null;
+        tool.IsSuccessful = complete.Success;
+
+        if (!string.IsNullOrWhiteSpace(complete.Output))
+        {
+            tool.ToolOutput = string.IsNullOrWhiteSpace(tool.ToolOutput)
+                ? complete.Output
+                : tool.ToolOutput + "\n" + complete.Output;
+        }
+
+        RequestSaveState();
+    }
+
+    /// <summary>
+    /// Moves a tool that was already shown in the main flow into a sub-agent block. Needed because
+    /// the function provider can report a tool call before the chat service tells which sub-agent
+    /// it belongs to.
+    /// </summary>
+    private bool TryAdoptRunningTool(ChatMessageSubAgentViewModel subAgent, string toolCallId)
+    {
+        var running = Messages.OfType<ChatMessageToolViewModel>().LastOrDefault(x =>
+            string.Equals(x.SourceToolCallId, toolCallId, StringComparison.Ordinal));
+
+        if (running == null) return false;
+
+        Messages.Remove(running);
+        subAgent.Items.Add(running);
+        subAgent.StatusText = running.ToolName;
+        return true;
+    }
+
+    private ChatMessageSubAgentViewModel? DequeueSubAgentToolClaim(string? toolCallId)
+    {
+        if (string.IsNullOrWhiteSpace(toolCallId)) return null;
+        if (!_pendingSubAgentTools.Remove(toolCallId, out var subAgent)) return null;
+
+        return subAgent;
+    }
+
+    private ChatMessageToolViewModel? FindToolMessage(string id)
+    {
+        return EnumerateAllMessages().OfType<ChatMessageToolViewModel>()
+            .LastOrDefault(x => string.Equals(x.Id, id, StringComparison.Ordinal));
     }
 
     private void ShowEdit(AiEditViewModel? editViewModel)
@@ -1258,6 +1510,17 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     SkillName = skill.SkillName,
                     Content = skill.Content
                 };
+            case ChatMessageSubAgentViewModel subAgent:
+                return new ChatMessageState(ChatMessageKind.SubAgent)
+                {
+                    Id = subAgent.Id,
+                    Message = subAgent.DisplayName,
+                    Content = subAgent.Description,
+                    ToolName = subAgent.Model,
+                    ToolOutput = subAgent.StatusText,
+                    IsSuccessful = subAgent.IsSuccessful,
+                    Children = subAgent.Items.Select(BuildMessageState).OfType<ChatMessageState>().ToList()
+                };
             default:
                 return null;
         }
@@ -1306,6 +1569,32 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 }
 
                 message = new ChatMessageSkillViewModel(state.SkillName, state.Content ?? string.Empty);
+                return true;
+            case ChatMessageKind.SubAgent:
+                if (string.IsNullOrWhiteSpace(state.Message))
+                {
+                    message = null!;
+                    return false;
+                }
+
+                var restored = new ChatMessageSubAgentViewModel(state.Id ?? Guid.NewGuid().ToString("N"),
+                    state.Message)
+                {
+                    Description = state.Content,
+                    Model = state.ToolName,
+                    IsRunning = false,
+                    IsExpanded = false,
+                    IsSuccessful = state.IsSuccessful,
+                    StatusText = state.ToolOutput ?? string.Empty
+                };
+
+                foreach (var childState in state.Children)
+                {
+                    if (TryCreateMessage(childState, out var child))
+                        restored.Items.Add(child);
+                }
+
+                message = restored;
                 return true;
             default:
                 message = null!;
@@ -1378,6 +1667,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Messages.Clear();
         _assistantMessagesById.Clear();
         _assistantReasoningById.Clear();
+        _subAgents.Clear();
+        _pendingSubAgentTools.Clear();
     }
 
     private void LoadMessagesFromStates(IReadOnlyCollection<ChatMessageState> states)
@@ -1385,6 +1676,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Messages.Clear();
         _assistantMessagesById.Clear();
         _assistantReasoningById.Clear();
+        _subAgents.Clear();
+        _pendingSubAgentTools.Clear();
 
         foreach (var messageState in states)
         {
@@ -1703,6 +1996,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         public string? ToolOutput { get; set; }
         public string? SkillName { get; set; }
         public bool IsSuccessful { get; set; }
+
+        /// <summary>Messages nested inside a sub-agent block.</summary>
+        public List<ChatMessageState> Children { get; set; } = [];
     }
 
     private enum ChatMessageKind
@@ -1711,6 +2007,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         Assistant,
         Reasoning,
         Tool,
-        Skill
+        Skill,
+        SubAgent
     }
 }

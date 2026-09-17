@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageSubAgentView"
+             x:DataType="chatMessages:ChatMessageSubAgentViewModel">
+
+    <Expander Margin="0 2" VerticalAlignment="Top" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+              ToolTip.Tip="{Binding Description}">
+        <Expander.Header>
+            <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="5" VerticalAlignment="Center">
+                <Image Source="{DynamicResource AI_Img}"
+                       Width="12" Height="12" VerticalAlignment="Center" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBlock Text=" (background)" VerticalAlignment="Center"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                               IsVisible="{Binding IsBackground}" />
+                    <Panel IsVisible="{Binding IsFinished}" VerticalAlignment="Center">
+                        <TextBlock Text=" ✓" Foreground="Lime" IsVisible="{Binding IsSuccessful}" />
+                        <TextBlock Text=" x" Foreground="Red" IsVisible="{Binding !IsSuccessful}" />
+                    </Panel>
+                </StackPanel>
+
+                <TextBlock Grid.Column="2" Text="{Binding StatusText}" VerticalAlignment="Center"
+                           FontSize="11" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+
+                <controls:Spinner Grid.Column="3" Width="12" Height="12" VerticalAlignment="Center"
+                                  IsVisible="{Binding IsRunning}" />
+            </Grid>
+        </Expander.Header>
+
+        <Border Margin="1 4 1 0" Padding="6 2 0 2" BorderThickness="2 0 0 0"
+                BorderBrush="{DynamicResource ThemeAccentBrush}">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="5" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </Border>
+    </Expander>
+
+</UserControl>
