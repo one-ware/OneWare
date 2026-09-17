@@ -40,6 +40,10 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     protected string? Arguments { get; set; }
     protected string? ExecutablePath { get; set; }
 
+    protected virtual void ConfigureClientOptions(LanguageClientOptions options)
+    {
+    }
+
     public virtual IReadOnlyCollection<KeyValuePair<string, string>> GetExtraEnvironmentVariables()
     {
         return new List<KeyValuePair<string, string>>();
@@ -48,22 +52,17 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     public override async Task ActivateAsync()
     {
         if (IsActivated) return;
-        IsActivated = true;
-
-        if (ExecutablePath == null)
+        if (string.IsNullOrWhiteSpace(ExecutablePath))
         {
             ContainerLocator.Container.Resolve<ILogger>().Warning(
                 $"Tried to activate Language Server {Name} without executable!", new NotSupportedException(), false);
             return;
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            PlatformHelper.ChmodFile(ExecutablePath);
-
-        _cancellation = new CancellationTokenSource();
-
         if (ExecutablePath.StartsWith("wss://") || ExecutablePath.StartsWith("ws://"))
         {
+            IsActivated = true;
+            _cancellation = new CancellationTokenSource();
             var websocket = new ClientWebSocket();
             try
             {
@@ -88,6 +87,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             return;
         }
 
+        IsActivated = true;
+        _cancellation = new CancellationTokenSource();
         var argumentArray = Arguments != null
             ? Arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.RemoveEmptyEntries)
             : Array.Empty<string>();
@@ -105,30 +106,49 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         try
         {
-            _process = ContainerLocator.Container.Resolve<IChildProcessService>().StartChildProcess(processStartInfo);
-            var reader = new StreamReader(_process.StandardError);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                PlatformHelper.ChmodFile(PlatformHelper.GetFullPath(ExecutablePath) ?? ExecutablePath);
+
+            var process = ContainerLocator.Container.Resolve<IChildProcessService>().StartChildProcess(processStartInfo);
+            _process = process;
+            var cancellation = _cancellation;
+            var reader = new StreamReader(process.StandardError);
             _ = Task.Run(() =>
             {
-                while (_process.HasStandardError && !reader.EndOfStream && !_cancellation.IsCancellationRequested)
+                while (process.HasStandardError && !reader.EndOfStream && !cancellation.IsCancellationRequested)
                     Console.WriteLine("ERR:" + reader.ReadToEnd());
-            }, _cancellation.Token);
+            }, cancellation.Token);
 
-            await InitAsync(_process.StandardOutput, _process.StandardInput);
+            await InitAsync(process.StandardOutput, process.StandardInput);
+            if (!IsLanguageServiceReady)
+            {
+                if (ReferenceEquals(_process, process)) await CleanupServerAsync();
+                return;
+            }
 
-            await _process.WaitForExitAsync();
+            await process.WaitForExitAsync();
 
-            await DeactivateAsync();
+            if (ReferenceEquals(_process, process)) await CleanupServerAsync();
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-            IsActivated = false;
+            await CleanupServerAsync();
         }
     }
 
-    public override async Task DeactivateAsync()
+    public override Task DeactivateAsync() => CleanupServerAsync();
+
+    private async Task CleanupServerAsync()
     {
         IsActivated = false;
+        IsLanguageServiceReady = false;
+        var client = Client;
+        Client = null;
+        var process = _process;
+        _process = null;
+        var cancellation = _cancellation;
+        _cancellation = null;
 
         lock (_pullDiagnosticsRequests)
         {
@@ -139,14 +159,12 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            if (Client == null) return;
+            if (client == null) return;
             try
             {
-                Client.SendExit();
+                client.SendExit();
 
                 await Task.Delay(200);
-                Client = null;
-                IsLanguageServiceReady = false;
             }
             catch (Exception e)
             {
@@ -156,13 +174,13 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             ContainerLocator.Container.Resolve<IErrorService>()?.Clear(Name);
         });
         await base.DeactivateAsync();
-        _cancellation?.Cancel();
-        _process?.Kill();
+        cancellation?.Cancel();
+        process?.Kill();
     }
 
     private async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
     {
-        Client = LanguageClient.PreInit(options =>
+        var client = LanguageClient.PreInit(options =>
             {
                 options.WithClientInfo(new ClientInfo { Name = "OneWare.Core" });
                 options.WithInput(input).WithOutput(output);
@@ -335,16 +353,22 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 });
 
                 customOptions?.Invoke(options);
+                ConfigureClientOptions(options);
             }
         );
+        Client = client;
 
-        var cancelToken = new CancellationToken();
+        var cancelToken = _cancellation?.Token ?? CancellationToken.None;
 
         ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name);
 
         try
         {
-            await Client.Initialize(cancelToken).ConfigureAwait(false);
+            await client.Initialize(cancelToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancelToken.IsCancellationRequested)
+        {
+            return;
         }
         catch (Exception e)
         {
@@ -353,6 +377,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             return;
         }
 
+        if (!ReferenceEquals(Client, client) || cancelToken.IsCancellationRequested) return;
         ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name);
 
         IsLanguageServiceReady = true;
