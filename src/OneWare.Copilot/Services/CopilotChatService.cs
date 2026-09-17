@@ -1640,10 +1640,18 @@ public sealed class CopilotChatService(
         {
             ToolExecutionStartEvent start => start.Data.ParentToolCallId,
             ToolExecutionCompleteEvent complete => complete.Data.ParentToolCallId,
+            AssistantMessageEvent message => message.Data.ParentToolCallId,
+            AssistantMessageDeltaEvent delta => delta.Data.ParentToolCallId,
+            AssistantUsageEvent usage => usage.Data.ParentToolCallId,
             _ => null
         });
 
-        var agentId = ResolveSubAgentId(evt);
+        // Sub-agent lifecycle events name their run through the tool call id and must never take part
+        // in instance guessing: their AgentId belongs to the starting/ending run itself, not to the
+        // block the event should be shown in.
+        var agentId = evt is SubagentStartedEvent or SubagentCompletedEvent or SubagentFailedEvent
+            ? null
+            : ResolveSubAgentId(evt);
 
         switch (evt)
         {
@@ -1666,15 +1674,17 @@ public sealed class CopilotChatService(
             }
             case AssistantMessageDeltaEvent x:
             {
-                EventReceived?.Invoke(this,
-                    new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId) { AgentId = agentId });
+                EventReceived?.Invoke(this, new ChatMessageDeltaEvent(x.Data.DeltaContent, x.Data.MessageId)
+                {
+                    AgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId)
+                });
                 break;
             }
             case AssistantMessageEvent x:
             {
                 EventReceived?.Invoke(this, new ChatMessageEvent(x.Data.Content, x.Data.MessageId)
                 {
-                    AgentId = agentId,
+                    AgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId),
                     Model = DescribeModel(x.Data.Model)
                 });
                 break;
@@ -1793,9 +1803,24 @@ public sealed class CopilotChatService(
 
         lock (_subAgents)
         {
-            // The started event is emitted by the spawning agent, so its agentId identifies the
-            // parent (absent for the main agent) and never the new sub-agent itself.
-            parentId = FindSubAgentByInstanceId(evt.AgentId)?.Id;
+            // Only the spawner nests this run into another block; it is absent when the main agent
+            // started it. Everything else would nest concurrently started siblings into each other.
+            // The spawner is named by the id it answers to, or by the task call that created it.
+            parentId = FindSubAgentByInstanceId(evt.Data.ParentId)?.Id
+                       ?? (evt.Data.ParentId != null && _subAgents.ContainsKey(evt.Data.ParentId)
+                           ? evt.Data.ParentId
+                           : null);
+
+            // The remaining id identifies the new run, which makes its streaming events attributable
+            // right away instead of only from its first tool call on.
+            if (!string.IsNullOrWhiteSpace(evt.AgentId) &&
+                !string.Equals(evt.AgentId, evt.Data.ParentId, StringComparison.Ordinal) &&
+                // An id another run already answers to belongs to that run, not to this one.
+                FindSubAgentByInstanceId(evt.AgentId) == null)
+            {
+                run.AgentInstanceId = evt.AgentId;
+            }
+
             _subAgents[id] = run;
         }
 

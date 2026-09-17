@@ -10,13 +10,11 @@
              x:DataType="chatMessages:ChatMessageAssistantViewModel">
 
     <Border>
-        <StackPanel Spacing="6">
+        <StackPanel>
             <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
 
             <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasModel}"
                         ToolTip.Tip="Model that answered">
-                <Image Source="{DynamicResource AI_Img}" Width="10" Height="10" VerticalAlignment="Center"
-                       Opacity="0.6" />
                 <TextBlock Text="{Binding Model}" FontSize="11" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis"
                            Foreground="{DynamicResource ThemeForegroundLowBrush}" />
