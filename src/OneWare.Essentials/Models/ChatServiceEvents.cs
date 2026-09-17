@@ -186,6 +186,49 @@ public sealed class ChatPermissionRequestEvent(
     public IRelayCommand<Control?>? AllowForSessionCommand { get; } = allowForSessionCommand;
 }
 
+/// <summary>
+/// The agent finished planning and asks how to continue: start the implementation, or keep
+/// refining the plan.
+/// </summary>
+public sealed class ChatPlanReadyEvent(
+    string summary,
+    string? planContent,
+    IRelayCommand<Control?> startImplementationCommand,
+    IRelayCommand<Control?> updatePlanCommand)
+    : ChatEvent()
+{
+    /// <summary>Short summary of the plan or of the proposed next step.</summary>
+    public string Summary { get; } = summary;
+
+    /// <summary>Full plan text, when the agent provided one.</summary>
+    public string? PlanContent { get; } = planContent;
+
+    /// <summary>Accepts the plan and lets the agent carry it out.</summary>
+    public IRelayCommand<Control?> StartImplementationCommand { get; } = startImplementationCommand;
+
+    /// <summary>Keeps planning so the user can have the plan changed.</summary>
+    public IRelayCommand<Control?> UpdatePlanCommand { get; } = updatePlanCommand;
+
+    public string StartImplementationButtonText { get; init; } = "Start implementation";
+
+    public string UpdatePlanButtonText { get; init; } = "Update plan";
+
+    /// <summary>
+    /// Raised when the decision can no longer be made, e.g. because the turn was aborted. The UI
+    /// stops offering the choice.
+    /// </summary>
+    public event EventHandler? Expired;
+
+    /// <summary>Withdraws the offer; the commands must not be executed afterwards.</summary>
+    public void Expire()
+    {
+        IsExpired = true;
+        Expired?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool IsExpired { get; private set; }
+}
+
 public sealed class ChatIdleEvent()
     : ChatEvent()
 {

@@ -13,6 +13,21 @@ public enum ChatAgentTurnMode
 }
 
 /// <summary>
+/// Ids of the chat agents that ship with OneWare.
+/// </summary>
+public static class BuiltInChatAgents
+{
+    /// <summary>Full access agent that carries work out.</summary>
+    public const string Agent = "agent";
+
+    /// <summary>Read-only agent that works out a plan first.</summary>
+    public const string Plan = "plan";
+
+    /// <summary>Read-only agent that only answers questions.</summary>
+    public const string Ask = "ask";
+}
+
+/// <summary>
 /// A user-selectable chat agent ("chat mode"): the personality, tool budget and turn mode the chat
 /// uses for the messages that are sent while it is selected.
 /// </summary>

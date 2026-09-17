@@ -52,6 +52,8 @@ public sealed class CopilotChatService(
     private IDisposable? _subscription;
     private string? _requestedSessionId;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
+    private readonly List<PendingPlanRequest> _pendingPlanRequests = new();
+
     private readonly HashSet<string> _sessionApprovedTools = new();
 
     // Usage tracking
@@ -1478,6 +1480,7 @@ public sealed class CopilotChatService(
     public async Task AbortAsync()
     {
         ReleasePendingInputRequests();
+        ReleasePendingPlanRequests();
         toolProvider.CancelActiveFunctions();
         DropForegroundSubAgents();
         if (_session == null) return;
@@ -1501,6 +1504,7 @@ public sealed class CopilotChatService(
     public async Task NewChatAsync()
     {
         ReleasePendingInputRequests();
+        ReleasePendingPlanRequests();
         lock (_sessionApprovedTools)
             _sessionApprovedTools.Clear();
         _requestedSessionId = null;
@@ -1533,6 +1537,7 @@ public sealed class CopilotChatService(
     public async ValueTask DisposeAsync()
     {
         ReleasePendingInputRequests();
+        ReleasePendingPlanRequests();
 
         if (_attachmentTrackingInitialized)
         {
@@ -2130,8 +2135,9 @@ public sealed class CopilotChatService(
     }
 
     /// <summary>
-    /// The model asks to leave plan mode and start implementing. The selected agent — not the model
-    /// — decides what the chat may do, so this is refused while a read-only agent is active.
+    /// The model finished planning and asks to start implementing. The user decides: either the plan
+    /// is carried out — which also leaves the read-only agent, because that agent, not the model,
+    /// controls what the chat may do — or planning continues.
     /// </summary>
     private Task<ExitPlanModeResult> OnExitPlanModeRequestAsync(ExitPlanModeRequest request,
         ExitPlanModeInvocation invocation)
@@ -2139,12 +2145,77 @@ public sealed class CopilotChatService(
         var agent = agentService.SelectedAgent;
         if (agent is not { IsReadOnly: true }) return Task.FromResult(new ExitPlanModeResult { Approved = true });
 
-        return Task.FromResult(new ExitPlanModeResult
+        var pending = new PendingPlanRequest();
+
+        lock (_pendingPlanRequests)
+            _pendingPlanRequests.Add(pending);
+
+        var startCommand = new RelayCommand<Control?>(_ =>
         {
-            Approved = false,
-            Feedback = $"The chat is in {agent.DisplayName} mode. Present the plan and let the user " +
-                       "switch to Agent mode to implement it."
+            // The choice only counts if it is still the one the runtime is waiting for; an aborted
+            // turn must not pull the user out of the planning agent.
+            if (!CompletePlanRequest(pending, new ExitPlanModeResult
+                {
+                    Approved = true,
+                    // The action decides the approval posture of what follows, so it must match what
+                    // OneWare is configured for — never what the model recommended.
+                    SelectedAction = IsAutopilot ? "autopilot" : "interactive"
+                })) return;
+
+            // Without leaving the read-only agent every edit of the implementation would be denied.
+            agentService.SelectAgent(BuiltInChatAgents.Agent);
         });
+
+        var updateCommand = new RelayCommand<Control?>(_ => CompletePlanRequest(pending,
+            new ExitPlanModeResult
+            {
+                Approved = false,
+                Feedback = "The user wants to refine the plan first. Stay in planning, ask what should " +
+                           "change, and do not implement anything yet."
+            }));
+
+        pending.Event = new ChatPlanReadyEvent(request.Summary, request.PlanContent, startCommand, updateCommand);
+        EventReceived?.Invoke(this, pending.Event);
+
+        return pending.Source.Task;
+    }
+
+    private bool CompletePlanRequest(PendingPlanRequest pending, ExitPlanModeResult result)
+    {
+        lock (_pendingPlanRequests)
+            _pendingPlanRequests.Remove(pending);
+
+        return pending.Source.TrySetResult(result);
+    }
+
+    /// <summary>
+    /// Answers plan decisions nobody can make any more (the turn was aborted or the session is gone)
+    /// by keeping the chat in planning, so the runtime is never left waiting, and withdraws the offer
+    /// from the chat so a late click cannot change the chat agent for nothing.
+    /// </summary>
+    private void ReleasePendingPlanRequests()
+    {
+        List<PendingPlanRequest> pending;
+        lock (_pendingPlanRequests)
+        {
+            pending = new List<PendingPlanRequest>(_pendingPlanRequests);
+            _pendingPlanRequests.Clear();
+        }
+
+        foreach (var request in pending)
+        {
+            request.Source.TrySetResult(new ExitPlanModeResult { Approved = false });
+            request.Event?.Expire();
+        }
+    }
+
+    /// <summary>A plan decision the runtime is waiting for, together with the block that offers it.</summary>
+    private sealed class PendingPlanRequest
+    {
+        public TaskCompletionSource<ExitPlanModeResult> Source { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public ChatPlanReadyEvent? Event { get; set; }
     }
 
     // ── OnPreToolUse — returns "ask" to escalate to OnPermissionRequest ────────

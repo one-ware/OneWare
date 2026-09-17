@@ -693,6 +693,11 @@ The selected agent applies to every message sent while it is active: its `Instru
 to the turn, `TurnMode` selects interactive or plan mode, and `IsReadOnly`/`Tools` are enforced
 before a tool runs — a blocked tool call is denied, not just hidden from the model.
 
+When a planning turn ends, the chat shows a **Plan ready** block with two choices: *Start
+implementation* switches to the `agent` mode and lets the plan be carried out, *Update plan* keeps
+planning. Chat services can raise that block themselves with `ChatPlanReadyEvent`; otherwise the
+chat adds it at the end of a turn of a `ChatAgentTurnMode.Plan` agent.
+
 Register an agent from a module:
 
 ```csharp

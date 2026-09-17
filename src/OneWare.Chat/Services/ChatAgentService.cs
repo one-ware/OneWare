@@ -296,14 +296,14 @@ public class ChatAgentService : ObservableObject, IChatAgentService
     [
         new()
         {
-            Id = "agent",
+            Id = BuiltInChatAgents.Agent,
             DisplayName = "Agent",
             Description = "Full access: researches, edits files and runs tools to complete the task.",
             IsBuiltIn = true
         },
         new()
         {
-            Id = "plan",
+            Id = BuiltInChatAgents.Plan,
             DisplayName = "Plan",
             Description = "Researches the codebase and works out a plan before anything is changed.",
             TurnMode = ChatAgentTurnMode.Plan,
@@ -317,12 +317,14 @@ public class ChatAgentService : ObservableObject, IChatAgentService
                            - Read the code you need first; never plan against assumptions.
                            - Deliver a concise, ordered plan of concrete steps with the files involved,
                              and call out open questions, risks and decisions the user has to make.
-                           - Wait for the user to accept the plan before doing any work.
+                           - Finish by presenting the plan with the exit_plan_mode tool, so the user can
+                             start the implementation or have the plan changed. Never implement before
+                             the user accepted it.
                            """
         },
         new()
         {
-            Id = "ask",
+            Id = BuiltInChatAgents.Ask,
             DisplayName = "Ask",
             Description = "Answers questions about the code base without changing anything.",
             IsReadOnly = true,

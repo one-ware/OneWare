@@ -239,6 +239,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         set => SetProperty(ref field, value);
     } = DefaultWorkingStatus;
 
+    /// <summary>Whether the current planning turn already offered how to continue.</summary>
+    private bool _planOptionsOffered;
+
     public ObservableCollection<IChatService> ChatServices { get; } = [];
 
     /// <summary>
@@ -449,6 +452,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         var prompt = CurrentMessage.Trim();
         if (string.IsNullOrWhiteSpace(prompt)) return;
+
+        // The next planning turn gets its own decision block. Steering or queueing happens inside a
+        // running turn and must not bring the offer of the current one back.
+        if (mode == ChatSendMode.Send) _planOptionsOffered = false;
 
         var chatService = SelectedChatService;
         if (chatService == null)
@@ -769,6 +776,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             foreach (var claim in _pendingSubAgentTools.Where(x => !x.Value.IsRunning).Select(x => x.Key).ToArray())
                 _pendingSubAgentTools.Remove(claim);
 
+            OfferPlanOptionsIfMissing();
+
             IsBusy = false;
             // Safety: never let the steering indicator stick past the end of a turn.
             WorkingStatusText = DefaultWorkingStatus;
@@ -777,6 +786,36 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             // throttled auto save.
             SaveState();
         });
+    }
+
+    /// <summary>
+    /// Ends a planning turn with the same choice the agent would offer: start the implementation or
+    /// keep planning. Chat backends that report a finished plan themselves already added the block;
+    /// this is the fallback for a planning turn that simply ended with the plan written out.
+    /// </summary>
+    private void OfferPlanOptionsIfMissing()
+    {
+        if (_planOptionsOffered) return;
+        if (AgentService.SelectedAgent is not { TurnMode: ChatAgentTurnMode.Plan }) return;
+
+        // Only after the agent actually said something — an aborted or empty turn has no plan.
+        if (Messages.LastOrDefault() is not ChatMessageAssistantViewModel { Content.Length: > 0 }) return;
+
+        _planOptionsOffered = true;
+
+        var start = new RelayCommand<Control?>(sender =>
+        {
+            AgentService.SelectAgent(BuiltInChatAgents.Agent);
+            CurrentMessage = "Implement the plan.";
+            _ = SendInternalAsync(ChatSendMode.Send);
+        });
+
+        var update = new RelayCommand<Control?>(_ => { });
+
+        AddMessage(new ChatMessagePlanReadyViewModel(
+            new ChatPlanReadyEvent("The plan is ready. Start the implementation or have it changed.",
+                null, start, update)));
+        NotifyContentAdded();
     }
 
     /// <summary>All messages of the conversation, including those nested in sub-agent blocks.</summary>
@@ -945,6 +984,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var msg = new ChatMessagePermissionRequestViewModel(x);
                     msg.CloseAction = () => Messages.Remove(msg);
                     AddMessage(msg);
+                    NotifyContentAdded();
+                });
+                break;
+            }
+            case ChatPlanReadyEvent x:
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _planOptionsOffered = true;
+                    AddMessage(new ChatMessagePlanReadyViewModel(x));
                     NotifyContentAdded();
                 });
                 break;
