@@ -31,7 +31,7 @@
     </controls:FlexibleWindow.Styles>
 
     <Border BorderThickness="0 1 0 0">
-        <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="180, Auto, *, Auto, *">
+        <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="240, Auto, *, Auto, *">
 
             <Border Grid.Column="0" Height="30" Grid.ColumnSpan="5" BorderThickness="0 0 0 1">
                 <DockPanel LastChildFill="False">
@@ -65,31 +65,36 @@
             </Border>
             <Border Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" BorderThickness="0, 0, 1, 0"
                     Background="{DynamicResource ThemeControlLowBrush}">
-                <TreeView Padding="3" BorderThickness="0" Background="Transparent"
-                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
-                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
-                    <TreeView.Styles>
-                        <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
-                            <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
-                        </Style>
-                    </TreeView.Styles>
-                    <TreeView.DataTemplates>
-                        <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
-                                          ItemsSource="{Binding SubCategories}">
-                            <Grid ColumnDefinitions="Auto, Auto, *" Margin="2 5">
-                                <Image
-                                    IsVisible="{Binding IconModel, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    VerticalAlignment="Center" Width="18" HorizontalAlignment="Center"
-                                    Source="{Binding IconModel.IconObservable^, FallbackValue={x:Null}}" />
-                                <TextBlock Grid.Column="1" Margin="7 0" FontSize="13" Text="{Binding Header}"
-                                           TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="2" Margin="3 0" HorizontalAlignment="Right"
-                                           TextAlignment="Center" Text="{Binding VisiblePackages.Count}"
-                                           Foreground="{DynamicResource ThemeBorderHighBrush}" />
-                            </Grid>
-                        </TreeDataTemplate>
-                    </TreeView.DataTemplates>
-                </TreeView>
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Top" Padding="3" BorderThickness="0 0 0 1">
+                        <Border Classes="RoundToolBar">
+                            <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False"
+                                                Label="Search..." />
+                        </Border>
+                    </Border>
+                    <TreeView Padding="3" BorderThickness="0" Background="Transparent"
+                              ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
+                              SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
+                        <TreeView.Styles>
+                            <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                <Setter Property="IsVisible" Value="{Binding IsVisible}" />
+                            </Style>
+                        </TreeView.Styles>
+                        <TreeView.DataTemplates>
+                            <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
+                                              ItemsSource="{Binding SubCategories}">
+                                <Grid ColumnDefinitions="*, Auto" Margin="2 5">
+                                    <TextBlock Margin="3 0" FontSize="13" Text="{Binding Header}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Margin="3 0" HorizontalAlignment="Right"
+                                               TextAlignment="Center" Text="{Binding DisplayCount}"
+                                               Foreground="{DynamicResource ThemeBorderHighBrush}" />
+                                </Grid>
+                            </TreeDataTemplate>
+                        </TreeView.DataTemplates>
+                    </TreeView>
+                </DockPanel>
             </Border>
             
             <GridSplitter Grid.Row="1" Grid.Column="1" Width="6" BorderThickness="0 0 1 0"
@@ -98,16 +103,40 @@
 
             <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
                   Background="{DynamicResource ThemeBackgroundBrush}"
-                  RowDefinitions="Auto,*" ColumnDefinitions="6,*">
-                <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="3" BorderThickness="0 0 0 1">
-                    <Grid ColumnDefinitions="6,*">
-                        <Border Grid.Column="1" Classes="RoundToolBar">
-                            <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False" />
-                        </Border>
-                    </Grid>
-                </Border>
-                <Grid Grid.Row="1" Grid.Column="1">
-                    <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  RowDefinitions="*" ColumnDefinitions="6,*">
+                <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,*">
+                    <Border Grid.Row="0" Padding="10 8" BorderThickness="0 0 0 1"
+                            IsVisible="{Binding FeaturedPackage.IsVisible}"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            Background="{DynamicResource ThemeControlLowBrush}">
+                        <DockPanel LastChildFill="True">
+                            <Panel DockPanel.Dock="Left" Width="50" Height="50" Margin="0 0 10 0">
+                                <Image Source="{DynamicResource AI_Img}" />
+                            </Panel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Vertical" Spacing="4"
+                                        VerticalAlignment="Center" Margin="10 0 0 0">
+                                <Button Classes="RoundButton" Padding="12 3"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{Binding FeaturedPackage.Target.PrimaryButtonBrush}"
+                                        Content="{Binding FeaturedPackage.Target.PrimaryButtonText}"
+                                        Command="{Binding FeaturedPackage.PrimaryCommand}" />
+                                <Button Classes="RoundButton" Padding="12 3"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Content="Details"
+                                        Command="{Binding FeaturedPackage.ShowDetailsCommand}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock FontSize="15" FontWeight="Bold"
+                                           Text="{Binding FeaturedPackage.Title}" />
+                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Top"
+                                           Text="{Binding FeaturedPackage.Description}" />
+                                <controls:HyperLink HorizontalAlignment="Left"
+                                                    Url="{Binding FeaturedPackage.LearnMoreUrl}"
+                                                    Label="Show more information." />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <ListBox Grid.Row="1" Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              Background="Transparent" BorderThickness="0"
                              SelectedItem="{Binding SelectedCategory.SelectedPackage, Mode=TwoWay, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">
@@ -138,7 +167,6 @@
                                         <TextBlock Text="{Binding Text}"
                                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                         <Border Grid.Column="1"
-                                                IsVisible="{Binding ShowLine}"
                                                 BorderThickness="0 1 0 0"
                                                 BorderBrush="{DynamicResource ThemeBorderMidBrush}"
                                                 Margin="8 0 0 0"
@@ -177,6 +205,13 @@
                                                    Height="12"
                                                    IsVisible="{Binding PackageState.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                    ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
+                                            <Border IsVisible="{Binding HasUpdate}" CornerRadius="3"
+                                                    Padding="5 1" VerticalAlignment="Center"
+                                                    Background="{DynamicResource ThemeAccentBrush}"
+                                                    ToolTip.Tip="An update is available">
+                                                <TextBlock Text="Update" FontSize="10" FontWeight="Bold"
+                                                           Foreground="White" />
+                                            </Border>
                                             <TextBlock
                                                 Text="{Binding PackageState.InstalledVersion.Version, FallbackValue={}}"
                                                 Foreground="{DynamicResource ThemeForegroundLowBrush}" />
@@ -199,7 +234,7 @@
                             </DataTemplate>
                         </ListBox.DataTemplates>
                     </ListBox>
-                    <controls:Spinner Height="20" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    <controls:Spinner Grid.Row="1" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center"
                                       IsVisible="{Binding IsLoading}" />
                 </Grid>
             </Grid>

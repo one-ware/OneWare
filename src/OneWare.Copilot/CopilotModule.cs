@@ -41,8 +41,7 @@ public class CopilotModule : OneWareModuleBase
         Name = "Copilot CLI",
         Description = "Used for Copilot Integration",
         License = "GitHub Copilot CLI License",
-        IconUrl =
-            "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/githubcopilot.png",
+        IconUrl = "https://github.githubassets.com/images/modules/site/copilot/copilot.png",
         AcceptLicenseBeforeDownload = true,
         Links =
         [

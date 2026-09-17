@@ -27,7 +27,8 @@ public class TypeScriptModule : OneWareModuleBase
         Name = "TypeScript (native tsc)",
         Description = "Used for JavaScript and TypeScript Support",
         License = "Apache 2.0",
-        IconUrl = "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/typescript.png",
+        IconUrl =
+            "https://raw.githubusercontent.com/microsoft/TypeScript-Website/v2/packages/typescriptlang-org/static/branding/ts-logo-512.png",
         Links =
         [
             new PackageLink
