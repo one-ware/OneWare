@@ -20,6 +20,13 @@ namespace OneWare.PackageManager.ViewModels;
 public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWindowService
 {
     private const string AllCategoryHeader = "All";
+    private const string UpdatesCategoryHeader = "Updates";
+
+    /// <summary>
+    ///     The package promoted by the hero banner above the list.
+    /// </summary>
+    private const string FeaturedPackageId = "OneWare.AI";
+
     private static readonly char[] CategorySeparators = ['/', '\\'];
 
     private readonly IApplicationStateService _applicationStateService;
@@ -27,6 +34,11 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private readonly ILogger _logger;
     private readonly IPackageService _packageService;
     private readonly IWindowService _windowService;
+
+    private readonly PackageCategoryViewModel _allCategory;
+    private readonly PackageCategoryViewModel _updatesCategory;
+
+    private readonly Dictionary<string, PackageViewModel> _packageViewModels = new();
 
     private bool _showAvailable = true;
     private bool _showInstalled = true;
@@ -42,21 +54,32 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _logger = logger;
         _applicationStateService = applicationStateService;
 
-        RegisterCategory(AllCategoryHeader);
-        RegisterCategory("Plugins", new IconModel("BoxIcons.RegularExtension"));
-        RegisterCategory("Plugins/Languages", new IconModel("FluentIcons.ProofreadLanguageRegular"));
-        RegisterCategory("Plugins/Toolchains", new IconModel("FeatherIcons.Tool"));
-        RegisterCategory("Plugins/Simulators", new IconModel("Material.Pulse"));
-        RegisterCategory("Plugins/Tools", new IconModel("Module"));
-        RegisterCategory("Hardware", new IconModel("NiosIcon"));
+        _allCategory = new PackageCategoryViewModel(AllCategoryHeader, PackageCategoryKind.Root);
+        PackageCategories.Add(_allCategory);
+
+        _updatesCategory = _allCategory.GetOrCreateSubCategory(UpdatesCategoryHeader, PackageCategoryKind.Updates);
+
+        FeaturedPackage = new FeaturedPackageViewModel(
+            "ONE AI is available",
+            "Manage your ONE AI projects directly in the IDE and get annotation, model training and real-time camera checking.",
+            "AI_Img",
+            "https://one-ware.com/one-ai",
+            new AsyncRelayCommand(ShowFeaturedPackageDetailsAsync));
+
+        RegisterCategory("Plugins");
+        RegisterCategory("Plugins/Languages");
+        RegisterCategory("Plugins/Toolchains");
+        RegisterCategory("Plugins/Simulators");
+        RegisterCategory("Plugins/Tools");
+        RegisterCategory("Hardware");
         RegisterCategory("Hardware/FPGA Boards");
         RegisterCategory("Hardware/Extensions");
-        RegisterCategory("Libraries", new IconModel("BoxIcons.RegularLibrary"));
-        RegisterCategory("Binaries", new IconModel("BoxIcons.RegularCode"));
+        RegisterCategory("Libraries");
+        RegisterCategory("Binaries");
         RegisterCategory("Binaries/ONNX Runtimes");
-        RegisterCategory("Drivers", new IconModel("BoxIcons.RegularUsb"));
+        RegisterCategory("Drivers");
 
-        SelectedCategory = GetAllCategory() ?? PackageCategories.FirstOrDefault();
+        SelectedCategory = _allCategory;
 
         _packageService.WhenValueChanged(x => x.IsUpdating)
             .Subscribe(x => Dispatcher.UIThread.Post(() => IsLoading = x));
@@ -75,6 +98,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         });
 
         ConstructPackageViewModels();
+        Relayout();
     }
 
     public bool ShowInstalled
@@ -83,7 +107,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         set
         {
             SetProperty(ref _showInstalled, value);
-            FilterPackages();
+            Relayout();
         }
     }
 
@@ -93,7 +117,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         set
         {
             SetProperty(ref _showAvailable, value);
-            FilterPackages();
+            Relayout();
         }
     }
 
@@ -108,7 +132,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             SetProperty(ref _selectedFilterIndex, value);
             _showInstalled = value is 0 or 1;
             _showAvailable = value is 0 or 2;
-            FilterPackages();
+            Relayout();
         }
     }
 
@@ -118,7 +142,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         set
         {
             SetProperty(ref field, value);
-            FilterPackages();
+            Relayout();
         }
     } = string.Empty;
 
@@ -136,32 +160,29 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
 
+    /// <summary>
+    ///     Pinned above the list, never part of it, so promoting a package cannot shift any row.
+    /// </summary>
+    public FeaturedPackageViewModel FeaturedPackage { get; }
+
     public bool AskForRestart { get; set; } = true;
     
     public AsyncRelayCommand UpdateAllCommand { get; }
 
+    /// <summary>
+    ///     Registers a category. <paramref name="iconModel" /> is accepted for API compatibility but no
+    ///     longer used, categories are listed without icons.
+    /// </summary>
     public void RegisterCategory(string categoryPath, IconModel? iconModel = null)
     {
         var segments = SplitCategoryPath(categoryPath);
         if (segments.Length == 0) return;
 
-        PackageCategoryViewModel? current = null;
+        var current = _allCategory;
 
-        for (var i = 0; i < segments.Length; i++)
-        {
-            var header = NormalizeCategorySegment(segments[i], i == segments.Length - 1);
-            var categories = current == null ? PackageCategories : current.SubCategories;
-
-            var existing = FindCategory(categories, header);
-            if (existing == null)
-            {
-                var category = new PackageCategoryViewModel(header, i == segments.Length - 1 ? iconModel : null);
-                categories.Add(category);
-                existing = category;
-            }
-
-            current = existing;
-        }
+        foreach (var (segment, index) in segments.Select((x, i) => (x, i)))
+            current = current.GetOrCreateSubCategory(
+                NormalizeCategorySegment(segment, index == segments.Length - 1));
     }
 
     public async Task RefreshPackagesAsync()
@@ -249,8 +270,8 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     private bool FocusCategory(string category, string? subcategory)
     {
-        var categoryVm = PackageCategories
-            .FirstOrDefault(x => x.Header == category);
+        var categoryVm = _allCategory.SubCategories
+            .FirstOrDefault(x => x.Kind == PackageCategoryKind.Normal && x.Header == category);
 
         if (categoryVm == null)
             return false;
@@ -269,10 +290,10 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     
     private async Task<PackageViewModel?> FocusPluginAsync(string packageId)
     {
-        var categoryVm = PackageCategories
-            .Where(x => !x.Header.Equals(AllCategoryHeader, StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault(x => x.VisiblePackages.Any(y => y.PackageState.Package.Id == packageId))
-            ?? GetAllCategory();
+        var categoryVm = _allCategory.SubCategories
+                             .FirstOrDefault(x => x.Kind == PackageCategoryKind.Normal &&
+                                                  x.VisiblePackages.Any(y => y.PackageState.Package.Id == packageId))
+                         ?? _allCategory;
 
         if (categoryVm != null && _packageService.Packages.TryGetValue(packageId, out var packageModel))
         {
@@ -293,24 +314,42 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return null;
     }
 
-    private void ConstructPackageViewModels()
+    /// <summary>
+    ///     The banner ignores the search text and the segment filter, so the promoted package is not
+    ///     necessarily laid out. The query is reset first, otherwise focusing it would silently do nothing.
+    /// </summary>
+    private async Task ShowFeaturedPackageDetailsAsync()
     {
-        var allCategory = GetAllCategory();
+        if (SelectedFilterIndex != 0) SelectedFilterIndex = 0;
+        if (!string.IsNullOrEmpty(Filter)) Filter = string.Empty;
 
+        await FocusPluginAsync(FeaturedPackageId);
+    }
+
+    private void ConstructPackageViewModels()    {
         foreach (var category in PackageCategories)
             ClearCategoryPackages(category);
 
-        foreach (var (_, packageModel) in _packageService.Packages)
+        var staleIds = _packageViewModels.Keys
+            .Where(x => !_packageService.Packages.ContainsKey(x))
+            .ToList();
+
+        foreach (var staleId in staleIds)
+        {
+            if (!_packageViewModels.Remove(staleId, out var staleViewModel)) continue;
+
+            staleViewModel.StatusChanged -= OnPackageStatusChanged;
+            staleViewModel.Dispose();
+        }
+
+        foreach (var (packageId, packageModel) in _packageService.Packages)
             try
             {
-                var viewModel =
-                    new PackageViewModel(packageModel, _packageService, _httpService, _windowService, _applicationStateService, _logger);
+                var viewModel = GetOrCreatePackageViewModel(packageId, packageModel);
 
-                var targetCategory = ResolveCategoryForPackage(packageModel.Package);
-                if (targetCategory == null) continue;
-
-                if (allCategory != null && !ReferenceEquals(allCategory, targetCategory))
-                    allCategory.Add(viewModel);
+                // The root category aggregates all sub category packages, so only the concrete
+                // category has to be filled here.
+                var targetCategory = ResolveCategoryForPackage(packageModel.Package) ?? _allCategory;
 
                 targetCategory.Add(viewModel);
             }
@@ -319,13 +358,98 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
                 _logger.Error(e.Message, e);
             }
 
-        FilterPackages();
+        RefreshUpdatesCategory(false);
+
+        // Runs after the stale view models were evicted and disposed, so the banner can never hold a
+        // disposed view model.
+        FeaturedPackage.Target = _packageViewModels.GetValueOrDefault(FeaturedPackageId);
+
+        // Package data changed. Rows are updated in place, membership and order stay untouched.
+        SyncSelection(() => _allCategory.Resync());
     }
 
-    private void FilterPackages()
+    /// <summary>
+    ///     Reuses the view model of a package across reconstructions. Recreating it would drop the list
+    ///     selection, the resolved icon and the resolved tabs of the package the user is looking at.
+    /// </summary>
+    private PackageViewModel GetOrCreatePackageViewModel(string packageId, IPackageState packageModel)
     {
-        foreach (var categoryModel in PackageCategories)
-            categoryModel.Filter(Filter, _showInstalled, _showAvailable);
+        if (_packageViewModels.TryGetValue(packageId, out var existing))
+        {
+            // RefreshAsync replaces the package states, the view model has to follow.
+            if (!ReferenceEquals(existing.PackageState, packageModel))
+                existing.PackageState = packageModel;
+
+            return existing;
+        }
+
+        var viewModel = new PackageViewModel(packageModel, _packageService, _httpService, _windowService,
+            _applicationStateService, _logger);
+
+        viewModel.StatusChanged += OnPackageStatusChanged;
+        _packageViewModels[packageId] = viewModel;
+        return viewModel;
+    }
+
+    private void OnPackageStatusChanged(object? sender, EventArgs e)
+    {
+        RefreshUpdateCount();
+    }
+
+    /// <summary>
+    ///     Recomputes membership and order of the whole tree. Only ever called in response to a user
+    ///     action, never because package data changed.
+    /// </summary>
+    private void Relayout()
+    {
+        RefreshUpdatesCategory(true);
+
+        var query = new PackageListQuery(Filter, _showInstalled, _showAvailable);
+        SyncSelection(() => _allCategory.Relayout(query));
+    }
+
+    /// <summary>
+    ///     The list box drops its selection while its items are reconciled, which would blank the detail
+    ///     pane. The selected package is therefore restored by id afterwards.
+    /// </summary>
+    private void SyncSelection(Action layout)
+    {
+        var selectedPackageId = SelectedCategory?.SelectedPackage?.PackageState.Package.Id;
+
+        layout();
+
+        // Depends on the freshly laid out content, so it has to run after the layout.
+        RefreshUpdateCount();
+
+        if (SelectedCategory is { IsVisible: false })
+            SelectedCategory = _allCategory;
+
+        if (SelectedCategory == null) return;
+
+        SelectedCategory.SelectedPackage = selectedPackageId == null
+            ? null
+            : SelectedCategory.VisiblePackages.FirstOrDefault(x => x.PackageState.Package.Id == selectedPackageId);
+    }
+
+    /// <summary>
+    ///     Refreshes the smart updates category. On a data change the previous content is kept, so a
+    ///     package updated from within the category stays in place instead of being pulled away.
+    /// </summary>
+    private void RefreshUpdatesCategory(bool relayout)
+    {
+        var live = _packageViewModels.Values.ToHashSet();
+        var updatable = live.Where(x => x.HasUpdate);
+
+        // Carried over packages must still exist, otherwise an evicted and disposed view model would be
+        // resurrected and keep rendering a row for a package the service no longer knows.
+        _updatesCategory.SetPackages(relayout
+            ? updatable
+            : updatable.Concat(_updatesCategory.Packages.Where(live.Contains)).Distinct());
+    }
+
+    private void RefreshUpdateCount()
+    {
+        _updatesCategory.SetLiveCount(_packageViewModels.Values.Count(x => x.HasUpdate));
     }
 
     public override bool OnWindowClosing(FlexibleWindow window)
@@ -455,19 +579,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             x.Header.Equals(header, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static PackageCategoryViewModel GetOrCreateCategory(
-        IList<PackageCategoryViewModel> categories,
-        string header,
-        IconModel? iconModel = null)
-    {
-        var existing = FindCategory(categories, header);
-        if (existing != null) return existing;
-
-        var category = new PackageCategoryViewModel(header, iconModel);
-        categories.Add(category);
-        return category;
-    }
-
     private PackageCategoryViewModel? ResolveCategoryForPackage(Essentials.PackageManager.Package package)
     {
         var rawCategory = package.Category;
@@ -479,14 +590,11 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             var segments = SplitCategoryPath(rawCategory);
             if (segments.Length == 0) return ResolveRootCategoryForType(package.Type);
 
-            var root = GetOrCreateCategory(PackageCategories, segments[0]);
-            var current = root;
+            var current = _allCategory.GetOrCreateSubCategory(segments[0]);
 
             for (var i = 1; i < segments.Length; i++)
-            {
-                var header = NormalizeCategorySegment(segments[i], i == segments.Length - 1);
-                current = GetOrCreateCategory(current.SubCategories, header);
-            }
+                current = current.GetOrCreateSubCategory(
+                    NormalizeCategorySegment(segments[i], i == segments.Length - 1));
 
             return current;
         }
@@ -500,14 +608,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
         wantedCategory = NormalizeCategorySegment(wantedCategory, true);
 
-        var subCategory = FindCategory(category.SubCategories, wantedCategory);
-        if (subCategory == null)
-        {
-            subCategory = new PackageCategoryViewModel(wantedCategory);
-            category.SubCategories.Add(subCategory);
-        }
-
-        return subCategory;
+        return category.GetOrCreateSubCategory(wantedCategory);
     }
 
     private PackageCategoryViewModel? ResolveRootCategoryForType(string? packageType)
@@ -525,18 +626,13 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         };
 
         if (rootCategoryName == null) return null;
-        return FindCategory(PackageCategories, rootCategoryName);
-    }
-
-    private PackageCategoryViewModel? GetAllCategory()
-    {
-        return FindCategory(PackageCategories, AllCategoryHeader);
+        return FindCategory(_allCategory.SubCategories, rootCategoryName);
     }
 
     private static void ClearCategoryPackages(PackageCategoryViewModel category)
     {
-        foreach (var pkg in category.Packages.ToArray())
-            category.Remove(pkg);
+        // Only the backing list is cleared, the visible collections are reconciled afterwards.
+        if (category.Kind != PackageCategoryKind.Updates) category.ClearPackages();
 
         foreach (var subCategory in category.SubCategories)
             ClearCategoryPackages(subCategory);
