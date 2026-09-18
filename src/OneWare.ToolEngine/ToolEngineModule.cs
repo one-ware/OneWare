@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ToolEngine.Strategies;
 using OneWare.ToolEngine.Services;
 
 namespace OneWare.ToolEngine;
@@ -18,7 +19,9 @@ public class ToolEngineModule : OneWareModuleBase
         settingsService.RegisterSettingCategory("Binary Management", iconKey: "VSImageLib.BinaryManagement_16x");
         settingsService.RegisterSettingSubCategory("Binary Management", "Execution Strategy");
 
-        _ = serviceProvider.Resolve<IToolService>();
+        var toolService = serviceProvider.Resolve<IToolService>();
+        toolService.RegisterUniversalStrategy(new NativeStrategy());
+
         _ = serviceProvider.Resolve<IToolExecutionDispatcherService>();
     }
 }
