@@ -205,13 +205,6 @@
                                                    Height="12"
                                                    IsVisible="{Binding PackageState.InstalledVersionWarningText, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                    ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
-                                            <Border IsVisible="{Binding HasUpdate}" CornerRadius="3"
-                                                    Padding="5 1" VerticalAlignment="Center"
-                                                    Background="{DynamicResource ThemeAccentBrush}"
-                                                    ToolTip.Tip="An update is available">
-                                                <TextBlock Text="Update" FontSize="10" FontWeight="Bold"
-                                                           Foreground="White" />
-                                            </Border>
                                             <TextBlock
                                                 Text="{Binding PackageState.InstalledVersion.Version, FallbackValue={}}"
                                                 Foreground="{DynamicResource ThemeForegroundLowBrush}" />
