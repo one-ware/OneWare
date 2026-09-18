@@ -1454,6 +1454,18 @@ public sealed class CopilotChatService(
 
         if (_session == null) return;
 
+        if (mode == ChatSendMode.Send &&
+            string.Equals(prompt.Trim(), "/remote", StringComparison.OrdinalIgnoreCase))
+        {
+            if (IsRemoteSession)
+                await DisableRemoteSessionAsync().ConfigureAwait(false);
+            else
+                await EnableRemoteSessionAsync().ConfigureAwait(false);
+
+            EventReceived?.Invoke(this, new ChatIdleEvent());
+            return;
+        }
+
         var agent = agentService.SelectedAgent;
 
         var options = new MessageOptions
@@ -1612,6 +1624,8 @@ public sealed class CopilotChatService(
             _subAgents.Clear();
 
         CurrentSessionId = null;
+        IsRemoteSession = false;
+        RemoteSessionUrl = null;
         ResetUsageStats();
     }
 
@@ -2066,9 +2080,9 @@ public sealed class CopilotChatService(
 
     // ── Remote session ────────────────────────────────────────────────────────
 
-    public async Task EnableRemoteSessionAsync()
+    public async Task<bool> EnableRemoteSessionAsync()
     {
-        if (_session == null) return;
+        if (_session == null) return false;
         try
         {
             var result = await _session.Rpc.Remote.EnableAsync();
@@ -2076,25 +2090,35 @@ public sealed class CopilotChatService(
             IsRemoteSession = !string.IsNullOrWhiteSpace(result.Url);
             if (IsRemoteSession)
                 EventReceived?.Invoke(this, new ChatMessageEvent($"Remote session active: {result.Url}"));
+            else
+                EventReceived?.Invoke(this, new ChatErrorEvent("Copilot did not return a remote session URL."));
+
+            return IsRemoteSession;
         }
         catch (Exception ex)
         {
             ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to enable remote session.");
+            EventReceived?.Invoke(this, new ChatErrorEvent("Failed to enable remote session."));
+            return false;
         }
     }
 
-    public async Task DisableRemoteSessionAsync()
+    public async Task<bool> DisableRemoteSessionAsync()
     {
-        if (_session == null) return;
+        if (_session == null) return false;
         try
         {
             await _session.Rpc.Remote.DisableAsync();
             IsRemoteSession = false;
             RemoteSessionUrl = null;
+            EventReceived?.Invoke(this, new ChatMessageEvent("Remote session disabled."));
+            return true;
         }
         catch (Exception ex)
         {
             ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to disable remote session.");
+            EventReceived?.Invoke(this, new ChatErrorEvent("Failed to disable remote session."));
+            return false;
         }
     }
 
