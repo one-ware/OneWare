@@ -25,6 +25,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
     {
         services.AddSingleton<OneWareCloudAccountSetting>();
         services.AddSingleton<OneWareCloudLoginService>();
+        services.AddSingleton<IOneWareCloudAccess>(provider => provider.GetRequiredService<OneWareCloudLoginService>());
         services.AddSingleton<OneWareCloudNotificationService>();
         services.AddSingleton<OneWareCloudCurrentAccountService>();
     }

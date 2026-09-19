@@ -12,42 +12,51 @@
                     Placement="BottomEdgeAlignedRight">
                 <StackPanel MinWidth="200" Margin="8" Spacing="8">
 
-                    <!-- Account state -->
-                    <StackPanel Spacing="1" IsVisible="{Binding IsAuthenticated}">
-                        <TextBlock Text="Signed in to GitHub Copilot" FontWeight="SemiBold" FontSize="11" />
+                    <StackPanel Spacing="8" IsVisible="{Binding UsesGitHubAuthentication}">
+                        <!-- Account state -->
+                        <StackPanel Spacing="1" IsVisible="{Binding IsAuthenticated}">
+                            <TextBlock Text="Signed in to GitHub Copilot" FontWeight="SemiBold" FontSize="11" />
+                            <TextBlock Text="{Binding AccountStatusText, FallbackValue={x:Null}}" FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        </StackPanel>
+
+                        <TextBlock Text="Not signed in to GitHub Copilot" FontWeight="SemiBold" FontSize="11"
+                                   IsVisible="{Binding !IsAuthenticated}" />
+
+                        <TextBlock
+                            Text="This login is provided outside of OneWare and cannot be removed here."
+                            FontSize="11" TextWrapping="Wrap"
+                            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                            IsVisible="{Binding !CanSignOut}" />
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                IsVisible="{Binding !IsAuthenticated}"
+                                Command="{Binding SignInCommand}"
+                                CommandParameter="{Binding $self}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Image Source="{DynamicResource Bootstrap.Github}" Width="12" Height="12" />
+                                <TextBlock Text="Sign in with GitHub" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                IsVisible="{Binding CanSignOut}"
+                                Command="{Binding SignOutCommand}"
+                                CommandParameter="{Binding $self}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Image Source="{DynamicResource BoxIcons.RegularLogOutCircle}" Width="12" Height="12" />
+                                <TextBlock Text="Sign out" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Spacing="1" IsVisible="{Binding IsByok}">
+                        <TextBlock Text="Custom model provider" FontWeight="SemiBold" FontSize="11" />
                         <TextBlock Text="{Binding AccountStatusText, FallbackValue={x:Null}}" FontSize="11"
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     </StackPanel>
-
-                    <TextBlock Text="Not signed in to GitHub Copilot" FontWeight="SemiBold" FontSize="11"
-                               IsVisible="{Binding !IsAuthenticated}" />
-
-                    <TextBlock
-                        Text="This login is provided outside of OneWare and cannot be removed here."
-                        FontSize="11" TextWrapping="Wrap"
-                        Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                        IsVisible="{Binding !CanSignOut}" />
-
-                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            IsVisible="{Binding !IsAuthenticated}"
-                            Command="{Binding SignInCommand}"
-                            CommandParameter="{Binding $self}">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Image Source="{DynamicResource Bootstrap.Github}" Width="12" Height="12" />
-                            <TextBlock Text="Sign in with GitHub" FontSize="11" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            IsVisible="{Binding CanSignOut}"
-                            Command="{Binding SignOutCommand}"
-                            CommandParameter="{Binding $self}">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Image Source="{DynamicResource BoxIcons.RegularLogOutCircle}" Width="12" Height="12" />
-                            <TextBlock Text="Sign out" FontSize="11" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
                 </StackPanel>
             </Flyout>
         </Button.Flyout>
