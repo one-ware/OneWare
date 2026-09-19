@@ -27,6 +27,8 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotByokSelectedModelSettingKey = "AI_Chat_Copilot_BYOK_SelectedModel";
     public const string CopilotOneWareCloudOrganizationSettingKey =
         "AI_Chat_Copilot_OneWareCloud_Organization";
+    public const string CopilotOneWareCloudSelectedModelSettingKey =
+        "AI_Chat_Copilot_OneWareCloud_SelectedModel";
 
     public const string ProviderGitHubCopilot = "GitHub Copilot";
     public const string ProviderOneWareCloud = "OneWare Cloud";
@@ -180,6 +182,7 @@ public class CopilotModule : OneWareModuleBase
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddTransient<CopilotChatService>();
+        services.AddTransient<OneWareCloudChatService>();
     }
 
     public override IReadOnlyCollection<string> Dependencies =>
@@ -194,13 +197,15 @@ public class CopilotModule : OneWareModuleBase
         var settingsService = serviceProvider.Resolve<ISettingsService>();
 
         settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotProviderSettingKey,
-            new ComboBoxSetting("Model Provider", ProviderOneWareCloud,
-                [ProviderOneWareCloud, ProviderGitHubCopilot, ProviderOpenAiCompatible, ProviderAnthropic])
+            new ComboBoxSetting("Model Provider", ProviderGitHubCopilot,
+                [ProviderGitHubCopilot, ProviderOpenAiCompatible, ProviderAnthropic])
             {
                 HoverDescription =
-                    "OneWare Cloud uses your signed-in cloud account and consumes plan credits. GitHub Copilot " +
-                    "uses your Copilot account. BYOK connects directly to the configured provider."
+                    "GitHub Copilot uses your Copilot account. BYOK connects directly to the configured provider. " +
+                    "OneWare Cloud is available as a separate chat service."
             });
+        if (settingsService.GetSettingValue<string>(CopilotProviderSettingKey) == ProviderOneWareCloud)
+            settingsService.SetSettingValue(CopilotProviderSettingKey, ProviderGitHubCopilot);
 
         var byokVisible = settingsService.GetSettingObservable<string>(CopilotProviderSettingKey)
             .Select(provider => provider is ProviderOpenAiCompatible or ProviderAnthropic);
@@ -313,10 +318,13 @@ public class CopilotModule : OneWareModuleBase
         settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);
         settingsService.Register(CopilotByokSelectedModelSettingKey, "");
         settingsService.Register(CopilotOneWareCloudOrganizationSettingKey, "");
+        settingsService.Register(CopilotOneWareCloudSelectedModelSettingKey, "");
 
         settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");
 
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
+        serviceProvider.Resolve<IChatManagerService>()
+            .RegisterChatService(serviceProvider.Resolve<OneWareCloudChatService>());
     }
 }

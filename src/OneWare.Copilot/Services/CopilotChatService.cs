@@ -18,6 +18,8 @@ using GitHub.Copilot;
 using GitHub.Copilot.Rpc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using OneWare.CloudIntegration.ViewModels;
+using OneWare.CloudIntegration.Views;
 using OneWare.Copilot.ViewModels;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Enums;
@@ -37,7 +39,7 @@ public sealed record ContextSizeOption(string Label, string Tier, long Tokens)
     public override string ToString() => Label;
 }
 
-public sealed class CopilotChatService(
+public abstract class CopilotChatServiceBase(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
     IPackageService packageService,
@@ -46,7 +48,8 @@ public sealed class CopilotChatService(
     IMainDockService mainDockService,
     IPaths paths,
     IChatAgentService agentService,
-    IOneWareCloudAccess? cloudAccess = null)
+    IOneWareCloudAccess? cloudAccess,
+    bool isOneWareCloudService)
     : ObservableObject, IChatServiceWithSessions
 {
     private CopilotClient? _client;
@@ -192,11 +195,7 @@ public sealed class CopilotChatService(
         }
     }
 
-    public bool IsOneWareCloud
-    {
-        get;
-        private set => SetProperty(ref field, value);
-    }
+    public bool IsOneWareCloud { get; } = isOneWareCloudService;
 
     public string? ModelSearchText
     {
@@ -254,9 +253,11 @@ public sealed class CopilotChatService(
         return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
     }
 
-    private string GetSelectedModelSettingKey() => _byokConfiguration == null
-        ? CopilotModule.CopilotSelectedModelSettingKey
-        : CopilotModule.CopilotByokSelectedModelSettingKey;
+    private string GetSelectedModelSettingKey() => IsOneWareCloud
+        ? CopilotModule.CopilotOneWareCloudSelectedModelSettingKey
+        : _byokConfiguration == null
+            ? CopilotModule.CopilotSelectedModelSettingKey
+            : CopilotModule.CopilotByokSelectedModelSettingKey;
 
     public ModelInfo? SelectedModel
     {
@@ -639,7 +640,7 @@ public sealed class CopilotChatService(
         });
     }
 
-    public string Name { get; } = "Copilot";
+    public string Name { get; } = isOneWareCloudService ? "OneWare Cloud" : "Copilot";
 
     public bool UsesGitHubAuthentication
     {
@@ -649,9 +650,9 @@ public sealed class CopilotChatService(
             if (!SetProperty(ref field, value)) return;
             OnPropertyChanged(nameof(IsByok));
         }
-    } = true;
+    } = !isOneWareCloudService;
 
-    public bool IsByok => !UsesGitHubAuthentication;
+    public bool IsByok => !UsesGitHubAuthentication && !IsOneWareCloud;
 
     public string? CurrentSessionId
     {
@@ -763,11 +764,20 @@ public sealed class CopilotChatService(
     private void ApplyByokStatus(ByokConfiguration configuration)
     {
         UsesGitHubAuthentication = false;
-        IsAuthenticated = false;
         AccountLogin = null;
-        AccountAuthType = "byok";
         CanSignOut = false;
-        AccountStatusText = $"{configuration.DisplayName} · {configuration.BaseUrl}";
+        if (configuration.UsesOneWareCloud)
+        {
+            IsAuthenticated = true;
+            AccountAuthType = "oneware-cloud";
+            AccountStatusText = "Signed in to OneWare Cloud";
+        }
+        else
+        {
+            IsAuthenticated = false;
+            AccountAuthType = "byok";
+            AccountStatusText = $"{configuration.DisplayName} · {configuration.BaseUrl}";
+        }
     }
 
     private void ApplyGitHubProviderStatus()
@@ -793,7 +803,37 @@ public sealed class CopilotChatService(
     {
         if (IsAuthenticated) return;
 
+        if (IsOneWareCloud)
+        {
+            await AuthenticateOneWareCloudAsync(owner);
+            return;
+        }
+
         if (await AuthenticateAsync(owner)) await InitializeAsync();
+    }
+
+    private async Task AuthenticateOneWareCloudAsync(Control? owner)
+    {
+        var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
+        await windowService.ShowDialogAsync(new AuthenticateCloudView
+        {
+            DataContext = ContainerLocator.Container.Resolve<AuthenticateCloudViewModel>()
+        }, ownerWindow);
+
+        try
+        {
+            await cloudAccess!.GetAccessTokenAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
+                "OneWare Cloud authentication did not complete.");
+            return;
+        }
+
+        _requestedSessionId ??= CurrentSessionId;
+        SessionReset?.Invoke(this, EventArgs.Empty);
+        await InitializeAsync();
     }
 
     private async Task SignOutAsync(Control? owner)
@@ -1097,11 +1137,11 @@ public sealed class CopilotChatService(
 
     private async Task<bool> AuthenticateAsync(Control? owner)
     {
-        if (GetByokConfiguration() != null) return true;
-        if (_client == null) return false;
-
         try
         {
+            if (GetByokConfiguration() != null) return true;
+            if (_client == null) return false;
+
             bool isAuthenticated;
             try
             {
@@ -1167,10 +1207,12 @@ public sealed class CopilotChatService(
         {
             await DisposeAsync();
 
-            IsOneWareCloud = settingsService.GetSettingValue<string>(
-                CopilotModule.CopilotProviderSettingKey) == CopilotModule.ProviderOneWareCloud;
             if (IsOneWareCloud)
+            {
+                if (!await EnsureOneWareCloudAuthenticationAsync())
+                    return false;
                 await RefreshOrganizationsAsync();
+            }
 
             _byokConfiguration = GetByokConfiguration();
             if (_byokConfiguration == null)
@@ -1290,7 +1332,7 @@ public sealed class CopilotChatService(
         ApplicationName = paths.AppName,
         ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(),
         IntegrationName = "OneWare.Copilot",
-        IntegrationVersion = typeof(CopilotChatService).Assembly.GetName().Version?.ToString()
+        IntegrationVersion = typeof(CopilotChatServiceBase).Assembly.GetName().Version?.ToString()
     };
 
     private sealed record ByokConfiguration(
@@ -1337,12 +1379,31 @@ public sealed class CopilotChatService(
             CopilotModule.CopilotOneWareCloudOrganizationSettingKey, selected.Id.ToString());
     }
 
+    private async Task<bool> EnsureOneWareCloudAuthenticationAsync()
+    {
+        if (cloudAccess is null)
+            throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
+
+        try
+        {
+            await cloudAccess.GetAccessTokenAsync();
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            ApplyAuthStatus(null);
+            UsesGitHubAuthentication = false;
+            StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
+            EventReceived?.Invoke(this, new ChatButtonEvent(
+                "Not authenticated to OneWare Cloud.", "Login to OneWare Cloud",
+                new AsyncRelayCommand<Control?>(AuthenticateOneWareCloudAsync)));
+            return false;
+        }
+    }
+
     private ByokConfiguration? GetByokConfiguration()
     {
-        var provider = settingsService.GetSettingValue<string>(CopilotModule.CopilotProviderSettingKey);
-        if (provider == CopilotModule.ProviderGitHubCopilot) return null;
-
-        if (provider == CopilotModule.ProviderOneWareCloud)
+        if (IsOneWareCloud)
         {
             if (cloudAccess is null)
                 throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
@@ -1351,7 +1412,7 @@ public sealed class CopilotChatService(
                 throw new InvalidOperationException("The OneWare Cloud URL is invalid.");
 
             return new ByokConfiguration(
-                provider,
+                CopilotModule.ProviderOneWareCloud,
                 "openai",
                 $"{cloudAccess.BaseUrl.TrimEnd('/')}/api/copilot/v1",
                 string.Empty,
@@ -1362,6 +1423,9 @@ public sealed class CopilotChatService(
                 ?? throw new InvalidOperationException(
                     "Select the organization that should be billed for this Cloud AI session."));
         }
+
+        var provider = settingsService.GetSettingValue<string>(CopilotModule.CopilotProviderSettingKey);
+        if (provider == CopilotModule.ProviderGitHubCopilot) return null;
 
         var configuredEndpoint =
             settingsService.GetSettingValue<string>(CopilotModule.CopilotByokEndpointSettingKey).Trim();
