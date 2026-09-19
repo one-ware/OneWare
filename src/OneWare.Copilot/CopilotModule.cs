@@ -1,5 +1,6 @@
 using System.Reactive.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.CloudIntegration;
 using OneWare.Copilot.Services;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Helpers;
@@ -24,6 +25,8 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotByokModelSettingKey = "AI_Chat_Copilot_BYOK_Model";
     public const string CopilotByokWireApiSettingKey = "AI_Chat_Copilot_BYOK_WireApi";
     public const string CopilotByokSelectedModelSettingKey = "AI_Chat_Copilot_BYOK_SelectedModel";
+    public const string CopilotOneWareCloudOrganizationSettingKey =
+        "AI_Chat_Copilot_OneWareCloud_Organization";
 
     public const string ProviderGitHubCopilot = "GitHub Copilot";
     public const string ProviderOneWareCloud = "OneWare Cloud";
@@ -179,6 +182,11 @@ public class CopilotModule : OneWareModuleBase
         services.AddTransient<CopilotChatService>();
     }
 
+    public override IReadOnlyCollection<string> Dependencies =>
+    [
+        nameof(OneWareCloudIntegrationModule),
+    ];
+
     public override void Initialize(IServiceProvider serviceProvider)
     {
         serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
@@ -304,6 +312,7 @@ public class CopilotModule : OneWareModuleBase
 
         settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);
         settingsService.Register(CopilotByokSelectedModelSettingKey, "");
+        settingsService.Register(CopilotOneWareCloudOrganizationSettingKey, "");
 
         settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");
 

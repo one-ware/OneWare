@@ -8,5 +8,4 @@ public class CurrentUserDto
 
     public required bool IsProfileComplete { get; set; }
 
-    public required UserPlanDto UserPlan { get; set; }
 }

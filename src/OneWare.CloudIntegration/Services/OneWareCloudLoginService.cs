@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
@@ -80,11 +81,31 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         return token.RawData;
     }
 
+    public async Task<IReadOnlyList<OneWareCloudOrganization>> GetOrganizationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var token = await GetAccessTokenAsync(cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"{BaseUrl}/api/organizations");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var response = await _httpService.HttpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var organizations = await JsonSerializer.DeserializeAsync<List<CloudOrganizationResponse>>(
+            content, JsonSerializerOptions.Web, cancellationToken) ?? [];
+        return organizations
+            .Select(x => new OneWareCloudOrganization(x.Id, x.Name))
+            .ToArray();
+    }
+
     public RestClient GetRestClient()
     {
         var baseUrl = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
         return new RestClient(_httpService.HttpClient, new RestClientOptions(baseUrl));
     }
+
+    private sealed record CloudOrganizationResponse(Guid Id, string Name);
 
     public Task<(JwtSecurityToken? token, HttpStatusCode status)> GetLoggedInJwtTokenAsync()
     {

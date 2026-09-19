@@ -168,6 +168,36 @@ public sealed class CopilotChatService(
 
     public ObservableCollection<ModelInfo> FilteredModels { get; } = [];
 
+    public ObservableCollection<OneWareCloudOrganization> Organizations { get; } = [];
+
+    private OneWareCloudOrganization? _selectedOrganization;
+
+    public OneWareCloudOrganization? SelectedOrganization
+    {
+        get => _selectedOrganization;
+        set
+        {
+            if (!SetProperty(ref _selectedOrganization, value))
+                return;
+
+            settingsService.SetSettingValue(
+                CopilotModule.CopilotOneWareCloudOrganizationSettingKey,
+                value?.Id.ToString() ?? string.Empty);
+            if (!IsOneWareCloud)
+                return;
+
+            _requestedSessionId = null;
+            SessionReset?.Invoke(this, EventArgs.Empty);
+            _ = InitializeAsync();
+        }
+    }
+
+    public bool IsOneWareCloud
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
     public string? ModelSearchText
     {
         get;
@@ -1137,6 +1167,11 @@ public sealed class CopilotChatService(
         {
             await DisposeAsync();
 
+            IsOneWareCloud = settingsService.GetSettingValue<string>(
+                CopilotModule.CopilotProviderSettingKey) == CopilotModule.ProviderOneWareCloud;
+            if (IsOneWareCloud)
+                await RefreshOrganizationsAsync();
+
             _byokConfiguration = GetByokConfiguration();
             if (_byokConfiguration == null)
                 ApplyGitHubProviderStatus();
@@ -1265,7 +1300,42 @@ public sealed class CopilotChatService(
         string ApiKeyEnvironmentVariable,
         string ModelOverride,
         string WireApi,
-        bool UsesOneWareCloud = false);
+        bool UsesOneWareCloud = false,
+        Guid? OrganizationId = null);
+
+    private async Task RefreshOrganizationsAsync()
+    {
+        if (cloudAccess is null)
+            throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
+
+        var organizations = await cloudAccess.GetOrganizationsAsync();
+        Organizations.Clear();
+        Organizations.AddRange(organizations);
+
+        var stored = settingsService.GetSettingValue<string>(
+            CopilotModule.CopilotOneWareCloudOrganizationSettingKey);
+        var selected = Guid.TryParse(stored, out var selectedId)
+            ? Organizations.FirstOrDefault(x => x.Id == selectedId)
+            : null;
+        selected ??= Organizations.Count == 1 ? Organizations[0] : null;
+
+        if (selected is null)
+        {
+            settingsService.SetSettingValue(
+                CopilotModule.CopilotOneWareCloudOrganizationSettingKey, string.Empty);
+            _selectedOrganization = null;
+            OnPropertyChanged(nameof(SelectedOrganization));
+            throw new InvalidOperationException(
+                Organizations.Count == 0
+                    ? "Create an organization in OneWare Cloud before starting a Cloud AI session."
+                    : "Select the organization that should be billed for this Cloud AI session.");
+        }
+
+        _selectedOrganization = selected;
+        OnPropertyChanged(nameof(SelectedOrganization));
+        settingsService.SetSettingValue(
+            CopilotModule.CopilotOneWareCloudOrganizationSettingKey, selected.Id.ToString());
+    }
 
     private ByokConfiguration? GetByokConfiguration()
     {
@@ -1287,7 +1357,10 @@ public sealed class CopilotChatService(
                 string.Empty,
                 string.Empty,
                 CopilotModule.WireApiResponses,
-                true);
+                true,
+                SelectedOrganization?.Id
+                ?? throw new InvalidOperationException(
+                    "Select the organization that should be billed for this Cloud AI session."));
         }
 
         var configuredEndpoint =
@@ -1327,7 +1400,14 @@ public sealed class CopilotChatService(
         };
 
         if (_byokConfiguration.UsesOneWareCloud)
+        {
             provider.BearerTokenProvider = _ => cloudAccess!.GetAccessTokenAsync();
+            provider.Headers = new Dictionary<string, string>
+            {
+                ["X-OneWare-Organization-Id"] =
+                    _byokConfiguration.OrganizationId!.Value.ToString()
+            };
+        }
 
         if (_byokConfiguration.Type == "openai")
             provider.WireApi = _byokConfiguration.WireApi;
@@ -1349,7 +1429,8 @@ public sealed class CopilotChatService(
 
     private string GetByokDataDirectory(ByokConfiguration configuration)
     {
-        var identity = Encoding.UTF8.GetBytes($"{configuration.Type}\n{configuration.BaseUrl}");
+        var identity = Encoding.UTF8.GetBytes(
+            $"{configuration.Type}\n{configuration.BaseUrl}\n{configuration.OrganizationId}");
         var providerHash = Convert.ToHexString(SHA256.HashData(identity))[..16].ToLowerInvariant();
         var directory = Path.Combine(paths.AppDataDirectory, "Copilot", "BYOK", providerHash);
         Directory.CreateDirectory(directory);
@@ -1374,6 +1455,8 @@ public sealed class CopilotChatService(
             request.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
                     "Bearer", await cloudAccess!.GetAccessTokenAsync(cancellationToken));
+            request.Headers.TryAddWithoutValidation(
+                "X-OneWare-Organization-Id", configuration.OrganizationId!.Value.ToString());
         }
         else if (!string.IsNullOrWhiteSpace(apiKey))
         {
