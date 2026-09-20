@@ -52,6 +52,7 @@ public abstract class CopilotChatServiceBase(
     bool isOneWareCloudService)
     : ObservableObject, IChatServiceWithSessions
 {
+    private const string IdempotencyHeader = "Idempotency-Key";
     private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
     private CopilotSession? _session;
@@ -178,21 +179,7 @@ public abstract class CopilotChatServiceBase(
     public OneWareCloudOrganization? SelectedOrganization
     {
         get => _selectedOrganization;
-        set
-        {
-            if (!SetProperty(ref _selectedOrganization, value))
-                return;
-
-            settingsService.SetSettingValue(
-                CopilotModule.CopilotOneWareCloudOrganizationSettingKey,
-                value?.Id.ToString() ?? string.Empty);
-            if (!IsOneWareCloud)
-                return;
-
-            _requestedSessionId = null;
-            SessionReset?.Invoke(this, EventArgs.Empty);
-            _ = InitializeAsync();
-        }
+        private set => SetProperty(ref _selectedOrganization, value);
     }
 
     public bool IsOneWareCloud { get; } = isOneWareCloudService;
@@ -1354,29 +1341,22 @@ public abstract class CopilotChatServiceBase(
         Organizations.Clear();
         Organizations.AddRange(organizations);
 
-        var stored = settingsService.GetSettingValue<string>(
-            CopilotModule.CopilotOneWareCloudOrganizationSettingKey);
-        var selected = Guid.TryParse(stored, out var selectedId)
+        var defaultOrganizationId = await cloudAccess.GetDefaultOrganizationIdAsync();
+        var selected = defaultOrganizationId is { } selectedId
             ? Organizations.FirstOrDefault(x => x.Id == selectedId)
             : null;
         selected ??= Organizations.Count == 1 ? Organizations[0] : null;
 
         if (selected is null)
         {
-            settingsService.SetSettingValue(
-                CopilotModule.CopilotOneWareCloudOrganizationSettingKey, string.Empty);
-            _selectedOrganization = null;
-            OnPropertyChanged(nameof(SelectedOrganization));
+            SelectedOrganization = null;
             throw new InvalidOperationException(
                 Organizations.Count == 0
                     ? "Create an organization in OneWare Cloud before starting a Cloud AI session."
-                    : "Select the organization that should be billed for this Cloud AI session.");
+                    : "Choose a default organization in OneWare Cloud account settings before starting a Cloud AI session.");
         }
 
-        _selectedOrganization = selected;
-        OnPropertyChanged(nameof(SelectedOrganization));
-        settingsService.SetSettingValue(
-            CopilotModule.CopilotOneWareCloudOrganizationSettingKey, selected.Id.ToString());
+        SelectedOrganization = selected;
     }
 
     private async Task<bool> EnsureOneWareCloudAuthenticationAsync()
@@ -1539,10 +1519,17 @@ public abstract class CopilotChatServiceBase(
         using var response = await ByokHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
         if (!response.IsSuccessStatusCode)
+        {
+            var providerMessage = configuration.UsesOneWareCloud
+                ? await ReadProviderErrorMessageAsync(response, cancellationToken)
+                : null;
             throw new InvalidOperationException(
                 $"Could not list models from {configuration.DisplayName}: " +
-                $"{(int)response.StatusCode} {response.ReasonPhrase}. Configure a Model Override if this endpoint " +
-                "does not support model discovery.");
+                $"{(int)response.StatusCode} {response.ReasonPhrase}." +
+                (string.IsNullOrWhiteSpace(providerMessage)
+                    ? " Configure a Model Override if this endpoint does not support model discovery."
+                    : $" {providerMessage}"));
+        }
 
         await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var document = await JsonDocument.ParseAsync(content, cancellationToken: cancellationToken);
@@ -1573,6 +1560,25 @@ public abstract class CopilotChatServiceBase(
             .DistinctBy(model => model.Id, StringComparer.OrdinalIgnoreCase)
             .OrderBy(model => model.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    private static async Task<string?> ReadProviderErrorMessageAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            return document.RootElement.TryGetProperty("error", out var error) &&
+                   error.TryGetProperty("message", out var message)
+                ? message.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static ModelInfo CreateByokModel(string id, string name) => new()
@@ -1878,6 +1884,13 @@ public abstract class CopilotChatServiceBase(
                 _ => null
             }
         };
+        if (IsOneWareCloud)
+        {
+            options.RequestHeaders = new Dictionary<string, string>
+            {
+                [IdempotencyHeader] = Guid.NewGuid().ToString("N")
+            };
+        }
 
         // The instructions are only for the model; the timeline keeps showing what the user wrote.
         if (!string.Equals(options.Prompt, prompt, StringComparison.Ordinal)) options.DisplayPrompt = prompt;

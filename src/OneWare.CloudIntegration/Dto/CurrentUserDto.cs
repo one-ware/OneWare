@@ -6,6 +6,8 @@ public class CurrentUserDto
 
     public string? AvatarUrl { get; set; }
 
+    public Guid? DefaultOrganizationId { get; set; }
+
     public required bool IsProfileComplete { get; set; }
 
 }

@@ -71,15 +71,16 @@
                         </Button>
                         <StackPanel Spacing="4" IsVisible="{Binding IsAuthenticated}">
                             <TextBlock Text="Billing organization" FontWeight="SemiBold" FontSize="11" />
-                            <ComboBox ItemsSource="{Binding Organizations}"
-                                      SelectedItem="{Binding SelectedOrganization, Mode=TwoWay}"
-                                      HorizontalAlignment="Stretch">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+                            <Border Padding="8,6"
+                                    CornerRadius="4"
+                                    Background="{DynamicResource ThemeBackgroundLowBrush}">
+                                <TextBlock Text="{Binding SelectedOrganization.Name, FallbackValue='Set in OneWare Cloud'}"
+                                           FontSize="11" />
+                            </Border>
+                            <TextBlock Text="Change this in OneWare Cloud account settings."
+                                       FontSize="10"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>

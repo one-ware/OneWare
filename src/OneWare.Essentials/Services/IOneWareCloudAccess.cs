@@ -8,6 +8,8 @@ public interface IOneWareCloudAccess
 
     Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default);
 
+    Task<Guid?> GetDefaultOrganizationIdAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<OneWareCloudOrganization>> GetOrganizationsAsync(
         CancellationToken cancellationToken = default);
 }

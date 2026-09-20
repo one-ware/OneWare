@@ -25,8 +25,6 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotByokModelSettingKey = "AI_Chat_Copilot_BYOK_Model";
     public const string CopilotByokWireApiSettingKey = "AI_Chat_Copilot_BYOK_WireApi";
     public const string CopilotByokSelectedModelSettingKey = "AI_Chat_Copilot_BYOK_SelectedModel";
-    public const string CopilotOneWareCloudOrganizationSettingKey =
-        "AI_Chat_Copilot_OneWareCloud_Organization";
     public const string CopilotOneWareCloudSelectedModelSettingKey =
         "AI_Chat_Copilot_OneWareCloud_SelectedModel";
 
@@ -317,7 +315,6 @@ public class CopilotModule : OneWareModuleBase
 
         settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);
         settingsService.Register(CopilotByokSelectedModelSettingKey, "");
-        settingsService.Register(CopilotOneWareCloudOrganizationSettingKey, "");
         settingsService.Register(CopilotOneWareCloudSelectedModelSettingKey, "");
 
         settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");

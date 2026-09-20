@@ -13,6 +13,7 @@ using System.Web;
 using Avalonia.Threading;
 using GitCredentialManager;
 using Microsoft.Extensions.Logging;
+using OneWare.CloudIntegration.Dto;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -97,6 +98,22 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         return organizations
             .Select(x => new OneWareCloudOrganization(x.Id, x.Name))
             .ToArray();
+    }
+
+    public async Task<Guid?> GetDefaultOrganizationIdAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var token = await GetAccessTokenAsync(cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"{BaseUrl}/api/users/current");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var response = await _httpService.HttpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var currentUser = await JsonSerializer.DeserializeAsync<CurrentUserDto>(
+            content, JsonSerializerOptions.Web, cancellationToken);
+        return currentUser?.DefaultOrganizationId;
     }
 
     public RestClient GetRestClient()
