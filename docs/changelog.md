@@ -1,3 +1,20 @@
+## 1.0.32
+
+- Added AI planning mode that proposes a plan for review before making changes
+- Added AI sub agents, including their own chat messages and progress display
+- Added /remote command to toggle a remote Copilot session
+- Added Python Pyrefly language server with automatic installation and workspace interpreter selection
+- Added Python indentation support
+- Reworked the Package Manager UI with featured packages, faster list updates and better filtering
+- Improved Git support: safer commit, discard and sync workflows, more reliable refresh and staged diffs
+- Improved the diff comparison control
+- Added Copy Path to the Project Explorer and document tabs
+- Open documents are now shown in the Copilot attachments by default
+- Refreshed icons and UI styling
+- More reliable language server auto downloads
+- Updated ONNX Runtime to 1.28, OpenCvSharp and Avalonia to 11.3.22
+- Fixed a possible crash when showing a message box
+
 ## 1.0.31
 
 - Fix preventing plugin updates forcing a restart
