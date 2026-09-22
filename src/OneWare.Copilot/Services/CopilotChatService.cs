@@ -168,19 +168,12 @@ public abstract class CopilotChatServiceBase(
         @"<skill-context(?:\s+name=""(?<name>[^""]*)"")?[^>]*>(?<content>.*?)</skill-context>",
         RegexOptions.Singleline | RegexOptions.Compiled);
 
+    private static readonly Regex InsufficientCreditsStatusRegex = new(
+        @"\b402\b", RegexOptions.Compiled);
+
     public ObservableCollection<ModelInfo> Models { get; } = [];
 
     public ObservableCollection<ModelInfo> FilteredModels { get; } = [];
-
-    public ObservableCollection<OneWareCloudOrganization> Organizations { get; } = [];
-
-    private OneWareCloudOrganization? _selectedOrganization;
-
-    public OneWareCloudOrganization? SelectedOrganization
-    {
-        get => _selectedOrganization;
-        private set => SetProperty(ref _selectedOrganization, value);
-    }
 
     public bool IsOneWareCloud { get; } = isOneWareCloudService;
 
@@ -1198,7 +1191,6 @@ public abstract class CopilotChatServiceBase(
             {
                 if (!await EnsureOneWareCloudAuthenticationAsync())
                     return false;
-                await RefreshOrganizationsAsync();
             }
 
             _byokConfiguration = GetByokConfiguration();
@@ -1329,35 +1321,7 @@ public abstract class CopilotChatServiceBase(
         string ApiKeyEnvironmentVariable,
         string ModelOverride,
         string WireApi,
-        bool UsesOneWareCloud = false,
-        Guid? OrganizationId = null);
-
-    private async Task RefreshOrganizationsAsync()
-    {
-        if (cloudAccess is null)
-            throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
-
-        var organizations = await cloudAccess.GetOrganizationsAsync();
-        Organizations.Clear();
-        Organizations.AddRange(organizations);
-
-        var defaultOrganizationId = await cloudAccess.GetDefaultOrganizationIdAsync();
-        var selected = defaultOrganizationId is { } selectedId
-            ? Organizations.FirstOrDefault(x => x.Id == selectedId)
-            : null;
-        selected ??= Organizations.Count == 1 ? Organizations[0] : null;
-
-        if (selected is null)
-        {
-            SelectedOrganization = null;
-            throw new InvalidOperationException(
-                Organizations.Count == 0
-                    ? "Create an organization in OneWare Cloud before starting a Cloud AI session."
-                    : "Choose a default organization in OneWare Cloud account settings before starting a Cloud AI session.");
-        }
-
-        SelectedOrganization = selected;
-    }
+        bool UsesOneWareCloud = false);
 
     private async Task<bool> EnsureOneWareCloudAuthenticationAsync()
     {
@@ -1398,10 +1362,7 @@ public abstract class CopilotChatServiceBase(
                 string.Empty,
                 string.Empty,
                 CopilotModule.WireApiResponses,
-                true,
-                SelectedOrganization?.Id
-                ?? throw new InvalidOperationException(
-                    "Select the organization that should be billed for this Cloud AI session."));
+                true);
         }
 
         var provider = settingsService.GetSettingValue<string>(CopilotModule.CopilotProviderSettingKey);
@@ -1444,14 +1405,7 @@ public abstract class CopilotChatServiceBase(
         };
 
         if (_byokConfiguration.UsesOneWareCloud)
-        {
             provider.BearerTokenProvider = _ => cloudAccess!.GetAccessTokenAsync();
-            provider.Headers = new Dictionary<string, string>
-            {
-                ["X-OneWare-Organization-Id"] =
-                    _byokConfiguration.OrganizationId!.Value.ToString()
-            };
-        }
 
         if (_byokConfiguration.Type == "openai")
             provider.WireApi = _byokConfiguration.WireApi;
@@ -1474,7 +1428,7 @@ public abstract class CopilotChatServiceBase(
     private string GetByokDataDirectory(ByokConfiguration configuration)
     {
         var identity = Encoding.UTF8.GetBytes(
-            $"{configuration.Type}\n{configuration.BaseUrl}\n{configuration.OrganizationId}");
+            $"{configuration.Type}\n{configuration.BaseUrl}");
         var providerHash = Convert.ToHexString(SHA256.HashData(identity))[..16].ToLowerInvariant();
         var directory = Path.Combine(paths.AppDataDirectory, "Copilot", "BYOK", providerHash);
         Directory.CreateDirectory(directory);
@@ -1499,8 +1453,6 @@ public abstract class CopilotChatServiceBase(
             request.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
                     "Bearer", await cloudAccess!.GetAccessTokenAsync(cancellationToken));
-            request.Headers.TryAddWithoutValidation(
-                "X-OneWare-Organization-Id", configuration.OrganizationId!.Value.ToString());
         }
         else if (!string.IsNullOrWhiteSpace(apiKey))
         {
@@ -1560,6 +1512,15 @@ public abstract class CopilotChatServiceBase(
             .DistinctBy(model => model.Id, StringComparer.OrdinalIgnoreCase)
             .OrderBy(model => model.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    /// <summary>Detects the 402 the OneWare Cloud endpoint returns when the organization is out of credits.</summary>
+    private static bool IsInsufficientCreditsError(string? message)
+    {
+        return message is not null &&
+               (message.Contains("insufficient_credits", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("Payment Required", StringComparison.OrdinalIgnoreCase) ||
+                InsufficientCreditsStatusRegex.IsMatch(message));
     }
 
     private static async Task<string?> ReadProviderErrorMessageAsync(
@@ -2166,6 +2127,19 @@ public abstract class CopilotChatServiceBase(
                 break;
             }
             case SessionErrorEvent error:
+                if (IsOneWareCloud && IsInsufficientCreditsError(error.Data.Message))
+                {
+                    EventReceived?.Invoke(this, new ChatButtonEvent(
+                        "This organization does not have enough OneWare Cloud credits for this request.",
+                        "Add credits",
+                        new RelayCommand<Control?>(_ =>
+                            PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}/credits")))
+                    {
+                        AgentId = agentId
+                    });
+                    break;
+                }
+
                 EventReceived?.Invoke(this,
                     new ChatErrorEvent(error.Data.Message) { AgentId = agentId });
                 break;
