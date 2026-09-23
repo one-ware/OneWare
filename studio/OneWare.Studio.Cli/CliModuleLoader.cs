@@ -65,7 +65,19 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
         if (compatibility.IsCompatible)
             return true;
 
-        ReportIncompatiblePlugin(pluginPath, compatibility.Report);
+        var blockingIssues = compatibility.Issues
+            .Where(issue => issue.Kind != CompatibilityRecordKind.MissingDependency)
+            .ToArray();
+
+        if (blockingIssues.Length == 0)
+        {
+            cliHostBuilder.Logger.LogInformation(
+                "Loading CLI modules from '{PluginPath}' without unavailable GUI dependencies.",
+                pluginPath);
+            return true;
+        }
+
+        ReportIncompatiblePlugin(pluginPath, new CompatibilityReport(false, blockingIssues).Report);
         return false;
     }
 
