@@ -9,7 +9,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Web;
-using Avalonia.Threading;
 using GitCredentialManager;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
@@ -250,30 +249,27 @@ public sealed class OneWareCloudLoginService
 
         _jwtBearerTokenCache[userId] = jwtToken;
 
-        try
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Directory.CreateDirectory(_tokenPath);
-                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
+            Directory.CreateDirectory(_tokenPath);
+            var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
 
-                var plaintext = Encoding.UTF8.GetBytes(refreshToken);
-                var encrypted = ProtectedData.Protect(plaintext, null, DataProtectionScope.CurrentUser);
-                File.WriteAllBytes(tokenPath, encrypted);
-            }
-            else
-            {
-                var store = CredentialManager.Create("oneware");
-                store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, userId, refreshToken);
-            }
+            var plaintext = Encoding.UTF8.GetBytes(refreshToken);
+            var encrypted = ProtectedData.Protect(plaintext, null, DataProtectionScope.CurrentUser);
+            File.WriteAllBytes(tokenPath, encrypted);
         }
-        catch (Exception e)
+        else
         {
-            _logger.Error(e.Message, e);
+            var store = CredentialManager.Create("oneware");
+            store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, userId, refreshToken);
         }
 
         _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountUserIdKey, userId);
-        _settingService.Save(_paths.SettingsPath);
+        _settingService.SaveValues(_paths.SettingsPath,
+            new Dictionary<string, object?>
+            {
+                [OneWareCloudIntegrationModule.OneWareAccountUserIdKey] = userId
+            });
     }
 
     /// <summary>
@@ -461,8 +457,13 @@ public sealed class OneWareCloudLoginService
                     return false;
                 }
                 
-                await ExchangeCodeForTokensAsync(code1, authProviderBaseUrl, redirectUri,
-                    persistTokens: false, clientIdOverride: "Empty");
+                if (!await ExchangeCodeForTokensAsync(code1, authProviderBaseUrl, redirectUri,
+                        persistTokens: false, clientIdOverride: "Empty"))
+                {
+                    step1Response.StatusCode = 500;
+                    step1Response.Close();
+                    return false;
+                }
 
                 _offlineCodeVerifier = GenerateCodeVerifier();
                 string offlineCodeChallenge = GenerateCodeChallenge(_offlineCodeVerifier);
@@ -509,8 +510,13 @@ public sealed class OneWareCloudLoginService
                     return false;
                 }
 
-                await ExchangeCodeForTokensAsync(code2, authProviderBaseUrl, redirectUri,
-                    persistTokens: true, codeVerifierOverride: _offlineCodeVerifier);
+                if (!await ExchangeCodeForTokensAsync(code2, authProviderBaseUrl, redirectUri,
+                        persistTokens: true, codeVerifierOverride: _offlineCodeVerifier))
+                {
+                    step2Response.StatusCode = 500;
+                    step2Response.Close();
+                    return false;
+                }
 
                 var cloudHost = _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
                     .TrimEnd('/');
@@ -550,7 +556,7 @@ public sealed class OneWareCloudLoginService
         return startNewListener;
     }
 
-    private async Task ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri,
+    private async Task<bool> ExchangeCodeForTokensAsync(string code, string authProviderBaseUrl, string redirectUri,
         bool persistTokens = true, string? codeVerifierOverride = null, string? clientIdOverride = null)
     {
         try
@@ -579,7 +585,7 @@ public sealed class OneWareCloudLoginService
                 if (string.IsNullOrWhiteSpace(accessToken))
                 {
                     _logger.Error("Access token not found in response");
-                    return;
+                    return false;
                 }
 
                 if (persistTokens)
@@ -587,14 +593,10 @@ public sealed class OneWareCloudLoginService
                     if (string.IsNullOrWhiteSpace(refreshToken))
                     {
                         _logger.Error("Refresh token not found in step-2 response");
-                        return;
+                        return false;
                     }
 
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        SaveCredentials(accessToken, refreshToken);
-                        _settingService.Save(_paths.SettingsPath);
-                    });
+                    SaveCredentials(accessToken, refreshToken);
                 }
                 else
                 {
@@ -603,15 +605,17 @@ public sealed class OneWareCloudLoginService
                     if (userId != null)
                         _jwtBearerTokenCache[userId] = jwtToken;
                 }
+
+                return true;
             }
-            else
-            {
-                _logger.Error($"Failed to exchange code for tokens: {response.StatusCode} - {SanitizeForLog(response.Content)}");
-            }
+
+            _logger.Error($"Failed to exchange code for tokens: {response.StatusCode} - {SanitizeForLog(response.Content)}");
+            return false;
         }
         catch (Exception e)
         {
             _logger.Error(e.Message, e);
+            return false;
         }
     }
 

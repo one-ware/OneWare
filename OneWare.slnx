@@ -126,6 +126,7 @@
   </Folder>
   <Folder Name="/Studio/">
     <Project Path="studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj" />
+    <Project Path="studio/OneWare.Studio.Cli/OneWare.Studio.Cli.csproj" />
     <Project Path="studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj" />
     <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj" />
   </Folder>

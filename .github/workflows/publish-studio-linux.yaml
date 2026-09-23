@@ -37,6 +37,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Publish
         run: dotnet publish ./studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -c Release -r ${{ matrix.arch }} -o ./out
+      - name: Mark launchers executable
+        run: chmod +x ./out/oneware ./out/oneware-studio
       - name: Compress
         uses: a7ul/tar-action@v1.2.0
         id: compress

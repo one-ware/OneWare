@@ -11,12 +11,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Dialogs;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Dock.Settings;
 using Microsoft.Extensions.Logging;
+using OneWare.CloudIntegration;
+using OneWare.CloudIntegration.Services;
 using OneWare.Core.Data;
+using OneWare.Core.Services;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -224,6 +228,30 @@ internal abstract class Program
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}");
 
+            if (target == "shutdown")
+            {
+                logger?.Log("Shutting down via IPC request");
+
+                if (ContainerLocator.Container?.Resolve<IApplicationStateService>() is { } applicationStateService)
+                    _ = applicationStateService.TryShutdownAsync();
+                else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
+                    desktopApp.Shutdown();
+
+                return;
+            }
+
+            if (target == OneWareCloudIntegrationModule.LogoutIpcMessage)
+            {
+                var settingsService = ContainerLocator.Container?.Resolve<ISettingsService>();
+                var userId = settingsService?.GetSettingValue<string>(
+                    OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
+
+                if (!string.IsNullOrWhiteSpace(userId))
+                    ContainerLocator.Container?.Resolve<OneWareCloudLoginService>().Logout(userId);
+
+                return;
+            }
+
             var mainWindow = ContainerLocator.Container?.Resolve<MainWindow>();
             if (mainWindow != null)
             {
@@ -267,91 +295,12 @@ internal abstract class Program
     {
         try
         {
-            Option<string> dirOption = new("--oneware-dir")
-                { Description = "Path to documents directory for OneWare Studio. (optional)" };
-            Option<string> projectsDirOption = new("--oneware-projects-dir")
-                { Description = "Path to default projects directory for OneWare Studio. (optional)" };
-            Option<string> appdataDirOption = new("--oneware-appdata-dir")
-                { Description = "Path to application data directory for OneWare Studio. (optional)" };
-            Option<string> moduleOption = new("--modules")
-                { Description = "Adds plugin to OneWare Studio during initialization. (optional)" };
-            Option<string> autoLaunchOption = new("--autolaunch")
-            {
-                Description =
-                    "Auto launches a specific action after OneWare Studio is loaded. Can be used by plugins (optional)"
-            };
-            Option<string> packageRepositoryOption = new("--package-repository")
-            {
-                Description =
-                    "Overrides the package repository URL(s) used by OneWare Studio. Separate multiple URLs with ';'. (optional)"
-            };
-            Option<string> configurationProfileOption = new("--configuration-profile")
-            {
-                Description =
-                    "Applies a configuration profile (settings, packages, package sources) at startup. Accepts a file path or an http(s) URL. (optional)"
-            };
-            Argument<string?> openArgument = new("open")
-            {
-                Description = "File/Folder path or oneware:// URI to open",
-                DefaultValueFactory = x => null
-            };
-
-            RootCommand rootCommand = new()
-            {
-                Options =
-                {
-                    dirOption,
-                    appdataDirOption,
-                    projectsDirOption,
-                    moduleOption,
-                    autoLaunchOption,
-                    packageRepositoryOption,
-                    configurationProfileOption
-                },
-                Arguments =
-                {
-                    openArgument
-                }
-            };
+            var startupSymbols = OneWareStartupCommandLine.CreateSymbols();
+            var rootCommand = OneWareStartupCommandLine.CreateRootCommand(startupSymbols);
 
             rootCommand.SetAction(parseResult =>
             {
-                var dirValue = parseResult.GetValue(dirOption);
-                if (!string.IsNullOrEmpty(dirValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_DIR", Path.GetFullPath(dirValue));
-
-                var projectsDirValue = parseResult.GetValue(projectsDirOption);
-                if (!string.IsNullOrEmpty(projectsDirValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_PROJECTS_DIR", Path.GetFullPath(projectsDirValue));
-
-                var appdataDirValue = parseResult.GetValue(appdataDirOption);
-                if (!string.IsNullOrEmpty(appdataDirValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_APPDATA_DIR", Path.GetFullPath(appdataDirValue));
-
-                var moduleValue = parseResult.GetValue(moduleOption);
-                if (!string.IsNullOrEmpty(moduleValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_MODULES", moduleValue);
-
-                var autoLaunchValue = parseResult.GetValue(autoLaunchOption);
-                if (!string.IsNullOrEmpty(autoLaunchValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_AUTOLAUNCH", autoLaunchValue);
-
-                var packageRepositoryValue = parseResult.GetValue(packageRepositoryOption);
-                if (!string.IsNullOrEmpty(packageRepositoryValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY", packageRepositoryValue);
-
-                var configurationProfileValue = parseResult.GetValue(configurationProfileOption);
-                if (!string.IsNullOrEmpty(configurationProfileValue))
-                    Environment.SetEnvironmentVariable("ONEWARE_CONFIGURATION_PROFILE", configurationProfileValue);
-
-                var openValue = parseResult.GetValue(openArgument);
-                if (!string.IsNullOrEmpty(openValue))
-                {
-                    if (openValue.StartsWith("oneware://", StringComparison.OrdinalIgnoreCase))
-                        Environment.SetEnvironmentVariable("ONEWARE_OPEN_URL", openValue);
-                    else if (File.Exists(openValue) || Directory.Exists(openValue))
-                        Environment.SetEnvironmentVariable("ONEWARE_OPEN_PATH", Path.GetFullPath(openValue));
-                }
+                OneWareStartupCommandLine.ApplyEnvironmentVariables(parseResult, startupSymbols);
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
