@@ -38,21 +38,27 @@ namespace OneWare.Debugger;
 // Nach jedem Halt werden Frame und Register in einem Rutsch gelesen und als ein
 // DebugSessionState veroeffentlicht. Die Panels ziehen sich also nichts selbst,
 // und es kann keinen Zustand geben, in dem Register und Frame aus verschiedenen Halts stammen.
-public class GdbSession : IDebugSession
+public class GdbSession(
+    string gdbExecutable,
+    string? executablePath,
+    string? remoteEndpoint,
+    string? workingDirectory,
+    IReadOnlyList<string>? initCommands,
+    bool asyncMode,
+    ILogger logger)
+    : IDebugSession
 {
     // GDB antwortet auf jedes Kommando; laenger als das zu warten heisst, dass etwas haengt.
     private const int CommandTimeout = 10000;
 
-    private readonly bool _asyncMode;
-    private readonly string? _elfFile;
-    private readonly string _gdbExecutable;
-    private readonly ILogger _logger;
+    private readonly string? _elfFile = string.IsNullOrWhiteSpace(executablePath) ? null : Path.GetFileName(executablePath);
     private readonly GdbOutputFormatter _consoleFormatter = new();
-    private readonly IReadOnlyList<string> _initCommands;
-    private readonly string? _remoteEndpoint;
-    private readonly SemaphoreSlim _commandGate = new(1, 1);
+    private readonly IReadOnlyList<string> _initCommands = initCommands ?? [];
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly GdbCommandResult _timeout = new("") { Status = CommandStatus.Timeout };
-    private readonly string _workingDir;
+    private readonly string _workingDir = FirstExistingDirectory(
+        string.IsNullOrWhiteSpace(executablePath) ? null : Path.GetDirectoryName(executablePath),
+        workingDirectory);
 
     private bool _clientReady;
     private Process? _process;
@@ -63,26 +69,11 @@ public class GdbSession : IDebugSession
 
     private volatile TaskCompletionSource<GdbCommandResult>? _pendingCommand;
     private volatile bool _targetRunning;
-    private StreamWriter? _sIn;
-    private StreamReader? _sOut;
+    private StreamWriter? _writer;
+    private StreamReader? _reader;
 
-    public GdbSession(string gdbExecutable, string? executablePath, string? remoteEndpoint,
-        string? workingDirectory, IReadOnlyList<string>? initCommands, bool asyncMode, ILogger logger)
-    {
-        _gdbExecutable = gdbExecutable;
-        _remoteEndpoint = remoteEndpoint;
-        _initCommands = initCommands ?? [];
-        _asyncMode = asyncMode;
-        _logger = logger;
-
-        // Ohne Programmdatei startet GDB ohne Argument. Register, Einzelschritte und die Console
-        // gehen dann trotzdem - nur Quellzeilen und Variablen nicht, weil die Symbole fehlen.
-        _elfFile = string.IsNullOrWhiteSpace(executablePath) ? null : Path.GetFileName(executablePath);
-
-        _workingDir = FirstExistingDirectory(
-            string.IsNullOrWhiteSpace(executablePath) ? null : Path.GetDirectoryName(executablePath),
-            workingDirectory);
-    }
+    // Ohne Programmdatei startet GDB ohne Argument. Register, Einzelschritte und die Console
+    // gehen dann trotzdem - nur Quellzeilen und Variablen nicht, weil die Symbole fehlen.
 
     // Das Verzeichnis der Programmdatei hat Vorrang, sonst das des Projekts. Existiert keines
     // von beiden, bleibt das aktuelle - ein nicht vorhandenes Arbeitsverzeichnis laesst den
@@ -111,14 +102,14 @@ public class GdbSession : IDebugSession
         {
             if (!StartProcess() || _process == null) return false;
 
-            _sIn = _process.StandardInput;
-            _sOut = _process.StandardOutput;
+            _writer = _process.StandardInput;
+            _reader = _process.StandardOutput;
 
             _ = Task.Run(ReadOutput);
 
             if (_process.HasExited)
             {
-                _logger.Error("Debugging failed: GDB could not be started.");
+                logger.Error("Debugging failed: GDB could not be started.");
                 return false;
             }
 
@@ -136,12 +127,12 @@ public class GdbSession : IDebugSession
 
             if (!await WaitUntilReadyAsync())
             {
-                _logger.Error("GDB timed out during startup.");
+                logger.Error("GDB timed out during startup.");
                 return false;
             }
 
             await RunCommandAsync("-gdb-set", "pagination", "off");
-            if (_asyncMode) await RunCommandAsync("-gdb-set", "mi-async", "on");
+            if (asyncMode) await RunCommandAsync("-gdb-set", "mi-async", "on");
 
             await ApplyInitCommandsAsync();
 
@@ -149,7 +140,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"GDB at '{_gdbExecutable}' failed to start: {e.Message}", e);
+            logger.Error($"GDB at '{gdbExecutable}' failed to start: {e.Message}", e);
             return false;
         }
     }
@@ -163,7 +154,7 @@ public class GdbSession : IDebugSession
         // sofort bis zum Ende durch. Gestartet wird deshalb erst auf Continue.
         // -exec-run waere hier ohnehin falsch: es verlangt einen Neustart, den die Hardware
         // nicht anbietet.
-        if (_remoteEndpoint != null) return Task.CompletedTask;
+        if (remoteEndpoint != null) return Task.CompletedTask;
 
         // Ohne Programm und ohne Ziel gibt es nichts zu starten. -exec-run wuerde hier nur einen
         // Fehler in die Console schreiben und den Eindruck erwecken, der Start sei fehlgeschlagen.
@@ -179,7 +170,7 @@ public class GdbSession : IDebugSession
 
     public async Task PauseAsync()
     {
-        if (_asyncMode)
+        if (asyncMode)
         {
             await RunCommandAsync("-exec-interrupt");
             return;
@@ -318,16 +309,16 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"GDB did not shut down cleanly: {e.Message}", e);
+            logger.Error($"GDB did not shut down cleanly: {e.Message}", e);
         }
 
         try
         {
-            _sIn?.Close();
+            _writer?.Close();
         }
         catch (Exception e)
         {
-            _logger.Error($"Could not close GDB's input stream: {e.Message}", e);
+            logger.Error($"Could not close GDB's input stream: {e.Message}", e);
         }
 
         try
@@ -338,7 +329,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"Could not kill the GDB process: {e.Message}", e);
+            logger.Error($"Could not kill the GDB process: {e.Message}", e);
         }
         finally
         {
@@ -353,7 +344,7 @@ public class GdbSession : IDebugSession
     {
         if (!_targetRunning) return;
 
-        if (_asyncMode)
+        if (asyncMode)
         {
             _ = RunCommandAsync("-exec-interrupt", 500);
             return;
@@ -373,22 +364,22 @@ public class GdbSession : IDebugSession
 
             if (result.Status is CommandStatus.Done or CommandStatus.Connected) continue;
 
-            _logger.Error(
+            logger.Error(
                 $"GDB rejected the init command '{command}': {result.ErrorMessage ?? result.Status.ToString()}");
         }
     }
 
     private async Task<bool> ConnectRemoteAsync()
     {
-        if (_remoteEndpoint == null) return true;
+        if (remoteEndpoint == null) return true;
 
-        var result = await RunCommandAsync("-target-select", "extended-remote", _remoteEndpoint);
+        var result = await RunCommandAsync("-target-select", "extended-remote", remoteEndpoint);
 
         // Sowohl ^done als auch ^connected sind laut MI gueltige Antworten auf -target-select.
         if (result.Status is CommandStatus.Done or CommandStatus.Connected) return true;
 
-        _logger.Error(
-            $"GDB could not connect to '{_remoteEndpoint}': {result.ErrorMessage ?? result.Status.ToString()}");
+        logger.Error(
+            $"GDB could not connect to '{remoteEndpoint}': {result.ErrorMessage ?? result.Status.ToString()}");
         return false;
     }
 
@@ -408,13 +399,13 @@ public class GdbSession : IDebugSession
     {
         if (!Directory.Exists(_workingDir))
         {
-            _logger.Error($"Working directory does not exist: '{_workingDir}'");
+            logger.Error($"Working directory does not exist: '{_workingDir}'");
             return false;
         }
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = _gdbExecutable,
+            FileName = gdbExecutable,
             WorkingDirectory = _workingDir,
             Arguments = BuildArguments(),
             RedirectStandardOutput = true,
@@ -432,7 +423,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"Could not start GDB at '{_gdbExecutable}': {e.Message}", e);
+            logger.Error($"Could not start GDB at '{gdbExecutable}': {e.Message}", e);
             return false;
         }
     }
@@ -452,7 +443,7 @@ public class GdbSession : IDebugSession
     {
         try
         {
-            while (_sOut?.ReadLine() is { } line)
+            while (_reader?.ReadLine() is { } line)
             {
                 _clientReady = true;
                 ProcessLine(line);
@@ -460,7 +451,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"Stopped reading GDB's output: {e.Message}", e);
+            logger.Error($"Stopped reading GDB's output: {e.Message}", e);
         }
     }
 
@@ -530,7 +521,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"Could not publish the target state after a stop: {e.Message}", e);
+            logger.Error($"Could not publish the target state after a stop: {e.Message}", e);
         }
     }
 
@@ -635,7 +626,7 @@ public class GdbSession : IDebugSession
 
     private async Task<GdbCommandResult> RunCommandAsync(string command, int timeout, params string[] args)
     {
-        await _commandGate.WaitAsync();
+        await _semaphore.WaitAsync();
 
         try
         {
@@ -643,15 +634,15 @@ public class GdbSession : IDebugSession
         }
         finally
         {
-            _commandGate.Release();
+            _semaphore.Release();
         }
     }
 
     private async Task<GdbCommandResult> SendAndAwaitAsync(string command, int timeout, string[] args)
     {
-        if (_sIn == null) return _timeout;
+        if (_writer == null) return _timeout;
 
-        if (!_asyncMode && _targetRunning)
+        if (!asyncMode && _targetRunning)
         {
             OutputReceived?.Invoke(this, "Not possible to run commands while the target is running!");
             return new GdbCommandResult("") { Status = CommandStatus.Running };
@@ -664,7 +655,7 @@ public class GdbSession : IDebugSession
         {
             var line = $"{command} {string.Join(" ", args)}".TrimEnd();
             CommandSent?.Invoke(this, line);
-            await _sIn.WriteLineAsync(line);
+            await _writer.WriteLineAsync(line);
 
             return await pending.Task.WaitAsync(TimeSpan.FromMilliseconds(timeout));
         }
@@ -679,7 +670,7 @@ public class GdbSession : IDebugSession
         }
         catch (Exception e)
         {
-            _logger.Error($"Command '{command}' to GDB failed: {e.Message}", e);
+            logger.Error($"Command '{command}' to GDB failed: {e.Message}", e);
             return _timeout;
         }
         finally
