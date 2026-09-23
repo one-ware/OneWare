@@ -2129,11 +2129,17 @@ public abstract class CopilotChatServiceBase(
             case SessionErrorEvent error:
                 if (IsOneWareCloud && IsInsufficientCreditsError(error.Data.Message))
                 {
+                    // The cloud reports "monthly budget" when the member's own limit, not the organization, ran out.
+                    var budgetExceeded = error.Data.Message?.Contains("monthly budget",
+                        StringComparison.OrdinalIgnoreCase) == true;
+                    var path = budgetExceeded ? "/organization" : "/credits";
                     EventReceived?.Invoke(this, new ChatButtonEvent(
-                        "This organization does not have enough OneWare Cloud credits for this request.",
-                        "Add credits",
+                        budgetExceeded
+                            ? "This request exceeds your monthly OneWare Cloud budget in this organization."
+                            : "This organization does not have enough OneWare Cloud credits for this request.",
+                        budgetExceeded ? "View budget" : "Add credits",
                         new RelayCommand<Control?>(_ =>
-                            PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}/credits")))
+                            PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}{path}")))
                     {
                         AgentId = agentId
                     });

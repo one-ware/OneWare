@@ -31,7 +31,8 @@
                 </DockPanel>
             </Button.Content>
             <Button.Flyout>
-                <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        Opened="OnFlyoutOpened">
 
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="2">
 
@@ -44,6 +45,68 @@
                         <!-- Logged In View -->
                         <StackPanel Orientation="Vertical" Spacing="5"
                                     IsVisible="{Binding CurrentAccountService.CurrentUser, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                            <!-- Active organization -->
+                            <StackPanel IsVisible="{Binding HasActiveOrganization}" Spacing="6" Margin="6,2"
+                                        MinWidth="220">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding OrganizationName}" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="240" />
+                                    <TextBlock Text="{Binding OrganizationDetails}" FontSize="11"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="240"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Text="{Binding PlanStatusText}" FontSize="11"
+                                               IsVisible="{Binding ShowPlanStatus}"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                </StackPanel>
+
+                                <!-- Owners / administrators: Compute Credits total with its monthly allowance / prepaid split -->
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="2"
+                                      IsVisible="{Binding ShowOrganizationCredits}">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Compute Credits"
+                                               ToolTip.Tip="Used for training, AI Copilot and exports" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ComputeCreditsText}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Monthly allowance" Margin="10,0,0,0"
+                                               FontSize="11" ToolTip.Tip="Included in the plan, used first, resets monthly"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding IncludedCreditsText}"
+                                               FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Prepaid" Margin="10,0,0,0"
+                                               FontSize="11" ToolTip.Tip="Purchased, used after the monthly allowance, never expires"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PrepaidCreditsText}"
+                                               FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                </Grid>
+
+                                <!-- Members: personal monthly budget -->
+                                <StackPanel Spacing="3" IsVisible="{Binding ShowPersonalBudget}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="Your Compute Credit budget"
+                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding BudgetText}"
+                                                   FontWeight="SemiBold" />
+                                    </Grid>
+                                    <ProgressBar IsVisible="{Binding HasBudgetLimit}" MinHeight="6"
+                                                 Minimum="0" Maximum="{Binding BudgetLimit}"
+                                                 Value="{Binding BudgetUsed}" />
+                                    <TextBlock Text="{Binding BudgetHint}" FontSize="11"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                    <controls:HyperLink Label="Add Compute Credits"
+                                                        Url="{Binding AddCreditsUrl}"
+                                                        IsVisible="{Binding ShowOrganizationCredits}" />
+                                    <controls:HyperLink Label="Upgrade to Pro"
+                                                        Url="{Binding UpgradeUrl}"
+                                                        IsVisible="{Binding ShowUpgrade}" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <TextBlock IsVisible="{Binding !HasActiveOrganization}"
+                                       Text="No active organization" Margin="6,0"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
 
                             <Separator Margin="0" Padding="0" />
 
