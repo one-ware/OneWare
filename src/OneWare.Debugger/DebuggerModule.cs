@@ -57,7 +57,6 @@ public class DebuggerModule : OneWareModuleBase
         // stabil, aber ohne Eintrag auf der Einstellungsseite: bedient wird die Anzeige in der
         // Leiste ueber der jeweiligen Tabelle.
         settingsService.Register(ValueFormatViewModel.BaseSetting, nameof(NumberBase.Hex));
-        settingsService.Register(ValueFormatViewModel.SignedSetting, true);
 
         // Der GDB-Adapter ist das Backend des Kerns. Er deckt lokale Programme und, ueber
         // RemoteEndpoint, auch angehaengte Ziele ab; ein Plugin braucht nur dann einen eigenen

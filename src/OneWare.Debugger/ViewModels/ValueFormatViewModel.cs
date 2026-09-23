@@ -13,16 +13,13 @@ namespace OneWare.Debugger.ViewModels;
 public partial class ValueFormatViewModel : ObservableObject
 {
     public const string BaseSetting = "Debugger_ValueBase";
-    public const string SignedSetting = "Debugger_ValueSigned";
 
     private readonly ISettingsService _settingsService;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsSignedEnabled))] [NotifyPropertyChangedFor(nameof(IsHex))]
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsHex))]
     [NotifyPropertyChangedFor(nameof(IsDec))] [NotifyPropertyChangedFor(nameof(IsOct))]
     [NotifyPropertyChangedFor(nameof(IsBin))]
     private NumberBase _selectedBase;
-
-    [ObservableProperty] private bool _isSigned;
 
     public ValueFormatViewModel(ISettingsService settingsService)
     {
@@ -34,18 +31,12 @@ public partial class ValueFormatViewModel : ObservableObject
         if (settingsService.HasSetting(BaseSetting) &&
             Enum.TryParse<NumberBase>(settingsService.GetSettingValue<string>(BaseSetting), out var stored))
             _selectedBase = stored;
-
-        if (settingsService.HasSetting(SignedSetting))
-            _isSigned = settingsService.GetSettingValue<bool>(SignedSetting);
     }
 
     // Meldet jede Aenderung an die drei Panels, die daraufhin ihre Zeilen neu beschriften.
     // Bewusst ohne erneutes Lesen vom Ziel: die Rohwerte des letzten Halts liegen vor, und
     // waehrend das Ziel laeuft gaebe es ohnehin nichts zu holen.
     public event EventHandler? Changed;
-
-    // Ein Vorzeichen gibt es nur dezimal -> bei Hex, Oktal und Binaer steht der Schalter grau.
-    public bool IsSignedEnabled => SelectedBase == NumberBase.Dec;
 
     // Je eine Eigenschaft pro Radioknopf. Der Setter reagiert nur auf true: beim Umschalten
     // meldet der abgewaehlte Knopf sein false, und das darf die neue Wahl nicht zuruecknehmen.
@@ -88,11 +79,6 @@ public partial class ValueFormatViewModel : ObservableObject
     partial void OnSelectedBaseChanged(NumberBase value)
     {
         Store(BaseSetting, value.ToString());
-    }
-
-    partial void OnIsSignedChanged(bool value)
-    {
-        Store(SignedSetting, value);
     }
 
     private void Store(string key, object value)

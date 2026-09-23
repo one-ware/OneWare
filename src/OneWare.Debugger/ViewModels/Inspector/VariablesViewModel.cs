@@ -82,15 +82,13 @@ public class VariablesViewModel : ObservableObject
     private void Show(VariableRow row, string raw)
     {
         row.Raw = raw;
-        row.Value = ValueFormatter.FormatDecimalValue(raw, BitsFor(raw), ValueFormat.SelectedBase,
-            ValueFormat.IsSigned);
+        row.Value = ValueFormatter.FormatDecimalValue(raw, BitsFor(raw), ValueFormat.SelectedBase);
     }
 
     private void RenderAll()
     {
         foreach (var row in Variables)
-            row.Value = ValueFormatter.FormatDecimalValue(row.Raw, BitsFor(row.Raw), ValueFormat.SelectedBase,
-                ValueFormat.IsSigned);
+            row.Value = ValueFormatter.FormatDecimalValue(row.Raw, BitsFor(row.Raw), ValueFormat.SelectedBase);
     }
 
     // Wortbreite fuer die Umrechnung. Sie folgt der Adresseinheit des Ziels aus dem Profil -> im Kern

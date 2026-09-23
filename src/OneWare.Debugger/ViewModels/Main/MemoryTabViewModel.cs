@@ -136,13 +136,13 @@ public partial class MemoryTabViewModel : ObservableObject
     private void Show(MemoryRow row, string raw)
     {
         row.Raw = raw;
-        row.Value = ValueFormatter.FormatHexUnits(raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+        row.Value = ValueFormatter.FormatHexUnits(raw, ValueFormat.SelectedBase);
     }
 
     private void RenderAll()
     {
         foreach (var row in Watches)
-            row.Value = ValueFormatter.FormatHexUnits(row.Raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+            row.Value = ValueFormatter.FormatHexUnits(row.Raw, ValueFormat.SelectedBase);
     }
 
     // Rechnet die eingetippte

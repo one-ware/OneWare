@@ -26,14 +26,6 @@
                          ToolTip.Tip="Decimal - the only base where the sign matters" />
             <RadioButton Content="Oct" IsChecked="{Binding IsOct, Mode=TwoWay}" />
             <RadioButton Content="Bin" IsChecked="{Binding IsBin, Mode=TwoWay}" />
-
-            <Border Width="1" Margin="4,2"
-                    Background="{DynamicResource ThemeBorderLowBrush}" />
-
-            <CheckBox Content="Signed"
-                      IsChecked="{Binding IsSigned, Mode=TwoWay}"
-                      IsEnabled="{Binding IsSignedEnabled}"
-                      ToolTip.Tip="Two's complement, the way the target's ALU computes. Decimal only - hex, octal and binary show the raw bit pattern, in which the same bits stand whether you read them as -1 or as 65535." />
         </StackPanel>
     </Border>
 </UserControl>

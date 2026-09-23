@@ -19,21 +19,21 @@ public static class ValueFormatter
     private const int MaxBits = 64;
 
     // Ein einzelner Hexwert des Backends, etwa ein Register als "0x00000000".
-    public static string FormatHexValue(string raw, NumberBase numberBase, bool signed)
+    public static string FormatHexValue(string raw, NumberBase numberBase)
     {
         // Hex ist die Form, in der die Werte ohnehin ankommen -> unveraendert lassen, damit die
         // Anzeige im Normalfall genau so aussieht wie zuvor, samt "0x" und Auffuellung.
         if (numberBase == NumberBase.Hex) return raw;
 
         return TryParseHex(raw, out var value, out var bits)
-            ? Format(value, bits, numberBase, signed)
+            ? Format(value, bits, numberBase)
             : raw;
     }
 
     // Mehrere Einheiten hintereinander, durch Leerzeichen getrennt, wie der Memory-Reiter sie
     // aus den gelesenen Bytes zusammensetzt. Scheitert eine, bleibt die ganze Zeile stehen ->
     // eine halb umgerechnete Zeile waere schlechter lesbar als die rohe.
-    public static string FormatHexUnits(string raw, NumberBase numberBase, bool signed)
+    public static string FormatHexUnits(string raw, NumberBase numberBase)
     {
         if (numberBase == NumberBase.Hex) return raw;
 
@@ -46,7 +46,7 @@ public static class ValueFormatter
         {
             if (!TryParseHex(unit, out var value, out var bits)) return raw;
 
-            formatted.Add(Format(value, bits, numberBase, signed));
+            formatted.Add(Format(value, bits, numberBase));
         }
 
         return string.Join(' ', formatted);
@@ -54,14 +54,14 @@ public static class ValueFormatter
 
     // Was GDB aus dem DWARF-Typ gemacht hat, in aller Regel eine vorzeichenbehaftete
     // Dezimalzahl. Die Breite steht dort nicht mit drin und kommt deshalb vom Ziel.
-    public static string FormatDecimalValue(string raw, int bits, NumberBase numberBase, bool signed)
+    public static string FormatDecimalValue(string raw, int bits, NumberBase numberBase)
     {
         if (bits is < 1 or > MaxBits) return raw;
 
         if (!long.TryParse(raw.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
             return raw;
 
-        return Format(Mask(unchecked((ulong)parsed), bits), bits, numberBase, signed);
+        return Format(Mask(unchecked((ulong)parsed), bits), bits, numberBase);
     }
 
     // Die Breite steht in der Zahl selbst: GDB fuellt auf die Registerbreite auf, und der
@@ -85,15 +85,13 @@ public static class ValueFormatter
         return true;
     }
 
-    private static string Format(ulong value, int bits, NumberBase numberBase, bool signed)
+    private static string Format(ulong value, int bits, NumberBase numberBase)
     {
         var pattern = unchecked((long)value);
 
         return numberBase switch
         {
-            NumberBase.Dec => signed
-                ? SignedDecimal(value, bits)
-                : value.ToString(CultureInfo.InvariantCulture),
+            NumberBase.Dec => SignedDecimal(value, bits),
 
             NumberBase.Oct => Convert.ToString(pattern, 8).PadLeft(OctalDigits(bits), '0'),
 

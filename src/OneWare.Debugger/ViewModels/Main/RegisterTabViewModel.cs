@@ -66,12 +66,12 @@ public class RegisterTabViewModel
     private void Show(RegisterRow row, string raw)
     {
         row.Raw = raw;
-        row.Value = ValueFormatter.FormatHexValue(raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+        row.Value = ValueFormatter.FormatHexValue(raw, ValueFormat.SelectedBase);
     }
 
     private void RenderAll()
     {
         foreach (var row in Rows)
-            row.Value = ValueFormatter.FormatHexValue(row.Raw, ValueFormat.SelectedBase, ValueFormat.IsSigned);
+            row.Value = ValueFormatter.FormatHexValue(row.Raw, ValueFormat.SelectedBase);
     }
 }
