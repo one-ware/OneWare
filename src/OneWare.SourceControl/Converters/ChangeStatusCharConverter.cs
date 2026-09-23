@@ -11,9 +11,13 @@ public class ChangeStatusCharConverter : IValueConverter
         if (value is FileStatus status)
             return status switch
             {
-                FileStatus.NewInIndex => "+",
-                FileStatus.NewInWorkdir => "+",
-                _ => status.ToString()[0] + ""
+                _ when status.HasFlag(FileStatus.Conflicted) => "U",
+                _ when (status & (FileStatus.DeletedFromIndex | FileStatus.DeletedFromWorkdir)) != 0 => "D",
+                _ when (status & (FileStatus.RenamedInIndex | FileStatus.RenamedInWorkdir)) != 0 => "R",
+                _ when (status & (FileStatus.ModifiedInIndex | FileStatus.ModifiedInWorkdir)) != 0 => "M",
+                _ when (status & (FileStatus.TypeChangeInIndex | FileStatus.TypeChangeInWorkdir)) != 0 => "T",
+                _ when (status & (FileStatus.NewInIndex | FileStatus.NewInWorkdir)) != 0 => "+",
+                _ => ""
             };
         return null;
     }

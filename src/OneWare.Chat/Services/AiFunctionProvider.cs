@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -259,6 +260,17 @@ public class AiFunctionProvider(
         return $"\"{escaped}\"";
     }
 
+    public bool? IsFunctionReadOnly(string functionName)
+    {
+        EnsureBuiltInsRegistered();
+        lock (_registrationLock)
+        {
+            return _registeredFunctions
+                .FirstOrDefault(f => string.Equals(f.Name, functionName, StringComparison.Ordinal))
+                ?.IsReadOnly;
+        }
+    }
+
     public Func<AIFunctionArguments, string?>? GetConfirmationCheck(string functionName)
     {
         EnsureBuiltInsRegistered();
@@ -332,15 +344,45 @@ public class AiFunctionProvider(
             aiFileEditService);
     }
 
-    private async Task NotifyFunctionStartedAsync(string id, string functionName, string? detail = null)
+    private async Task NotifyFunctionStartedAsync(string id, string functionName, string toolName,
+        string? toolCallId, string? detail = null)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
             FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
             {
                 Id = id,
                 FunctionName = functionName,
+                ToolName = toolName,
+                ToolCallId = toolCallId,
                 Detail = detail
             }));
+    }
+
+    private static readonly ConcurrentDictionary<Type, PropertyInfo?> ToolCallIdProperties = new();
+
+    /// <summary>
+    /// Reads the tool call id the AI backend assigned to this invocation. Backends pass their
+    /// invocation context in <see cref="AIFunctionArguments.Context"/>; the shape of that context is
+    /// backend specific, so it is only probed for a <c>ToolCallId</c>.
+    /// </summary>
+    private static string? TryGetBackendToolCallId(AIFunctionArguments arguments)
+    {
+        if (arguments.Context == null) return null;
+
+        foreach (var value in arguments.Context.Values)
+        {
+            if (value == null) continue;
+
+            var property = ToolCallIdProperties.GetOrAdd(value.GetType(),
+                type => type.GetProperty("ToolCallId", BindingFlags.Public | BindingFlags.Instance));
+
+            if (property?.PropertyType != typeof(string)) continue;
+
+            if (property.GetValue(value) is string toolCallId && !string.IsNullOrWhiteSpace(toolCallId))
+                return toolCallId;
+        }
+
+        return null;
     }
 
     private async Task NotifyFunctionCompletedAsync(string id, Exception? exception = null)
@@ -387,7 +429,8 @@ public class AiFunctionProvider(
             Exception? exception = null;
             try
             {
-                await provider.NotifyFunctionStartedAsync(id, friendlyName!, detail);
+                await provider.NotifyFunctionStartedAsync(id, friendlyName!, definition.Name,
+                    TryGetBackendToolCallId(arguments), detail);
 
                 if (definition.RunOnUiThread)
                 {

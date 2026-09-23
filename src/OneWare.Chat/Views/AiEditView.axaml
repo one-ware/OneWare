@@ -8,7 +8,8 @@
              x:Class="OneWare.Chat.Views.AiEditView" x:DataType="viewModels:AiEditViewModel">
 
     <Panel>
-        <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}" />
+        <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}"
+                                    ScrollToLine="{Binding ScrollToLine, Mode=OneWay}" />
         
         <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" Padding="5" Classes="RoundBorder" Background="{DynamicResource ThemeBackgroundBrush}">
             <StackPanel Orientation="Horizontal" Spacing="10">

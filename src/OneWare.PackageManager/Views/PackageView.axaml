@@ -8,6 +8,7 @@
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              xmlns:packageManager="clr-namespace:OneWare.Essentials.PackageManager;assembly=OneWare.Essentials"
+             xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
@@ -89,7 +90,7 @@
                     </DataTemplate>
                 </ItemsControl.DataTemplates>
             </ItemsControl>
-            
+
             <StackPanel
                 IsVisible="{Binding SelectedVersionModel.Version.IsPrerelease, FallbackValue={x:False}}"
                 Orientation="Horizontal" Spacing="5">
@@ -100,7 +101,7 @@
             </StackPanel>
 
             <Border Background="{DynamicResource ThemeControlLowBrush}"
-                    Classes="RoundBorder" 
+                    Classes="RoundBorder"
                     Classes.ValidBorder="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
                     Classes.InvalidBorder="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
                     Padding="5">
@@ -117,7 +118,13 @@
                                     IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}">
                             <StackPanel Orientation="Vertical" Spacing="5">
                                 <controls:MarkdownViewer VirtualizationEnabled="True"
-                                    Markdown="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}" />
+                                                         Markdown="{Binding SelectedVersionModel.CompatibilityReport.Report, FallbackValue={x:Null}}">
+                                    <controls:MarkdownViewer.Styles>
+                                        <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Paragraph">
+                                            <Setter Property="Margin" Value="0,0,0,0" />
+                                        </Style>
+                                    </controls:MarkdownViewer.Styles>
+                                </controls:MarkdownViewer>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
@@ -143,7 +150,8 @@
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="models:TabModel">
                         <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}">
-                            <controls:MarkdownViewer VirtualizationEnabled="False" Markdown="{Binding Content}" Margin="10 5 0 0" />
+                            <controls:MarkdownViewer VirtualizationEnabled="False" Markdown="{Binding Content}"
+                                                     Margin="10 5 0 0" />
                         </Border>
                     </DataTemplate>
                 </TabControl.ContentTemplate>

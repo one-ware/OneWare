@@ -103,6 +103,43 @@
             </StackPanel>
         </Button>
 
+        <!-- Auto routing preference (only for the "auto" model) -->
+        <Button Name="AutoTierButton" VerticalAlignment="Center"
+                IsVisible="{Binding ShowAutoTier}"
+                ToolTip.Tip="Auto routing preference">
+            <Button.Flyout>
+                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        Placement="TopEdgeAlignedRight">
+                    <ListBox ItemsSource="{Binding AutoTiers}"
+                             SelectedItem="{Binding SelectedAutoTier}" BorderThickness="0"
+                             MinWidth="140">
+                        <Interaction.Behaviors>
+                            <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
+                                <HideFlyoutAction Flyout="{Binding #AutoTierButton.Flyout}" />
+                            </behaviors:PointerPressedHandledEventTrigger>
+                        </Interaction.Behaviors>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </Flyout>
+            </Button.Flyout>
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="{Binding SelectedAutoTier, FallbackValue=Default}"
+                           FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                       Height="8" />
+            </StackPanel>
+        </Button>
+
         <!-- Reasoning effort selector (only for models that support it) -->
         <Button Name="ReasoningButton" VerticalAlignment="Center"
                 IsVisible="{Binding ShowReasoningEffort}"

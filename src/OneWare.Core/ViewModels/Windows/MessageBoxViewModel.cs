@@ -39,14 +39,14 @@ public class MessageBoxViewModel : FlexibleWindowViewModelBase
         if (request.SelectionItems != null)
             SelectionItems = new ObservableCollection<object>(request.SelectionItems);
 
-        SelectedItem = request.SelectedItem;
-
         Buttons = new ObservableCollection<MessageBoxButtonViewModel>(
             (request.Buttons.Count > 0 ? request.Buttons : CreateFallbackButtons())
             .Select(button => new MessageBoxButtonViewModel(button))
         );
 
         ButtonCommand = new RelayCommand<MessageBoxButtonViewModel>(ExecuteButton, CanExecuteButton);
+
+        SelectedItem = request.SelectedItem;
     }
 
     public string? Input

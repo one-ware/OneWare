@@ -327,7 +327,8 @@ public abstract class LanguageServiceBase : ILanguageService
             if (p.Range.Start.Line == endLine && p.Range.Start.Character == endCharacter)
                 endCharacter++;
 
-            yield return new ErrorListItem(p.Message, errorType, fullPath, Name, p.Range.Start.Line + 1,
+            yield return new ErrorListItem(p.Message.GetPlainText() ?? string.Empty, errorType, fullPath, Name,
+                p.Range.Start.Line + 1,
                 p.Range.Start.Character + 1, endLine + 1, endCharacter + 1,
                 p.Code?.String ?? p.Code?.Long.ToString() ?? "", p, root);
         }

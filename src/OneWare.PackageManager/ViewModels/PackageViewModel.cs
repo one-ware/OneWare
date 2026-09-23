@@ -18,7 +18,7 @@ using OneWare.PackageManager.Models;
 
 namespace OneWare.PackageManager.ViewModels;
 
-public class PackageViewModel : PackageListEntryViewModel
+public class PackageViewModel : PackageListEntryViewModel, IDisposable
 {
     private readonly IHttpService _httpService;
     private readonly IPackageService _packageService;
@@ -30,9 +30,17 @@ public class PackageViewModel : PackageListEntryViewModel
 
     private IDisposable? _primaryButtonBrushSubscription;
 
+    private IDisposable? _statusSubscription;
+
     private bool _resolveImageStarted;
 
     private bool _resolveTabsStarted;
+
+    /// <summary>
+    ///     Identifies the current tab resolve run. A package state swap invalidates an in flight run so a
+    ///     stale one cannot append its results to the tabs of the new package.
+    /// </summary>
+    private int _resolveTabsGeneration;
 
     public PackageViewModel(IPackageState packageState, IPackageService packageService, IHttpService httpService,
         IWindowService windowService, IApplicationStateService applicationStateService, ILogger logger)
@@ -61,7 +69,7 @@ public class PackageViewModel : PackageListEntryViewModel
         CancelCommand = new RelayCommand(() => _packageService.CancelInstall(PackageState.Package.Id!),
             () => PackageState.Status is PackageStatus.Installing);
 
-        PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
+        SubscribeToStatus();
         InitPackage();
     }
 
@@ -71,12 +79,28 @@ public class PackageViewModel : PackageListEntryViewModel
         set => SetProperty(ref field, value);
     }
 
+    /// <summary>
+    ///     Whether an update is available. Shown as a badge on the row, it never affects the position of
+    ///     the package in the list.
+    /// </summary>
+    public bool HasUpdate => PackageState.Status is PackageStatus.UpdateAvailable
+        or PackageStatus.UpdateAvailablePrerelease;
+
+    /// <summary>
+    ///     Raised whenever the package status changed, used to keep the live update count in sync.
+    /// </summary>
+    public event EventHandler? StatusChanged;
+
     public IPackageState PackageState
     {
         get => _packageState;
         set
         {
+            if (ReferenceEquals(_packageState, value)) return;
+
             SetProperty(ref _packageState, value);
+            // The status observable is bound to a single state instance, it has to follow the swap.
+            SubscribeToStatus();
             InitPackage();
         }
     }
@@ -133,6 +157,20 @@ public class PackageViewModel : PackageListEntryViewModel
     /// </summary>
     public ICommand ResolveIconCommand { get; }
 
+    public void Dispose()
+    {
+        _statusSubscription?.Dispose();
+        _statusSubscription = null;
+        _primaryButtonBrushSubscription?.Dispose();
+        _primaryButtonBrushSubscription = null;
+    }
+
+    private void SubscribeToStatus()
+    {
+        _statusSubscription?.Dispose();
+        _statusSubscription = PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
+    }
+
     private void InitPackage()
     {
         Links.Clear();
@@ -144,33 +182,35 @@ public class PackageViewModel : PackageListEntryViewModel
             PackageVersionModels.AddRange(PackageState.Package.Versions
                 .OrderByDescending(x =>
                 {
-                    if (Version.TryParse(x.Version, out var v)) return v;
-                    return new Version(int.MaxValue, 0);
+                    if (SemanticVersion.TryParse(x.Version, out var v)) return v;
+                    return SemanticVersion.Empty;
                 })
                 .Select(x => new PackageVersionModel(x)));
 
-        var includePrerelease = PackageState.InstalledVersion?.IsPrerelease ?? false;
+        var target = PackageState.ResolveTargetVersion();
 
-        SelectedVersionModel = PackageVersionModels.OrderBy(x => includePrerelease || x.Version.IsPrerelease)
-            .FirstOrDefault(x => x.Version.MinStudioVersion == null
-                                 || (Version.TryParse(x.Version.MinStudioVersion, out var minVersion)
-                                     && Assembly.GetEntryAssembly()!.GetName().Version >= minVersion));
+        SelectedVersionModel = PackageVersionModels.FirstOrDefault(x => x.Version == target);
 
+        var tabsWereResolved = _resolveTabsStarted;
         _resolveTabsStarted = false;
+        _resolveTabsGeneration++;
+        Tabs.Clear();
+        IsTabsResolved = false;
 
         var iconWasRequested = _resolveImageStarted;
         _resolveImageStarted = false;
 
         UpdateStatus();
 
-        // Only reload the icon if it was requested before, icons are resolved lazily when the package becomes visible.
+        // Only reload icon and tabs if they were requested before, both are resolved lazily.
         if (iconWasRequested) _ = ResolveIconAsync();
+        if (tabsWereResolved) _ = ResolveTabsAsync();
     }
 
     private void UpdateStatus()
     {
-        Version.TryParse(SelectedVersionModel?.Version.Version ?? "", out var sV);
-        Version.TryParse(PackageState.InstalledVersion?.Version ?? "", out var iV);
+        SemanticVersion.TryParse(SelectedVersionModel?.Version.Version, out var sV);
+        SemanticVersion.TryParse(PackageState.InstalledVersion?.Version, out var iV);
 
         MainButtonCommand = null;
         var primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeBorderMidBrush");
@@ -198,6 +238,10 @@ public class PackageViewModel : PackageListEntryViewModel
                 MainButtonCommand = CancelCommand;
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeControlMidBrush");
                 break;
+            case PackageStatus.Unavailable when PackageState.InstalledVersion != null:
+                PrimaryButtonText = "Remove";
+                MainButtonCommand = RemoveCommand;
+                break;
             case PackageStatus.Unavailable:
                 PrimaryButtonText = "Unavailable";
                 break;
@@ -213,6 +257,9 @@ public class PackageViewModel : PackageListEntryViewModel
         {
             PrimaryButtonBrush = x as IBrush;
         });
+
+        OnPropertyChanged(nameof(HasUpdate));
+        StatusChanged?.Invoke(this, EventArgs.Empty);
 
         RemoveCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
@@ -312,8 +359,14 @@ public class PackageViewModel : PackageListEntryViewModel
     {
         if (_resolveTabsStarted) return;
         _resolveTabsStarted = true;
+
+        var generation = _resolveTabsGeneration;
+
         IsTabsResolved = false;
         Tabs.Clear();
+
+        // Collected separately, the awaits below give a newer run the chance to take over.
+        var resolved = new List<TabModel>();
 
         if (PackageState.Package.Tabs != null)
             foreach (var tab in PackageState.Package.Tabs)
@@ -321,9 +374,15 @@ public class PackageViewModel : PackageListEntryViewModel
                 if (tab.ContentUrl == null) continue;
                 var content = await _httpService.DownloadTextAsync(tab.ContentUrl);
 
-                Tabs.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
+                if (generation != _resolveTabsGeneration) return;
+
+                resolved.Add(new TabModel(tab.Title ?? "Title", content ?? "Failed Loading Content"));
             }
 
+        if (generation != _resolveTabsGeneration) return;
+
+        Tabs.Clear();
+        Tabs.AddRange(resolved);
         IsTabsResolved = true;
     }
 

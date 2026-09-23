@@ -1,10 +1,14 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using AvaloniaEdit;
+using ColorTextBlock.Avalonia;
 using OneWare.Chat.ViewModels;
 using OneWare.Essentials.Services;
 
@@ -13,6 +17,7 @@ namespace OneWare.Chat.Views;
 public partial class ChatView : UserControl
 {
     private CompositeDisposable _disposables = new();
+    private string _contextMenuSelection = string.Empty;
     
     public ChatView()
     {
@@ -170,5 +175,51 @@ public partial class ChatView : UserControl
         {
             command.Execute(null);
         }
+    }
+
+    private void OnMessagesContextFlyoutOpening(object? sender, EventArgs e)
+    {
+        // The selection is captured while the flyout opens: a right click outside an existing selection
+        // collapses it (SelectableTextBlock does this after the context menu was requested), so reading
+        // it again when the menu item is clicked can come up empty.
+        _contextMenuSelection = GetSelectedMessageText();
+
+        if (sender is MenuFlyout { Items.Count: > 0 } flyout && flyout.Items[0] is MenuItem copyItem)
+            copyItem.IsEnabled = _contextMenuSelection.Length > 0;
+    }
+
+    private void OnCopySelectionClick(object? sender, RoutedEventArgs e)
+    {
+        if (_contextMenuSelection.Length == 0) return;
+
+        TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(_contextMenuSelection);
+    }
+
+    /// <summary>
+    /// Collects the selected text of the conversation. Messages are rendered by different controls
+    /// (markdown, selectable text blocks and code editors), each keeping its own selection, so the
+    /// selections of all realized message controls are concatenated in visual order.
+    /// </summary>
+    private string GetSelectedMessageText()
+    {
+        var builder = new StringBuilder();
+
+        foreach (var visual in ItemsControl.GetVisualDescendants())
+        {
+            var selection = visual switch
+            {
+                SelectableTextBlock selectableTextBlock => selectableTextBlock.SelectedText,
+                CTextBlock colorTextBlock => colorTextBlock.GetSelectedText(),
+                TextEditor { SelectionLength: > 0 } textEditor => textEditor.SelectedText,
+                _ => null
+            };
+
+            if (string.IsNullOrEmpty(selection)) continue;
+
+            if (builder.Length > 0) builder.Append('\n');
+            builder.Append(selection);
+        }
+
+        return builder.ToString();
     }
 }

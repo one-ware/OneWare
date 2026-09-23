@@ -31,6 +31,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "readFile",
+            IsReadOnly = true,
             FriendlyName = "Read File",
             RunOnUiThread = true,
             Description = "Read the specified file (optionally by line range). Always pass an absolute path.",
@@ -76,6 +77,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getActiveProject",
+            IsReadOnly = true,
             FriendlyName = "Get Active Project",
             RunOnUiThread = true,
             Description =
@@ -90,6 +92,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getOpenFiles",
+            IsReadOnly = true,
             FriendlyName = "Get Open Files",
             RunOnUiThread = true,
             Description = """
@@ -110,6 +113,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getFocusedFile",
+            IsReadOnly = true,
             FriendlyName = "Get Focused File",
             RunOnUiThread = true,
             Description = """
@@ -151,6 +155,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getErrorsForFile",
+            IsReadOnly = true,
             FriendlyName = "Get Errors for File",
             RunOnUiThread = true,
             Description = "Returns the LSP Errors for the specified path (if any)",
@@ -162,6 +167,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getAllErrors",
+            IsReadOnly = true,
             FriendlyName = "Get Errors",
             RunOnUiThread = true,
             Description = "Returns all the errors found by LSP",

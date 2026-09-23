@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Asmichi.ProcessManagement;
@@ -39,6 +40,10 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     protected string? Arguments { get; set; }
     protected string? ExecutablePath { get; set; }
 
+    protected virtual void ConfigureClientOptions(LanguageClientOptions options)
+    {
+    }
+
     public virtual IReadOnlyCollection<KeyValuePair<string, string>> GetExtraEnvironmentVariables()
     {
         return new List<KeyValuePair<string, string>>();
@@ -47,22 +52,17 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     public override async Task ActivateAsync()
     {
         if (IsActivated) return;
-        IsActivated = true;
-
-        if (ExecutablePath == null)
+        if (string.IsNullOrWhiteSpace(ExecutablePath))
         {
             ContainerLocator.Container.Resolve<ILogger>().Warning(
                 $"Tried to activate Language Server {Name} without executable!", new NotSupportedException(), false);
             return;
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            PlatformHelper.ChmodFile(ExecutablePath);
-
-        _cancellation = new CancellationTokenSource();
-
         if (ExecutablePath.StartsWith("wss://") || ExecutablePath.StartsWith("ws://"))
         {
+            IsActivated = true;
+            _cancellation = new CancellationTokenSource();
             var websocket = new ClientWebSocket();
             try
             {
@@ -87,6 +87,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             return;
         }
 
+        IsActivated = true;
+        _cancellation = new CancellationTokenSource();
         var argumentArray = Arguments != null
             ? Arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.RemoveEmptyEntries)
             : Array.Empty<string>();
@@ -104,30 +106,49 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         try
         {
-            _process = ContainerLocator.Container.Resolve<IChildProcessService>().StartChildProcess(processStartInfo);
-            var reader = new StreamReader(_process.StandardError);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                PlatformHelper.ChmodFile(PlatformHelper.GetFullPath(ExecutablePath) ?? ExecutablePath);
+
+            var process = ContainerLocator.Container.Resolve<IChildProcessService>().StartChildProcess(processStartInfo);
+            _process = process;
+            var cancellation = _cancellation;
+            var reader = new StreamReader(process.StandardError);
             _ = Task.Run(() =>
             {
-                while (_process.HasStandardError && !reader.EndOfStream && !_cancellation.IsCancellationRequested)
+                while (process.HasStandardError && !reader.EndOfStream && !cancellation.IsCancellationRequested)
                     Console.WriteLine("ERR:" + reader.ReadToEnd());
-            }, _cancellation.Token);
+            }, cancellation.Token);
 
-            await InitAsync(_process.StandardOutput, _process.StandardInput);
+            await InitAsync(process.StandardOutput, process.StandardInput);
+            if (!IsLanguageServiceReady)
+            {
+                if (ReferenceEquals(_process, process)) await CleanupServerAsync();
+                return;
+            }
 
-            await _process.WaitForExitAsync();
+            await process.WaitForExitAsync();
 
-            await DeactivateAsync();
+            if (ReferenceEquals(_process, process)) await CleanupServerAsync();
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
-            IsActivated = false;
+            await CleanupServerAsync();
         }
     }
 
-    public override async Task DeactivateAsync()
+    public override Task DeactivateAsync() => CleanupServerAsync();
+
+    private async Task CleanupServerAsync()
     {
         IsActivated = false;
+        IsLanguageServiceReady = false;
+        var client = Client;
+        Client = null;
+        var process = _process;
+        _process = null;
+        var cancellation = _cancellation;
+        _cancellation = null;
 
         lock (_pullDiagnosticsRequests)
         {
@@ -138,14 +159,12 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            if (Client == null) return;
+            if (client == null) return;
             try
             {
-                Client.SendExit();
+                client.SendExit();
 
                 await Task.Delay(200);
-                Client = null;
-                IsLanguageServiceReady = false;
             }
             catch (Exception e)
             {
@@ -155,13 +174,13 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             ContainerLocator.Container.Resolve<IErrorService>()?.Clear(Name);
         });
         await base.DeactivateAsync();
-        _cancellation?.Cancel();
-        _process?.Kill();
+        cancellation?.Cancel();
+        process?.Kill();
     }
 
     private async Task InitAsync(Stream input, Stream output, Action<LanguageClientOptions>? customOptions = null)
     {
-        Client = LanguageClient.PreInit(options =>
+        var client = LanguageClient.PreInit(options =>
             {
                 options.WithClientInfo(new ClientInfo { Name = "OneWare.Core" });
                 options.WithInput(input).WithOutput(output);
@@ -189,7 +208,8 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 });
                 options.WithCapability(new HoverCapability
                 {
-                    ContentFormat = new Container<MarkupKind>(MarkupKind.PlainText, MarkupKind.Markdown)
+                    //Markdown first, servers glue the signature and the documentation together in plain text
+                    ContentFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText)
                 });
                 options.WithCapability(new PublishDiagnosticsCapability
                 {
@@ -240,7 +260,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 {
                     SignatureInformation = new SignatureInformationCapabilityOptions
                     {
-                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText),
                         ParameterInformation = new SignatureParameterInformationCapabilityOptions
                         {
                             LabelOffsetSupport = true
@@ -271,7 +291,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                     CompletionItem = new CompletionItemCapabilityOptions
                     {
                         CommitCharactersSupport = false,
-                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.PlainText),
+                        DocumentationFormat = new Container<MarkupKind>(MarkupKind.Markdown, MarkupKind.PlainText),
                         SnippetSupport = true,
                         PreselectSupport = true,
                         InsertReplaceSupport = true,
@@ -333,16 +353,22 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
                 });
 
                 customOptions?.Invoke(options);
+                ConfigureClientOptions(options);
             }
         );
+        Client = client;
 
-        var cancelToken = new CancellationToken();
+        var cancelToken = _cancellation?.Token ?? CancellationToken.None;
 
         ContainerLocator.Container.Resolve<ILogger>()?.Log("Preinit finished " + Name);
 
         try
         {
-            await Client.Initialize(cancelToken).ConfigureAwait(false);
+            await client.Initialize(cancelToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancelToken.IsCancellationRequested)
+        {
+            return;
         }
         catch (Exception e)
         {
@@ -351,6 +377,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             return;
         }
 
+        if (!ReferenceEquals(Client, client) || cancelToken.IsCancellationRequested) return;
         ContainerLocator.Container.Resolve<ILogger>()?.Log("init finished " + Name);
 
         IsLanguageServiceReady = true;
@@ -389,9 +416,19 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     {
     }
 
+    /// <summary>
+    ///     window/logMessage is the server's own diagnostic log, not something the user asked for.
+    ///     Servers log every handled request there, so only problems are kept at a visible level.
+    /// </summary>
     private void WriteLog(LogMessageParams log)
     {
-        var level = MapMessageType(log.Type);
+        var level = log.Type switch
+        {
+            MessageType.Error => LogLevel.Error,
+            MessageType.Warning => LogLevel.Warning,
+            _ => LogLevel.Trace
+        };
+
         LogLspEvent("logMessage", log.Message ?? string.Empty, level);
     }
 
@@ -546,7 +583,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
     /// <summary>
     ///     Requests diagnostics for a document using the pull model (textDocument/diagnostic).
-    ///     Servers that only support pull diagnostics (like tsgo) never send publishDiagnostics for
+    ///     Servers that only support pull diagnostics (like the native tsc language server) never send publishDiagnostics for
     ///     source files, so they are requested here and forwarded to the regular diagnostics handling.
     /// </summary>
     private void RequestPullDiagnostics(string fullPath)
@@ -590,31 +627,25 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
             var client = Client;
             if (client == null) return;
 
-            //The request is sent manually because the RelatedDocumentDiagnosticReport converter of
-            //OmniSharp.Extensions.LanguageServer.Protocol is not implemented and throws on deserialization
-            var report = await client
-                .SendRequest(TextDocumentNames.Diagnostics, new DocumentDiagnosticParams
-                {
-                    TextDocument = new TextDocumentIdentifier { Uri = fullPath },
-                    PreviousResultId = previousResultId
-                })
-                .Returning<JToken?>(cancellation.Token);
+            var report = await client.RequestDocumentDiagnostic(new DocumentDiagnosticParams
+            {
+                TextDocument = new TextDocumentIdentifier { Uri = fullPath },
+                PreviousResultId = previousResultId
+            }, cancellation.Token);
 
-            if (cancellation.IsCancellationRequested || report is not JObject reportObject) return;
+            if (cancellation.IsCancellationRequested || report == null) return;
 
-            HandlePullDiagnosticsReport(fullPath, reportObject);
+            HandlePullDiagnosticsReport(fullPath, report);
 
             //Servers may report diagnostics for other documents in the same response
-            if (reportObject["relatedDocuments"] is JObject relatedDocuments)
-                foreach (var relatedDocument in relatedDocuments.Properties())
-                {
-                    if (relatedDocument.Value is not JObject relatedReport) continue;
+            foreach (var (relatedUri, relatedReport) in report.RelatedDocuments ??
+                                                        ImmutableDictionary<DocumentUri, DocumentDiagnosticReport>.Empty)
+            {
+                var relatedPath = relatedUri.GetFileSystemPath();
+                if (relatedPath == null) continue;
 
-                    var relatedPath = DocumentUri.From(relatedDocument.Name).GetFileSystemPath();
-                    if (relatedPath == null) continue;
-
-                    HandlePullDiagnosticsReport(relatedPath, relatedReport);
-                }
+                HandlePullDiagnosticsReport(relatedPath, relatedReport);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -637,26 +668,30 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
     }
 
     /// <summary>
-    ///     Parses a single document diagnostic report. An unchanged report means the previously
+    ///     Handles a single document diagnostic report. An unchanged report means the previously
     ///     published diagnostics are still valid, so only the result id is updated.
     /// </summary>
-    private void HandlePullDiagnosticsReport(string fullPath, JObject report)
+    private void HandlePullDiagnosticsReport(string fullPath, IDiagnosticReport report)
     {
-        var resultId = report["resultId"]?.Value<string>();
+        //Full and unchanged reports exist once for the requested document and once for related documents
+        var (resultId, items) = report switch
+        {
+            IFullDocumentDiagnosticReport full => (full.ResultId, full.Items),
+            IUnchangedDocumentDiagnosticReport unchanged => (unchanged.ResultId, null),
+            _ => (null, null)
+        };
 
         lock (_pullDiagnosticsRequests)
         {
             _pullDiagnosticsResultIds[fullPath] = resultId;
         }
 
-        if (report["kind"]?.Value<string>() == "unchanged") return;
-
-        var items = report["items"]?.ToObject<List<Diagnostic>>(LspSerializer.Instance.JsonSerializer);
+        if (items is null) return;
 
         PublishDiag(new PublishDiagnosticsParams
         {
             Uri = fullPath,
-            Diagnostics = new Container<Diagnostic>(items ?? [])
+            Diagnostics = items
         });
     }
 
@@ -735,7 +770,7 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
         CompletionTriggerKind triggerKind, string? triggerChar)
     {
         var cts = new CancellationTokenSource();
-        cts.CancelAfter(1000);
+        cts.CancelAfter(5000);
         if (Client?.ServerSettings.Capabilities.CompletionProvider == null) return null;
         try
         {
@@ -941,9 +976,9 @@ public abstract class LanguageServiceLsp(string name, string? workspace) : Langu
 
             return ca;
         }
-        catch
+        catch (Exception e)
         {
-            //ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e); Enable once bug fixed
+            ContainerLocator.Container.Resolve<ILogger>()?.Error(e.Message, e);
             return null;
         }
     }

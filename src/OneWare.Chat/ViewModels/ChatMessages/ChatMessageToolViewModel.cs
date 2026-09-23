@@ -18,6 +18,12 @@ public class ChatMessageToolViewModel : ObservableObject, IChatMessage, IEstimat
     
     [DataMember]
     public string ToolName { get; }
+
+    /// <summary>
+    /// Id the AI backend assigned to this tool call, used to match the entry against the tool
+    /// events of the chat service.
+    /// </summary>
+    public string? SourceToolCallId { get; init; }
     
     [DataMember]
     public string? ToolOutput

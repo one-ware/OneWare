@@ -10,7 +10,7 @@
 
     <Button Cursor="Hand"
             IsVisible="{Binding  ActiveRepository.HeadBranch, FallbackValue={x:False}, Converter={x:Static ObjectConverters.IsNotNull}}"
-            Command="{Binding SyncAsync}"
+            Command="{Binding SyncAsyncCommand}"
             ToolTip.Tip="Synchronize Changes">
         <StackPanel Orientation="Horizontal" Spacing="3">
             <controls:Spinner Foreground="White" Height="13"

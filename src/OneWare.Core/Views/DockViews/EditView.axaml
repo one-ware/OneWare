@@ -92,7 +92,7 @@
                 </ContentControl.Styles>
             </ContentControl>
 
-            <Popup Name="HoverBox" IsLightDismissEnabled="False" MaxWidth="700">
+            <Popup Name="HoverBox" IsLightDismissEnabled="False">
                 <Grid>
                     <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="3" BorderThickness="1"
                                     BorderBrush="{DynamicResource ThemeBorderLowBrush}"

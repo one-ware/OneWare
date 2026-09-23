@@ -36,7 +36,8 @@
                         CommandParameter="{Binding $self}"
                         HorizontalAlignment="Center" />
 
-                <Button DockPanel.Dock="Left" Content="Restart" Height="NaN"
+                <Button DockPanel.Dock="Left" Classes="RoundButton PrimaryButton" Content="Restart"
+                        Padding="10 5" Height="NaN"
                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
                         Command="{Binding TryRestart}"
                         HorizontalAlignment="Center" />

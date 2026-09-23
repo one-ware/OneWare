@@ -60,7 +60,7 @@
                         </avaloniaEdit:TextEditor.Styles>
                     </avaloniaEdit:TextEditor>
 
-                    <ScrollViewer Grid.Column="0" Name="ScrollLeft" Offset="{Binding #ScrollRight.Offset, Mode=TwoWay}"
+                    <ScrollViewer Grid.Column="0" Name="ScrollLeft"
                                   HorizontalScrollBarVisibility="Visible" AllowAutoHide="True">
                         <Grid Name="LeftSide" />
                     </ScrollViewer>

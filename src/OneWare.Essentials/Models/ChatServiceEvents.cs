@@ -6,7 +6,12 @@ namespace OneWare.Essentials.Models;
 
 public abstract class ChatEvent()
 {
-
+    /// <summary>
+    /// Id of the sub-agent this event belongs to, or <c>null</c> when it comes from the main agent.
+    /// The chat UI shows events of a sub-agent inside the corresponding
+    /// <see cref="ChatSubAgentStartedEvent"/> block instead of the main conversation flow.
+    /// </summary>
+    public string? AgentId { get; init; }
 }
 
 public sealed class ChatMessageDeltaEvent(string content, string? messageId = null)
@@ -23,6 +28,9 @@ public sealed class ChatMessageEvent(string content, string? messageId = null)
     public string Content { get; } = content;
     
     public string? MessageId { get; } = messageId;
+
+    /// <summary>Display name of the model that produced this message, when the service reports it.</summary>
+    public string? Model { get; init; }
 }
 
 public sealed class ChatReasoningDeltaEvent(string content, string? reasoningId = null)
@@ -47,10 +55,85 @@ public sealed class ChatUserMessageEvent(string content)
     public string Content { get; } = content;
 }
 
-public sealed class ChatToolExecutionStartEvent(string tool)
+public sealed class ChatToolExecutionStartEvent(string tool, string? toolCallId = null, bool isClientTool = false)
     : ChatEvent()
 {
     public string Tool { get; } = tool;
+
+    /// <summary>Id of the tool call, used to correlate with <see cref="ChatToolExecutionCompleteEvent"/>.</summary>
+    public string? ToolCallId { get; } = toolCallId;
+
+    /// <summary>
+    /// True when the tool is executed by OneWare itself. Those tool calls are already reported
+    /// through the AI function provider, so the chat UI only uses this event to attribute them to a
+    /// sub-agent instead of rendering a second entry.
+    /// </summary>
+    public bool IsClientTool { get; } = isClientTool;
+
+    /// <summary>Short description of what the tool was called with, when known.</summary>
+    public string? Detail { get; init; }
+}
+
+/// <summary>
+/// Completion of a tool call previously announced by <see cref="ChatToolExecutionStartEvent"/>.
+/// </summary>
+public sealed class ChatToolExecutionCompleteEvent(string toolCallId, bool success, string? output = null)
+    : ChatEvent()
+{
+    public string ToolCallId { get; } = toolCallId;
+
+    public bool Success { get; } = success;
+
+    public string? Output { get; } = output;
+}
+
+/// <summary>
+/// Raised when the agent delegated work to a sub-agent. The chat UI opens a collapsible block for
+/// it; all following events carrying this <see cref="Id"/> as their <see cref="ChatEvent.AgentId"/>
+/// belong inside that block.
+/// </summary>
+public sealed class ChatSubAgentStartedEvent(string id, string displayName)
+    : ChatEvent()
+{
+    public string Id { get; } = id;
+
+    public string DisplayName { get; } = displayName;
+
+    /// <summary>What the sub-agent was created for, when the agent definition provides it.</summary>
+    public string? Description { get; init; }
+
+    /// <summary>Model the sub-agent runs with, when known.</summary>
+    public string? Model { get; init; }
+
+    /// <summary>True when the sub-agent runs in the background instead of blocking its parent.</summary>
+    public bool IsBackground { get; init; }
+
+    /// <summary>Id of the spawning sub-agent, for nested delegation. Null when the main agent spawned it.</summary>
+    public string? ParentSubAgentId { get; init; }
+}
+
+/// <summary>
+/// Raised when a sub-agent announced by <see cref="ChatSubAgentStartedEvent"/> finished, failed or
+/// was cancelled.
+/// </summary>
+public sealed class ChatSubAgentCompletedEvent(string id, bool success)
+    : ChatEvent()
+{
+    public string Id { get; } = id;
+
+    public bool Success { get; } = success;
+
+    /// <summary>Error message when the sub-agent failed.</summary>
+    public string? Error { get; init; }
+
+    /// <summary>True when the sub-agent was torn down instead of finishing its work.</summary>
+    public bool Cancelled { get; init; }
+
+    public TimeSpan? Duration { get; init; }
+
+    public long? TotalTokens { get; init; }
+
+    public long? TotalToolCalls { get; init; }
 }
 
 /// <summary>
@@ -106,9 +189,58 @@ public sealed class ChatPermissionRequestEvent(
     public IRelayCommand<Control?>? AllowForSessionCommand { get; } = allowForSessionCommand;
 }
 
+/// <summary>
+/// The agent finished planning and asks how to continue: start the implementation, or keep
+/// refining the plan.
+/// </summary>
+public sealed class ChatPlanReadyEvent(
+    string summary,
+    string? planContent,
+    IRelayCommand<Control?> startImplementationCommand,
+    IRelayCommand<Control?> updatePlanCommand)
+    : ChatEvent()
+{
+    /// <summary>Short summary of the plan or of the proposed next step.</summary>
+    public string Summary { get; } = summary;
+
+    /// <summary>Full plan text, when the agent provided one.</summary>
+    public string? PlanContent { get; } = planContent;
+
+    /// <summary>Accepts the plan and lets the agent carry it out.</summary>
+    public IRelayCommand<Control?> StartImplementationCommand { get; } = startImplementationCommand;
+
+    /// <summary>Keeps planning so the user can have the plan changed.</summary>
+    public IRelayCommand<Control?> UpdatePlanCommand { get; } = updatePlanCommand;
+
+    public string StartImplementationButtonText { get; init; } = "Start implementation";
+
+    public string UpdatePlanButtonText { get; init; } = "Update plan";
+
+    /// <summary>
+    /// Raised when the decision can no longer be made, e.g. because the turn was aborted. The UI
+    /// stops offering the choice.
+    /// </summary>
+    public event EventHandler? Expired;
+
+    /// <summary>Withdraws the offer; the commands must not be executed afterwards.</summary>
+    public void Expire()
+    {
+        IsExpired = true;
+        Expired?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool IsExpired { get; private set; }
+}
+
 public sealed class ChatIdleEvent()
     : ChatEvent()
 {
+    /// <summary>
+    /// Display name of the model that produced the last response of the turn, when the service
+    /// reports it. Lets the chat show which AI finished the turn even when the final message
+    /// carried no model information.
+    /// </summary>
+    public string? Model { get; init; }
 }
 
 /// <summary>

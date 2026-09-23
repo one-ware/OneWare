@@ -14,11 +14,11 @@ public enum PinPropertyType
 
 /// <summary>
 /// Declares a per-pin property that a hardware support module (e.g. Quartus Agilex toolchain)
-/// wants to expose in the pin planner UI and persist via
+/// wants to expose in the constraint editor UI and persist via
 /// <see cref="IFpgaToolchain.SaveConnections"/> / <see cref="IFpgaToolchain.LoadConnections"/>.
 /// </summary>
 /// <param name="Key">Unique identifier used as the dictionary key in <c>HardwarePinModel.PinPropertyValues</c>.</param>
-/// <param name="DisplayName">Column header shown in the pin planner table.</param>
+/// <param name="DisplayName">Column header shown in the constraint editor table.</param>
 /// <param name="Type">Whether the cell renders as a text box or a combo box.</param>
 /// <param name="AllowedValues">Allowed options when <paramref name="Type"/> is <see cref="PinPropertyType.ComboBox"/>.</param>
 public record PinPropertyDefinition(

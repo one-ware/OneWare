@@ -58,9 +58,24 @@ public class OpenFpgaLoader(ISettingsService settingsService, ILogger logger, IO
         
         outputService.WriteLine("Starting OpenFpgaLoader ...");
         
+        var bitstreamPath = BitstreamPaths.GetValueOrDefault(bitstreamFormat);
+        if (bitstreamPath != null && !File.Exists(Path.Combine(project.FullPath, bitstreamPath)))
+        {
+            logger.Error($"Bitstream '{bitstreamPath}' not found. Compile the project successfully first.");
+            return;
+        }
+
         try 
         {
-            await toolExecutionDispatcherService.ExecuteAsync(command);
+            var (success, _) = await toolExecutionDispatcherService.ExecuteAsync(command);
+
+            if (!success)
+            {
+                logger.Error("OpenFpgaLoader failed. See output for details.");
+                return;
+            }
+
+            Dispatcher.UIThread.Post(() => { outputService.WriteLine("OpenFpgaLoader finished successfully"); });
         }
         catch (Exception ex)
         {

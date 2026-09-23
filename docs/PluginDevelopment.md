@@ -261,21 +261,47 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 
-- `Register(toolContext, strategy)`: add a tool + default strategy.
-- `RegisterStrategy(toolKey, strategy)`: add a strategy for an existing tool.
+- `Register(toolContext)`: add a tool. At least one strategy must become available for it
+  separately (see below), before or after this call, in any order.
+- `RegisterStrategy(strategy)`: register a strategy globally, under its own `GetStrategyKey()`.
+  Only available to a tool that lists this key in its own `ToolContext.PreferredStrategyKeys`
+  (tool-side opt-in).
+- `RegisterStrategy(strategy, supportedToolKeys)` / `RegisterStrategy(strategy, supportsTool)`:
+  same, plus a strategy-side opt-in - available to exactly the given tool keys, or to any tool
+  matching the predicate, regardless of whether those tools listed it as preferred. Use the
+  predicate form when the supported tools can't be enumerated up front (e.g. a Docker extension
+  matching tools by name pattern); it's re-evaluated on demand, so it also covers tools registered
+  after the strategy, since plugin load order isn't guaranteed.
+- `RegisterUniversalStrategy(strategy)`: register a strategy available to every tool - used for a
+  generic fallback like a native-process strategy, which needs no tool-specific wiring.
 - `Unregister(toolContext)` / `Unregister(toolKey)` / `UnregisterStrategy(strategyKey)`: remove.
-- `GetAllTools()`, `GetStrategies(toolKey)`, `GetStrategy(toolKey)`, `GetStrategyKeys(toolKey)`:
-  query registered tools and strategies.
+- `GetAllTools()`, `GetStrategies(toolKey)`, `GetStrategy(toolKey)`, `GetStrategyKeys(toolKey)`,
+  `TryGetStrategy(toolKey, strategyKey)`: query registered tools and strategies. `TryGetStrategy`
+  bypasses the tool's configured setting - used to resolve a `ToolCommand.ForcedStrategyKey`.
+- `GetStrategyConfiguration(toolKey[, prefix])`, `SetStrategyConfigurationValue(toolKey, key, value)`,
+  `GetEffectiveStrategyConfiguration(command)`: read/write opaque per-tool strategy configuration
+  (e.g. `"docker.image"`), layered as plugin default -> user Settings override -> per-call override
+  (`ToolCommand.StrategyConfigurationOverrides` / `IToolCommandBuilder.WithStrategyConfiguration`). A
+  strategy implementation should read via `GetEffectiveStrategyConfiguration` rather than merging the
+  layers itself.
 
 #### `IToolExecutionStrategy` (src/OneWare.Essentials/Services/IToolExecutionStrategy.cs)
 
-- `ExecuteAsync(ToolCommand)`: run a tool.
+- `ExecuteAsync(ToolCommand)`: run a tool and wait for completion.
+- `StartWeakProcess(ToolCommand)`: start a fire-and-forget process without tracking it.
+- `StartProcess(ToolCommand)` / `StopProcess(handle)`: start a long-running background process
+  tracked by an opaque `Guid` handle, and stop it later.
 - `GetStrategyName()`: display name.
-- `GetStrategyKey()`: unique key.
+- `GetStrategyKey()`: unique key, used for registration and `ToolCommand.ForcedStrategyKey`.
 
 #### `IToolExecutionDispatcherService` (src/OneWare.Essentials/Services/IToolExecutionDispatcherService.cs)
 
-- `ExecuteAsync(ToolCommand)`: dispatch a tool command through configured strategy.
+- `ExecuteAsync(ToolCommand)` / `StartWeakProcess(ToolCommand)` / `StartProcess(ToolCommand)` /
+  `StopProcess(handle)`: dispatch a tool command through its configured execution strategy (or the
+  strategy named by `ToolCommand.ForcedStrategyKey`, if set). `StopProcess` routes back to whichever
+  strategy started the process, even if the tool's configured strategy has since changed.
+- `CreateToolCommandBuilder(toolName)`: entry point for the fluent `IToolCommandBuilder` used to
+  build a `ToolCommand`.
 
 #### `IPackageService` (src/OneWare.Essentials/Services/IPackageService.cs)
 
@@ -329,6 +355,12 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `SelectedChatService`: currently selected provider.
 - `SaveState()`: persist selection.
 
+#### `IChatAgentService` (src/OneWare.Essentials/Services/IChatAgentService.cs)
+
+- `Agents` / `SelectedAgent`: the agents offered in the chat agent picker and the selected one.
+- `RegisterAgent(ChatAgentDefinition)`: add a selectable agent (see "Chat agents").
+- `Refresh()`: re-read the markdown agents of the active project.
+
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
 - `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
@@ -338,6 +370,8 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `GetTools()`: return the registered tools for chat or automation.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
+- Set `OneWareAiFunction.IsReadOnly` on tools that only read state, so read-only chat agents
+  (`Plan`, `Ask`) may use them. Everything else is blocked for those agents.
 - Set `OneWareAiFunction.InvocationHandler` when a tool needs an
   `AiFunctionInvocationContext` for invocation-scoped progress reporting. Keep `Handler` as the
   typed delegate used to generate the tool schema.
@@ -546,6 +580,10 @@ Key points:
 - Use `EventReceived` to stream chat content and `StatusChanged` to report activity or errors.
 - Set `BottomUiExtension` to a custom `Avalonia.Controls.Control` if you need extra UI (model
   selector, provider settings, etc.).
+- Report which AI answered: set `ChatMessageEvent.Model` to the display name of the model that
+  wrote the message, and `ChatIdleEvent.Model` for turns whose messages carry no model. The chat
+  shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
+  for a delegated task, shown in the header of its block.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
 
 Skeleton example:
@@ -662,10 +700,67 @@ Optional members: `Tools` (restrict the agent to specific tool names), `Model` a
 `ReasoningEffort` (overrides for this agent), and `Infer = false` if the main agent must not
 delegate to it on its own.
 
-There is no agent picker in the chat UI. An agent is used either automatically — the main agent
-delegates when the request matches the `Description` — or because the user names it (*"use the
-OneAI dataset agent to …"*). Write the `Description` for the first case: state *when* to use the
-agent, not what it is.
+Agents registered this way are *delegation targets*: they are used either automatically — the main
+agent delegates when the request matches the `Description` — or because the user names it (*"use
+the OneAI dataset agent to …"*). Write the `Description` for the first case: state *when* to use
+the agent, not what it is. Their work is shown in the chat as a collapsible sub-agent block.
+
+To add an agent the **user selects** for the whole conversation, use `IChatAgentService` instead
+(see "Chat agents").
+
+### Chat agents
+
+`IChatAgentService` (src/OneWare.Essentials/Services/IChatAgentService.cs) holds the agents offered
+in the picker below the chat input. OneWare ships three built-ins:
+
+| Agent | Behaviour |
+| --- | --- |
+| `agent` | Full access: researches, edits files and runs tools |
+| `plan` | Runs the turn in plan mode and works out a plan; workspace changes are blocked |
+| `ask` | Answers questions; workspace changes are blocked |
+
+The selected agent applies to every message sent while it is active: its `Instructions` are added
+to the turn, `TurnMode` selects interactive or plan mode, and `IsReadOnly`/`Tools` are enforced
+before a tool runs — a blocked tool call is denied, not just hidden from the model.
+
+When a planning turn ends, the chat shows a **Plan ready** block with two choices: *Start
+implementation* switches to the `agent` mode and lets the plan be carried out, *Update plan* keeps
+planning. Chat services can raise that block themselves with `ChatPlanReadyEvent`; otherwise the
+chat adds it at the end of a turn of a `ChatAgentTurnMode.Plan` agent.
+
+Register an agent from a module:
+
+```csharp
+serviceProvider.Resolve<IChatAgentService>().RegisterAgent(new ChatAgentDefinition
+{
+    Id = "fpga-bringup",
+    DisplayName = "FPGA Bring-up",
+    Description = "Walks through pin planning, constraints and the first bitstream.",
+    Instructions = "You guide the user through bringing up a new FPGA board. ...",
+    Tools = ["readFile", "getActiveProject", "getAllErrors"]
+});
+```
+
+Users can add agents without writing code by dropping a markdown file into `.github/agents/` of the
+project (or into `<AppData>/Agents/` to have it available everywhere). The front matter is optional;
+the body is used as the instructions:
+
+```markdown
+---
+name: release-notes
+displayName: Release Notes
+description: Summarizes what changed since the last tag.
+mode: plan            # "plan" or omitted for interactive
+readOnly: true
+tools: [readFile, getActiveProject]
+model: claude-haiku-4.5
+reasoningEffort: low
+---
+
+Summarize the changes since the last release tag, grouped by area.
+```
+
+File agents are re-read whenever the active project changes or a new chat is started.
 
 ### Skills
 

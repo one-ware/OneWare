@@ -7,7 +7,6 @@
         xmlns:folding="clr-namespace:AvaloniaEdit.Folding;assembly=AvaloniaEdit"
         xmlns:editorEx="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
         xmlns:snippets="clr-namespace:AvaloniaEdit.Snippets;assembly=AvaloniaEdit"
-        xmlns:colorTextBlock="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
         xmlns:models="clr-namespace:OmniSharp.Extensions.LanguageServer.Protocol.Models;assembly=OmniSharp.Extensions.LanguageProtocol"
         xmlns:rendering="https://github.com/avaloniaui/avaloniaedit">
@@ -56,9 +55,14 @@
                                                    Height="{Binding #CompletionName.Bounds.Height}" />
                                             <TextBlock VerticalAlignment="Center" Padding="0" Name="CompletionName"
                                                        Margin="8,0,0,0" Text="{Binding Label}"
+                                                       Classes.Deprecated="{Binding IsDeprecated}"
                                                        Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                            <TextBlock VerticalAlignment="Center" Padding="0"
+                                                       Text="{Binding LabelDetail}"
+                                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{Binding Detail}"
+                                        <TextBlock Grid.Column="2" Text="{Binding Annotation}"
                                                    Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                                    TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                                    TextAlignment="Right" HorizontalAlignment="Right" />
@@ -84,6 +88,10 @@
         <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
     </Style>
 
+    <Style Selector="cc|CompletionList TextBlock.Deprecated">
+        <Setter Property="TextDecorations" Value="Strikethrough" />
+    </Style>
+
     <Style Selector="cc|CompletionList > ListBox > ListBoxItem">
         <Setter Property="Margin" Value="0" />
         <Setter Property="Padding" Value="5, 3, 3, 3" />
@@ -94,9 +102,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="Padding" Value="2" />
-        <Setter Property="MaxHeight" Value="350" />
-        <Setter Property="MaxWidth" Value="700" />
+        <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Template">
             <Setter.Value>
@@ -105,18 +111,7 @@
                             BorderThickness="1"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             Background="{TemplateBinding Background}">
-                        <controls:MarkdownViewer Markdown="{TemplateBinding Content}">
-                            <controls:MarkdownViewer.Styles>
-                                <Style Selector="avaloniaEdit|TextEditor">
-                                    <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                    <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                </Style>
-                                <Style Selector="colorTextBlock|CTextBlock">
-                                    <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                    <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                </Style>
-                            </controls:MarkdownViewer.Styles>
-                        </controls:MarkdownViewer>
+                        <controls:MarkdownViewer Markdown="{TemplateBinding Content}" Classes="ToolTip" />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -148,8 +143,6 @@
                 Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="MaxWidth" Value="800" />
-        <Setter Property="MaxHeight" Value="400" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         <Setter Property="Template">
             <ControlTemplate>
@@ -181,47 +174,21 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Row="0" Grid.Column="1" Padding="5">
+                        <Border Grid.Row="0" Grid.Column="1">
                             <controls:MarkdownViewer VerticalAlignment="Center"
                                                      HorizontalAlignment="Left"
-                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                      SelectionEnabled="True"
-                                                     Classes="ToolTip"
-                                                     Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}">
-                                <controls:MarkdownViewer.Styles>
-                                    <Style Selector="avaloniaEdit|TextEditor">
-                                        <Setter Property="WordWrap" Value="True" />
-                                        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                    </Style>
-                                    <Style Selector="colorTextBlock|CTextBlock">
-                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                    </Style>
-                                </controls:MarkdownViewer.Styles>
-                            </controls:MarkdownViewer>
+                                                     Classes="ToolTip Signature"
+                                                     Markdown="{Binding Provider.CurrentHeader, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Border>
 
                         <Border
                             IsVisible="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static ObjectConverters.IsNotNull}}"
-                            Grid.Row="1" Grid.Column="1" Padding="5" BorderThickness="0 1 0 0"
+                            Grid.Row="1" Grid.Column="1" BorderThickness="0 1 0 0"
                             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                            <controls:MarkdownViewer VerticalAlignment="Top" MaxHeight="250"
-                                                     Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}">
-                                <controls:MarkdownViewer.Styles>
-                                    <Style Selector="avaloniaEdit|TextEditor">
-                                        <Setter Property="WordWrap" Value="True" />
-                                        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                    </Style>
-                                    <Style Selector="colorTextBlock|CTextBlock">
-                                        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-                                        <Setter Property="FontSize" Value="{DynamicResource EditorFontSize}" />
-                                    </Style>
-                                </controls:MarkdownViewer.Styles>
-                            </controls:MarkdownViewer>
+                            <controls:MarkdownViewer VerticalAlignment="Top"
+                                                     Classes="ToolTip"
+                                                     Markdown="{Binding Provider.CurrentContent, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Border>
                     </Grid>
                 </Border>
@@ -235,7 +202,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <TextBox Name="inputBox" IsReadOnly="False" />
+                    <!-- Height is auto so the box follows the editor font size instead of the fixed height every TextBox gets -->
+                    <TextBox Name="inputBox" IsReadOnly="False" Height="NaN"
+                             MinWidth="100" MaxWidth="500"
+                             VerticalContentAlignment="Center"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

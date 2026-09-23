@@ -23,7 +23,7 @@ public class LanguageServiceVerilog : LanguageServiceLspAutoDownload
 
     public override ITypeAssistance GetTypeAssistance(IEditor editor)
     {
-        return new TypeAssistanceVerilog(editor, this, _settingsService);
+        return new TypeAssistanceVerilog(editor, this);
     }
 
     protected override string GetLanguageId(string fullPath)

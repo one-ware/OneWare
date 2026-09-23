@@ -326,6 +326,17 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
                     Command = new RelayCommand(() => PlatformHelper.OpenExplorerPath(entry.FullPath)),
                     Icon = new IconModel("VsImageLib.OpenFolder16Xc")
                 });
+
+                var clipboard = topLevel.Clipboard;
+                menuItems.Add(new MenuItemModel("CopyPath")
+                {
+                    Header = "Copy Path",
+                    Command = clipboard is not null
+                        ? new AsyncRelayCommand(() => clipboard.SetTextAsync(entry.FullPath))
+                        : null,
+                    IsEnabled = clipboard is not null,
+                    Icon = new IconModel("BoxIcons.RegularCopy")
+                });
             }
         }
         else if (SelectedItems.Count > 1)

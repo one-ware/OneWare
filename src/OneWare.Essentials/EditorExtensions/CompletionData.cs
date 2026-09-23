@@ -67,6 +67,23 @@ public partial class CompletionData : ICompletionData
 
     public string? SortText { get; set; }
 
+    /// <summary>
+    ///     Extra label text a server may send, shown right behind the label. Usually the parameter list.
+    /// </summary>
+    public string? LabelDetail { get; set; }
+
+    /// <summary>
+    ///     Where the symbol comes from, for example the module it is imported from.
+    /// </summary>
+    public string? LabelDescription { get; set; }
+
+    public bool IsDeprecated { get; set; }
+
+    /// <summary>
+    ///     The dimmed text on the right of a completion entry.
+    /// </summary>
+    public string? Annotation => LabelDescription ?? Detail;
+
     public string Text => FilterText ?? Label;
 
     public bool IsSnippet { get; set; } = true;

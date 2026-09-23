@@ -11,4 +11,10 @@
         <ProjectReference Include="..\OneWare.ToolEngine\OneWare.ToolEngine.csproj"/>
         <ProjectReference Include="..\OneWare.UniversalFpgaProjectSystem\OneWare.UniversalFpgaProjectSystem.csproj"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <!-- Toolchain skill for the FPGA agent, discovered at runtime from the output directory.
+             The relative Skills/<skill-name>/SKILL.md layout is what the host scans for. -->
+        <Content Include="Skills/**/*.md" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
 </Project>

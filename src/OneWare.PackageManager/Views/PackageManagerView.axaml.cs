@@ -27,7 +27,10 @@ public partial class PackageManagerView : FlexibleWindow
         if (DataContext is not PackageManagerViewModel viewModel)
             return;
 
-        var separators = viewModel.SelectedCategory?.VisibleSeparators;
+        var separators = viewModel.SelectedCategory?.VisibleEntries
+            .OfType<PackageSeparatorViewModel>()
+            .ToList();
+
         if (separators == null || separators.Count == 0)
             return;
 

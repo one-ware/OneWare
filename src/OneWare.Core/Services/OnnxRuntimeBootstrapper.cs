@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.ML.OnnxRuntime;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -16,6 +17,41 @@ public class OnnxRuntimeBootstrapper
     
     public const string SettingOpenVinoDeviceKey = "OnnxRuntime_OpenVinoDevice";
 
+    /// <summary>
+    ///     Runtimes from the frozen combined-build packages. They ship an onnxruntime older than the
+    ///     managed assembly, which is not ABI compatible, and were superseded by Windows ML and the
+    ///     plugin execution providers. Stale installations are removed instead of being loaded.
+    /// </summary>
+    private static readonly string[] LegacyIncompatibleRuntimes =
+    [
+        "onnxruntime-directml",
+        "onnxruntime-openvino",
+        "onnxruntime-qnn"
+    ];
+
+    /// <summary>
+    ///     Native libraries that live next to onnxruntime and are loaded dynamically by it at runtime.
+    ///     They are preloaded by absolute path so the OS loader resolves them from the side-loaded
+    ///     runtime directory instead of the application directory.
+    /// </summary>
+    private static readonly string[] SiblingDependencyLibraries =
+    [
+        "onnxruntime_providers_shared",
+        "DirectML",
+        "Microsoft.Windows.AI.MachineLearning"
+    ];
+
+    /// <summary>
+    ///     Plugin execution providers are additive: they do not replace onnxruntime itself but are
+    ///     registered against it via <see cref="OrtEnv.RegisterExecutionProviderLibrary"/>.
+    ///     Maps the plugin library base name to its ONNX Runtime registration name.
+    /// </summary>
+    private static readonly (string LibraryBaseName, string RegistrationName)[] PluginExecutionProviders =
+    [
+        ("onnxruntime_providers_openvino_plugin", "OpenVINOExecutionProvider"),
+        ("onnxruntime_providers_qnn", "QNNExecutionProvider")
+    ];
+
     private readonly ILogger _logger;
     private readonly IPaths _paths;
     private static readonly Lock ResolverSync = new();
@@ -24,6 +60,17 @@ public class OnnxRuntimeBootstrapper
     private static bool _onnxResolverRegistered;
 
     public string SelectedRuntime { get; private set; } = "onnxruntime-builtin";
+
+    /// <summary>
+    ///     ONNX Runtime registration name of the side-loaded plugin execution provider, if the selected
+    ///     runtime is a plugin execution provider rather than a full runtime.
+    /// </summary>
+    public string? PluginExecutionProviderName { get; private set; }
+
+    /// <summary>
+    ///     Absolute path to the side-loaded plugin execution provider library.
+    /// </summary>
+    public string? PluginExecutionProviderLibraryPath { get; private set; }
 
     public OnnxRuntimeBootstrapper(IPaths paths, ILogger logger)
     {
@@ -40,7 +87,8 @@ public class OnnxRuntimeBootstrapper
                 options.AddRange(Directory.GetDirectories(paths.OnnxRuntimesDirectory)
                     .Select(Path.GetFileName)
                     .Where(x => !string.IsNullOrWhiteSpace(x))!
-                    .Cast<string>());
+                    .Cast<string>()
+                    .Where(x => !LegacyIncompatibleRuntimes.Contains(x, StringComparer.OrdinalIgnoreCase)));
         }
         catch
         {
@@ -66,17 +114,17 @@ public class OnnxRuntimeBootstrapper
                 if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     executionProviders.Add(OnnxExecutionProvider.CoreMl);
                 break;
-            case "onnxruntime-directml":
+            case "onnxruntime-windowsml":
                 executionProviders.Add(OnnxExecutionProvider.DirectMl);
                 break;
             case "onnxruntime-nvidia":
                 executionProviders.Add(OnnxExecutionProvider.Cuda);
                 executionProviders.Add(OnnxExecutionProvider.TensorRt);
                 break;
-            case "onnxruntime-openvino":
+            case "onnxruntime-ep-openvino":
                 executionProviders.Add(OnnxExecutionProvider.OpenVino);
                 break;
-            case "onnxruntime-qnn":
+            case "onnxruntime-ep-qnn":
                 executionProviders.Add(OnnxExecutionProvider.Qnn);
                 break;
         }
@@ -92,7 +140,18 @@ public class OnnxRuntimeBootstrapper
         {
             // We don't use settings service here because it is not loaded at this state
             var selectedRuntime = ReadStringSetting(SettingSelectedRuntimeKey)?.Trim() ?? "no-runtime";
-            
+
+            RemoveLegacyRuntimes();
+
+            if (LegacyIncompatibleRuntimes.Contains(selectedRuntime, StringComparer.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning(
+                    "ONNX runtime '{Runtime}' is no longer supported and was removed. Falling back to the built-in runtime.",
+                    selectedRuntime);
+                SelectedRuntime = "onnxruntime-builtin";
+                return;
+            }
+
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
             var runtimeRootToLoad = CreateSessionRuntimeCopy(selectedRuntime, selectedRuntimeRoot) ?? selectedRuntimeRoot;
 
@@ -117,6 +176,29 @@ public class OnnxRuntimeBootstrapper
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to initialize ONNX Runtime bootstrapper.");
+        }
+    }
+
+    /// <summary>
+    ///     Deletes installations of runtimes that are no longer ABI compatible with the bundled managed
+    ///     assembly, so they cannot be side-loaded and no longer show up as a selectable runtime.
+    /// </summary>
+    private void RemoveLegacyRuntimes()
+    {
+        foreach (var legacyRuntime in LegacyIncompatibleRuntimes)
+        {
+            var path = Path.Combine(_paths.OnnxRuntimesDirectory, legacyRuntime);
+            if (!Directory.Exists(path)) continue;
+
+            try
+            {
+                Directory.Delete(path, true);
+                _logger.LogInformation("Removed unsupported ONNX runtime '{Runtime}'.", legacyRuntime);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to remove unsupported ONNX runtime '{Runtime}'.", legacyRuntime);
+            }
         }
     }
 
@@ -157,15 +239,9 @@ public class OnnxRuntimeBootstrapper
     {
         if (!Directory.Exists(nativeDirectory)) return false;
 
-        var fileNames = GetOnnxRuntimeFileNameCandidates();
-        var providersShared = PlatformHelper.GetLibraryFileName("onnxruntime_providers_shared");
-        
-        // Ensure provider shared library can be resolved before loading onnxruntime itself.
-        var providerSharedPath = Path.Combine(nativeDirectory, providersShared);
-        if (File.Exists(providerSharedPath))
-            _ = NativeLibrary.TryLoad(providerSharedPath, out _);
+        PreloadSiblingDependencies(nativeDirectory);
 
-        foreach (var fileName in fileNames.Distinct(StringComparer.OrdinalIgnoreCase))
+        foreach (var fileName in GetOnnxRuntimeFileNameCandidates().Distinct(StringComparer.OrdinalIgnoreCase))
         {
             var fullPath = Path.Combine(nativeDirectory, fileName);
             if (!File.Exists(fullPath)) continue;
@@ -177,7 +253,62 @@ public class OnnxRuntimeBootstrapper
             return true;
         }
 
+        return TryDetectPluginExecutionProvider(nativeDirectory);
+    }
+
+    /// <summary>
+    ///     Detects a plugin execution provider in the given directory. Plugin providers ship without
+    ///     onnxruntime itself and are registered against the active runtime once ONNX Runtime is
+    ///     initialized, so nothing is loaded here beyond recording the library path.
+    /// </summary>
+    private bool TryDetectPluginExecutionProvider(string nativeDirectory)
+    {
+        foreach (var (libraryBaseName, registrationName) in PluginExecutionProviders)
+        {
+            foreach (var candidate in BuildLibraryFileCandidates(libraryBaseName))
+            {
+                var fullPath = Path.Combine(nativeDirectory, candidate);
+                if (!File.Exists(fullPath)) continue;
+
+                PluginExecutionProviderName = registrationName;
+                PluginExecutionProviderLibraryPath = fullPath;
+
+                // Preloading by absolute path lets the loader resolve the provider's own dependencies
+                // (OpenVINO/QNN runtime libraries) from the side-loaded directory.
+                if (!NativeLibrary.TryLoad(fullPath, out _))
+                    _logger.LogDebug("Failed to preload plugin execution provider '{Path}'.", fullPath);
+
+                _logger.LogInformation("Found ONNX Runtime plugin execution provider {Provider} at {Path}",
+                    registrationName, fullPath);
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    /// <summary>
+    ///     Preloads native libraries that sit next to onnxruntime and are resolved dynamically by it.
+    ///     Loading them by absolute path first makes the loader reuse the already loaded module instead
+    ///     of searching the application directory, where the side-loaded copies do not exist.
+    /// </summary>
+    private void PreloadSiblingDependencies(string nativeDirectory)
+    {
+        foreach (var libraryBaseName in SiblingDependencyLibraries)
+        {
+            // Not using BuildLibraryFileCandidates: names like "Microsoft.Windows.AI.MachineLearning"
+            // already contain dots and would be treated as having a file extension.
+            var platformFileName = PlatformHelper.GetLibraryFileName(libraryBaseName);
+
+            foreach (var candidate in new[] { platformFileName, $"lib{platformFileName}" })
+            {
+                var fullPath = Path.Combine(nativeDirectory, candidate);
+                if (!File.Exists(fullPath)) continue;
+
+                if (!NativeLibrary.TryLoad(fullPath, out _))
+                    _logger.LogDebug("Failed to preload ONNX Runtime dependency '{Path}'.", fullPath);
+            }
+        }
     }
 
     private IEnumerable<string> EnumerateNativeSearchDirectories(string rootPath)
@@ -240,6 +371,9 @@ public class OnnxRuntimeBootstrapper
 
             try
             {
+                // Our resolver takes over native lookup, so ONNX Runtime must not install its own.
+                OrtEnv.DisableDllImportResolver = true;
+
                 var onnxAssembly = typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly;
                 NativeLibrary.SetDllImportResolver(onnxAssembly, ResolveOnnxRuntimeNativeLibrary);
                 _onnxResolverRegistered = true;

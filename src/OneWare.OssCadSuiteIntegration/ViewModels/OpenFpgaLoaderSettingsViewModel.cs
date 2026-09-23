@@ -35,16 +35,16 @@ public class OpenFpgaLoaderSettingsViewModel : FlexibleWindowViewModelBase
             HoverDescription = "OpenFPGALoader Board"
         };
 
-        _shortTermFlagsSetting = new TextBoxSetting("Short Term Arguments",
+        _shortTermFlagsSetting = new TextBoxSetting("Config FPGA Arguments",
             defaultProperties.GetValueOrDefault("openFpgaLoaderShortTermFlags") ?? "", null)
         {
-            HoverDescription = "OpenFPGALoader Flags for Short Term Programming"
+            HoverDescription = "OpenFPGALoader Flags for Config FPGA"
         };
 
-        _longTermFlagsSetting = new TextBoxSetting("Long Term Arguments",
+        _longTermFlagsSetting = new TextBoxSetting("Write FLASH Memory Arguments",
             defaultProperties.GetValueOrDefault("openFpgaLoaderLongTermFlags") ?? "", null)
         {
-            HoverDescription = "OpenFPGALoader Flags for Long Term Programming"
+            HoverDescription = "OpenFPGALoader Flags for Write FLASH Memory"
         };
         
         _inputBitstreamFormat = new ComboBoxSetting("Pack output format",

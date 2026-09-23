@@ -1,3 +1,42 @@
+## 1.0.32
+
+- Added AI planning mode that proposes a plan for review before making changes
+- Added AI sub agents, including their own chat messages and progress display
+- Added /remote command to toggle a remote Copilot session
+- Added Python Pyrefly language server with automatic installation and workspace interpreter selection
+- Added Python indentation support
+- Reworked the Package Manager UI with featured packages, faster list updates and better filtering
+- Improved Git support: safer commit, discard and sync workflows, more reliable refresh and staged diffs
+- Improved the diff comparison control
+- Added Copy Path to the Project Explorer and document tabs
+- Open documents are now shown in the Copilot attachments by default
+- Refreshed icons and UI styling
+- More reliable language server auto downloads
+- Updated ONNX Runtime to 1.28, OpenCvSharp and Avalonia to 11.3.22
+- Fixed a possible crash when showing a message box
+
+## 1.0.31
+
+- Fix preventing plugin updates forcing a restart
+- Fix plugin removals forcing package manager viewmodel reconstruction
+
+## 1.0.30
+
+- Huge LSP Support improvements (Benefitting all languages)
+- Improved Markdown Styling
+- Added Verilator simulator and improved Verilog / SystemVerilog support
+- Added FPGA AI skills for projects, toolchains and simulations
+- Added Go to Symbol
+- Added Accept All for AI edits and a copy button in the AI chat
+- Breakpoints now sit on the line number margin and can be restricted per file type
+- Renamed the Pin Planner to Constraint Editor
+- More robust native tool downloads and plugin updates
+- Fixed prerelease packages showing as unavailable and not being removable
+- Fixed a crash in the Problems list
+- Fixed resuming the cloud login after a host change
+- Fixed opening files from a link being handled twice
+- Fixed windows stealing focus when a document opens in the background
+
 ## 1.0.28
 
 - Add possibility to add custom AI Agents and Skills
@@ -12,7 +51,7 @@
 
 ## 1.0.25
 
-- Add JavaScript/TypeScript language support (tsgo language server, auto-downloadable)
+- Add JavaScript/TypeScript language support (native tsc language server, auto-downloadable)
 - Support language servers that only provide pull diagnostics (textDocument/diagnostic)
 - Improve Copilot Terminal Handling in Windows
 - Add possibility to add default startup configuration

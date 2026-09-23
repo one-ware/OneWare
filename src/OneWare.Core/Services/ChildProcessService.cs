@@ -86,6 +86,7 @@ public class ChildProcessService(
             key = applicationStateService.AddState(status, state, () => tokenSource.Cancel());
 
             var start = DateTime.Now;
+            var cancelled = false;
 
             var statusTimer = showTimer
                 ? new DispatcherTimer(new TimeSpan(0, 0, 0, 1), DispatcherPriority.Default,
@@ -148,6 +149,7 @@ public class ChildProcessService(
             }
             catch (TaskCanceledException)
             {
+                cancelled = true;
                 logger.Log(
                     $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} cancelled!",
                     true, Brushes.DarkOrange);
@@ -159,6 +161,21 @@ public class ChildProcessService(
 
             collectorTimer.Stop();
             statusTimer?.Stop();
+
+            if (cancelled)
+            {
+                success = false;
+            }
+            else
+            {
+                var exitCode = childProcess.ExitCode;
+                if (exitCode != 0)
+                {
+                    success = false;
+                    logger.Error(
+                        $"[{Path.GetFileName(workingDirectory)}]: {Path.GetFileNameWithoutExtension(path)} exited with code {exitCode}");
+                }
+            }
         }
         catch (Exception e)
         {
@@ -178,6 +195,11 @@ public class ChildProcessService(
     public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments,
         string workingDirectory)
     {
+        return new WeakReference<Process>(StartProcess(path, arguments, workingDirectory));
+    }
+
+    public Process StartProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory)
+    {
         var process = new Process
         {
             StartInfo = new ProcessStartInfo(path, arguments)
@@ -191,7 +213,7 @@ public class ChildProcessService(
         process.Start();
         process.EnableRaisingEvents = true;
 
-        return new WeakReference<Process>(process);
+        return process;
     }
 
     private static ChildProcessStartInfo GetProcessStartInfo(string path, string workingDirectory,
