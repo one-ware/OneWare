@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -286,17 +287,47 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 oldValue.EventReceived -= OnEventReceived;
                 oldValue.StatusChanged -= OnStatusChanged;
                 oldValue.SessionReset -= OnSessionReset;
+                oldValue.PropertyChanged -= OnChatServicePropertyChanged;
                 ReleaseConnectionWaiters(false);
             }
+
+            Blocker = value?.Blocker;
 
             if (value == null) return;
 
             value.EventReceived += OnEventReceived;
             value.StatusChanged += OnStatusChanged;
             value.SessionReset += OnSessionReset;
+            value.PropertyChanged += OnChatServicePropertyChanged;
             
             _ = InitializeAndRestoreCurrentServiceAsync(value);
         }
+    }
+
+    /// <summary>
+    /// Set while the selected service cannot be used (e.g. login or subscription required). The chat is hidden
+    /// and replaced by a panel describing the blocker until the service clears it.
+    /// </summary>
+    public ChatServiceBlocker? Blocker
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(IsBlocked));
+        }
+    }
+
+    public bool IsBlocked => Blocker != null;
+
+    private void OnChatServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(IChatService.Blocker)) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ReferenceEquals(sender, SelectedChatService))
+                Blocker = SelectedChatService?.Blocker;
+        });
     }
 
     public AiFileEditService AiFileEditService { get; }

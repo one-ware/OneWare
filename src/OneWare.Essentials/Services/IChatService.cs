@@ -34,6 +34,12 @@ public interface IChatService : INotifyPropertyChanged, IAsyncDisposable
     public Control? HeaderUiExtension => null;
 
     /// <summary>
+    /// When not null, the service cannot be used (e.g. login or subscription required) and the chat is replaced
+    /// by a panel describing the blocker. Changes are announced through <see cref="INotifyPropertyChanged"/>.
+    /// </summary>
+    public ChatServiceBlocker? Blocker => null;
+
+    /// <summary>
     /// Fired when the chat session is reset.
     /// </summary>
     event EventHandler SessionReset;

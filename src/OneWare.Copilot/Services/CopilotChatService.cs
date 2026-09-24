@@ -631,6 +631,12 @@ public abstract class CopilotChatServiceBase(
 
     public string Name { get; } = isOneWareCloudService ? "OneWare Cloud" : "Copilot";
 
+    public ChatServiceBlocker? Blocker
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
     public bool UsesGitHubAuthentication
     {
         get;
@@ -1336,9 +1342,12 @@ public abstract class CopilotChatServiceBase(
             if (!PlatformHelper.ExistsOnPath(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
-                EventReceived?.Invoke(this, new ChatButtonEvent(
-                    "Copilot CLI not found.", "Install Copilot CLI",
-                    new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))));
+                Blocker = new ChatServiceBlocker("Copilot CLI required",
+                    $"{Name} needs the Copilot CLI. Install it to start chatting.")
+                {
+                    ActionText = "Install Copilot CLI",
+                    ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))
+                };
                 return false;
             }
 
@@ -1349,9 +1358,12 @@ public abstract class CopilotChatServiceBase(
                     state.Status is PackageStatus.UpdateAvailable)
                 {
                     StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
-                    EventReceived?.Invoke(this, new ChatButtonEvent(
-                        "Copilot CLI update found", "Update Copilot CLI",
-                        new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))));
+                    Blocker = new ChatServiceBlocker("Copilot CLI update available",
+                        "Update the Copilot CLI to continue chatting.")
+                    {
+                        ActionText = "Update Copilot CLI",
+                        ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))
+                    };
                     return false;
                 }
             }
@@ -1396,9 +1408,12 @@ public abstract class CopilotChatServiceBase(
                 if (!isAuthenticated)
                 {
                     StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
-                    EventReceived?.Invoke(this, new ChatButtonEvent(
-                        "Not Authenticated to Copilot CLI.", "Login with GitHub",
-                        new AsyncRelayCommand<Control?>(AuthenticateAsync)));
+                    Blocker = new ChatServiceBlocker("Sign in to GitHub Copilot",
+                        "Copilot uses your GitHub account. Sign in to start chatting.")
+                    {
+                        ActionText = "Login with GitHub",
+                        ActionCommand = new AsyncRelayCommand<Control?>(AuthenticateAsync)
+                    };
                     return false;
                 }
             }
@@ -1410,6 +1425,7 @@ public abstract class CopilotChatServiceBase(
             var models = await _client.ListModelsAsync();
 
             StatusChanged?.Invoke(this, new StatusEvent(true, $"Copilot started"));
+            Blocker = null;
 
             Models.Clear();
             Models.AddRange(models.ToArray());
@@ -1426,13 +1442,14 @@ public abstract class CopilotChatServiceBase(
         catch (Exception ex) when (IsOneWareCloud && IsCloudAiNotInPlan(ex))
         {
             StatusChanged?.Invoke(this, new StatusEvent(false, "Pro plan required"));
-            ReportCloudAiUpgradeRequired(null);
+            ReportCloudAiUpgradeRequired();
 
             return false;
         }
         catch (Exception ex)
         {
             StatusChanged?.Invoke(this, new StatusEvent(false, "Copilot unavailable"));
+            Blocker = null;
             EventReceived?.Invoke(this, new ChatErrorEvent(ex.Message));
 
             return false;
@@ -1479,9 +1496,12 @@ public abstract class CopilotChatServiceBase(
             ApplyAuthStatus(null);
             UsesGitHubAuthentication = false;
             StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
-            EventReceived?.Invoke(this, new ChatButtonEvent(
-                "Not authenticated to OneWare Cloud.", "Login to OneWare Cloud",
-                new AsyncRelayCommand<Control?>(AuthenticateOneWareCloudAsync)));
+            Blocker = new ChatServiceBlocker("Sign in to OneWare Cloud",
+                "OneWare Cloud AI uses your OneWare account. Sign in to start chatting.")
+            {
+                ActionText = "Login to OneWare Cloud",
+                ActionCommand = new AsyncRelayCommand<Control?>(AuthenticateOneWareCloudAsync)
+            };
             return false;
         }
     }
@@ -1733,7 +1753,7 @@ public abstract class CopilotChatServiceBase(
 
         if (problem.Code == CloudAiNotInPlanErrorCode)
         {
-            ReportCloudAiUpgradeRequired(agentId);
+            ReportCloudAiUpgradeRequired();
             return;
         }
 
@@ -1744,16 +1764,15 @@ public abstract class CopilotChatServiceBase(
         });
     }
 
-    private void ReportCloudAiUpgradeRequired(string? agentId)
+    private void ReportCloudAiUpgradeRequired()
     {
-        EventReceived?.Invoke(this, new ChatButtonEvent(
-            "OneWare Cloud AI is included in the Pro plans. Upgrade your organization to use it.",
-            "Upgrade to Pro",
-            new RelayCommand<Control?>(_ =>
-                PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}/organization/credits")))
+        Blocker = new ChatServiceBlocker("OneWare Cloud Pro required",
+            "OneWare Cloud AI is included in the Pro plans. Upgrade your organization, then refresh.")
         {
-            AgentId = agentId
-        });
+            ActionText = "Upgrade to Pro",
+            ActionCommand = new RelayCommand<Control?>(_ =>
+                PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}/organization/credits"))
+        };
     }
 
     private sealed class CloudAiNotInPlanException(string? message)

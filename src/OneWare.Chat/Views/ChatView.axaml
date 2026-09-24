@@ -23,23 +23,39 @@
 
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
                             IsVisible="{Binding SelectedChatService, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Button Command="{Binding InitializeCurrentCommand}"
-                            IsVisible="{Binding !IsInitialized}">
+                    <Button Command="{Binding InitializeCurrentCommand}">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!IsInitialized" />
+                                <Binding Path="!IsBlocked" />
+                            </MultiBinding>
+                        </Button.IsVisible>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="8" Width="8"
                                    VerticalAlignment="Center" />
                             <TextBlock Text="Refresh" />
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding NewChatCommand}" IsVisible="{Binding IsInitialized}">
+                    <Button Command="{Binding NewChatCommand}">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="IsInitialized" />
+                                <Binding Path="!IsBlocked" />
+                            </MultiBinding>
+                        </Button.IsVisible>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8"
                                    VerticalAlignment="Center" />
                             <TextBlock Text="New Chat" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Name="HistoryButton"
-                            IsVisible="{Binding !!SessionHistory.Count}">
+                    <Button Name="HistoryButton">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!!SessionHistory.Count" />
+                                <Binding Path="!IsBlocked" />
+                            </MultiBinding>
+                        </Button.IsVisible>
                         <Button.Flyout>
                             <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
                                     Placement="BottomEdgeAlignedRight">
@@ -80,7 +96,7 @@
         </Border>
 
         <Panel Grid.Row="1">
-            <DockPanel>
+            <DockPanel IsVisible="{Binding !IsBlocked}">
                 <!-- Loading indicator + queued messages are pinned below the conversation and kept
                      outside the scrolling region so the virtualizing message list above can virtualize
                      against the viewport (it must be the direct content of the ScrollViewer). -->
@@ -181,6 +197,36 @@
                 </ScrollViewer>
             </DockPanel>
 
+            <!-- Replaces the chat while the selected service cannot be used (login, subscription, ...) -->
+            <Grid IsVisible="{Binding IsBlocked}" Margin="20">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" MaxWidth="340">
+                    <TextBlock Text="{Binding Blocker.Title, FallbackValue={x:Null}}" FontWeight="Bold"
+                               FontSize="15" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
+                               TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0 6 0 0">
+                        <Button Classes="RoundButton PrimaryButton" Padding="10 5" Height="NaN"
+                                Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
+                                CommandParameter="{Binding $self}"
+                                Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
+                                IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+                        <Button Classes="RoundButton" Padding="10 5" Height="NaN"
+                                Command="{Binding InitializeCurrentCommand}"
+                                IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
+                                ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="10" Width="10"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="Checking..." HorizontalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                               IsVisible="{Binding InitializeCurrentCommand.IsRunning}" />
+                </StackPanel>
+            </Grid>
+
             <!--
             <Border VerticalAlignment="Center" HorizontalAlignment="Center"
                     IsVisible="{Binding NeedsAuthentication}">
@@ -199,8 +245,13 @@
         </Panel>
 
         <Border Grid.Row="2" Margin="10 4 10 0" Background="{DynamicResource ThemeControlMidBrush}"
-                Classes="RoundBorder"
-                IsVisible="{Binding !!AiFileEditService.ActiveEdits.Count}">
+                Classes="RoundBorder">
+            <Border.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="!!AiFileEditService.ActiveEdits.Count" />
+                    <Binding Path="!IsBlocked" />
+                </MultiBinding>
+            </Border.IsVisible>
             <StackPanel Orientation="Vertical" Spacing="5">
                 <Grid ColumnDefinitions="Auto, *, Auto">
                     <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
@@ -237,6 +288,7 @@
 
         <Border Grid.Row="3" Margin="10 0" Background="{DynamicResource EditorInputSurfaceBrush}"
                 Classes="RoundBorder" BorderThickness="1"
+                IsVisible="{Binding !IsBlocked}"
                 Classes.busy="{Binding IsBusy}">
             <Border.Styles>
                 <Style Selector="Border.busy">
@@ -348,6 +400,7 @@
 
                 <!-- Agent selector: Agent / Plan / Ask and custom agents -->
                 <Button Name="AgentMenuButton" DockPanel.Dock="Left" VerticalAlignment="Center"
+                        IsVisible="{Binding !IsBlocked}"
                         ToolTip.Tip="{Binding AgentService.SelectedAgent.Description}">
                     <Button.Flyout>
                         <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
@@ -390,6 +443,7 @@
                 </Button>
 
                 <ContentControl DockPanel.Dock="Right" VerticalAlignment="Center"
+                                IsVisible="{Binding !IsBlocked}"
                                 Content="{Binding SelectedChatService.FooterUiExtension, FallbackValue={x:Null}}" />
             </DockPanel>
         </Border>
