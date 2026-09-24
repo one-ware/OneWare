@@ -43,4 +43,4 @@ public sealed class OneWareCloudChatService(
         paths,
         agentService,
         cloudAccess,
-        true);
+        true), IChatServiceWithHistoryReset;

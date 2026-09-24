@@ -319,9 +319,10 @@ public class CopilotModule : OneWareModuleBase
 
         settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");
 
-        serviceProvider.Resolve<IChatManagerService>()
-            .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
+        // The first registered service is the default selection.
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<OneWareCloudChatService>());
+        serviceProvider.Resolve<IChatManagerService>()
+            .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
     }
 }

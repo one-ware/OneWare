@@ -71,6 +71,17 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
     public string BaseUrl =>
         _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey).TrimEnd('/');
 
+    public string? UserId => NormalizeUserId(
+        _settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey));
+
+    // Deferred because the user id setting is registered after this service may have been created.
+    public IObservable<string?> UserIdObservable => Observable.Defer(() =>
+            _settingService.GetSettingObservable<object?>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey)
+                .Select(value => NormalizeUserId(value?.ToString())))
+        .DistinctUntilChanged();
+
+    private static string? NormalizeUserId(string? userId) => string.IsNullOrWhiteSpace(userId) ? null : userId;
+
     public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

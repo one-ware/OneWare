@@ -8,8 +8,6 @@ public class CurrentUserDto
 
     public Guid? DefaultOrganizationId { get; set; }
 
-    public required bool IsProfileComplete { get; set; }
-
     /// <summary>
     ///     Legacy plan of the active organization. <see cref="UserPlanDto.IncludedMonthlyCredits" /> follows
     ///     <see cref="Services.OneWareCloudCurrentAccountService.ActiveOrganization" />.
