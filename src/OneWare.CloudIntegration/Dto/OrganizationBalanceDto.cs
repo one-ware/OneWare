@@ -2,7 +2,8 @@
 
 /// <summary>
 ///     The signed-in user's view of an organization's credits (mirror of the cloud's <c>OrganizationBalanceDto</c>).
-///     Returned by <c>GET /api/credits/balance</c> for the active organization and pushed via <c>Balance_Updated</c>.
+///     Returned by <c>GET /api/organizations/current/balance</c> for the active organization and pushed via
+///     <c>OrganizationBalance_Updated</c>.
 ///     Organization-wide balances are null unless <see cref="CanViewBalances" /> (owners and administrators).
 /// </summary>
 public class OrganizationBalanceDto

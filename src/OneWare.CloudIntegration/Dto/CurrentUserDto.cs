@@ -10,4 +10,11 @@ public class CurrentUserDto
 
     public required bool IsProfileComplete { get; set; }
 
+    /// <summary>
+    ///     Legacy plan of the active organization. <see cref="UserPlanDto.IncludedMonthlyCredits" /> follows
+    ///     <see cref="Services.OneWareCloudCurrentAccountService.ActiveOrganization" />.
+    /// </summary>
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
+    public UserPlanDto UserPlan { get; set; } = new() { Id = Guid.Empty, Name = string.Empty };
+
 }

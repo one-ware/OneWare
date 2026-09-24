@@ -35,7 +35,8 @@ public class OneWareCloudCurrentAccountService : ObservableObject
                 nameof(notificationService.ConnectionStateChanged))
             .Subscribe(_ => OnConnectionStateChanged(notificationService.ConnectionState));
 
-        notificationService.SubscribeToHubMethod<OrganizationBalanceDto>("Balance_Updated", OnBalanceUpdated);
+        notificationService.SubscribeToHubMethod<OrganizationBalanceDto>("OrganizationBalance_Updated",
+            OnBalanceUpdated);
         // Sent after the active organization changed on the server (switch, invitation, leave, removal, deletion).
         notificationService.SubscribeToHubMethod<OrganizationBalanceDto>("ActiveOrganization_Changed",
             SetActiveOrganization);
@@ -46,6 +47,18 @@ public class OneWareCloudCurrentAccountService : ObservableObject
         get;
         set => SetProperty(ref field, value);
     }
+
+    /// <summary>Legacy whole-Credit view of <see cref="ActiveOrganization" />, kept for older plugins.</summary>
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
+    public UserBalanceDto? CurrentBalance
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
+    public string MonthlyIncludedCreditsValue =>
+        $"{CurrentUser?.UserPlan.IncludedMonthlyCredits - CurrentBalance?.IncludedMonthlyCreditsUsed ?? 0}";
 
     public CurrentUserDto? CurrentUser
     {
@@ -75,7 +88,7 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             var (jwt, _) = await _loginService.GetJwtTokenAsync(UserId);
             if (jwt == null) return;
 
-            var request = new RestRequest("/api/credits/balance");
+            var request = new RestRequest("/api/organizations/current/balance");
             request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
             var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
 
@@ -105,7 +118,7 @@ public class OneWareCloudCurrentAccountService : ObservableObject
 
     private void OnBalanceUpdated(OrganizationBalanceDto update)
     {
-        // Balance_Updated is sent for every organization the user belongs to; only the active one is shown.
+        // OrganizationBalance_Updated is sent for every organization the user belongs to; only the active one is shown.
         var activeOrganizationId = ActiveOrganization?.OrganizationId ?? CurrentUser?.DefaultOrganizationId;
         if (activeOrganizationId != update.OrganizationId) return;
 
@@ -115,10 +128,45 @@ public class OneWareCloudCurrentAccountService : ObservableObject
     private void SetActiveOrganization(OrganizationBalanceDto? organization)
     {
         if (Dispatcher.UIThread.CheckAccess())
-            ActiveOrganization = organization;
+            ApplyActiveOrganization(organization);
         else
-            Dispatcher.UIThread.Post(() => ActiveOrganization = organization);
+            Dispatcher.UIThread.Post(() => ApplyActiveOrganization(organization));
     }
+
+    private void ApplyActiveOrganization(OrganizationBalanceDto? organization)
+    {
+        ActiveOrganization = organization;
+#pragma warning disable CS0618 // Keep the legacy members in sync for older plugins.
+        if (CurrentUser != null)
+            CurrentUser.UserPlan.IncludedMonthlyCredits =
+                organization?.CanViewBalances == true ? ToLegacyCredits(organization.IncludedMonthlyCredits) : 0;
+        CurrentBalance = ToLegacyBalance(organization);
+        OnPropertyChanged(nameof(MonthlyIncludedCreditsValue));
+#pragma warning restore CS0618
+    }
+
+    // Same mapping as the cloud's legacy GET /api/credits/balance.
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
+    private static UserBalanceDto? ToLegacyBalance(OrganizationBalanceDto? organization)
+    {
+        if (organization == null) return null;
+
+        if (organization.CanViewBalances)
+            return new UserBalanceDto
+            {
+                Balance = ToLegacyCredits(organization.CreditBalance),
+                IncludedMonthlyCreditsUsed = ToLegacyCredits(organization.IncludedMonthlyCreditsUsed)
+            };
+
+        return new UserBalanceDto
+        {
+            Balance = ToLegacyCredits(organization.MonthlyCreditsRemaining),
+            IncludedMonthlyCreditsUsed = 0
+        };
+    }
+
+    private static int ToLegacyCredits(decimal? amount) =>
+        (int)Math.Clamp(decimal.Floor(amount ?? 0), int.MinValue, int.MaxValue);
 
     private async Task ResolveAsync()
     {
