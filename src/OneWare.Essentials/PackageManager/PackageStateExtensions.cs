@@ -14,10 +14,8 @@ public static class PackageStateExtensions
     /// This is the single source of truth for "which version does the update button install", used
     /// by the package status, the package manager and the Studio updater alike.
     /// </remarks>
-    public static PackageVersion? ResolveTargetVersion(this IPackageState state)
+    public static PackageVersion? ResolveTargetVersion(this IPackageState state, bool includePrerelease = false)
     {
-        var includePrerelease = state.InstalledVersion?.IsPrerelease ?? false;
-
         return state.Package.Versions?
             .Where(x => (includePrerelease || !x.IsPrerelease) && x.IsSupportedByStudio())
             .OrderByDescending(x => SemanticVersion.TryParse(x.Version, out var parsed) ? parsed : SemanticVersion.Empty)
