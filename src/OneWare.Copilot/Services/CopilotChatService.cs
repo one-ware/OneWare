@@ -176,6 +176,7 @@ public abstract class CopilotChatServiceBase(
 
     /// <summary>Error code of the OneWare Cloud 403 for plans that do not include Cloud AI.</summary>
     private const string CloudAiNotInPlanErrorCode = "cloud_ai_not_in_plan";
+    private const string CloudAiDisabledByOrganizationErrorCode = "cloud_ai_disabled_by_organization";
 
     private static readonly Regex InsufficientCreditsStatusRegex = new(
         @"\b402\b", RegexOptions.Compiled);
@@ -1439,10 +1440,18 @@ public abstract class CopilotChatServiceBase(
 
             return true;
         }
-        catch (Exception ex) when (IsOneWareCloud && IsCloudAiNotInPlan(ex))
+        catch (Exception ex) when (IsOneWareCloud && FindCloudAiBlocked(ex) is { } blocked)
         {
-            StatusChanged?.Invoke(this, new StatusEvent(false, "Pro plan required"));
-            ReportCloudAiUpgradeRequired();
+            if (blocked.Code == CloudAiNotInPlanErrorCode)
+            {
+                StatusChanged?.Invoke(this, new StatusEvent(false, "Pro plan required"));
+                ReportCloudAiUpgradeRequired();
+            }
+            else
+            {
+                StatusChanged?.Invoke(this, new StatusEvent(false, "Disabled by organization"));
+                ReportCloudAiDisabledByOrganization(blocked.Message);
+            }
 
             return false;
         }
@@ -1636,8 +1645,8 @@ public abstract class CopilotChatServiceBase(
             var (providerMessage, providerCode) = configuration.UsesOneWareCloud
                 ? await ReadProviderErrorAsync(response, cancellationToken)
                 : default;
-            if (providerCode == CloudAiNotInPlanErrorCode)
-                throw new CloudAiNotInPlanException(providerMessage);
+            if (providerCode is CloudAiNotInPlanErrorCode or CloudAiDisabledByOrganizationErrorCode)
+                throw new CloudAiBlockedException(providerCode, providerMessage);
 
             throw new InvalidOperationException(
                 $"Could not list models from {configuration.DisplayName}: " +
@@ -1715,16 +1724,17 @@ public abstract class CopilotChatServiceBase(
                 : null;
     }
 
-    private static bool IsCloudAiNotInPlan(Exception exception)
+    private static CloudAiBlockedException? FindCloudAiBlocked(Exception exception)
     {
         for (Exception? current = exception; current != null; current = current.InnerException)
         {
-            if (current is CloudAiNotInPlanException) return true;
+            if (current is CloudAiBlockedException blocked) return blocked;
             if (current is AggregateException aggregate &&
-                aggregate.InnerExceptions.Any(IsCloudAiNotInPlan)) return true;
+                aggregate.InnerExceptions.Select(FindCloudAiBlocked).FirstOrDefault(x => x != null) is { } inner)
+                return inner;
         }
 
-        return false;
+        return null;
     }
 
     /// <summary>
@@ -1757,6 +1767,12 @@ public abstract class CopilotChatServiceBase(
             return;
         }
 
+        if (problem.Code == CloudAiDisabledByOrganizationErrorCode)
+        {
+            ReportCloudAiDisabledByOrganization(problem.Message);
+            return;
+        }
+
         EventReceived?.Invoke(this, new ChatErrorEvent(
             problem.Message ?? "OneWare Cloud rejected the request. Check the organization selected in your account.")
         {
@@ -1775,8 +1791,19 @@ public abstract class CopilotChatServiceBase(
         };
     }
 
-    private sealed class CloudAiNotInPlanException(string? message)
-        : InvalidOperationException(message ?? "Cloud AI is not included in this organization's plan.");
+    private void ReportCloudAiDisabledByOrganization(string? message)
+    {
+        Blocker = new ChatServiceBlocker("Cloud AI disabled",
+            (message ?? "Cloud AI is turned off for this organization by its administrators.") +
+            " Ask an organization admin to allow it, or switch to another organization or provider.");
+    }
+
+    /// <summary>OneWare Cloud refused Cloud AI for the organization (not in the plan or turned off by its admins).</summary>
+    private sealed class CloudAiBlockedException(string code, string? message)
+        : InvalidOperationException(message ?? "Cloud AI is not available for this organization.")
+    {
+        public string Code { get; } = code;
+    }
 
     /// <summary>
     /// Enables the reasoning effort picker for OneWare Cloud models that report
