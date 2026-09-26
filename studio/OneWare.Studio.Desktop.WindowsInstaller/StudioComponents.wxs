@@ -97,6 +97,10 @@
 
             </Component>
 
+            <Component Id="OneWareCliCommandComponent" Guid="{5b928cbc-b3b6-474e-bdcd-5e1b515a7c08}">
+                <File Id="OneWareCliCommand" Source="oneware.cmd" KeyPath="yes" />
+            </Component>
+
             <!-- Harvest Studio Files Automatically -->
             <Files Include="!(bindpath.publish)\**\*.*">
                 <Exclude Files="!(bindpath.publish)OneWareStudio.exe" />

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\Avalonia.Desktop.props"/>
@@ -53,6 +53,8 @@
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.mime.xml" CopyToOutputDirectory="PreserveNewest"/>
+        <Content Include="oneware" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
+        <Content Include="oneware-studio" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
     </ItemGroup>
 
     <!--Exclude Terminal on Linux to stop crashes on SetWindowSize. TODO: Check if this is still needed-->
@@ -60,10 +62,53 @@
         <PublishReadyToRunExclude Include="OneWare.Terminal.dll"/>
     </ItemGroup>
 
-    <Target Name="CreateWindowsCommandAlias" AfterTargets="Publish"
-        Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
-        <Copy SourceFiles="$(PublishDir)OneWareStudio.exe" DestinationFiles="$(PublishDir)oneware.exe"
-            SkipUnchangedFiles="true"/>
+    <Target Name="BuildStudioCliIntoDesktopOutput" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+        <PropertyGroup>
+            <StudioCliBuildDir>$(MSBuildProjectDirectory)\..\OneWare.Studio.Cli\bin\$(Configuration)\net10.0\</StudioCliBuildDir>
+            <StudioCliBuildDir Condition="'$(RuntimeIdentifier)' != ''">$(StudioCliBuildDir)$(RuntimeIdentifier)\</StudioCliBuildDir>
+            <StudioCliBuildProperties>Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier)</StudioCliBuildProperties>
+            <StudioCliBuildProperties Condition="'$(RuntimeIdentifier)' != ''">$(StudioCliBuildProperties);SelfContained=$(SelfContained)</StudioCliBuildProperties>
+        </PropertyGroup>
+
+        <MSBuild Projects="..\OneWare.Studio.Cli\OneWare.Studio.Cli.csproj"
+                 Targets="Restore;Build"
+                 Properties="$(StudioCliBuildProperties)"/>
+
+        <ItemGroup>
+            <StudioCliOutputFiles Include="$(StudioCliBuildDir)**\*"
+                                  Exclude="$(StudioCliBuildDir)Avalonia.Skia.dll;
+                                           $(StudioCliBuildDir)Microsoft.IdentityModel.*.dll;
+                                           $(StudioCliBuildDir)System.IdentityModel.Tokens.Jwt.dll"/>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(StudioCliOutputFiles)"
+              DestinationFiles="@(StudioCliOutputFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')"
+              SkipUnchangedFiles="true"/>
+    </Target>
+
+    <Target Name="BuildStudioCliIntoDesktopPublishOutput" AfterTargets="Publish">
+        <PropertyGroup>
+            <StudioCliBuildDir>$(MSBuildProjectDirectory)\..\OneWare.Studio.Cli\bin\$(Configuration)\net10.0\</StudioCliBuildDir>
+            <StudioCliBuildDir Condition="'$(RuntimeIdentifier)' != ''">$(StudioCliBuildDir)$(RuntimeIdentifier)\</StudioCliBuildDir>
+            <StudioCliBuildProperties>Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier)</StudioCliBuildProperties>
+            <StudioCliBuildProperties Condition="'$(RuntimeIdentifier)' != ''">$(StudioCliBuildProperties);SelfContained=$(SelfContained)</StudioCliBuildProperties>
+        </PropertyGroup>
+
+        <MSBuild Projects="..\OneWare.Studio.Cli\OneWare.Studio.Cli.csproj"
+                 Targets="Restore;Build"
+                 Properties="$(StudioCliBuildProperties)"/>
+
+        <ItemGroup>
+            <StudioCliPublishOutputFiles Include="$(StudioCliBuildDir)**\*"
+                                         Exclude="$(StudioCliBuildDir)Avalonia.Skia.dll;
+                                                  $(StudioCliBuildDir)Microsoft.IdentityModel.*.dll;
+                                                  $(StudioCliBuildDir)System.IdentityModel.Tokens.Jwt.dll"/>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(StudioCliPublishOutputFiles)"
+              DestinationFiles="@(StudioCliPublishOutputFiles->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
+              SkipUnchangedFiles="true"/>
+
     </Target>
 
 </Project>

@@ -260,22 +260,24 @@ public class SettingsService : ISettingsService
     {
         try
         {
-            var saveD = _settings.ToDictionary(s => s.Key, s => s.Value.Value);
-
-            foreach (var unregistered in _unregisteredSettings) saveD.TryAdd(unregistered.Key, unregistered.Value);
-
-            if (_loadedSettings != null)
-                foreach (var (key, value) in _loadedSettings)
-                    saveD.TryAdd(key, value);
-
-            using var stream = File.Create(path);
-            JsonSerializer.Serialize(stream, saveD, saveD.GetType(), JsonSerializerOptions);
-            Saved?.Invoke(this, new SaveEventArgs(autoSave));
+            var values = CreateSaveDictionary();
+            WriteSettings(path, values, autoSave);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
         }
+    }
+
+    public void SaveValues(string path, IReadOnlyDictionary<string, object?> values, bool autoSave = true)
+    {
+        using var fileLock = AcquireFileLock(path);
+        var savedValues = ReadSettings(path);
+
+        foreach (var (key, value) in values)
+            savedValues[key] = value;
+
+        WriteSettings(path, savedValues, autoSave, fileLock);
     }
 
     public void Reset(string key)
@@ -293,6 +295,69 @@ public class SettingsService : ISettingsService
     public void WhenLoaded(Action action)
     {
         _afterLoadingActions.Add(action);
+    }
+
+    private Dictionary<string, object?> CreateSaveDictionary()
+    {
+        var saveValues = _settings.ToDictionary(s => s.Key, s => (object?)s.Value.Value);
+
+        foreach (var unregistered in _unregisteredSettings)
+            saveValues.TryAdd(unregistered.Key, unregistered.Value);
+
+        if (_loadedSettings != null)
+            foreach (var (key, value) in _loadedSettings)
+                saveValues.TryAdd(key, value);
+
+        return saveValues;
+    }
+
+    private static Dictionary<string, object?> ReadSettings(string path)
+    {
+        if (!File.Exists(path))
+            return [];
+
+        using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return JsonSerializer.Deserialize<Dictionary<string, object?>>(stream, JsonSerializerOptions) ?? [];
+    }
+
+    private void WriteSettings(string path, Dictionary<string, object?> values, bool autoSave,
+        FileStream? fileLock = null)
+    {
+        using var acquiredLock = fileLock is null ? AcquireFileLock(path) : null;
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+
+        try
+        {
+            using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                JsonSerializer.Serialize(stream, values, JsonSerializerOptions);
+                stream.Flush(flushToDisk: true);
+            }
+
+            File.Move(temporaryPath, path, overwrite: true);
+            Saved?.Invoke(this, new SaveEventArgs(autoSave));
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+        }
+    }
+
+    private static FileStream AcquireFileLock(string path)
+    {
+        var lockPath = $"{path}.lock";
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+
+        while (true)
+            try
+            {
+                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException) when (DateTime.UtcNow < deadline)
+            {
+                Thread.Sleep(50);
+            }
     }
 
     public void RegisterTitledPath(string category, string subCategory, string key, string title, string description,

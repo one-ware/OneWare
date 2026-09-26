@@ -21,10 +21,6 @@ public class PluginService : IPluginService
     private readonly IApplicationStateService _applicationStateService;
 
     private readonly string _pluginDirectory;
-    private readonly HashSet<string> _resolverSetAssemblies = new();
-
-    private List<Assembly> _initAssemblies;
-
     public PluginService(OneWareModuleCatalog moduleCatalog, OneWareModuleManager moduleManager,
         ModuleServiceRegistry moduleServiceRegistry, IPaths paths, IApplicationStateService applicationStateService)
     {
@@ -34,8 +30,6 @@ public class PluginService : IPluginService
         _moduleServiceRegistry = moduleServiceRegistry;
         _applicationStateService = applicationStateService;
         
-        _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
-
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
         Directory.CreateDirectory(_pluginDirectory);
     }
@@ -44,8 +38,7 @@ public class PluginService : IPluginService
 
     public IPlugin AddPlugin(string path)
     {
-        // Update known assemblies to avoid redundant resolver registration
-        _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+        var initialAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToHashSet();
 
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
@@ -82,7 +75,12 @@ public class PluginService : IPluginService
 
             //We should not use that anymore, since it can break compatibility with code signed apps
             //We keep it for now except on MacOS
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) SetupNativeImports(realPath);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                PluginNativeLibraryResolver.Configure(
+                    realPath,
+                    AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !initialAssemblies.Contains(assembly)),
+                    assembly => ContainerLocator.Container?.Resolve<ILogger>().Warning(
+                        $"Skipping resolver setup for {assembly.FullName}, resolver already set."));
         }
         catch (Exception e)
         {
@@ -114,9 +112,9 @@ public class PluginService : IPluginService
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var file in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories)
-                     .Where(file => ShouldProbePluginAssembly(path, file)))
+                     .Where(file => PluginAssemblyLoader.ShouldProbePluginAssembly(path, file)))
         {
-            if (!TryGetManagedAssemblyName(file, out var assemblyName))
+            if (!PluginAssemblyLoader.TryGetManagedAssemblyName(file, out var assemblyName))
                 continue;
 
             if (assemblyName.FullName is { } fullName && loadedAssemblyNames.Contains(fullName))
@@ -145,101 +143,4 @@ public class PluginService : IPluginService
         return added;
     }
 
-    // Usually we can assume that all managed DLLs will be in the base dir of a plugin
-    // Some libraries ship in runtimes/arch/lib/...
-    private static bool ShouldProbePluginAssembly(string pluginPath, string filePath)
-    {
-        var relativePath = Path.GetRelativePath(pluginPath, filePath);
-        var pathSegments = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-        if (pathSegments.Length < 2 || !pathSegments[0].Equals("runtimes", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if (pathSegments.Length < 4)
-            return false;
-
-        return pathSegments[1].Equals(PlatformHelper.PlatformIdentifier, StringComparison.OrdinalIgnoreCase)
-               && pathSegments[2].Equals("lib", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool TryGetManagedAssemblyName(string filePath, out AssemblyName assemblyName)
-    {
-        try
-        {
-            assemblyName = AssemblyName.GetAssemblyName(filePath);
-            return true;
-        }
-        catch (BadImageFormatException)
-        {
-        }
-        catch (FileLoadException)
-        {
-        }
-
-        assemblyName = null!;
-        return false;
-    }
-
-    private void SetupNativeImports(string pluginPath)
-    {
-        var newAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !_initAssemblies.Contains(x));
-
-        foreach (var assembly in newAssemblies)
-        {
-            _initAssemblies.Add(assembly);
-
-            if (assembly.FullName == null) continue;
-
-            if (_resolverSetAssemblies.Contains(assembly.FullName))
-                continue;
-
-            try
-            {
-                NativeLibrary.SetDllImportResolver(assembly, (libraryName, _, _) =>
-                {
-                    // Try 1 : Check runtimes folder
-                    var libFileName = PlatformHelper.GetLibraryFileName(libraryName);
-                    var libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
-                        libFileName);
-                    
-                    // Try 2 : add lib infront in runtimes folder
-                    if (!File.Exists(libPath))
-                        libPath = Path.Combine(pluginPath, "runtimes", PlatformHelper.PlatformIdentifier, "native",
-                            $"lib{libFileName}");
-
-                    // Try 3: check base
-                    if (!File.Exists(libPath)) 
-                        libPath = Path.Combine(pluginPath, libFileName);
-
-                    // Try 4 : base with lib infront
-                    if (!File.Exists(libPath))
-                        libPath = Path.Combine(pluginPath, $"lib{libFileName}");
-
-                    // Try 5: MacOS weirdness, look in (own) base folder
-                    // TODO find out why this is not automatic in MacOS, and why even without this we don't have issues
-                    if (!File.Exists(libPath))
-                        libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, libFileName);
-
-                    // Try 6: Same as 5 but added lib Prefix
-                    if (!File.Exists(libPath))
-                        libPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"lib{libFileName}");
-                    
-                    if (NativeLibrary.TryLoad(libPath, out var customHandle)) return customHandle;
-
-                    if (NativeLibrary.TryLoad(libraryName, out var handle)) return handle;
-
-                    Console.WriteLine($"Loading native library {libraryName} failed {File.Exists(libPath)}");
-                    return IntPtr.Zero;
-                });
-
-                _resolverSetAssemblies.Add(assembly.FullName);
-            }
-            catch (InvalidOperationException)
-            {
-                // This assembly already has a resolver — log and continue
-                ContainerLocator.Container.Resolve<ILogger>().Warning(
-                    $"Skipping resolver setup for {assembly.FullName}, resolver already set.");
-            }
-        }
-    }
 }

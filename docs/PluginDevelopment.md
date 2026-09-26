@@ -6,9 +6,10 @@ and how UniversalFpgaProject support is wired so you can extend it safely.
 ## Quick start
 
 1) Create a class library that references `OneWare.Essentials`.
-2) Implement a module by deriving from `OneWare.Essentials.Services.OneWareModuleBase`.
-3) Add a `compatibility.txt` file next to your plugin assemblies.
-4) Package the plugin as a folder (assemblies + `compatibility.txt`) and install it via the plugin manager.
+2) Implement a GUI module by deriving from `OneWare.Essentials.Services.OneWareModuleBase`.
+3) Optionally implement a CLI module by deriving from `OneWare.Essentials.Services.OneWareCliModuleBase`.
+4) Add a `compatibility.txt` file next to your plugin assemblies.
+5) Package the plugin as a folder (assemblies + `compatibility.txt`) and install it via the plugin manager.
 
 Minimal module example:
 
@@ -34,6 +35,33 @@ public sealed class MyPluginModule : OneWareModuleBase
                 if (selected is [IProjectFile])
                     items.Add(new MenuItemModel("MyAction") { Header = "My Action" });
             });
+    }
+}
+```
+
+Minimal CLI module example:
+
+```csharp
+using System.CommandLine;
+using OneWare.Essentials.Services;
+
+namespace MyCompany.MyPlugin;
+
+public sealed class MyPluginCliModule : OneWareCliModuleBase
+{
+    public override IReadOnlyList<Command> RegisterCommands(IServiceProvider serviceProvider)
+    {
+        var helloCommand = new Command("myplugin", "Commands for MyPlugin");
+        var pingCommand = new Command("ping", "Simple health check");
+
+        pingCommand.SetAction((_, _) =>
+        {
+            Console.WriteLine("pong");
+            return Task.FromResult(0);
+        });
+
+        helloCommand.Subcommands.Add(pingCommand);
+        return [helloCommand];
     }
 }
 ```
@@ -92,17 +120,32 @@ You can generate `compatibility.txt` automatically during build by marking depen
 - A plugin must include a `compatibility.txt` file at its root. It lists assembly dependencies and
   versions using `AssemblyName : Version` lines. The check is enforced by
   `OneWare.Essentials.PackageManager.Compatibility.PluginCompatibilityChecker`.
-- Modules are discovered by scanning assemblies for `IOneWareModule` implementations.
-- If `IOneWareModule.RegisterServices` adds services, they are injected into the main container
-  before module initialization. If the app is already running, modules are initialized immediately.
+- GUI modules are discovered by scanning assemblies for `IOneWareModule` implementations.
+- CLI modules are discovered by scanning assemblies for `IOneWareCliModule` implementations.
+- `IOneWareModule.RegisterServices` contributes services to the desktop app container before
+  `Initialize(IServiceProvider)` runs.
+- `IOneWareCliModule.RegisterServices` contributes services to the CLI container before
+  `RegisterCommands(IServiceProvider)` runs.
+- A single assembly may contain both GUI and CLI modules when the feature supports both surfaces.
 
 ## Module lifecycle and dependency injection
 
-`IOneWareModule` is the entry point for plugins:
+`IOneWareModule` is the entry point for desktop/UI plugins:
 
 - `RegisterServices(IServiceCollection services)` lets you register your own services.
 - `Initialize(IServiceProvider serviceProvider)` runs after services are registered.
 - `Dependencies` allows declaring other module IDs to load before yours.
+
+`IOneWareCliModule` is the entry point for CLI plugins:
+
+- `RegisterServices(IServiceCollection services)` lets you register services needed by CLI commands.
+- `RegisterCommands(IServiceProvider serviceProvider)` returns the commands your module contributes.
+- `Dependencies` allows declaring other CLI module IDs that must load first.
+- CLI module types must be public, non-abstract, and expose a parameterless constructor so the CLI loader can discover and instantiate them.
+
+CLI modules are intentionally headless: they should not depend on Avalonia UI state, windows, or
+desktop-only lifecycles. Prefer shared services for reusable logic and keep CLI-specific behavior in
+the command layer.
 
 Use `serviceProvider.Resolve<T>()` or `ContainerLocator.Current` to resolve OneWare services.
 
@@ -141,6 +184,14 @@ The following sections document the core services and their key functions.
 - `Dependencies`: other module IDs that must load before this one.
 - `RegisterServices(IServiceCollection)`: add services to the DI container.
 - `Initialize(IServiceProvider)`: run after services are registered.
+
+#### `IOneWareCliModule` (src/OneWare.Essentials/Services/IOneWareCliModule.cs)
+
+- `Id`: module identifier (defaults to class name in `OneWareCliModuleBase`).
+- `Dependencies`: other CLI module IDs that must load before this one.
+- `RegisterServices(IServiceCollection)`: add services to the CLI DI container.
+- `RegisterCommands(IServiceProvider)`: return top-level CLI commands for registration.
+- Module type: must be public, non-abstract, and expose a parameterless constructor for CLI discovery.
 
 #### `IPluginService` (src/OneWare.Essentials/Services/IPluginService.cs)
 
@@ -565,7 +616,9 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 ## Suggested validation and troubleshooting
 
 - Ensure `compatibility.txt` matches the core dependency versions.
-- Verify your module class is public and implements `IOneWareModule`.
+- Verify your module class is public and implements `IOneWareModule` and/or `IOneWareCliModule`.
+- If CLI commands do not appear under `oneware --help`, verify the assembly is copied with the
+  plugin and the command name does not collide with an existing top-level command or alias.
 - If your UI does not appear, confirm you used the correct UI extension key.
 - For FPGA tooling, confirm your toolchain ID matches the project `toolchain` property.
 
