@@ -33,7 +33,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
       - name: Install create-dmg using Brew
         run: brew install create-dmg
       - name: Import Apple Developer Certificate
