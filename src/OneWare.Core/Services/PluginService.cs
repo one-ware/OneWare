@@ -19,6 +19,7 @@ public class PluginService : IPluginService
     private readonly OneWareModuleManager _moduleManager;
     private readonly ModuleServiceRegistry _moduleServiceRegistry;
     private readonly IApplicationStateService _applicationStateService;
+    private readonly IBinaryCacheService _binaryCacheService;
 
     private readonly string _pluginDirectory;
     private readonly HashSet<string> _resolverSetAssemblies = new();
@@ -26,8 +27,10 @@ public class PluginService : IPluginService
     private List<Assembly> _initAssemblies;
 
     public PluginService(OneWareModuleCatalog moduleCatalog, OneWareModuleManager moduleManager,
-        ModuleServiceRegistry moduleServiceRegistry, IPaths paths, IApplicationStateService applicationStateService)
+        ModuleServiceRegistry moduleServiceRegistry, IPaths paths, IApplicationStateService applicationStateService,
+        IBinaryCacheService binaryCacheService)
     {
+        _binaryCacheService = binaryCacheService;
         _paths = paths;
         _moduleCatalog = moduleCatalog;
         _moduleManager = moduleManager;
@@ -37,7 +40,6 @@ public class PluginService : IPluginService
         _initAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
-        Directory.CreateDirectory(_pluginDirectory);
     }
 
     public List<IPlugin> InstalledPlugins { get; } = new();
@@ -66,8 +68,11 @@ public class PluginService : IPluginService
 
         try
         {
-            var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
-            PlatformHelper.CopyDirectory(path, realPath);
+            // Plugins are loaded from a copy so the installed package can be updated while it is loaded.
+            // The cached copy is reused across sessions until the plugin changes.
+            var realPath = _binaryCacheService.GetOrCreateCopy("Plugins",
+                               Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(path))), path)
+                           ?? CreateSessionCopy(path);
 
             var addedModules = LoadModulesFromPath(realPath);
 
@@ -90,6 +95,14 @@ public class PluginService : IPluginService
         }
 
         return plugin;
+    }
+
+    private string CreateSessionCopy(string path)
+    {
+        var realPath = Path.Combine(_pluginDirectory, Path.GetFileName(path));
+        if (Directory.Exists(realPath)) Directory.Delete(realPath, true);
+        PlatformHelper.CopyDirectory(path, realPath);
+        return realPath;
     }
 
     public void RemovePlugin(IPlugin plugin)

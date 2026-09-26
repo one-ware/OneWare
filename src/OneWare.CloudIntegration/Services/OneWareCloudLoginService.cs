@@ -191,7 +191,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                 if (token == null || newRefreshToken == null)
                     throw new Exception("Token or refresh token not found");
 
-                SaveCredentials(token, newRefreshToken);
+                await SaveCredentialsAsync(token, newRefreshToken);
 
                 return (true, response.StatusCode);
             }
@@ -269,7 +269,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         return false;
     }
 
-    private void SaveCredentials(string jwt, string refreshToken)
+    private async Task SaveCredentialsAsync(string jwt, string refreshToken)
     {
         JwtSecurityToken? jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(jwt);
         string? userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "sub")?.Value ?? null;
@@ -277,6 +277,15 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
 
         _jwtBearerTokenCache[userId] = jwtToken;
 
+        // The platform credential store can be slow (keyring/dbus, DPAPI), keep it off the UI thread
+        await Task.Run(() => StoreRefreshToken(userId, refreshToken));
+
+        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountUserIdKey, userId);
+        _settingService.Save(_paths.SettingsPath);
+    }
+
+    private void StoreRefreshToken(string userId, string refreshToken)
+    {
         try
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -298,9 +307,6 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         {
             _logger.Error(e.Message, e);
         }
-
-        _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountUserIdKey, userId);
-        _settingService.Save(_paths.SettingsPath);
     }
 
     /// <summary>
@@ -617,9 +623,9 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                         return;
                     }
 
-                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
-                        SaveCredentials(accessToken, refreshToken);
+                        await SaveCredentialsAsync(accessToken, refreshToken);
                         _settingService.Save(_paths.SettingsPath);
                     });
                 }
@@ -657,9 +663,11 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         }
         else
         {
-            var store = CredentialManager.Create("oneware");
-            var cred = store.Get(OneWareCloudIntegrationModule.CredentialStore, userId);
-            refreshToken = cred?.Password;
+            refreshToken = await Task.Run(() =>
+            {
+                var store = CredentialManager.Create("oneware");
+                return store.Get(OneWareCloudIntegrationModule.CredentialStore, userId)?.Password;
+            });
         }
 
         return refreshToken;

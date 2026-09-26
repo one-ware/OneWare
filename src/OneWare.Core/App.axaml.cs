@@ -76,6 +76,7 @@ public class App : Application
             provider.GetRequiredService<ILoggerFactory>().CreateLogger("OneWare"));
 
         //Services
+        services.AddSingleton<IBinaryCacheService, BinaryCacheService>();
         services.AddSingleton<IPluginService, PluginService>();
         services.AddSingleton<OnnxRuntimeBootstrapper>();
         services.AddSingleton<IOnnxRuntimeService, OnnxRuntimeService>();
@@ -604,8 +605,75 @@ public class App : Application
     {
     }
 
+    /// <summary>
+    ///     Optional window shown while the application initializes (desktop only).
+    ///     Return null to show the main window directly after initialization.
+    /// </summary>
+    protected virtual Window? CreateSplashWindow()
+    {
+        return null;
+    }
+
+    /// <summary>
+    ///     Called once services, modules and the shell are initialized, right before content is loaded.
+    ///     Use this instead of code after <c>base.OnFrameworkInitializationCompleted()</c>, since initialization
+    ///     may run deferred while a splash window is visible.
+    /// </summary>
+    protected virtual void OnInitializationCompleted()
+    {
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
+        StartupTimer.Mark("Avalonia framework initialized");
+
+        var splashWindow = ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+            ? CreateSplashWindow()
+            : null;
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && splashWindow != null)
+        {
+            desktop.MainWindow = splashWindow;
+            splashWindow.Show();
+
+            var initialized = false;
+
+            void RunDeferredInitialization()
+            {
+                if (initialized) return;
+                initialized = true;
+
+                try
+                {
+                    InitializeApplication();
+                }
+                finally
+                {
+                    if (desktop.MainWindow is { } mainWindow && mainWindow != splashWindow)
+                        mainWindow.Show();
+
+                    splashWindow.Close();
+                }
+            }
+
+            // Wait until the splash window has been committed for rendering, then run the heavy initialization.
+            // The timer is a fallback in case no frame is rendered (e.g. window not mapped).
+            splashWindow.RequestAnimationFrame(_ =>
+                Dispatcher.UIThread.Post(RunDeferredInitialization, DispatcherPriority.Background));
+            DispatcherTimer.RunOnce(RunDeferredInitialization, TimeSpan.FromMilliseconds(500));
+        }
+        else
+        {
+            InitializeApplication();
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private void InitializeApplication()
+    {
+        StartupTimer.Mark("Initialization started");
+
         DeferredContentPresentationSettings.BudgetMode = DeferredContentPresentationBudgetMode.ItemCount;
         DeferredContentPresentationSettings.MaxPresentationsPerPass = 1000;
         DeferredContentPresentationSettings.InitialDelay = TimeSpan.Zero;
@@ -636,6 +704,7 @@ public class App : Application
         var compositeProvider = provider.Resolve<ICompositeServiceProvider>();
         
         ContainerLocator.SetContainer(compositeProvider);
+        StartupTimer.Mark("Services registered");
 
         var logger = compositeProvider.GetRequiredService<ILogger>();
         _moduleManager.SetLogger(logger);
@@ -644,11 +713,13 @@ public class App : Application
             $"App Started: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
 
         compositeProvider.Resolve<OnnxRuntimeBootstrapper>().Initialize();
+        StartupTimer.Mark("ONNX runtime initialized");
 
-        
         LoadStartupPlugins();
+        StartupTimer.Mark("Startup plugins loaded");
 
         var shell = CreateShell();
+        StartupTimer.Mark("Shell created");
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime &&
             shell is Window shellWindow)
             desktopLifetime.MainWindow = shellWindow;
@@ -657,6 +728,7 @@ public class App : Application
             singleViewLifetime.MainView = shellView;
 
         _moduleManager.InitializeModules(compositeProvider);
+        StartupTimer.Mark("Modules initialized");
 
         Dispatcher.UIThread.UnhandledException += (s, e) => { Console.WriteLine($"Unhandled: {e.Exception}"); };
 
@@ -684,6 +756,7 @@ public class App : Application
         Services.Resolve<ILogger>().Log("Framework initialization complete!");
         Services.Resolve<BackupService>().LoadAutoSaveFile();
         Services.Resolve<IMainDockService>().LoadLayout(GetDefaultLayoutName);
+        StartupTimer.Mark("Layout loaded");
         Services.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
         Services.Resolve<BackupService>().Init();
 
@@ -706,9 +779,54 @@ public class App : Application
             Resources["EditorFontSize"] = (double)x;
         });
 
-        _ = LoadContentAsync();
+        OnInitializationCompleted();
 
-        base.OnFrameworkInitializationCompleted();
+        ScheduleBinaryCacheCleanup();
+
+        _ = LoadContentAsync();
+        StartupTimer.Mark("Content loading started");
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } shownWindow })
+            shownWindow.Opened += ReportStartupTimings;
+        else
+            Dispatcher.UIThread.Post(() => StartupTimer.Report(Services.Resolve<ILogger>()),
+                DispatcherPriority.Background);
+    }
+
+    private void ScheduleBinaryCacheCleanup()
+    {
+        if (PlatformHelper.Platform is PlatformId.Wasm) return;
+
+        var binaryCacheService = Services.Resolve<IBinaryCacheService>();
+        var logger = Services.Resolve<ILogger>();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Keep IO away from the startup phase
+                await Task.Delay(TimeSpan.FromSeconds(15));
+                binaryCacheService.CleanupUnusedEntries();
+            }
+            catch (Exception e)
+            {
+                logger.LogDebug(e, "Binary cache cleanup failed");
+            }
+        });
+    }
+
+    private void ReportStartupTimings(object? sender, EventArgs e)
+    {
+        if (sender is Window window)
+        {
+            window.Opened -= ReportStartupTimings;
+            StartupTimer.Mark("Main window opened");
+            window.RequestAnimationFrame(_ =>
+            {
+                StartupTimer.Mark("First frame");
+                StartupTimer.Report(Services.Resolve<ILogger>());
+            });
+        }
     }
 
     protected virtual Task LoadContentAsync()
