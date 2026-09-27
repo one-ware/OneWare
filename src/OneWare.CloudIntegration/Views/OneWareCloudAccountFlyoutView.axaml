@@ -94,26 +94,27 @@
                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                 </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                                    <controls:HyperLink Label="Add Compute Credits"
-                                                        Url="{Binding AddCreditsUrl}"
-                                                        IsVisible="{Binding ShowOrganizationCredits}" />
-                                    <controls:HyperLink Label="Upgrade to Pro"
-                                                        Url="{Binding UpgradeUrl}"
-                                                        IsVisible="{Binding ShowUpgrade}" />
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                                        <controls:HyperLink Label="Add Compute Credits"
+                                                            Url="{Binding AddCreditsUrl}"
+                                                            IsVisible="{Binding ShowOrganizationCredits}" />
+                                        <controls:HyperLink Label="Upgrade to Pro"
+                                                            Url="{Binding UpgradeUrl}"
+                                                            IsVisible="{Binding ShowUpgrade}" />
+                                    </StackPanel>
+                                
+                                    <controls:HyperLink Label="Manage Account"
+                                                        Url="{Binding Url}"
+                                                        HorizontalAlignment="Left" />
                                 </StackPanel>
+                                
                             </StackPanel>
 
                             <TextBlock IsVisible="{Binding !HasActiveOrganization}"
                                        Text="No active organization" Margin="6,0"
                                        Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-
-                            <Separator Margin="0" Padding="0" />
-
-                            <controls:HyperLink Label="Manage Account"
-                                                Url="{Binding Url}"
-                                                Margin="6,0, 6, 0"
-                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center" />
+            
                         </StackPanel>
 
                         <!-- Logged Out View -->
