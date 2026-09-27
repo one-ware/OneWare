@@ -38,6 +38,12 @@ public class OrganizationBalanceDto
 
     public DateTime BudgetResetsAt { get; set; }
 
+    /// <summary>When the included credits renew (UTC); null for a trial, whose allowance is granted once.</summary>
+    public DateTime? IncludedCreditsResetAt { get; set; }
+
+    /// <summary>Spending is suspended (e.g. after a chargeback) until OneWare support clears it.</summary>
+    public bool SpendingSuspended { get; set; }
+
     public bool CanSpendDeploymentCredits { get; set; }
     
     public decimal? DeploymentCreditBalance { get; set; }

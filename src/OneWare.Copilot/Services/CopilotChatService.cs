@@ -2425,9 +2425,22 @@ public abstract class CopilotChatServiceBase(
 
                 if (IsOneWareCloud && IsInsufficientCreditsError(error.Data.Message))
                 {
-                    // The cloud reports "monthly budget" when the member's own limit, not the organization, ran out.
-                    var budgetExceeded = error.Data.Message?.Contains("monthly budget",
-                        StringComparison.OrdinalIgnoreCase) == true;
+                    // Cloud AI is paid with Compute Credits. The 402 body carries the reason (MemberBudget when the
+                    // member's own monthly budget ran out, SpendingSuspended after a chargeback, else OrganizationCredits).
+                    var message = error.Data.Message ?? string.Empty;
+                    if (message.Contains("SpendingSuspended", StringComparison.OrdinalIgnoreCase) ||
+                        message.Contains("suspended", StringComparison.OrdinalIgnoreCase))
+                    {
+                        EventReceived?.Invoke(this, new ChatErrorEvent(
+                            "Spending is suspended for this organization. Please contact OneWare support.")
+                        {
+                            AgentId = agentId
+                        });
+                        break;
+                    }
+
+                    var budgetExceeded = message.Contains("MemberBudget", StringComparison.OrdinalIgnoreCase) ||
+                                         message.Contains("budget", StringComparison.OrdinalIgnoreCase);
                     var path = budgetExceeded ? "/organization" : "/credits";
                     EventReceived?.Invoke(this, new ChatButtonEvent(
                         budgetExceeded
