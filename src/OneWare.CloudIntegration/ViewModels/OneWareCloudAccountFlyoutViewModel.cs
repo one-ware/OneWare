@@ -70,34 +70,36 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
     /// <summary>Members only see their personal monthly budget.</summary>
     public bool ShowPersonalBudget => Organization is { CanViewBalances: false };
 
-    /// <summary>Compute Credits available now: remaining monthly allowance plus the prepaid balance.</summary>
-    public string ComputeCreditsText => FormatCredits(
+    /// <summary>Training Credits available now: remaining monthly allowance plus the prepaid balance.</summary>
+    public string TrainingCreditsText => FormatCredits(
         Math.Max(0, Organization?.IncludedMonthlyCreditsRemaining ?? 0) + Math.Max(0, Organization?.CreditBalance ?? 0));
 
     public string PrepaidCreditsText => FormatCredits(Organization?.CreditBalance ?? 0);
 
     public string IncludedCreditsText => FormatCredits(Organization?.IncludedMonthlyCreditsRemaining ?? 0);
 
-    public bool HasBudgetLimit => Organization?.MonthlyCreditCap != null;
+    /// <summary>AI Credits available now: remaining plan allowance plus the prepaid balance.</summary>
+    public string AiCreditsText => FormatCredits(
+        Math.Max(0, Organization?.IncludedMonthlyAiCreditsRemaining ?? 0) + Math.Max(0, Organization?.AiCreditBalance ?? 0));
 
-    public double BudgetLimit => (double)Math.Max(1, Organization?.MonthlyCreditCap ?? 1);
+    public string PrepaidAiCreditsText => FormatCredits(Organization?.AiCreditBalance ?? 0);
 
-    public double BudgetUsed => Math.Min((double)(Organization?.MonthlyCreditsUsed ?? 0), BudgetLimit);
+    public string IncludedAiCreditsText => FormatCredits(Organization?.IncludedMonthlyAiCreditsRemaining ?? 0);
 
-    public string BudgetText => Organization switch
-    {
-        null => string.Empty,
-        { MonthlyCreditCap: { } cap } => $"{FormatCredits(Organization.MonthlyCreditsUsed)} / {FormatCredits(cap)}",
-        _ => $"{FormatCredits(Organization.MonthlyCreditsUsed)} used"
-    };
+    /// <summary>A trial grants its AI allowance once instead of monthly.</summary>
+    public string IncludedAiCreditsLabel => Organization is { PlanKind: "Trial" } ? "Trial allowance" : "Monthly allowance";
 
-    public string BudgetHint => Organization switch
-    {
-        null => string.Empty,
-        { MonthlyCreditCap: not null } =>
-            $"{FormatCredits(Organization.MonthlyCreditsRemaining ?? 0)} left · resets {Organization.BudgetResetsAt.ToLocalTime():d MMM}",
-        _ => "No personal limit this month"
-    };
+    public bool SpendingSuspended => Organization?.SpendingSuspended == true;
+
+    public CreditBudget TrainingBudget => Organization == null
+        ? CreditBudget.Empty
+        : new CreditBudget("Your Training Credit budget", Organization.MonthlyCreditCap, Organization.MonthlyCreditsUsed,
+            Organization.BudgetResetsAt);
+
+    public CreditBudget AiBudget => Organization == null
+        ? CreditBudget.Empty
+        : new CreditBudget("Your AI Credit budget", Organization.MonthlyAiCreditCap, Organization.MonthlyAiCreditsUsed,
+            Organization.BudgetResetsAt);
 
     /// <summary>Balances are shown as whole Credits, rounded down so they never overstate what is available.</summary>
     public static string FormatCredits(decimal credits) => decimal.Floor(credits).ToString("N0", CreditNumberFormat);
@@ -149,12 +151,35 @@ public class OneWareCloudAccountFlyoutViewModel : ObservableObject
                  {
                      nameof(HasActiveOrganization), nameof(OrganizationName),
                      nameof(OrganizationDetails), nameof(ShowOrganizationCredits), nameof(ShowPersonalBudget),
-                     nameof(ComputeCreditsText), nameof(PrepaidCreditsText), nameof(IncludedCreditsText), nameof(HasBudgetLimit),
-                     nameof(BudgetLimit), nameof(BudgetUsed), nameof(BudgetText), nameof(BudgetHint),
+                     nameof(TrainingCreditsText), nameof(PrepaidCreditsText), nameof(IncludedCreditsText),
+                     nameof(AiCreditsText), nameof(PrepaidAiCreditsText), nameof(IncludedAiCreditsText),
+                     nameof(IncludedAiCreditsLabel), nameof(SpendingSuspended), nameof(TrainingBudget), nameof(AiBudget),
                      nameof(OrganizationUrl),
                      nameof(PlanStatusText), nameof(ShowPlanStatus), nameof(ShowUpgrade), nameof(UpgradeUrl),
                      nameof(AddCreditsUrl)
                  })
             OnPropertyChanged(property);
     }
+}
+
+/// <summary>A member's personal monthly budget for one currency, as shown in the account flyout.</summary>
+public sealed class CreditBudget(string title, decimal? cap, decimal used, DateTime resetsAt)
+{
+    public static CreditBudget Empty { get; } = new(string.Empty, null, 0, DateTime.MinValue);
+
+    public string Title { get; } = title;
+
+    public bool HasLimit => cap != null;
+
+    public double Limit => (double)Math.Max(1, cap ?? 1);
+
+    public double Used => Math.Min((double)used, Limit);
+
+    public string Text => cap is { } limit
+        ? $"{OneWareCloudAccountFlyoutViewModel.FormatCredits(used)} / {OneWareCloudAccountFlyoutViewModel.FormatCredits(limit)}"
+        : $"{OneWareCloudAccountFlyoutViewModel.FormatCredits(used)} used";
+
+    public string Hint => cap is { } limit
+        ? $"{OneWareCloudAccountFlyoutViewModel.FormatCredits(Math.Max(0, limit - used))} left · resets {resetsAt.ToLocalTime():d MMM}"
+        : "No personal limit this month";
 }

@@ -175,7 +175,6 @@ public abstract class CopilotChatServiceBase(
         RegexOptions.Singleline | RegexOptions.Compiled);
 
     /// <summary>Error code of the OneWare Cloud 403 for plans that do not include Cloud AI.</summary>
-    private const string CloudAiNotInPlanErrorCode = "cloud_ai_not_in_plan";
     private const string CloudAiDisabledByOrganizationErrorCode = "cloud_ai_disabled_by_organization";
 
     private static readonly Regex InsufficientCreditsStatusRegex = new(
@@ -1442,16 +1441,8 @@ public abstract class CopilotChatServiceBase(
         }
         catch (Exception ex) when (IsOneWareCloud && FindCloudAiBlocked(ex) is { } blocked)
         {
-            if (blocked.Code == CloudAiNotInPlanErrorCode)
-            {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "Pro plan required"));
-                ReportCloudAiUpgradeRequired();
-            }
-            else
-            {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "Disabled by organization"));
-                ReportCloudAiDisabledByOrganization(blocked.Message);
-            }
+            StatusChanged?.Invoke(this, new StatusEvent(false, "Disabled by organization"));
+            ReportCloudAiDisabledByOrganization(blocked.Message);
 
             return false;
         }
@@ -1645,7 +1636,7 @@ public abstract class CopilotChatServiceBase(
             var (providerMessage, providerCode) = configuration.UsesOneWareCloud
                 ? await ReadProviderErrorAsync(response, cancellationToken)
                 : default;
-            if (providerCode is CloudAiNotInPlanErrorCode or CloudAiDisabledByOrganizationErrorCode)
+            if (providerCode is CloudAiDisabledByOrganizationErrorCode)
                 throw new CloudAiBlockedException(providerCode, providerMessage);
 
             throw new InvalidOperationException(
@@ -1761,12 +1752,6 @@ public abstract class CopilotChatServiceBase(
                 "Could not read why OneWare Cloud rejected the Cloud AI request.");
         }
 
-        if (problem.Code == CloudAiNotInPlanErrorCode)
-        {
-            ReportCloudAiUpgradeRequired();
-            return;
-        }
-
         if (problem.Code == CloudAiDisabledByOrganizationErrorCode)
         {
             ReportCloudAiDisabledByOrganization(problem.Message);
@@ -1780,17 +1765,6 @@ public abstract class CopilotChatServiceBase(
         });
     }
 
-    private void ReportCloudAiUpgradeRequired()
-    {
-        Blocker = new ChatServiceBlocker("OneWare Cloud Pro required",
-            "OneWare Cloud AI is included in the Pro plans. Upgrade your organization, then refresh.")
-        {
-            ActionText = "Upgrade to Pro",
-            ActionCommand = new RelayCommand<Control?>(_ =>
-                PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}/organization/credits"))
-        };
-    }
-
     private void ReportCloudAiDisabledByOrganization(string? message)
     {
         Blocker = new ChatServiceBlocker("Cloud AI disabled",
@@ -1798,7 +1772,7 @@ public abstract class CopilotChatServiceBase(
             " Ask an organization admin to allow it, or switch to another organization or provider.");
     }
 
-    /// <summary>OneWare Cloud refused Cloud AI for the organization (not in the plan or turned off by its admins).</summary>
+    /// <summary>OneWare Cloud refused Cloud AI for the organization (turned off by its admins).</summary>
     private sealed class CloudAiBlockedException(string code, string? message)
         : InvalidOperationException(message ?? "Cloud AI is not available for this organization.")
     {
@@ -2425,15 +2399,28 @@ public abstract class CopilotChatServiceBase(
 
                 if (IsOneWareCloud && IsInsufficientCreditsError(error.Data.Message))
                 {
-                    // The cloud reports "monthly budget" when the member's own limit, not the organization, ran out.
-                    var budgetExceeded = error.Data.Message?.Contains("monthly budget",
-                        StringComparison.OrdinalIgnoreCase) == true;
+                    // Cloud AI is paid with AI Credits. The 402 body carries the reason (MemberBudget when the member's
+                    // own monthly AI budget ran out, SpendingSuspended after a chargeback, else OrganizationCredits).
+                    var message = error.Data.Message ?? string.Empty;
+                    if (message.Contains("SpendingSuspended", StringComparison.OrdinalIgnoreCase) ||
+                        message.Contains("suspended", StringComparison.OrdinalIgnoreCase))
+                    {
+                        EventReceived?.Invoke(this, new ChatErrorEvent(
+                            "Spending is suspended for this organization. Please contact OneWare support.")
+                        {
+                            AgentId = agentId
+                        });
+                        break;
+                    }
+
+                    var budgetExceeded = message.Contains("MemberBudget", StringComparison.OrdinalIgnoreCase) ||
+                                         message.Contains("budget", StringComparison.OrdinalIgnoreCase);
                     var path = budgetExceeded ? "/organization" : "/credits";
                     EventReceived?.Invoke(this, new ChatButtonEvent(
                         budgetExceeded
-                            ? "This request exceeds your monthly OneWare Cloud budget in this organization."
-                            : "This organization does not have enough OneWare Cloud credits for this request.",
-                        budgetExceeded ? "View budget" : "Add credits",
+                            ? "This request exceeds your monthly AI Credit budget in this organization."
+                            : "This organization does not have enough AI Credits for this request.",
+                        budgetExceeded ? "View budget" : "Add AI Credits",
                         new RelayCommand<Control?>(_ =>
                             PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}{path}")))
                     {

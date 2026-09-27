@@ -60,12 +60,16 @@
                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                 </StackPanel>
 
-                                <!-- Owners / administrators: Compute Credits total with its monthly allowance / prepaid split -->
+                                <TextBlock IsVisible="{Binding SpendingSuspended}" TextWrapping="Wrap" MaxWidth="240"
+                                           FontSize="11" Foreground="{DynamicResource ErrorBrush}"
+                                           Text="Spending is suspended for this organization. Please contact OneWare support." />
+
+                                <!-- Owners / administrators: Training and AI Credits with their allowance / prepaid split -->
                                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="2"
                                       IsVisible="{Binding ShowOrganizationCredits}">
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Compute Credits"
-                                               ToolTip.Tip="Used for training, AI Copilot and exports" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ComputeCreditsText}"
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Training Credits"
+                                               ToolTip.Tip="Used for training, tests and exports" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TrainingCreditsText}"
                                                FontWeight="SemiBold" />
                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Monthly allowance" Margin="10,0,0,0"
                                                FontSize="11" ToolTip.Tip="Included in the plan, used first, resets monthly"
@@ -78,24 +82,54 @@
                                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PrepaidCreditsText}"
                                                FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                 </Grid>
-
-                                <!-- Members: personal monthly budget -->
-                                <StackPanel Spacing="3" IsVisible="{Binding ShowPersonalBudget}">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="Your Compute Credit budget"
-                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                        <TextBlock Grid.Column="1" Text="{Binding BudgetText}"
-                                                   FontWeight="SemiBold" />
-                                    </Grid>
-                                    <ProgressBar IsVisible="{Binding HasBudgetLimit}" MinHeight="6"
-                                                 Minimum="0" Maximum="{Binding BudgetLimit}"
-                                                 Value="{Binding BudgetUsed}" />
-                                    <TextBlock Text="{Binding BudgetHint}" FontSize="11"
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="2"
+                                      IsVisible="{Binding ShowOrganizationCredits}">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="AI Credits"
+                                               ToolTip.Tip="Used for OneWare Cloud AI chat" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding AiCreditsText}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding IncludedAiCreditsLabel}" Margin="10,0,0,0"
+                                               FontSize="11" ToolTip.Tip="Included in the plan, used first"
                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding IncludedAiCreditsText}"
+                                               FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Prepaid" Margin="10,0,0,0"
+                                               FontSize="11" ToolTip.Tip="Purchased, used after the allowance, never expires"
+                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PrepaidAiCreditsText}"
+                                               FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                </Grid>
+
+                                <!-- Members: personal monthly budgets -->
+                                <StackPanel Spacing="8" IsVisible="{Binding ShowPersonalBudget}">
+                                    <StackPanel Spacing="3" DataContext="{Binding TrainingBudget}"
+                                                x:DataType="viewModels:CreditBudget">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Text}" FontWeight="SemiBold" />
+                                        </Grid>
+                                        <ProgressBar IsVisible="{Binding HasLimit}" MinHeight="6"
+                                                     Minimum="0" Maximum="{Binding Limit}" Value="{Binding Used}" />
+                                        <TextBlock Text="{Binding Hint}" FontSize="11"
+                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="3" DataContext="{Binding AiBudget}"
+                                                x:DataType="viewModels:CreditBudget">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Text}" FontWeight="SemiBold" />
+                                        </Grid>
+                                        <ProgressBar IsVisible="{Binding HasLimit}" MinHeight="6"
+                                                     Minimum="0" Maximum="{Binding Limit}" Value="{Binding Used}" />
+                                        <TextBlock Text="{Binding Hint}" FontSize="11"
+                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    </StackPanel>
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                                    <controls:HyperLink Label="Add Compute Credits"
+                                    <controls:HyperLink Label="Add credits"
                                                         Url="{Binding AddCreditsUrl}"
                                                         IsVisible="{Binding ShowOrganizationCredits}" />
                                     <controls:HyperLink Label="Upgrade to Pro"
