@@ -449,6 +449,13 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
             .Replace("=", "");
     }
 
+    private static bool StateMatches(string? received, string? expected)
+    {
+        if (received == null || expected == null) return false;
+        return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(received),
+            Encoding.UTF8.GetBytes(expected));
+    }
+
     private static string GenerateState()
     {
         var bytes = new byte[16];
@@ -534,13 +541,13 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                     var code = query["code"];
                     var state = query["state"];
                     var error = query["error"];
-                    var isStep1 = state != null && state == _state;
-                    var isStep2 = state != null && state == _offlineState;
+                    var isStep1 = StateMatches(state, _state);
+                    var isStep2 = StateMatches(state, _offlineState);
 
                     if (!isStep1 && !isStep2)
                     {
                         _logger.Error("Invalid login callback (state mismatch)");
-                        await WriteLoginPageAsync(response, 400, "This sign-in link has expired",
+                        await WriteCallbackPageAsync(response, 400, "This sign-in link has expired",
                             "Start the sign-in again, or return to OneWare Studio.", canRetry: true);
                         continue;
                     }
@@ -550,7 +557,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                         if (error == "access_denied")
                         {
                             _logger.Log("Sign-in to OneWare Cloud was canceled in the browser.");
-                            await WriteLoginPageAsync(response, 200, "Sign-in canceled",
+                            await WriteCallbackPageAsync(response, 200, "Sign-in canceled",
                                 "OneWare Studio was not connected. You can sign in again or close this tab.",
                                 canRetry: true);
                         }
@@ -558,7 +565,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                         {
                             _logger.Error(
                                 $"Authentication error ({(isStep1 ? "step 1" : "step 2 offline upgrade")}): {SanitizeForLog(error ?? "missing code")}");
-                            await WriteLoginPageAsync(response, 400, "Sign-in failed",
+                            await WriteCallbackPageAsync(response, 400, "Sign-in failed",
                                 "OneWare Cloud could not complete the sign-in. Try again, or close this tab.",
                                 canRetry: true);
                         }
@@ -578,7 +585,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                     if (!await ExchangeCodeForTokensAsync(code, authProviderBaseUrl, redirectUri,
                             persistTokens: true, codeVerifierOverride: _offlineCodeVerifier))
                     {
-                        await WriteLoginPageAsync(response, 500, "Sign-in failed",
+                        await WriteCallbackPageAsync(response, 500, "Sign-in failed",
                             "OneWare Studio could not store the sign-in. Try again, or close this tab.", canRetry: true);
                         continue;
                     }
@@ -665,7 +672,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         response.Close();
     }
 
-    private static async Task WriteLoginPageAsync(HttpListenerResponse response, int statusCode, string title,
+    private static async Task WriteCallbackPageAsync(HttpListenerResponse response, int statusCode, string title,
         string message, bool canRetry)
     {
         var actions = canRetry
