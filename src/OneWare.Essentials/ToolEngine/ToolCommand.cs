@@ -18,13 +18,30 @@ public class ToolCommand
         CommandArguments.Select(x => x.GetArgument()).ToList().AsReadOnly();
     
     public required IReadOnlyCollection<ICommandArgument> CommandArguments { get; init; }
+
+    /// <summary>
+    /// When set, forces this specific call to run with the strategy matching this key, regardless of the
+    /// tool's currently configured strategy setting. Fails (see <see cref="IToolExecutionDispatcherService"/>
+    /// return conventions) if no such strategy is registered for the tool.
+    /// </summary>
+    public string? ForcedStrategyKey { get; init; }
+
     public string WorkingDirectory { get; init; } = ".";
     public string StatusMessage { get; init; } = "Running tool...";
     public AppState State { get; init; } = AppState.Loading;
     public bool ShowTimer { get; init; }
 
     public IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; } = new Dictionary<string, string>();
-    
+
+    /// <summary>
+    /// Per-call overrides for strategy configuration keys (e.g. "docker.image"), taking precedence over
+    /// both the tool's plugin-declared default and any user-set override for this call only. Retrieve the
+    /// fully merged result via <see cref="IToolService.GetEffectiveStrategyConfiguration"/> rather than
+    /// reading this property directly.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> StrategyConfigurationOverrides { get; init; } =
+        new Dictionary<string, string>();
+
     public Func<string, bool>? OutputHandler { get; init; }
     public Func<string, bool>? ErrorHandler { get; init; }
 

@@ -668,7 +668,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     {
         if (state.Status == PackageStatus.NeedRestart) return;
 
-        var target = state.ResolveTargetVersion();
+        var target = state.ResolveTargetVersion(true);
 
         var hasTarget = SemanticVersion.TryParse(target?.Version, out var targetVersion);
         var hasInstalled = SemanticVersion.TryParse(state.InstalledVersion?.Version, out var installedVersion);

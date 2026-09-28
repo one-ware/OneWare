@@ -35,4 +35,10 @@ public interface IChildProcessService
     /// </summary>
     public WeakReference<Process> StartWeakProcess(string path, IReadOnlyCollection<string> arguments,
         string workingDirectory);
+
+    /// <summary>
+    /// Starts a process and returns a strong reference to it, e.g. for callers that need to keep it alive
+    /// and terminate it explicitly later on.
+    /// </summary>
+    public Process StartProcess(string path, IReadOnlyCollection<string> arguments, string workingDirectory);
 }
