@@ -1,5 +1,10 @@
 namespace OneWare.CloudIntegration.Dto;
 
+/// <summary>
+///     Legacy user plan, kept so plugins built against older OneWare versions still load.
+///     Plans belong to organizations now; use <see cref="OrganizationBalanceDto" /> instead.
+/// </summary>
+[Obsolete(LegacyCloudContract.ObsoleteMessage)]
 public class UserPlanDto
 {
     public required Guid Id { get; set; }

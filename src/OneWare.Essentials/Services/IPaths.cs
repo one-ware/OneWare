@@ -27,6 +27,10 @@ public interface IPaths
     /// </summary>
     public string SessionDirectory { get; }
     /// <summary>
+    /// Persistent directory for caches that can be deleted at any time (e.g. copies of native binaries).
+    /// </summary>
+    public string CacheDirectory => Path.Combine(AppDataDirectory, "Cache");
+    /// <summary>
     /// Directory for persisted layouts.
     /// </summary>
     public string LayoutDirectory { get; }

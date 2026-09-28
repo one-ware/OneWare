@@ -267,6 +267,8 @@ internal abstract class Program
     {
         try
         {
+            StartupTimer.Mark("Main entered");
+
             Option<string> dirOption = new("--oneware-dir")
                 { Description = "Path to documents directory for OneWare Studio. (optional)" };
             Option<string> projectsDirOption = new("--oneware-projects-dir")
@@ -397,7 +399,10 @@ internal abstract class Program
 
             _ = Task.Run(() => RunIpcServerAsync(_ipcCancellation.Token));
 
-            var result = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            var appBuilder = BuildAvaloniaApp();
+            StartupTimer.Mark("Settings loaded, Avalonia setup started");
+
+            var result = appBuilder.StartWithClassicDesktopLifetime(args);
 
             return result;
         }

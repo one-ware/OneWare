@@ -86,9 +86,14 @@ public class DesktopStudioApp : StudioApp
         }
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    protected override Window? CreateSplashWindow()
     {
-        base.OnFrameworkInitializationCompleted();
+        return new SplashWindow();
+    }
+
+    protected override void OnInitializationCompleted()
+    {
+        base.OnInitializationCompleted();
 
         Services.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
         Services.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);

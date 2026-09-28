@@ -47,6 +47,15 @@ public class OneWareContractResolver : DefaultContractResolver
         return contract;
     }
 
+    /// <summary>
+    ///     The default provider emits and JITs a dynamic method per member, which cannot be precompiled (ReadyToRun)
+    ///     and dominated layout loading at startup. Plain reflection is fast enough for the small layout files.
+    /// </summary>
+    protected override IValueProvider CreateMemberValueProvider(MemberInfo member)
+    {
+        return new ReflectionValueProvider(member);
+    }
+
     /// <inheritdoc />
     public override JsonContract ResolveContract(Type type)
     {

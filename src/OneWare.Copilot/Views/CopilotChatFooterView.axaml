@@ -6,7 +6,7 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="30"
-             x:Class="OneWare.Copilot.Views.CopilotChatFooterView" x:DataType="services:CopilotChatService">
+             x:Class="OneWare.Copilot.Views.CopilotChatFooterView" x:DataType="services:CopilotChatServiceBase">
     <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
 
         <!-- Approval mode selector -->
