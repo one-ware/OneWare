@@ -630,7 +630,7 @@ public abstract class CopilotChatServiceBase(
         });
     }
 
-    public string Name { get; } = isOneWareCloudService ? "OneWare Cloud" : "Copilot";
+    public string Name { get; } = isOneWareCloudService ? "OneWare Cloud" : "GitHub Copilot";
 
     public ChatServiceBlocker? Blocker
     {
