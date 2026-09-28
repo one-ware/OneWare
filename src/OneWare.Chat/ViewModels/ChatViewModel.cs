@@ -460,6 +460,31 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (string.IsNullOrWhiteSpace(targetSessionId)) return;
 
         await serviceWithSessions.LoadSessionAsync(targetSessionId);
+        ShowReplacementSessionIfNeeded(chatService, targetSessionId);
+    }
+
+    /// <summary>
+    /// A session that no longer exists in the backend is replaced by a new one; the transcript of
+    /// the requested session must not stay visible, otherwise it would be saved into the new session.
+    /// </summary>
+    private void ShowReplacementSessionIfNeeded(IChatService service, string requestedSessionId)
+    {
+        if (SelectedChatService != service ||
+            service is not IChatServiceWithSessions sessions ||
+            string.IsNullOrWhiteSpace(sessions.CurrentSessionId) ||
+            string.Equals(sessions.CurrentSessionId, requestedSessionId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Messages.Clear();
+        _assistantMessagesById.Clear();
+        _turnAssistantMessages.Clear();
+        _assistantReasoningById.Clear();
+        _subAgents.Clear();
+        _pendingSubAgentTools.Clear();
+
+        UpdateSelectedSessionFromService(service);
     }
 
     private async Task NewChatAsync()
@@ -1233,7 +1258,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         Dispatcher.UIThread.Post(() =>
         {
-            if (SelectedChatService == service)
+            if (SelectedChatService != service) return;
+
+            if (!string.Equals(sessions.CurrentSessionId, sessionId, StringComparison.Ordinal))
+                ShowReplacementSessionIfNeeded(service, sessionId);
+            else
                 UpdateSelectedSessionFromService(service);
         });
     }
@@ -1942,6 +1971,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             var loaded = await serviceWithSessions.LoadSessionAsync(item.SessionId);
             if (!loaded)
             {
+                ShowReplacementSessionIfNeeded(SelectedChatService, item.SessionId);
                 AddErrorMessage($"Failed to load session '{item.SessionId}'.");
                 return;
             }

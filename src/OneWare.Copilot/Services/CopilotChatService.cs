@@ -1758,7 +1758,7 @@ public abstract class CopilotChatServiceBase(
         catch (Exception ex)
         {
             ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                "Could not read why OneWare Cloud rejected the Cloud AI request.");
+                "Could not read why OneWare Cloud rejected the OneWare Cloud AI request.");
         }
 
         if (problem.Code == CloudAiNotInPlanErrorCode)
@@ -1793,14 +1793,14 @@ public abstract class CopilotChatServiceBase(
 
     private void ReportCloudAiDisabledByOrganization(string? message)
     {
-        Blocker = new ChatServiceBlocker("Cloud AI disabled",
-            (message ?? "Cloud AI is turned off for this organization by its administrators.") +
+        Blocker = new ChatServiceBlocker("OneWare Cloud AI disabled",
+            (message ?? "OneWare Cloud AI is turned off for this organization by its administrators.") +
             " Ask an organization admin to allow it, or switch to another organization or provider.");
     }
 
     /// <summary>OneWare Cloud refused Cloud AI for the organization (not in the plan or turned off by its admins).</summary>
     private sealed class CloudAiBlockedException(string code, string? message)
-        : InvalidOperationException(message ?? "Cloud AI is not available for this organization.")
+        : InvalidOperationException(message ?? "OneWare Cloud AI is not available for this organization.")
     {
         public string Code { get; } = code;
     }
@@ -2217,12 +2217,40 @@ public abstract class CopilotChatServiceBase(
             await InitializeSessionAsync();
             return string.Equals(CurrentSessionId, sessionId, StringComparison.Ordinal);
         }
+        catch (Exception ex) when (IsSessionNotFound(ex))
+        {
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(
+                "Copilot session {SessionId} no longer exists, starting a new session.", sessionId);
+
+            try
+            {
+                _requestedSessionId = null;
+                await InitializeSessionAsync();
+            }
+            catch (Exception initEx)
+            {
+                ContainerLocator.Container.Resolve<ILogger>().LogError(initEx, "Failed to start Copilot session.");
+            }
+
+            return false;
+        }
         catch (Exception ex)
         {
             ContainerLocator.Container.Resolve<ILogger>().LogError(ex, "Failed to load Copilot session {SessionId}.",
                 sessionId);
             return false;
         }
+    }
+
+    private static bool IsSessionNotFound(Exception ex)
+    {
+        for (var current = ex; current != null; current = current.InnerException)
+        {
+            if (current.Message.Contains("Session not found", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     public async ValueTask DisposeAsync()

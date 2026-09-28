@@ -146,6 +146,7 @@
     <Project Path="tests/OneWare.Vhdl.UnitTests/OneWare.Vhdl.UnitTests.csproj" />
     <Project Path="tests/OneWare.WaveFormViewer.Tests/OneWare.WaveFormViewer.Tests.csproj" />
   </Folder>
+  <Project Path="../../../../../tmp/splashpreview/splashpreview.csproj" />
   <Project Path="src/OneWare.Core/OneWare.Core.csproj" />
   <Project Path="src/OneWare.Essentials/OneWare.Essentials.csproj" />
   <File Path="Directory.Build.props" />
