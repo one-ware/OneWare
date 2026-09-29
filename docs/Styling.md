@@ -150,6 +150,8 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
   search icon and a clear button. Set `SearchButtonVisible="False"` for live filtering, and bind `IsBusy` to show a
   spinner. Do not wrap it in extra borders or give it a background. Put it in a strip with `Padding="4"`.
 - `ComboBox`: `small`
+- `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
+  draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.
 - `ListBox`: `transparent`, `InvisibleSelection`
 
 ### Layout (`StackPanel`)

@@ -1,0 +1,208 @@
+<!--
+    Slider theme.
+    Replaces the SimpleTheme slider (flat track, no fill, no hover feedback) with a rounded track,
+    an accent-filled value range, a ringed thumb that reacts to hover/drag, and working tick marks
+    (TickPlacement / TickFrequency / Ticks).
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="12" Width="260">
+            <Slider Value="30" Maximum="100" />
+            <Slider Value="4" Maximum="10" TickFrequency="1" TickPlacement="BottomRight" IsSnapToTickEnabled="True" />
+            <Slider Value="60" Maximum="100" IsEnabled="False" />
+            <Slider Value="40" Maximum="100" Orientation="Vertical" Height="100" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="OneWareSliderFillHorizontal" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel Background="Transparent">
+                        <Border Height="4" VerticalAlignment="Center"
+                                CornerRadius="2"
+                                Background="{TemplateBinding Background}" />
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+        <ControlTheme x:Key="OneWareSliderFillVertical" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel Background="Transparent">
+                        <Border Width="4" HorizontalAlignment="Center"
+                                CornerRadius="2"
+                                Background="{TemplateBinding Background}" />
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+        <ControlTheme x:Key="OneWareSliderThumb" TargetType="Thumb">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel>
+                        <Ellipse Name="ThumbRing"
+                                 Fill="{DynamicResource ThemeElevatedBrush}"
+                                 Stroke="{DynamicResource ThemeBorderMidBrush}"
+                                 StrokeThickness="1" />
+                        <Ellipse Name="ThumbDot" Width="10" Height="10"
+                                 Fill="{DynamicResource ThemeAccentBrush}"
+                                 RenderTransform="scale(0.8)">
+                            <Ellipse.Transitions>
+                                <Transitions>
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                </Transitions>
+                            </Ellipse.Transitions>
+                        </Ellipse>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+
+            <Style Selector="^:pointerover /template/ Ellipse#ThumbRing">
+                <Setter Property="Stroke" Value="{DynamicResource ThemeBorderHighBrush}" />
+            </Style>
+            <Style Selector="^:pointerover /template/ Ellipse#ThumbDot">
+                <Setter Property="RenderTransform" Value="scale(1)" />
+            </Style>
+            <Style Selector="^:pressed /template/ Ellipse#ThumbDot">
+                <Setter Property="RenderTransform" Value="scale(0.65)" />
+            </Style>
+        </ControlTheme>
+
+        <ControlTheme x:Key="{x:Type Slider}" TargetType="Slider">
+            <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+
+            <Style Selector="^:horizontal">
+                <Setter Property="MinWidth" Value="40" />
+                <Setter Property="MinHeight" Value="20" />
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Grid Name="grid" RowDefinitions="Auto,Auto,Auto">
+                            <TickBar Name="TopTickBar" Grid.Row="0"
+                                     Height="4" Margin="0 0 0 2"
+                                     Placement="Top" Orientation="Horizontal" IsVisible="False"
+                                     Fill="{DynamicResource ThemeBorderMidBrush}"
+                                     Minimum="{TemplateBinding Minimum}"
+                                     Maximum="{TemplateBinding Maximum}"
+                                     TickFrequency="{TemplateBinding TickFrequency}"
+                                     Ticks="{TemplateBinding Ticks}"
+                                     IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                                     ReservedSpace="{Binding #PART_Track.Thumb.Bounds}" />
+                            <Border Name="TrackBackground" Grid.Row="1"
+                                    Height="4" VerticalAlignment="Center"
+                                    CornerRadius="2"
+                                    Background="{TemplateBinding Background}" />
+                            <Track Name="PART_Track" Grid.Row="1" MinHeight="20"
+                                   IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                                   Orientation="Horizontal">
+                                <Track.DecreaseButton>
+                                    <RepeatButton Name="PART_DecreaseButton"
+                                                  Theme="{StaticResource OneWareSliderFillHorizontal}"
+                                                  Background="{TemplateBinding Foreground}" />
+                                </Track.DecreaseButton>
+                                <Track.IncreaseButton>
+                                    <RepeatButton Name="PART_IncreaseButton"
+                                                  Theme="{StaticResource OneWareSliderFillHorizontal}" />
+                                </Track.IncreaseButton>
+                                <Thumb Name="thumb" Theme="{StaticResource OneWareSliderThumb}" />
+                            </Track>
+                            <TickBar Name="BottomTickBar" Grid.Row="2"
+                                     Height="4" Margin="0 2 0 0"
+                                     Placement="Bottom" Orientation="Horizontal" IsVisible="False"
+                                     Fill="{DynamicResource ThemeBorderMidBrush}"
+                                     Minimum="{TemplateBinding Minimum}"
+                                     Maximum="{TemplateBinding Maximum}"
+                                     TickFrequency="{TemplateBinding TickFrequency}"
+                                     Ticks="{TemplateBinding Ticks}"
+                                     IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                                     ReservedSpace="{Binding #PART_Track.Thumb.Bounds}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter>
+            </Style>
+
+            <Style Selector="^:vertical">
+                <Setter Property="MinWidth" Value="20" />
+                <Setter Property="MinHeight" Value="40" />
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Grid Name="grid" ColumnDefinitions="Auto,Auto,Auto">
+                            <TickBar Name="TopTickBar" Grid.Column="0"
+                                     Width="4" Margin="0 0 2 0"
+                                     Placement="Left" Orientation="Vertical" IsVisible="False"
+                                     Fill="{DynamicResource ThemeBorderMidBrush}"
+                                     Minimum="{TemplateBinding Minimum}"
+                                     Maximum="{TemplateBinding Maximum}"
+                                     TickFrequency="{TemplateBinding TickFrequency}"
+                                     Ticks="{TemplateBinding Ticks}"
+                                     IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                                     ReservedSpace="{Binding #PART_Track.Thumb.Bounds}" />
+                            <Border Name="TrackBackground" Grid.Column="1"
+                                    Width="4" HorizontalAlignment="Center"
+                                    CornerRadius="2"
+                                    Background="{TemplateBinding Background}" />
+                            <Track Name="PART_Track" Grid.Column="1" MinWidth="20"
+                                   IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                                   Orientation="Vertical">
+                                <Track.DecreaseButton>
+                                    <RepeatButton Name="PART_DecreaseButton"
+                                                  Theme="{StaticResource OneWareSliderFillVertical}"
+                                                  Background="{TemplateBinding Foreground}" />
+                                </Track.DecreaseButton>
+                                <Track.IncreaseButton>
+                                    <RepeatButton Name="PART_IncreaseButton"
+                                                  Theme="{StaticResource OneWareSliderFillVertical}" />
+                                </Track.IncreaseButton>
+                                <Thumb Name="thumb" Theme="{StaticResource OneWareSliderThumb}" />
+                            </Track>
+                            <TickBar Name="BottomTickBar" Grid.Column="2"
+                                     Width="4" Margin="2 0 0 0"
+                                     Placement="Right" Orientation="Vertical" IsVisible="False"
+                                     Fill="{DynamicResource ThemeBorderMidBrush}"
+                                     Minimum="{TemplateBinding Minimum}"
+                                     Maximum="{TemplateBinding Maximum}"
+                                     TickFrequency="{TemplateBinding TickFrequency}"
+                                     Ticks="{TemplateBinding Ticks}"
+                                     IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                                     ReservedSpace="{Binding #PART_Track.Thumb.Bounds}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter>
+            </Style>
+
+            <Style Selector="^ /template/ Track#PART_Track">
+                <Setter Property="Minimum" Value="{TemplateBinding Minimum}" />
+                <Setter Property="Maximum" Value="{TemplateBinding Maximum}" />
+                <Setter Property="Value" Value="{TemplateBinding Value, Mode=TwoWay}" />
+            </Style>
+
+            <Style Selector="^[TickPlacement=TopLeft] /template/ TickBar#TopTickBar, ^[TickPlacement=Outside] /template/ TickBar#TopTickBar">
+                <Setter Property="IsVisible" Value="True" />
+            </Style>
+            <Style Selector="^[TickPlacement=BottomRight] /template/ TickBar#BottomTickBar, ^[TickPlacement=Outside] /template/ TickBar#BottomTickBar">
+                <Setter Property="IsVisible" Value="True" />
+            </Style>
+
+            <Style Selector="^:disabled /template/ Grid#grid">
+                <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <!-- Keyboard focus: accent ring on the thumb (nested template selectors are not allowed inside a ControlTheme) -->
+    <Style Selector="Slider:focus-visible /template/ Thumb#thumb /template/ Ellipse#ThumbRing">
+        <Setter Property="Stroke" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+</Styles>

@@ -92,7 +92,7 @@
         <Setter Property="Opacity" Value="1" />
     </Style>
 
-    <!-- Slider / ProgressBar -->
+    <!-- ProgressBar (Slider: see Slider.axaml) -->
     <Style Selector="ProgressBar">
         <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />

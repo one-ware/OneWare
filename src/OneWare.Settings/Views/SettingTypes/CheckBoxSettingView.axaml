@@ -22,10 +22,7 @@
                                ToolTip.Tip="{Binding Setting.HoverDescription}" />
                     <Button Classes="icon" VerticalAlignment="Center"
                             IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <PathIcon Data="{StaticResource Icon.Help}"
-                               Height="14"
-                               Width="14"
-                               VerticalAlignment="Center" />
+                        <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                         <Button.Flyout>
                             <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                                 <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"

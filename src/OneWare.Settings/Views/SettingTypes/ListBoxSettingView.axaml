@@ -18,10 +18,7 @@
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
             <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <PathIcon Data="{StaticResource Icon.Help}"
-                       Height="14"
-                       Width="14"
-                       VerticalAlignment="Center" />
+                <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                 <Button.Flyout>
                     <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                         <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
@@ -31,19 +28,19 @@
             </Button>
         </StackPanel>
         <Border Classes="inset">
-            <Grid RowDefinitions="20, *">
-                <StackPanel Classes="ToolBar">
-                    <Button Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}"
+            <Grid RowDefinitions="Auto, *">
+                <StackPanel Classes="toolbar" Height="NaN" Margin="2" Spacing="2">
+                    <Button Classes="icon small" Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}">
-                        <PathIcon Data="{StaticResource Icon.Add}" Height="12" Width="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Add}" />
                     </Button>
-                    <Button Command="{Binding RemoveSelected}" CommandParameter="{Binding $self}"
+                    <Button Classes="icon small" Command="{Binding RemoveSelected}" CommandParameter="{Binding $self}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}">
-                        <PathIcon Data="{StaticResource Icon.Close}" Height="12" Width="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Remove}" />
                     </Button>
-                    <Button Command="{Binding EditSelectedAsync}" CommandParameter="{Binding $self}"
+                    <Button Classes="icon small" Command="{Binding EditSelectedAsync}" CommandParameter="{Binding $self}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}">
-                        <PathIcon Data="{StaticResource Icon.Edit}" Height="12" Width="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Edit}" />
                     </Button>
                 </StackPanel>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Setting.Items}" Height="100"

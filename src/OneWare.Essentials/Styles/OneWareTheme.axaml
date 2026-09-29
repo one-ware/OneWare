@@ -25,6 +25,7 @@
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Borders.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TextBoxes.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ComboBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Slider.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ListBox.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TreeView.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TabControl.axaml" />

@@ -19,10 +19,7 @@
                        ToolTip.Tip="{Binding AdvancedSetting.HoverDescription}" />
             <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding AdvancedSetting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <PathIcon Data="{StaticResource Icon.Help}"
-                       Height="14"
-                       Width="14"
-                       VerticalAlignment="Center" />
+                <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                 <Button.Flyout>
                     <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                         <controls:MarkdownViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
@@ -43,13 +40,10 @@
             <controls:SearchComboBox.ItemTemplate>
                 <DataTemplate DataType="models:AdvancedComboBoxOption">
                     <DockPanel>
-                        <Button Classes="icon" VerticalAlignment="Center" DockPanel.Dock="Right"
+                        <Button Classes="icon small" VerticalAlignment="Center" DockPanel.Dock="Right"
                                 HorizontalAlignment="Right"
                                 IsVisible="{Binding MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <PathIcon Data="{StaticResource Icon.Help}"
-                                   Height="13"
-                                   Width="13"
-                                   VerticalAlignment="Center" />
+                            <PathIcon Classes="small muted" Data="{StaticResource Icon.Help}" />
                             <Button.Flyout>
                                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
                                     <controls:MarkdownViewer Markdown="{Binding MarkdownDocumentation}"

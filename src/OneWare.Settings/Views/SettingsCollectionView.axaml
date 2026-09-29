@@ -8,7 +8,7 @@
              x:Class="OneWare.Settings.Views.SettingsCollectionView"
              x:DataType="viewModels:SettingsCollectionViewModel">
     <DockPanel HorizontalAlignment="Stretch">
-        <DockPanel IsVisible="{Binding ShowTitle}" DockPanel.Dock="Top" Margin="0 5" LastChildFill="True">
+        <DockPanel IsVisible="{Binding ShowTitle}" DockPanel.Dock="Top" Margin="0 10" LastChildFill="True">
             <TextBlock Text="{Binding Header}" Classes="h4" />
 
             <Border Classes="divider" Margin="10 0" VerticalAlignment="Center" />
