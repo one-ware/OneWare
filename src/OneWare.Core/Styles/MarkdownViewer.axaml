@@ -38,6 +38,16 @@
                             <Setter Property="Margin" Value="0,0,0,8" />
                         </Style>
 
+                        <!-- No trailing gap after the last block. The root is a StackPanel, or an ItemsControl
+                             wrapping each block in a ContentPresenter when virtualization is enabled -->
+                        <Style Selector="StackPanel.Markdown_Avalonia_MarkdownViewer > ctxt|CTextBlock.Paragraph:nth-last-child(1)">
+                            <Setter Property="Margin" Value="0" />
+                        </Style>
+
+                        <Style Selector="ItemsControl.Markdown_Avalonia_MarkdownViewer ContentPresenter:nth-last-child(1) > ctxt|CTextBlock.Paragraph">
+                            <Setter Property="Margin" Value="0" />
+                        </Style>
+
                         <!-- ============ Headings ============ -->
 
                         <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading1">
