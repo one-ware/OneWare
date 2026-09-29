@@ -154,6 +154,25 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.
 - `ListBox`: `transparent`, `InvisibleSelection`
 
+### Flyouts
+
+Every `Flyout` is rounded and elevated, with 8 px padding. Do not set `FlyoutPresenterTheme`, and do not add an outer
+margin or background to the content. Choose a variant with `FlyoutPresenterClasses`:
+
+| Class | Use |
+|---|---|
+| (none) | Text, help/markdown, and small forms |
+| `list` | `ListBox` / `MenuItem` pickers: 4 px padding like menus, and the `ListBox` becomes transparent |
+| `flush` | Content that brings its own layout (headers, color picker); no padding, clipped to the rounded corners |
+
+```xml
+<Flyout FlyoutPresenterClasses="list">
+    <ListBox ItemsSource="{Binding Items}" />
+</Flyout>
+```
+
+`FlyoutNoPadding` is a legacy alias for the default flyout.
+
 ### Layout (`StackPanel`)
 
 | Class | Look |

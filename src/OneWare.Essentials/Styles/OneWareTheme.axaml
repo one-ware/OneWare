@@ -30,6 +30,7 @@
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TreeView.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TabControl.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Menu.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Flyout.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ScrollViewer.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Expander.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Controls/SharedControls.axaml" />

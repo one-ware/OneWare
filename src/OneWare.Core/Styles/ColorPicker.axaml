@@ -109,7 +109,7 @@
                                     Padding="0,0,8,0"
                                     UseLayoutRounding="False">
                         <DropDownButton.Flyout>
-                            <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}"
+                            <Flyout FlyoutPresenterClasses="flush"
                                     Placement="{DynamicResource ColorPickerFlyoutPlacement}">
                                 <Grid RowDefinitions="Auto,Auto">
                                     <Grid.Resources>
@@ -599,14 +599,6 @@
     <Style Selector="ColorPicker NumericUpDown /template/ TextBox#PART_TextBox">
         <Setter Property="Background" Value="{DynamicResource ThemeControlTransparentBrush}" />
         <Setter Property="BorderThickness" Value="0" />
-    </Style>
-
-    <Style Selector="FlyoutPresenter.nopadding">
-        <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
-        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
-        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
-        <Setter Property="Padding" Value="0" />
     </Style>
 
 </Styles>

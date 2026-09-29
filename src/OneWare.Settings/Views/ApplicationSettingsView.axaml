@@ -63,10 +63,10 @@
                         <TreeView.DataTemplates>
                             <TreeDataTemplate DataType="viewModels:SettingsPageViewModel"
                                               ItemsSource="{Binding SettingCollections}">
-                                <TextBlock Classes="h4" Text="{Binding Header}" Margin="0 2" />
+                                <TextBlock FontSize="{DynamicResource FontSizeMedium}" Text="{Binding Header}" Margin="0 2" />
                             </TreeDataTemplate>
                             <DataTemplate DataType="viewModels:SettingsCollectionViewModel">
-                                <TextBlock Classes="h4" Text="{Binding Header}" Margin="0 2" />
+                                <TextBlock FontSize="{DynamicResource FontSizeMedium}" Text="{Binding Header}" Margin="0 2" />
                             </DataTemplate>
                         </TreeView.DataTemplates>
                     </TreeView>

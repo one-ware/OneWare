@@ -8,9 +8,9 @@
              x:Class="OneWare.Copilot.Views.CopilotChatHeaderView" x:DataType="services:CopilotChatServiceBase">
     <Button Name="OverflowButton" VerticalAlignment="Center" ToolTip.Tip="More">
         <Button.Flyout>
-            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+            <Flyout
                     Placement="BottomEdgeAlignedRight">
-                <StackPanel MinWidth="200" Margin="8" Spacing="8">
+                <StackPanel MinWidth="200" Spacing="8">
 
                     <StackPanel Spacing="8" IsVisible="{Binding UsesGitHubAuthentication}">
                         <!-- Account state -->

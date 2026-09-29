@@ -112,8 +112,8 @@
 
                     <Button>
                         <Button.Flyout>
-                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
-                                <StackPanel Orientation="Vertical" Spacing="2" Margin="3">
+                            <Flyout>
+                                <StackPanel Orientation="Vertical" Spacing="2">
                                     <StackPanel Orientation="Horizontal" Spacing="3">
                                         <TextBlock Text="Zoom:" />
                                         <TextBlock Text="{Binding ZoomLevel}" />

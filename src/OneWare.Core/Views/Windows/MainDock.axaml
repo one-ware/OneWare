@@ -64,9 +64,9 @@
                     </Panel>
 
                     <Button.Flyout>
-                        <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}"
+                        <Flyout FlyoutPresenterClasses="flush"
                                 Placement="BottomEdgeAlignedRight">
-                            <Border Width="340" MaxHeight="280" Background="{DynamicResource ThemeElevatedBrush}">
+                            <Border Width="340" MaxHeight="280">
                                 <Grid RowDefinitions="30,*">
                                     <Panel>
                                         <TextBlock Classes="semibold" Text="Notifications" HorizontalAlignment="Center"

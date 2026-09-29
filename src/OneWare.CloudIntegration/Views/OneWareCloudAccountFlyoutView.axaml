@@ -31,10 +31,10 @@
                 </DockPanel>
             </Button.Content>
             <Button.Flyout>
-                <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                <Flyout Placement="BottomEdgeAlignedRight"
                         Opened="OnFlyoutOpened">
 
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="2">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Spacing="2">
 
                         <TextBlock Classes="h4" Text="OneWare Cloud" />
 

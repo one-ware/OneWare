@@ -13,7 +13,7 @@
         <Button Name="ModeButton" VerticalAlignment="Center"
                 ToolTip.Tip="Approval mode for tool and command requests">
             <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                <Flyout FlyoutPresenterClasses="flush"
                         Placement="TopEdgeAlignedLeft">
                     <ListBox ItemsSource="{Binding ApprovalModes}"
                              SelectedItem="{Binding SelectedApprovalMode}" BorderThickness="0"
@@ -50,8 +50,8 @@
                 IsVisible="{Binding HasUsageData}"
                 ToolTip.Tip="Token usage">
             <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}" Placement="TopEdgeAlignedRight">
-                    <StackPanel Spacing="10" Margin="8" MinWidth="220">
+                <Flyout Placement="TopEdgeAlignedRight">
+                    <StackPanel Spacing="10" MinWidth="220">
 
                         <!-- Last request -->
                         <StackPanel Spacing="3">
