@@ -25,6 +25,15 @@ public class ChangeStatusBrushConverter : IValueConverter
                                  GetBrush("SuccessBrush"),
                 _ => GetBrush("ThemeForegroundLowBrush")
             };
+        if (value is ChangeKind kind)
+            return kind switch
+            {
+                ChangeKind.Added or ChangeKind.Copied => GetBrush("SuccessBrush"),
+                ChangeKind.Deleted => GetBrush("ErrorBrush"),
+                ChangeKind.Conflicted => GetBrush("ErrorBrush"),
+                ChangeKind.Unmodified => Brushes.Transparent,
+                _ => GetBrush("WarningBrush")
+            };
         return null;
     }
 

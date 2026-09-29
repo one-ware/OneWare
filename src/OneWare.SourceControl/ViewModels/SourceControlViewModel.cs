@@ -47,6 +47,9 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
     private readonly SemaphoreSlim _operationGate = new(1, 1);
     private readonly CompositeDisposable _subscriptions = new();
     private bool _disposed;
+    private GitRepositoryWatcher? _watcher;
+    private bool _refreshPending;
+    private readonly HashSet<TopLevel> _attachedTopLevels = [];
 
     public SourceControlViewModel(ILogger logger, ISettingsService settingsService,
         IApplicationStateService applicationStateService,
@@ -97,6 +100,12 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         _subscriptions.Add(settingsService.GetSettingObservable<double>("SourceControl_PollChangesDelay")
             .Subscribe(SetupPollTimer));
 
+        _subscriptions.Add(settingsService.GetSettingObservable<bool>("SourceControl_WatchChanges")
+            .Subscribe(_ => UpdateWatcher()));
+
+        _subscriptions.Add(settingsService.GetSettingObservable<bool>("SourceControl_GraphShowAllBranches")
+            .Subscribe(OnGraphShowAllBranchesChanged));
+
         _subscriptions.Add(projectExplorerService
             .WhenValueChanged(x => x.ActiveProject)
             .Subscribe(project => { _ = RefreshAsync(); }));
@@ -134,7 +143,9 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         get => _activeRepository;
         set
         {
-            if (SetProperty(ref _activeRepository, value)) NotifyCommands();
+            if (!SetProperty(ref _activeRepository, value)) return;
+            NotifyCommands();
+            UpdateWatcher();
         }
     }
 
@@ -183,13 +194,33 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         Title = "Source Control";
     }
 
-    private async Task RefreshAsync()
+    private Task RefreshAsync() => RefreshAsync(false);
+
+    /// <summary>
+    ///     Background refreshes (file watcher, focus, polling) never show progress or disable the UI,
+    ///     and the models only raise change notifications for data that actually changed.
+    /// </summary>
+    private async Task RefreshAsync(bool background)
     {
-        await _operationGate.WaitAsync();
+        if (_disposed) return;
+        if (background)
+        {
+            if (!await _operationGate.WaitAsync(0))
+            {
+                _refreshPending = true;
+                return;
+            }
+        }
+        else
+        {
+            await _operationGate.WaitAsync();
+        }
+
         try
         {
             if (_disposed) return;
-            IsLoading = true;
+            _refreshPending = false;
+            if (!background) IsLoading = true;
             var removeInstances = Repositories.Where(x => !_projectExplorerService.Projects.Contains(x.Project)).ToArray();
             foreach (var removed in removeInstances)
             {
@@ -205,7 +236,10 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
                     if (!string.IsNullOrEmpty(path) && Repository.IsValid(path))
                     {
                         if (Repositories.Any(x => x.Project == project)) continue;
-                        Repositories.Add(new GitRepositoryModel(project, new Repository(path)));
+                        Repositories.Add(new GitRepositoryModel(project, new Repository(path))
+                        {
+                            ShowAllBranches = GraphShowAllBranches
+                        });
                     }
                 }
                 catch (Exception e)
@@ -215,6 +249,7 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
 
             ActiveRepository = Repositories.FirstOrDefault(x => x.Project == _projectExplorerService.ActiveProject);
             if (ActiveRepository != null) await ActiveRepository.RefreshAsync(this);
+            _watcher?.MarkRefreshed();
         }
         catch (Exception e)
         {
@@ -249,18 +284,27 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         SetUserIdentityAsyncCommand.NotifyCanExecuteChanged();
     }
 
-    private async Task RunRepositoryOperationAsync(Func<Repository, Task> operation)
+    private async Task RunRepositoryOperationAsync(Func<Repository, Task> operation, bool background = false)
     {
         var model = ActiveRepository;
         if (model == null || _disposed) return;
-        await _operationGate.WaitAsync();
+        if (background)
+        {
+            // Automatic work never queues behind (or in front of) user operations.
+            if (!await _operationGate.WaitAsync(0)) return;
+        }
+        else
+        {
+            await _operationGate.WaitAsync();
+        }
+
         var started = false;
         try
         {
             // Never run a queued command against a different or already closed project.
             if (_disposed || ActiveRepository != model || !Repositories.Contains(model) ||
                 _projectExplorerService.ActiveProject != model.Project) return;
-            IsLoading = true;
+            if (!background) IsLoading = true;
             started = true;
             await operation(model.Repository);
         }
@@ -272,7 +316,11 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         {
             try
             {
-                if (started && !_disposed && Repositories.Contains(model)) await model.RefreshAsync(this);
+                if (started && !_disposed && Repositories.Contains(model))
+                {
+                    await model.RefreshAsync(this);
+                    if (model == ActiveRepository) _watcher?.MarkRefreshed();
+                }
             }
             finally
             {
@@ -298,6 +346,38 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         {
             _operationGate.Release();
         }
+
+        if (_refreshPending && !_disposed)
+            Dispatcher.UIThread.Post(() => _ = RefreshAsync(true), DispatcherPriority.Background);
+    }
+
+    private void UpdateWatcher()
+    {
+        _watcher?.Dispose();
+        _watcher = null;
+        if (_disposed || _activeRepository == null ||
+            !_settingsService.GetSettingValue<bool>("SourceControl_WatchChanges")) return;
+        try
+        {
+            var info = _activeRepository.Repository.Info;
+            _watcher = new GitRepositoryWatcher(info.WorkingDirectory, info.Path,
+                () => Dispatcher.UIThread.Post(() => _ = RefreshAsync(true)));
+        }
+        catch (Exception e)
+        {
+            _logger.LogDebug(e, "Could not watch the repository, falling back to polling");
+            _watcher = null;
+        }
+    }
+
+    /// <summary>
+    ///     Refreshes silently whenever the window regains focus, changes made in other tools show up immediately.
+    /// </summary>
+    public void AttachTopLevel(TopLevel? topLevel)
+    {
+        if (topLevel is not WindowBase window || !_attachedTopLevels.Add(topLevel)) return;
+        window.Activated += (_, _) => _ = RefreshAsync(true);
+        window.Closed += (_, _) => _attachedTopLevels.Remove(topLevel);
     }
 
     public void Dispose()
@@ -306,6 +386,8 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         _disposed = true;
         _fetchTimer?.Stop();
         _pollTimer?.Stop();
+        _watcher?.Dispose();
+        _watcher = null;
         _subscriptions.Dispose();
         // An in-flight operation owns the native handles until it finishes.
         if (_operationGate.Wait(0)) EndOperation();
@@ -456,8 +538,10 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
 
     private void PollTimerCallback(object? sender, EventArgs args)
     {
-        if (!_disposed && !IsLoading && _settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable"))
-            _ = RefreshAsync();
+        // Polling is only a fallback when file system events are unavailable (e.g. some network drives).
+        if (_disposed || IsLoading || _watcher?.IsActive == true ||
+            !_settingsService.GetSettingValue<bool>("SourceControl_PollChangesEnable")) return;
+        _ = RefreshAsync(true);
     }
 
     public void ViewInProjectExplorer(string fullPath)
@@ -479,9 +563,17 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
 
     public void ChangeBranch(Branch? branch)
     {
-        if (branch == null || !CanUseRepository()) return;
+        if (branch != null) ChangeBranch(branch.CanonicalName);
+    }
+
+    public void ChangeBranch(string canonicalName)
+    {
+        if (!CanUseRepository()) return;
         _ = RunRepositoryOperationAsync(async repository =>
         {
+            // Resolve at execution time, a cached branch may point to an outdated tip.
+            var branch = repository.Branches[canonicalName];
+            if (branch == null) return;
             var checkedOut = await Task.Run(() => GitOperations.CheckoutBranch(repository, branch));
             _logger.Log("Switched to branch '" + checkedOut.FriendlyName + "'", true,
                 Application.Current?.FindResource("SuccessBrush") as IBrush ?? Brushes.Transparent);
@@ -722,22 +814,24 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
 
     private Task FetchAsync(bool interactive)
     {
-        return RunRepositoryOperationAsync(async repository =>
+        return RunRepositoryOperationAsync(repository => FetchCoreAsync(repository, interactive), !interactive);
+    }
+
+    private async Task FetchCoreAsync(Repository repository, bool interactive)
+    {
+        foreach (var remote in repository.Network.Remotes)
         {
-            foreach (var remote in repository.Network.Remotes)
+            try
             {
-                try
-                {
-                    await Task.Run(() => Commands.Fetch(repository, remote.Name,
-                        remote.FetchRefSpecs.Select(x => x.Specification), CreateFetchOptions(interactive), ""));
-                }
-                catch (Exception e)
-                {
-                    if (interactive) _logger.Error(e.Message, e);
-                    else _logger.LogDebug(e, "Automatic Git fetch failed for remote {Remote}", remote.Name);
-                }
+                await Task.Run(() => Commands.Fetch(repository, remote.Name,
+                    remote.FetchRefSpecs.Select(x => x.Specification), CreateFetchOptions(interactive), ""));
             }
-        });
+            catch (Exception e)
+            {
+                if (interactive) _logger.Error(e.Message, e);
+                else _logger.LogDebug(e, "Automatic Git fetch failed for remote {Remote}", remote.Name);
+            }
+        }
     }
 
     // LibGit2Sharp requires synchronous callbacks. These are only invoked on worker threads.
@@ -891,6 +985,142 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         using var repository = new Repository(repositoryPath);
         return GitOperations.GetPatch(repository, path, contextLines, staged);
     }
+
+    public Patch? GetCommitPatch(string path, string? oldPath, string sha, int contextLines, string? repositoryPath)
+    {
+        repositoryPath ??= Repository.Discover(Path.GetDirectoryName(path));
+        if (repositoryPath == null) return null;
+        using var repository = new Repository(repositoryPath);
+        var relativePath = GitOperations.GetRelativePath(repository, path);
+        return GitOperations.GetCommitPatch(repository, sha, relativePath, oldPath, contextLines);
+    }
+
+    #endregion
+
+    #region Graph
+
+    public bool GraphShowAllBranches
+    {
+        get => _settingsService.GetSettingValue<bool>("SourceControl_GraphShowAllBranches");
+        set => _settingsService.SetSettingValue("SourceControl_GraphShowAllBranches", value);
+    }
+
+    private void OnGraphShowAllBranchesChanged(bool value)
+    {
+        OnPropertyChanged(nameof(GraphShowAllBranches));
+        foreach (var repository in Repositories) repository.ShowAllBranches = value;
+        _ = RefreshAsync(true);
+    }
+
+    public async Task CopyToClipboardAsync(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try
+        {
+            if (TopLevel.GetTopLevel(_mainDockService.GetWindowOwner(this))?.Clipboard is { } clipboard)
+                await clipboard.SetTextAsync(text);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+
+    public void ToggleCommit(GitGraphRow row)
+    {
+        if (ActiveRepository is not { } model) return;
+        _ = model.SetExpandedAsync(row, !row.IsExpanded);
+    }
+
+    public async Task LoadMoreHistoryAsync()
+    {
+        var model = ActiveRepository;
+        if (model is not { HasMoreHistory: true } || _disposed) return;
+        if (!await _operationGate.WaitAsync(0)) return;
+        try
+        {
+            if (model == ActiveRepository && !_disposed) await model.LoadMoreHistoryAsync();
+        }
+        finally
+        {
+            EndOperation();
+        }
+    }
+
+    public void CompareCommitFile(GitCommitFileModel file)
+    {
+        if (ActiveRepository?.Repository is not { } repository) return;
+        try
+        {
+            var sha = file.Owner.Commit.Sha;
+            var openTab = _mainDockService.SearchView<CompareGitViewModel>()
+                .FirstOrDefault(x => x.FullPath == file.FullPath && x.CommitSha == sha);
+            openTab ??= ContainerLocator.Container.Resolve<CompareGitViewModel>((typeof(string), file.FullPath));
+
+            openTab.RepositoryPath = repository.Info.Path;
+            openTab.CommitSha = sha;
+            openTab.OldPath = file.OldPath;
+            openTab.ContextLines = 10000;
+            openTab.Title = $"{file.Name} ({file.Owner.Commit.ShortSha})";
+            openTab.Id = $"Commit {sha}: {file.FullPath}";
+
+            _mainDockService.Show(openTab, DockShowLocation.Document);
+            openTab.InitializeContent();
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+
+    public async Task OpenCommitFileAsync(GitCommitFileModel file)
+    {
+        if (ActiveRepository?.Repository is not { } repository) return;
+        try
+        {
+            var gitDirectory = repository.Info.Path;
+            var sha = file.Owner.Commit.Sha;
+            var deleted = file.Status == ChangeKind.Deleted;
+            var folder = Path.Combine(_paths.TempDirectory, "Git", Guid.NewGuid().ToString("N"));
+            var snapshotPath = Path.Combine(folder, file.Name);
+
+            var found = await Task.Run(() =>
+            {
+                using var snapshotRepository = new Repository(gitDirectory);
+                var commit = snapshotRepository.Lookup<Commit>(sha);
+                // A deleted file only exists in the parent revision.
+                var source = deleted ? commit?.Parents.FirstOrDefault() : commit;
+                var blob = source?[file.Path]?.Target as Blob ??
+                           (file.OldPath != null ? source?[file.OldPath]?.Target as Blob : null);
+                if (blob == null) return false;
+                Directory.CreateDirectory(folder);
+                using var content = blob.GetContentStream();
+                using var stream = File.Create(snapshotPath);
+                content.CopyTo(stream);
+                return true;
+            });
+
+            if (!found)
+            {
+                _windowService.ShowNotification("Git Info", "This file does not exist in the selected commit.");
+                return;
+            }
+
+            if (await _mainDockService.OpenFileAsync(snapshotPath) is IEditor editor)
+            {
+                editor.Title = $"{file.Name} ({file.Owner.Commit.ShortSha})";
+                editor.IsReadOnly = true;
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.Message, e);
+        }
+    }
+
+    #endregion
+
+    #region Compare Helpers
 
     private async Task CompareChangesAsync(Repository repository, string path, string titlePrefix, int contextLines = 3,
         bool switchTab = true, bool staged = false)

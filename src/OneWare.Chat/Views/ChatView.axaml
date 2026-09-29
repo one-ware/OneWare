@@ -317,7 +317,8 @@
                          Text="{Binding CurrentMessage, Mode=TwoWay}" />
 
                 <Border Grid.Row="2" Background="{DynamicResource EditorInputFooterBrush}"
-                        BorderThickness="0 1 0 0" Padding="6 4">
+                        BorderThickness="0 1 0 0"
+                        CornerRadius="0 0 3 3" Padding="6 4">
                     <DockPanel Height="22" LastChildFill="False" VerticalAlignment="Bottom">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">

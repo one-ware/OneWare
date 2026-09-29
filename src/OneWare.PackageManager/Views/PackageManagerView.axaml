@@ -52,7 +52,7 @@
                         <PathIcon Data="{StaticResource Icon.RefreshSmall}" />
                     </Button>
                     <Button Classes="secondary" IsEnabled="{Binding !IsLoading}"
-                            Command="{Binding UpdateAllAsync}">
+                            Command="{Binding UpdateAllCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="small" Data="{StaticResource Icon.Download}" />
                             <TextBlock Text="Update All" />

@@ -36,6 +36,9 @@
         <CornerRadius x:Key="DockDocumentTabItemCornerRadius">4 4 0 0</CornerRadius>
         <!-- ThemeCornerRadiusLarge on the bottom only, the top edge is the tab separator -->
         <CornerRadius x:Key="DockDocumentCardCornerRadius">0 0 6 6</CornerRadius>
+        <!-- The clip sits inside the 1px outline (radius - 1), so content never bleeds over the outline arc -->
+        <CornerRadius x:Key="DockCardInnerCornerRadius">5</CornerRadius>
+        <CornerRadius x:Key="DockDocumentCardInnerCornerRadius">0 0 5 5</CornerRadius>
         
 
         <ContextMenu x:Key="DocumentTabStripItemContextMenu" x:DataType="core:IDockable">
@@ -229,12 +232,13 @@
     <!--
         Every tool / document dock is a rounded card. The transparent 4px splitters between docks become the gaps.
         The Tool/DocumentDockControl templates match Dock's own, with the content wrapped in the card.
-        The content is clipped to the rounded shape and the outline is a separate border drawn on top, otherwise
-        content (active headers, colored views) paints over the border at the corners.
+        The content is clipped to the rounded shape inside the outline and the outline is a separate border drawn
+        on top, otherwise content (active headers, colored views) paints over the border at the corners.
     -->
     <Style Selector="Border.dock-card">
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+        <Setter Property="Margin" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource DockCardInnerCornerRadius}" />
         <Setter Property="ClipToBounds" Value="True" />
     </Style>
 
@@ -267,10 +271,12 @@
     </Style>
 
     <!-- Documents: the tab row sits on the background, the card starts below the separator (which forms its top edge) -->
-    <Style Selector="Border.dock-card.document, Border.dock-card-outline.document">
-        <Setter Property="CornerRadius" Value="{DynamicResource DockDocumentCardCornerRadius}" />
+    <Style Selector="Border.dock-card.document">
+        <Setter Property="Margin" Value="1 0 1 1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource DockDocumentCardInnerCornerRadius}" />
     </Style>
     <Style Selector="Border.dock-card-outline.document">
+        <Setter Property="CornerRadius" Value="{DynamicResource DockDocumentCardCornerRadius}" />
         <Setter Property="BorderThickness" Value="1 0 1 1" />
     </Style>
 

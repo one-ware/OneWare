@@ -569,7 +569,9 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - `UniversalFpgaToolBar_PinPlannerMenuExtension`: pin planner menu.
 - `UniversalFpgaToolBar_DownloaderConfigurationExtension`: download configuration area.
 - `CompileWindow_TopRightExtension`: pin planner window (top right region).
-- `EditView_Top`: top editor panel (used for test bench toolbar).
+- `EditView_Top`: top editor panel (used for test bench toolbar). Use the `Border.editor-bar` /
+  `WrapPanel.editor-bar-items` style classes so the bar matches the others and wraps on small screens
+  (see `docs/Styling.md`, "Editor bar").
 
 ## Suggested validation and troubleshooting
 

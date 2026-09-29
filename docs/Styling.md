@@ -154,7 +154,9 @@ a fixed square instead, so an inline `Width` / `Height` of any size wins.
 | `card` (+ `compact`) | Elevated, bordered, rounded block |
 | `panel` | Flat bordered block on the panel background |
 | `inset` | Recessed area (lists, previews) |
+| `inset-content` | Put directly inside `inset` when the content has its own backgrounds; clips it inside the rounded outline |
 | `header` / `footer` | Bar with a bottom / top divider |
+| `editor-bar` | Contextual bar above an editor (`EditView_Top` extensions), see below |
 | `statusbar` | Accent strip at the bottom of the window; text, icons, buttons and top-level menu items are white in both themes (popups opened from it keep the normal colors) |
 | `divider` (+ `vertical`) | 1 px line |
 | `overlay` | Floating popup surface with shadow |
@@ -190,7 +192,8 @@ border or corner radius of their own, and should not add margins to keep content
 - `ProgressBar`: a flat, square-cornered track with an accent fill, 6 px thick by default. Use `large` (12 px) for prominent
   progress such as downloads and installs; set `Height` only when a custom thickness is really needed. Don't set
   `Background` or `CornerRadius`. `ShowProgressText` shows the percentage next to the bar. `fill` stretches the bar over its container, e.g. as a
-  progress background behind a button's content.
+  progress background behind a button's content. It has a transparent track and a subtle overlay fill, which turns
+  light on `primary` / `danger` buttons.
 - `TreeDataGrid`: themed app-wide (`Controls/TreeDataGrid.axaml`), so no local theme include is needed. It has compact
   rows with a hover highlight, an accent selection and a 16 px indent per level. The Project Explorer and Problems panels use it.
 
@@ -218,11 +221,38 @@ margin or background to the content. Choose a variant with `FlyoutPresenterClass
 | Class | Look |
 |---|---|
 | `toolbar` (legacy `ToolBar`) | Horizontal, 24 px high, 4 px spacing |
+| `editor-bar-items` (`WrapPanel`) | Groups of an editor bar; wraps onto new lines when the editor is narrow |
 | `form` | Vertical, 8 px spacing |
 | `form-row` | Horizontal, 8 px spacing, centered labels |
 | `section` | 4 px spacing |
 | `page` | 12 px spacing and 16 px outer margin |
 | `spacing-small` / `spacing` / `spacing-large` | 4 / 8 / 12 px spacing |
+
+### Editor bar
+
+Toolbars above an editor (`EditView_Top` extensions, test bench simulator options) share one layout: the primary
+action first, then labelled option groups. Groups wrap onto new lines on narrow editors instead of being clipped.
+Labels inside `form-row` groups are muted, rarely used options go into a settings flyout (`Button.icon`).
+
+```xml
+<Border Classes="editor-bar">
+    <WrapPanel Classes="editor-bar-items">
+        <Button Classes="primary" Command="{Binding RunCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Width="10" Height="10" Data="{StaticResource Icon.Play}" />
+                <TextBlock Text="Run" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
+        <StackPanel Classes="form-row">
+            <TextBlock Text="Arguments" />
+            <TextBox Width="180" Text="{Binding Arguments}" />
+        </StackPanel>
+    </WrapPanel>
+</Border>
+```
+
+Nested extensions (`TestBenchToolbarTopUiExtension`) provide only a `WrapPanel.editor-bar-items` without the outer
+border; the host bar already draws it.
 
 ## Example
 

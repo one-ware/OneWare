@@ -98,6 +98,48 @@
         <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingSmall}" />
     </Style>
 
+    <!--
+        Editor bar: contextual toolbar above an editor (EditView_Top extensions).
+        <Border Classes="editor-bar">
+            <WrapPanel Classes="editor-bar-items">
+                <Button Classes="primary">...</Button>
+                <StackPanel Classes="form-row"><TextBlock Text="Label" /><TextBox Width="160" /></StackPanel>
+            </WrapPanel>
+        </Border>
+        Groups wrap onto new lines on narrow editors. Nested extensions can use their own
+        WrapPanel.editor-bar-items, which then wraps inside the remaining width.
+    -->
+    <Style Selector="Border.editor-bar">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="0 0 0 1" />
+        <Setter Property="Padding" Value="6 4" />
+    </Style>
+
+    <Style Selector="WrapPanel.editor-bar-items">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="ItemSpacing" Value="{DynamicResource ThemeSpacingLarge}" />
+        <Setter Property="LineSpacing" Value="{DynamicResource ThemeSpacingSmall}" />
+    </Style>
+
+    <Style Selector="WrapPanel.editor-bar-items > :is(Control)">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="WrapPanel.editor-bar-items StackPanel.form-row">
+        <Setter Property="Spacing" Value="6" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+    </Style>
+
+    <Style Selector="WrapPanel.editor-bar-items StackPanel.form-row > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+    </Style>
+
+    <Style Selector="WrapPanel.editor-bar-items TextBlock.muted">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
     <Style Selector="StackPanel.page">
         <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingLarge}" />
         <Setter Property="Margin" Value="{DynamicResource ThemePaddingXLarge}" />

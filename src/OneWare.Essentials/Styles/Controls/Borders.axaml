@@ -81,6 +81,15 @@
         <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
     </Style>
 
+    <!--
+        Place directly inside Border.inset when the content has its own backgrounds (lists, grids, headers).
+        Clips the content to the rounded shape inside the 1px outline, so it does not paint over the corners.
+    -->
+    <Style Selector="Border.inset-content">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+
     <!-- Header / footer bars -->
     <Style Selector="Border.header">
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />

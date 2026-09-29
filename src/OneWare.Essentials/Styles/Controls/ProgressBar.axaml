@@ -155,11 +155,17 @@
         </ControlTheme>
     </Styles.Resources>
 
-    <!-- Fills its container, e.g. as a progress background behind a button's content -->
+    <!-- Fills its container, e.g. as a progress background behind a button's content. The track is
+         transparent and the progress is drawn like a hover overlay, so the host keeps its own look. -->
     <Style Selector="ProgressBar.fill">
         <Setter Property="Height" Value="NaN" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+    </Style>
+    <Style Selector=":is(Button).primary ProgressBar.fill, :is(Button).danger ProgressBar.fill">
+        <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundMidBrush}" />
     </Style>
 
 </Styles>

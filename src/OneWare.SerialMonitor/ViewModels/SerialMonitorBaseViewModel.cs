@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
-using DynamicData;
 using DynamicData.Binding;
 using OneWare.Essentials.Services;
 using OneWare.Output.ViewModels;
@@ -15,8 +14,6 @@ namespace OneWare.SerialMonitor.ViewModels;
 public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
 {
     private readonly List<string> _lastCommands = new();
-
-    private bool _allowConnecting = true;
 
     private int _byteCount;
 
@@ -45,7 +42,7 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
             500000, 921600, 1000000, 2000000, 3000000, 5000000, 10000000, 12000000
         };
 
-        SerialPorts = new ObservableCollection<string>(SerialPort.GetPortNames());
+        SerialPorts = new ObservableCollection<string>(SerialPort.GetPortNames().Distinct().OrderBy(x => x));
 
         settingsService.Bind("SerialMonitor_SelectedBaudRate",
             this.WhenValueChanged(x => x.SelectedBaudRate)).Subscribe(x => SelectedBaudRate = x);
@@ -63,7 +60,20 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
     public int SelectedBaudRate
     {
         get => _selectedBaudRate;
-        set => SetProperty(ref _selectedBaudRate, value);
+        set
+        {
+            if (!SetProperty(ref _selectedBaudRate, value)) return;
+            if (_currentPort is not { IsOpen: true } || value <= 0) return;
+            try
+            {
+                _currentPort.BaudRate = value;
+                OnPropertyChanged(nameof(ConnectionStatus));
+            }
+            catch (Exception e)
+            {
+                WriteLine("Could not change baud rate: " + e.Message, GetThemeBrush("ErrorBrush"));
+            }
+        }
     }
 
     public List<string> AvailableLineEndings { get; } = new() { @"\r\n", @"\n", "None" };
@@ -85,14 +95,15 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
     public bool IsConnected
     {
         get => _isConnected;
-        set => SetProperty(ref _isConnected, value);
+        set
+        {
+            if (SetProperty(ref _isConnected, value)) OnPropertyChanged(nameof(ConnectionStatus));
+        }
     }
 
-    public bool AllowConnecting
-    {
-        get => _allowConnecting;
-        set => SetProperty(ref _allowConnecting, value);
-    }
+    public string ConnectionStatus => IsConnected && _currentPort != null
+        ? $"Connected to {_currentPort.PortName} at {_currentPort.BaudRate} baud"
+        : "Not connected";
 
     public string CommandBoxText
     {
@@ -107,48 +118,92 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
         {
             if (!SetProperty(ref _selectedSerialPort, value)) return;
 
-            _currentPort?.Dispose();
+            ClosePort();
 
-            _currentPort = string.IsNullOrWhiteSpace(value)
-                ? null
-                : new SerialPort(value, SelectedBaudRate, Parity.None, 8, StopBits.One);
-
-            if (_currentPort == null)
-            {
-                IsConnected = false;
-                return;
-            }
-
-            _currentPort.DataReceived += TextReceived;
-            _currentPort.ErrorReceived += ErrorReceived;
-            _currentPort.ReadBufferSize = 64000000;
-            _currentPort.Encoding = Encoding.GetEncoding("ISO-8859-1");
-            try
-            {
-                _currentPort.Open();
-                WriteLine("Successfully opened connection on " + value, GetThemeBrush("SuccessBrush"));
-                IsConnected = true;
-            }
-            catch (Exception e)
-            {
-                WriteLine("Could not open serial connection: " + e.Message, GetThemeBrush("ErrorBrush"));
-                IsConnected = false;
-            }
+            if (!string.IsNullOrWhiteSpace(value)) Connect();
         }
+    }
+
+    /// <summary>
+    ///     Opens the selected serial port (again) with the selected baud rate
+    /// </summary>
+    public void Connect()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedSerialPort))
+        {
+            WriteLine("[Error] No serial port selected!", GetThemeBrush("ErrorBrush"));
+            return;
+        }
+
+        ClosePort();
+
+        var port = new SerialPort(SelectedSerialPort, SelectedBaudRate > 0 ? SelectedBaudRate : 9600,
+            Parity.None, 8, StopBits.One);
+        port.DataReceived += TextReceived;
+        port.ErrorReceived += ErrorReceived;
+        port.ReadBufferSize = 64000000;
+        port.Encoding = Encoding.GetEncoding("ISO-8859-1");
+        _currentPort = port;
+
+        try
+        {
+            port.Open();
+            WriteLine($"Connected to {port.PortName} at {port.BaudRate} baud", GetThemeBrush("SuccessBrush"));
+            IsConnected = true;
+        }
+        catch (Exception e)
+        {
+            WriteLine("Could not open serial connection: " + e.Message, GetThemeBrush("ErrorBrush"));
+            IsConnected = false;
+        }
+    }
+
+    public void ToggleConnection()
+    {
+        if (IsConnected) Disconnect();
+        else Connect();
+    }
+
+    private void ClosePort()
+    {
+        if (_currentPort == null) return;
+
+        var port = _currentPort;
+        _currentPort = null;
+        port.DataReceived -= TextReceived;
+        port.ErrorReceived -= ErrorReceived;
+        try
+        {
+            if (port.IsOpen) port.Close();
+        }
+        catch
+        {
+            // The device may already be gone
+        }
+
+        port.Dispose();
+        IsConnected = false;
     }
 
     public void RefreshSerialPorts()
     {
-        var selectedPort = _currentPort?.PortName ?? null;
-        SelectedSerialPort = null;
-        SerialPorts.Clear();
-        SerialPorts.AddRange(SerialPort.GetPortNames());
-        SelectedSerialPort = selectedPort;
+        var available = SerialPort.GetPortNames().Distinct().OrderBy(x => x).ToList();
 
-        if (SerialPorts.Count == 1)
-            WriteLine("Found " + SerialPorts.Count + " usable port!", GetThemeBrush("ThemeForegroundLowBrush"));
-        else
-            WriteLine("Found " + SerialPorts.Count + " usable ports!", GetThemeBrush("ThemeForegroundLowBrush"));
+        // Update in place so the ComboBox keeps its selection and the connection stays untouched
+        foreach (var removed in SerialPorts.Except(available).ToList())
+        {
+            if (removed == SelectedSerialPort) SelectedSerialPort = null;
+            SerialPorts.Remove(removed);
+        }
+
+        foreach (var added in available.Except(SerialPorts).ToList())
+        {
+            var index = SerialPorts.TakeWhile(x => string.CompareOrdinal(x, added) < 0).Count();
+            SerialPorts.Insert(index, added);
+        }
+
+        WriteLine(SerialPorts.Count == 1 ? "Found 1 serial port" : $"Found {SerialPorts.Count} serial ports",
+            GetThemeBrush("ThemeForegroundLowBrush"));
     }
 
     public new void Clear()
@@ -160,8 +215,10 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
 
     public void Disconnect()
     {
-        if (_currentPort?.IsOpen ?? false) _currentPort.Close();
-        SelectedSerialPort = null;
+        if (_currentPort == null) return;
+        var name = _currentPort.PortName;
+        ClosePort();
+        WriteLine("Disconnected from " + name, GetThemeBrush("ThemeForegroundLowBrush"));
     }
 
     /// <summary>
@@ -170,25 +227,10 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
     /// <param name="text">Command</param>
     public void SendText(string text)
     {
-        if (_currentPort == null)
-        {
-            WriteLine("[Error] No serial port selected!", GetThemeBrush("ErrorBrush"));
-        }
-        else
-        {
-            if (!_currentPort.IsOpen)
-                try
-                {
-                    _currentPort.Open();
-                }
-                catch (Exception e)
-                {
-                    WriteLine("[Error] Can't open connection: " + e.Message, GetThemeBrush("ErrorBrush"));
-                    return;
-                }
+        if (_currentPort is not { IsOpen: true }) Connect();
 
-            //this.WriteLine("Sending: " + text + " ...\n");
-
+        if (_currentPort is { IsOpen: true })
+        {
             try
             {
                 if (SelectedLineEncoding == "ASCII")
@@ -197,7 +239,7 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
                 }
                 else
                 {
-                    var numbers = text.Split(' ');
+                    var numbers = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     var dataList = new List<byte>();
                     foreach (var n in numbers)
                         dataList.Add(SelectedLineEncoding == "Byte" ? byte.Parse(n) : Convert.ToByte(n, 16));

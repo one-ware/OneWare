@@ -21,4 +21,21 @@ public static class PackageStateExtensions
             .OrderByDescending(x => SemanticVersion.TryParse(x.Version, out var parsed) ? parsed : SemanticVersion.Empty)
             .FirstOrDefault();
     }
+
+    /// <summary>
+    /// The stable version a bulk update ("Update All", Studio updater) moves this package to, or
+    /// <c>null</c> when there is none. Prereleases never count, and the target must be strictly newer
+    /// than the installed version, so a package whose only update is a prerelease is skipped.
+    /// </summary>
+    public static PackageVersion? ResolveStableUpdateVersion(this IPackageState state)
+    {
+        if (!SemanticVersion.TryParse(state.InstalledVersion?.Version, out var installed))
+            return null;
+
+        var target = state.ResolveTargetVersion();
+
+        return SemanticVersion.TryParse(target?.Version, out var targetVersion) && targetVersion > installed
+            ? target
+            : null;
+    }
 }
