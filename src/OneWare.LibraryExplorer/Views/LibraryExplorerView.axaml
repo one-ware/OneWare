@@ -20,7 +20,6 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
-        <StyleInclude Source="avares://OneWare.ProjectExplorer/Views/ProjectExplorerTheme.axaml" />
     </UserControl.Styles>
 
     <Grid>

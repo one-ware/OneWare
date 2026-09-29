@@ -29,6 +29,7 @@
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ProgressBar.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ListBox.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TreeView.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TreeDataGrid.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TabControl.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Menu.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Flyout.axaml" />

@@ -26,7 +26,6 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
-        <StyleInclude Source="ProjectExplorerTheme.axaml" />
     </UserControl.Styles>
 
     <Grid>

@@ -38,7 +38,7 @@
             <controls:SearchBox Grid.Row="0" Grid.Column="0" Margin="8 6 4 6" VerticalAlignment="Center"
                                 SearchText="{Binding Filter}" SearchButtonVisible="False" Label="Search extensions..." />
 
-            <DockPanel Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="3" Margin="8 0" LastChildFill="False">
+            <DockPanel Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="3" Margin="4 0" LastChildFill="False">
                 <controls:SegmentedControl DockPanel.Dock="Left" VerticalAlignment="Center"
                                            SelectedIndex="{Binding SelectedFilterIndex, Mode=TwoWay}">
                     <controls:SegmentedControlItem Content="All" />

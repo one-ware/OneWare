@@ -1,157 +1,141 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              xmlns:viewModels="clr-namespace:OneWare.ErrorList.ViewModels"
-             xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-             xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+             xmlns:views="clr-namespace:OneWare.ErrorList.Views"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
              x:Class="OneWare.ErrorList.Views.ErrorListView" x:DataType="viewModels:ErrorListViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
     <UserControl.Styles>
-        <Style Selector="Border.TopGrid">
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-            <Setter Property="BorderThickness" Value="1,0,0,1" />
-            <Setter Property="Height" Value="30" />
+        <Style Selector="Image.severity">
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Image.severity.error">
+            <Setter Property="Source" Value="{DynamicResource VsImageLib.StatusCriticalError16X}" />
+        </Style>
+        <Style Selector="Image.severity.warning">
+            <Setter Property="Source" Value="{DynamicResource VsImageLib.StatusWarning16X}" />
+        </Style>
+        <Style Selector="Image.severity.hint">
+            <Setter Property="Source" Value="{DynamicResource VsImageLib.StatusInformation16X}" />
         </Style>
 
-        <Style Selector="Border.ChildBorder">
-            <Setter Property="Padding" Value="5,0,1,0" />
-            <Setter Property="Margin" Value="0,2,0,2" />
+        <!-- Code, source and line are secondary information -->
+        <Style Selector="TreeDataGrid#ProblemTree TreeDataGridTextCell">
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
         </Style>
-
-        <Style Selector="TextBlock.ChildText">
-            <Setter Property="Margin" Value="0,0,0,1" />
-        </Style>
-
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
-
     </UserControl.Styles>
 
+    <UserControl.Resources>
+        <views:ErrorListNodeTemplate x:Key="ErrorListDescriptionTemplate">
+            <views:ErrorListNodeTemplate.FileTemplate>
+                <DataTemplate x:DataType="viewModels:ErrorListFileNode">
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" Background="Transparent"
+                          ToolTip.Tip="{Binding FilePath}">
+                        <controls:LayeredIconPresenter Grid.Column="0" Width="16" Height="16"
+                                                       Value="{Binding Icon}" />
+                        <TextBlock Grid.Column="1" Classes="semibold" Margin="6 0 0 0" VerticalAlignment="Center"
+                                   Text="{Binding FileName}" />
+                        <TextBlock Grid.Column="2" Classes="muted" Margin="8 0" VerticalAlignment="Center"
+                                   TextTrimming="PrefixCharacterEllipsis" Text="{Binding Directory}" />
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" Margin="0 0 4 0"
+                                    VerticalAlignment="Center">
+                            <Border Classes="badge small error" IsVisible="{Binding HasErrors}"
+                                    ToolTip.Tip="Errors">
+                                <TextBlock Text="{Binding ErrorCount}" />
+                            </Border>
+                            <Border Classes="badge small warning" IsVisible="{Binding HasWarnings}"
+                                    ToolTip.Tip="Warnings">
+                                <TextBlock Text="{Binding WarningCount}" />
+                            </Border>
+                            <Border Classes="badge small" IsVisible="{Binding HasHints}" ToolTip.Tip="Hints">
+                                <TextBlock Text="{Binding HintCount}" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </views:ErrorListNodeTemplate.FileTemplate>
+            <DataTemplate x:DataType="viewModels:ErrorListProblemNode">
+                <DockPanel Background="Transparent" ToolTip.Tip="{Binding Item.Description}">
+                    <Image DockPanel.Dock="Left" Margin="0 0 6 0"
+                           Classes="severity"
+                           Classes.error="{Binding IsError}"
+                           Classes.warning="{Binding IsWarning}"
+                           Classes.hint="{Binding IsHint}" />
+                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Text="{Binding Summary}" />
+                </DockPanel>
+            </DataTemplate>
+        </views:ErrorListNodeTemplate>
+    </UserControl.Resources>
 
-    <Grid RowDefinitions="30,*">
+    <Grid RowDefinitions="Auto,*">
 
-        <Border Classes="header" Padding="2">
-            <DockPanel Name="InformationPanel">
-                <StackPanel Classes="ToolBar">
-
-                    <ComboBox SelectedIndex="{Binding ErrorListFilterMode}" Width="140">
+        <Border Classes="header" Padding="4">
+            <!-- The toolbar moves below the search box when the panel is narrow, see ErrorListView.axaml.cs -->
+            <Grid Name="HeaderGrid" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                <StackPanel Name="FilterToolbar" Grid.Column="1" Classes="toolbar" Margin="6 0 0 0">
+                    <ComboBox Width="140" ToolTip.Tip="Scope"
+                              SelectedIndex="{Binding ErrorListFilterMode}">
                         <ComboBoxItem>All open projects</ComboBoxItem>
                         <ComboBoxItem>Current project</ComboBoxItem>
                         <ComboBoxItem>Current file</ComboBoxItem>
                     </ComboBox>
 
-                    <Separator />
-
-                    <ComboBox ItemsSource="{Binding ErrorListVisibleSources}"
-                              SelectedItem="{Binding ErrorListVisibleSource}"
-                              Width="140">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                    <ComboBox Width="130" ToolTip.Tip="Source"
+                              ItemsSource="{Binding ErrorListVisibleSources}"
+                              SelectedItem="{Binding ErrorListVisibleSource}" />
 
                     <Separator />
 
-                    <ToggleButton Classes="RoundButton" IsChecked="{Binding ErrorEnabled}"
-                                  DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusCriticalError16X}" />
-                            <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
-                                       Text="{Binding ErrorCountVisible}" />
+                    <ToggleButton IsChecked="{Binding ErrorEnabled}" ToolTip.Tip="Show errors">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Classes="severity error" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding ErrorCount}" />
                         </StackPanel>
                     </ToggleButton>
+                    <ToggleButton IsChecked="{Binding WarningEnabled}" ToolTip.Tip="Show warnings">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Classes="severity warning" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding WarningCount}" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <ToggleButton IsChecked="{Binding HintEnabled}" ToolTip.Tip="Show hints">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Image Classes="severity hint" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding HintCount}" />
+                        </StackPanel>
+                    </ToggleButton>
+
                     <Separator />
-                    <ToggleButton Classes="RoundButton" IsChecked="{Binding WarningEnabled}"
-                                  DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
-                            <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
-                                       Text="{Binding WarningCountVisible}" />
-                        </StackPanel>
-                    </ToggleButton>
-                    <Separator />
-                    <ToggleButton Classes="RoundButton" IsChecked="{Binding HintEnabled}"
-                                  DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
-                            <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
-                                       Text="{Binding HintCountVisible}" />
-                        </StackPanel>
-                    </ToggleButton>
+
+                    <Button Classes="icon" ToolTip.Tip="Expand all" Command="{Binding ExpandAllCommand}">
+                        <PathIcon Data="{StaticResource Icon.ExpandAll}" />
+                    </Button>
+                    <Button Classes="icon" ToolTip.Tip="Collapse all" Command="{Binding CollapseAllCommand}">
+                        <PathIcon Data="{StaticResource Icon.CollapseAll}" />
+                    </Button>
                 </StackPanel>
 
-                <controls:SearchBox DockPanel.Dock="Right" Width="280" HorizontalAlignment="Right"
-                                    Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}"
-                                    SearchButtonVisible="False" Name="SearchErrors" />
-            </DockPanel>
-
+                <controls:SearchBox Grid.Column="0" Label="Filter problems..." SearchButtonVisible="False"
+                                    SearchText="{Binding SearchString, Mode=TwoWay}" />
+            </Grid>
         </Border>
 
-        <DataGrid Padding="2, 0, 2, 2" BorderThickness="0"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1"
-                  Background="{DynamicResource ThemeControlTransparentBrush}"
-                  ItemsSource="{Binding Collection}"
-                  RowBackground="{DynamicResource ThemeControlTransparentBrush}" IsReadOnly="True" Name="ErrorList" SelectedItem="{Binding SelectedItem}"
-                  CanUserResizeColumns="True" CanUserSortColumns="True">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn CanUserResize="False" Width="25" CanUserSort="False">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ErrorListItem">
-                            <Grid ToolTip.Tip="{Binding Code}">
-                                <Image Width="14" Height="14"
-                                       Source="{DynamicResource VsImageLib.StatusInformation16X}"
-                                       IsVisible="{Binding Path=Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ErrorType.Hint}}" />
-                                <Image Width="14" Height="14"
-                                       Source="{DynamicResource VsImageLib.StatusCriticalError16X}"
-                                       IsVisible="{Binding Path=Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ErrorType.Error}}" />
-                                <Image Width="14" Height="14"
-                                       Source="{DynamicResource VsImageLib.StatusWarning16X}"
-                                       IsVisible="{Binding Path=Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ErrorType.Warning}}" />
-                            </Grid>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Width="4*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ErrorListItem">
-                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding Description}"
-                                       Text="{Binding Description}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                        <TextBlock Text="Description" />
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Source"
-                                    Binding="{Binding Source}" />
-                <DataGridTextColumn Width="*" x:DataType="models:ErrorListItem" Header="Project"
-                                    Binding="{Binding Root.Header}" />
-                <DataGridTemplateColumn Width="4*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:ErrorListItem">
-                            <TextBlock VerticalAlignment="Center" Padding="5 0" ToolTip.Tip="{Binding FilePath}"
-                                       Text="{Binding FileName}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.Header>
-                        <TextBlock Text="File" />
-                    </DataGridTemplateColumn.Header>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Width="40" x:DataType="models:ErrorListItem" Header="Line"
-                                    Binding="{Binding StartLine}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <TreeDataGrid Grid.Row="1" Name="ProblemTree"
+                      Source="{Binding Source}"
+                      CanUserSortColumns="False" CanUserResizeColumns="True"
+                      AutoDragDropRows="False"
+                      Background="Transparent" BorderThickness="0" />
 
+        <Border Grid.Row="1" Classes="empty-state" IsHitTestVisible="False"
+                IsVisible="{Binding !HasVisibleProblems}">
+            <TextBlock Text="{Binding EmptyText}" />
+        </Border>
     </Grid>
 </UserControl>

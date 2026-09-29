@@ -5,7 +5,8 @@
         xmlns:mdc="clr-namespace:Markdown.Avalonia.Controls;assembly=Markdown.Avalonia"
         xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
         xmlns:extensions="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia"
-        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit">
+        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+        xmlns:coreExtensions="clr-namespace:OneWare.Core.Extensions">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -18,6 +19,7 @@
                 <mdxaml:MarkdownScrollViewer x:Name="PART_MarkdownScrollViewer" MarkdownStyleName="SimpleTheme"
                                              SelectionEnabled="{TemplateBinding SelectionEnabled}"
                                              Markdown="{TemplateBinding Markdown}"
+                                             coreExtensions:MarkdownScrollViewerExtensions.HyperlinkCommand="{TemplateBinding LinkCommand}"
                                              VirtualizationCacheLength="{TemplateBinding VirtualizationCacheLength}"
                                              EnableVirtualization="{TemplateBinding VirtualizationEnabled}">
                     <mdxaml:MarkdownScrollViewer.Plugins>

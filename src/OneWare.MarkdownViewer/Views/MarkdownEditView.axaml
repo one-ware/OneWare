@@ -26,6 +26,7 @@
         <controls:MarkdownViewer Grid.Column="2"
                                  IsVisible="{Binding ShowPreview}"
                                  SelectionEnabled="True"
+                                 LinkBasePath="{Binding FullPath}"
                                  Margin="12,8"
                                  Markdown="{Binding MarkdownText}" />
 

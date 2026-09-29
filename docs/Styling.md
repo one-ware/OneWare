@@ -191,6 +191,8 @@ border or corner radius of their own, and should not add margins to keep content
   progress such as downloads and installs; set `Height` only when a custom thickness is really needed. Don't set
   `Background` or `CornerRadius`. `ShowProgressText` shows the percentage next to the bar. `fill` stretches the bar over its container, e.g. as a
   progress background behind a button's content.
+- `TreeDataGrid`: themed app-wide (`Controls/TreeDataGrid.axaml`), so no local theme include is needed. It has compact
+  rows with a hover highlight, an accent selection and a 16 px indent per level. The Project Explorer and Problems panels use it.
 
 ### Flyouts
 
