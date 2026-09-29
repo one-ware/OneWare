@@ -1,5 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:OneWare.Essentials.Models"
+        xmlns:converters="clr-namespace:OneWare.Essentials.Converters">
 
     <Design.PreviewWith>
         <StackPanel Margin="20" Spacing="8" Width="320">
@@ -200,6 +202,33 @@
     </Style>
     <Style Selector="Border.badge.success > PathIcon, Border.badge.success > StackPanel > PathIcon">
         <Setter Property="Foreground" Value="Black" />
+    </Style>
+
+    <!-- Compact badge for dense rows (tree / list items) -->
+    <Style Selector="Border.badge.small">
+        <Setter Property="Padding" Value="6 0" />
+    </Style>
+
+    <!-- Tags: a row of small badges for ProjectExplorerTag items (e.g. "Top" / "Testbench" after a file name) -->
+    <Style Selector="ItemsControl.tags">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="ItemsPanel">
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource ThemeSpacingSmall}" />
+            </ItemsPanelTemplate>
+        </Setter>
+        <Setter Property="ItemTemplate">
+            <DataTemplate DataType="models:ProjectExplorerTag">
+                <Border Classes="badge small"
+                        Classes.accent="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:ProjectExplorerTagKind.Accent}}"
+                        Classes.success="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:ProjectExplorerTagKind.Success}}"
+                        Classes.warning="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:ProjectExplorerTagKind.Warning}}"
+                        Classes.error="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:ProjectExplorerTagKind.Error}}"
+                        ToolTip.Tip="{Binding ToolTip}">
+                    <TextBlock Text="{Binding Text}" />
+                </Border>
+            </DataTemplate>
+        </Setter>
     </Style>
 
     <!-- Callouts (inline info / warning / error boxes) -->

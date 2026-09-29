@@ -57,6 +57,7 @@
                 <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" />
             </Button>
         </StackPanel>
+        <Separator />
         <StackPanel Classes="split" Orientation="Horizontal">
             <Button ToolTip.Tip="Run Toolchain" Command="{Binding CompileAsync}"
                     IsEnabled="{Binding Project.Toolchain, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
@@ -84,6 +85,7 @@
                 <PathIcon Data="{StaticResource Icon.ChevronDown}" Width="10" Height="10" />
             </Button>
         </StackPanel>
+        <Separator />
         <StackPanel Classes="split" Orientation="Horizontal">
             <Button ToolTip.Tip="Configures the FPGA or writes the FLASH memory" Command="{Binding DownloadAsync}"
                     IsEnabled="{Binding Project.Loader, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">

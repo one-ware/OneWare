@@ -475,7 +475,9 @@ Project-specific files:
 - `RegisterPreCompileStep<T>()` for pre-compile hooks.
 - `RegisterNodeProvider<T>()` for HDL node extraction.
 - `RegisterProjectPropertyMigration(...)` for project property migrations.
-- `RegisterProjectEntryModification(Action<IProjectEntry>)` for custom project explorer adornments.
+- `RegisterProjectEntryModification(Action<IProjectEntry>)` for custom project explorer adornments. To mark a file
+  (e.g. top entity, testbench), prefer `entry.AddTag(key, new ProjectExplorerTag("Top", ProjectExplorerTagKind.Accent))`
+  / `entry.RemoveTag(key)`, which shows a pill after the name, over icon overlays.
 
 ### Hardware packages
 

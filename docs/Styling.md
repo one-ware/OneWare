@@ -69,6 +69,11 @@ Non-color tokens:
 
 Legacy keys such as `GreenAccent` are kept as aliases.
 
+Fonts: the UI uses the platform font (`$Default`, also available as `ContentControlThemeFontFamily`): Segoe UI on
+Windows, SF Pro on macOS, and the bundled Inter on Linux and in the browser (set up by `AppBuilder.WithOneWareFonts()`).
+Don't set a UI `FontFamily` inline. Monospace text uses `{DynamicResource EditorFont}` (or the `mono` class), which follows
+the editor font setting: bundled JetBrains Mono NL (default), Fira Code, Cascadia Mono, or any installed monospace font.
+
 Inputs (`TextBox`, `ComboBox`, `NumericUpDown`) get a default `Height` of `ThemeControlHeight`. It is a normal
 `Height`, not a `MinHeight`, so an inline `Height` on a view still wins. Multiline text boxes reset it to `NaN`.
 
@@ -153,7 +158,8 @@ a fixed square instead, so an inline `Width` / `Height` of any size wins.
 | `statusbar` | Accent strip at the bottom of the window; text, icons, buttons and top-level menu items are white in both themes (popups opened from it keep the normal colors) |
 | `divider` (+ `vertical`) | 1 px line |
 | `overlay` | Floating popup surface with shadow |
-| `badge` (+ `accent` `success` `warning` `error`) | Solid status pill (neutral grey by default) with small white text, dark on `success`; put a `TextBlock` inside. Not a container for buttons, use `inset` for that |
+| `badge` (+ `accent` `success` `warning` `error`, `small` for dense rows) | Solid status pill (neutral grey by default) with small white text, dark on `success`; put a `TextBlock` inside. Not a container for buttons, use `inset` for that |
+| `ItemsControl.tags` | Row of `badge small` pills for `ProjectExplorerTag` items (project explorer file tags) |
 | `callout` (+ `success` `warning` `error`) | Inline info box |
 | `empty-state` | Centered placeholder |
 | `interactive` / `selected` | Hover and selection modifiers for clickable cards |

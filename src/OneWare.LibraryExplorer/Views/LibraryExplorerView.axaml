@@ -76,11 +76,13 @@
                         <controls:LayeredIconPresenter HorizontalAlignment="Left" Grid.Column="0"
                                                        Value="{Binding Icon}" Height="16" Width="16" />
 
-                        <TextBlock Grid.Column="1"
-                                   VerticalAlignment="Center"
-                                   FontWeight="{Binding FontWeight}"
-                                   Text="{Binding Header, Mode=OneWay}"
-                                   Opacity="{Binding TextOpacity}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <TextBlock VerticalAlignment="Center"
+                                       FontWeight="{Binding FontWeight}"
+                                       Text="{Binding Header, Mode=OneWay}"
+                                       Opacity="{Binding TextOpacity}" />
+                            <ItemsControl Classes="tags" ItemsSource="{Binding Tags}" />
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </TreeDataGrid.Resources>

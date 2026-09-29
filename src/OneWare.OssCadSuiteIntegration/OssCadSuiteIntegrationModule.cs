@@ -344,11 +344,12 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 
             if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == file.RelativePath)
             {
-                x.Icon?.AddOverlay("ConstraintFile", "ForkAwesome.Check");
+                x.AddTag("ConstraintFile", new ProjectExplorerTag("Constraints", ProjectExplorerTagKind.Neutral,
+                    "Constraint file used by the OSS CAD Suite toolchain"));
             }
             else
             {
-                x.Icon?.RemoveOverlay("ConstraintFile");
+                x.RemoveTag("ConstraintFile");
             }
         });
         

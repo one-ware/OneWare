@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Dialogs;
-using Avalonia.Media;
 using Avalonia.Threading;
 using Dock.Settings;
 using Microsoft.Extensions.Logging;
 using OneWare.Core.Data;
+using OneWare.Core.Extensions;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
@@ -88,11 +88,7 @@ internal abstract class Program
                     : 0
             })
             .With(new MacOSPlatformOptions())
-            //.WithInterFont()
-            .With(new FontManagerOptions
-            {
-                DefaultFamilyName = "avares://OneWare.Core/Assets/Fonts#Noto Sans"
-            })
+            .WithOneWareFonts()
             .LogToTrace();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))

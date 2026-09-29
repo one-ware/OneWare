@@ -15,9 +15,5 @@
     <StyleInclude Source="avares://OneWare.Core/Styles/DataGrid.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/ColorPicker.axaml" />
     <StyleInclude Source="avares://OneWare.Core/Styles/MarkdownViewer.axaml" />
-    
-    <Style Selector=":is(Window)">
-        <Setter Property="FontFamily" Value="{StaticResource Noto Sans}" />
-    </Style>
 
 </Styles>
