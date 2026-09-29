@@ -19,8 +19,6 @@ using GitHub.Copilot;
 using GitHub.Copilot.Rpc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using OneWare.CloudIntegration.ViewModels;
-using OneWare.CloudIntegration.Views;
 using OneWare.Copilot.ViewModels;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Enums;
@@ -48,19 +46,11 @@ public abstract class CopilotChatServiceBase(
     IWindowService windowService,
     IMainDockService mainDockService,
     IPaths paths,
-    IChatAgentService agentService,
-    IOneWareCloudAccess? cloudAccess,
-    bool isOneWareCloudService)
+    IChatAgentService agentService)
     : ObservableObject, IChatServiceWithSessions
 {
-    private const string IdempotencyHeader = "Idempotency-Key";
-    private const string CloudOwnerMarkerFileName = ".oneware-cloud-owner";
     private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
-    private readonly SemaphoreSlim _cloudAccountSync = new(1, 1);
-    private IDisposable? _cloudAccountSubscription;
-    private bool _wasInitialized;
-    private string? _initializedCloudUserId;
     private CopilotSession? _session;
     private IDisposable? _subscription;
     private string? _requestedSessionId;
@@ -69,7 +59,7 @@ public abstract class CopilotChatServiceBase(
     private readonly List<PendingPlanRequest> _pendingPlanRequests = new();
 
     private readonly HashSet<string> _sessionApprovedTools = new();
-    private static readonly HttpClient ByokHttpClient = new()
+    protected static readonly HttpClient ByokHttpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(15)
     };
@@ -174,18 +164,11 @@ public abstract class CopilotChatServiceBase(
         @"<skill-context(?:\s+name=""(?<name>[^""]*)"")?[^>]*>(?<content>.*?)</skill-context>",
         RegexOptions.Singleline | RegexOptions.Compiled);
 
-    /// <summary>Error code of the OneWare Cloud 403 for plans that do not include Cloud AI.</summary>
-    private const string CloudAiNotInPlanErrorCode = "cloud_ai_not_in_plan";
-    private const string CloudAiDisabledByOrganizationErrorCode = "cloud_ai_disabled_by_organization";
-
-    private static readonly Regex InsufficientCreditsStatusRegex = new(
-        @"\b402\b", RegexOptions.Compiled);
-
     public ObservableCollection<ModelInfo> Models { get; } = [];
 
     public ObservableCollection<ModelInfo> FilteredModels { get; } = [];
 
-    public bool IsOneWareCloud { get; } = isOneWareCloudService;
+    public virtual bool IsOneWareCloud => false;
 
     public string? ModelSearchText
     {
@@ -243,11 +226,9 @@ public abstract class CopilotChatServiceBase(
         return new string(modelId.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
     }
 
-    private string GetSelectedModelSettingKey() => IsOneWareCloud
-        ? CopilotModule.CopilotOneWareCloudSelectedModelSettingKey
-        : _byokConfiguration == null
-            ? CopilotModule.CopilotSelectedModelSettingKey
-            : CopilotModule.CopilotByokSelectedModelSettingKey;
+    protected virtual string GetSelectedModelSettingKey() => _byokConfiguration == null
+        ? CopilotModule.CopilotSelectedModelSettingKey
+        : CopilotModule.CopilotByokSelectedModelSettingKey;
 
     public ModelInfo? SelectedModel
     {
@@ -630,23 +611,23 @@ public abstract class CopilotChatServiceBase(
         });
     }
 
-    public string Name { get; } = isOneWareCloudService ? "OneWare Cloud" : "GitHub Copilot";
+    public abstract string Name { get; }
 
     public ChatServiceBlocker? Blocker
     {
         get;
-        private set => SetProperty(ref field, value);
+        protected set => SetProperty(ref field, value);
     }
 
     public bool UsesGitHubAuthentication
     {
         get;
-        private set
+        protected set
         {
             if (!SetProperty(ref field, value)) return;
             OnPropertyChanged(nameof(IsByok));
         }
-    } = !isOneWareCloudService;
+    } = true;
 
     public bool IsByok => !UsesGitHubAuthentication && !IsOneWareCloud;
 
@@ -706,27 +687,27 @@ public abstract class CopilotChatServiceBase(
     public string? AccountLogin
     {
         get;
-        private set => SetProperty(ref field, value);
+        protected set => SetProperty(ref field, value);
     }
 
     /// <summary>How the CLI is authenticated ("user", "gh-cli", "env", ...).</summary>
     public string? AccountAuthType
     {
         get;
-        private set => SetProperty(ref field, value);
+        protected set => SetProperty(ref field, value);
     }
 
     /// <summary>Account line for the header menu, including where the login comes from.</summary>
     public string? AccountStatusText
     {
         get;
-        private set => SetProperty(ref field, value);
+        protected set => SetProperty(ref field, value);
     }
 
     public bool IsAuthenticated
     {
         get;
-        private set => SetProperty(ref field, value);
+        protected set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -737,14 +718,14 @@ public abstract class CopilotChatServiceBase(
     public bool CanSignOut
     {
         get;
-        private set => SetProperty(ref field, value);
+        protected set => SetProperty(ref field, value);
     }
 
     public IAsyncRelayCommand<Control?> SignInCommand => field ??= new AsyncRelayCommand<Control?>(SignInAsync);
 
     public IAsyncRelayCommand<Control?> SignOutCommand => field ??= new AsyncRelayCommand<Control?>(SignOutAsync);
 
-    private void ApplyAuthStatus(GetAuthStatusResponse? status)
+    protected void ApplyAuthStatus(GetAuthStatusResponse? status)
     {
         IsAuthenticated = status?.IsAuthenticated ?? false;
         AccountLogin = IsAuthenticated ? status?.Login : null;
@@ -757,23 +738,14 @@ public abstract class CopilotChatServiceBase(
             : null;
     }
 
-    private void ApplyByokStatus(ByokConfiguration configuration)
+    protected virtual void ApplyByokStatus(ByokConfiguration configuration)
     {
         UsesGitHubAuthentication = false;
         AccountLogin = null;
         CanSignOut = false;
-        if (configuration.UsesOneWareCloud)
-        {
-            IsAuthenticated = true;
-            AccountAuthType = "oneware-cloud";
-            AccountStatusText = "Signed in to OneWare Cloud";
-        }
-        else
-        {
-            IsAuthenticated = false;
-            AccountAuthType = "byok";
-            AccountStatusText = $"{configuration.DisplayName} · {configuration.BaseUrl}";
-        }
+        IsAuthenticated = false;
+        AccountAuthType = "byok";
+        AccountStatusText = $"{configuration.DisplayName} · {configuration.BaseUrl}";
     }
 
     private void ApplyGitHubProviderStatus()
@@ -799,155 +771,49 @@ public abstract class CopilotChatServiceBase(
     {
         if (IsAuthenticated) return;
 
-        if (IsOneWareCloud)
-        {
-            await AuthenticateOneWareCloudAsync(owner);
-            return;
-        }
+        await SignInCoreAsync(owner);
+    }
 
+    protected virtual async Task SignInCoreAsync(Control? owner)
+    {
         if (await AuthenticateAsync(owner)) await InitializeAsync();
     }
 
-    private async Task AuthenticateOneWareCloudAsync(Control? owner)
-    {
-        var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
-        var userIdBeforeLogin = cloudAccess!.UserId;
-
-        await windowService.ShowDialogAsync(new AuthenticateCloudView
-        {
-            DataContext = ContainerLocator.Container.Resolve<AuthenticateCloudViewModel>()
-        }, ownerWindow);
-
-        // A login that changed the user id is picked up by the account subscription.
-        if (_cloudAccountSubscription != null && cloudAccess.UserId != userIdBeforeLogin) return;
-
-        try
-        {
-            await cloudAccess.GetAccessTokenAsync();
-        }
-        catch (InvalidOperationException ex)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                "OneWare Cloud authentication did not complete.");
-            return;
-        }
-
-        await HandleCloudAccountChangedAsync(true);
-    }
-
-    private void EnsureCloudAccountSubscription()
-    {
-        if (!IsOneWareCloud || cloudAccess == null || _cloudAccountSubscription != null) return;
-
-        // Skip the current value: only react to logins and logouts that happen from now on.
-        _cloudAccountSubscription = cloudAccess.UserIdObservable
-            .Skip(1)
-            // Run off the caller: logouts are raised from inside the token refresh of the login service.
-            .Subscribe(_ => Task.Run(() => HandleCloudAccountChangedAsync()));
-    }
-
     /// <summary>
-    /// Restarts the OneWare Cloud runtime after a login or logout anywhere in the app. A logout keeps
-    /// the conversation so the same user can resume it; a different user starts with an empty history.
+    /// Stops the runtime, runs <paramref name="whileStopped"/> (e.g. to clean up files the runtime holds)
+    /// and starts it again, resuming the current conversation when it still exists.
     /// </summary>
-    private async Task HandleCloudAccountChangedAsync(bool force = false)
+    protected async Task RestartAsync(Action? whileStopped = null)
     {
-        if (!_wasInitialized) return;
-
-        await _cloudAccountSync.WaitAsync().ConfigureAwait(false);
+        await _sync.WaitAsync().ConfigureAwait(false);
         try
         {
-            // Read the id now instead of using the notified value, so queued changes always apply the latest state.
-            var userId = cloudAccess!.UserId;
-            if (!force && string.Equals(userId, _initializedCloudUserId, StringComparison.Ordinal)) return;
+            _requestedSessionId ??= CurrentSessionId;
+            await DisposeAsync();
 
-            // Stop the runtime first: it holds the session files that may have to be deleted.
-            await _sync.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                _requestedSessionId ??= CurrentSessionId;
-                await DisposeAsync();
-
-                // Raised before SessionReset so the chat view forgets the old account's sessions
-                // before it tries to resume the remembered one.
-                if (userId != null) EnsureCloudHistoryOwner(userId);
-            }
-            finally
-            {
-                _sync.Release();
-            }
-
-            SessionReset?.Invoke(this, EventArgs.Empty);
-            await InitializeAsync();
-        }
-        catch (Exception ex)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().LogError(ex,
-                "Failed to apply the OneWare Cloud account change.");
+            // Runs before SessionReset so the chat view forgets cleared sessions
+            // before it tries to resume the remembered one.
+            whileStopped?.Invoke();
         }
         finally
         {
-            _cloudAccountSync.Release();
+            _sync.Release();
         }
+
+        SessionReset?.Invoke(this, EventArgs.Empty);
+        await InitializeAsync();
     }
 
-    /// <summary>
-    /// Deletes the stored OneWare Cloud sessions when they belong to a different user than
-    /// <paramref name="userId"/>. Must only run while the Copilot runtime is stopped.
-    /// </summary>
-    private void EnsureCloudHistoryOwner(string userId)
+    /// <summary>Tells the chat view that all stored sessions of this service were deleted.</summary>
+    protected void NotifyHistoryCleared()
     {
-        var configuration = GetByokConfiguration();
-        if (configuration is not { UsesOneWareCloud: true }) return;
-
-        var directory = GetByokDataDirectory(configuration);
-        var markerPath = Path.Combine(directory, CloudOwnerMarkerFileName);
-        var owner = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(userId))).ToLowerInvariant();
-
-        string? previousOwner = null;
-        try
-        {
-            if (File.Exists(markerPath)) previousOwner = File.ReadAllText(markerPath).Trim();
-        }
-        catch (Exception ex)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                "Could not read the OneWare Cloud history owner.");
-        }
-
-        if (string.Equals(previousOwner, owner, StringComparison.Ordinal)) return;
-
-        // Data without an owner (created before owners were tracked) is adopted by the first user.
-        if (!string.IsNullOrEmpty(previousOwner))
-        {
-            foreach (var entry in new DirectoryInfo(directory).EnumerateFileSystemInfos())
-            {
-                try
-                {
-                    if (entry is DirectoryInfo subDirectory) subDirectory.Delete(true);
-                    else entry.Delete();
-                }
-                catch (Exception ex)
-                {
-                    ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                        "Could not delete OneWare Cloud history entry {Path}.", entry.FullName);
-                }
-            }
-
-            _requestedSessionId = null;
-            HistoryCleared?.Invoke(this, EventArgs.Empty);
-        }
-
-        try
-        {
-            File.WriteAllText(markerPath, owner);
-        }
-        catch (Exception ex)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                "Could not store the OneWare Cloud history owner.");
-        }
+        _requestedSessionId = null;
+        HistoryCleared?.Invoke(this, EventArgs.Empty);
     }
+
+    protected void RaiseEvent(ChatEvent chatEvent) => EventReceived?.Invoke(this, chatEvent);
+
+    protected void RaiseStatus(StatusEvent statusEvent) => StatusChanged?.Invoke(this, statusEvent);
 
     private async Task SignOutAsync(Control? owner)
     {
@@ -1321,18 +1187,8 @@ public abstract class CopilotChatServiceBase(
         {
             await DisposeAsync();
 
-            if (IsOneWareCloud)
-            {
-                _wasInitialized = true;
-                EnsureCloudAccountSubscription();
-                _initializedCloudUserId = cloudAccess?.UserId;
-
-                if (!await EnsureOneWareCloudAuthenticationAsync())
-                    return false;
-
-                // Also covers a user switch that happened while the app was closed.
-                if (cloudAccess?.UserId is { } cloudUserId) EnsureCloudHistoryOwner(cloudUserId);
-            }
+            if (!await PrepareInitializationAsync())
+                return false;
 
             _byokConfiguration = GetByokConfiguration();
             if (_byokConfiguration == null)
@@ -1384,6 +1240,8 @@ public abstract class CopilotChatServiceBase(
                 clientOptions.OnListModels = cancellationToken =>
                     ListByokModelsAsync(_byokConfiguration, cancellationToken);
             }
+
+            clientOptions.RequestHandler = CreateRequestHandler();
 
             _client = new CopilotClient(clientOptions);
 
@@ -1440,23 +1298,10 @@ public abstract class CopilotChatServiceBase(
 
             return true;
         }
-        catch (Exception ex) when (IsOneWareCloud && FindCloudAiBlocked(ex) is { } blocked)
-        {
-            if (blocked.Code == CloudAiNotInPlanErrorCode)
-            {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "Pro plan required"));
-                ReportCloudAiUpgradeRequired();
-            }
-            else
-            {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "Disabled by organization"));
-                ReportCloudAiDisabledByOrganization(blocked.Message);
-            }
-
-            return false;
-        }
         catch (Exception ex)
         {
+            if (HandleInitializationError(ex)) return false;
+
             StatusChanged?.Invoke(this, new StatusEvent(false, "Copilot unavailable"));
             Blocker = null;
             EventReceived?.Invoke(this, new ChatErrorEvent(ex.Message));
@@ -1481,60 +1326,74 @@ public abstract class CopilotChatServiceBase(
         IntegrationVersion = typeof(CopilotChatServiceBase).Assembly.GetName().Version?.ToString()
     };
 
-    private sealed record ByokConfiguration(
+    protected sealed record ByokConfiguration(
         string DisplayName,
         string Type,
         string BaseUrl,
         string ApiKeyEnvironmentVariable,
         string ModelOverride,
-        string WireApi,
-        bool UsesOneWareCloud = false);
+        string WireApi);
 
-    private async Task<bool> EnsureOneWareCloudAuthenticationAsync()
+    #region Provider hooks
+
+    /// <summary>Runs before the runtime starts. Returning <c>false</c> aborts the initialization.</summary>
+    protected virtual Task<bool> PrepareInitializationAsync() => Task.FromResult(true);
+
+    /// <summary>Handles an initialization failure. Returning <c>true</c> suppresses the generic error.</summary>
+    protected virtual bool HandleInitializationError(Exception exception) => false;
+
+    /// <summary>Intercepts the LLM requests of the runtime, or <c>null</c> to let the runtime send them.</summary>
+    protected virtual CopilotRequestHandler? CreateRequestHandler() => null;
+
+    protected virtual void ConfigureProvider(GitHub.Copilot.ProviderConfig provider, ByokConfiguration configuration)
     {
-        if (cloudAccess is null)
-            throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
-
-        try
-        {
-            await cloudAccess.GetAccessTokenAsync();
-            return true;
-        }
-        catch (InvalidOperationException)
-        {
-            ApplyAuthStatus(null);
-            UsesGitHubAuthentication = false;
-            StatusChanged?.Invoke(this, new StatusEvent(false, "Not Authenticated"));
-            Blocker = new ChatServiceBlocker("Sign in to OneWare Cloud",
-                "OneWare Cloud AI uses your OneWare account. Sign in to start chatting.")
-            {
-                ActionText = "Login to OneWare Cloud",
-                ActionCommand = new AsyncRelayCommand<Control?>(AuthenticateOneWareCloudAsync)
-            };
-            return false;
-        }
     }
 
-    private ByokConfiguration? GetByokConfiguration()
+    protected virtual Task AuthorizeModelListRequestAsync(HttpRequestMessage request,
+        ByokConfiguration configuration, CancellationToken cancellationToken)
     {
-        if (IsOneWareCloud)
-        {
-            if (cloudAccess is null)
-                throw new InvalidOperationException("The OneWare Cloud integration is not installed.");
-            if (!Uri.TryCreate(cloudAccess.BaseUrl, UriKind.Absolute, out var cloudUri) ||
-                cloudUri.Scheme is not ("http" or "https"))
-                throw new InvalidOperationException("The OneWare Cloud URL is invalid.");
+        var apiKey = ResolveByokApiKey(configuration);
+        if (string.IsNullOrWhiteSpace(apiKey)) return Task.CompletedTask;
 
-            return new ByokConfiguration(
-                CopilotModule.ProviderOneWareCloud,
-                "openai",
-                $"{cloudAccess.BaseUrl.TrimEnd('/')}/api/copilot/v1",
-                string.Empty,
-                string.Empty,
-                CopilotModule.WireApiResponses,
-                true);
+        if (configuration.Type == "anthropic")
+        {
+            request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+            request.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
+        }
+        else
+        {
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
         }
 
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Returns a provider-supplied reason for a failed model list request, or throws a more specific exception.
+    /// </summary>
+    protected virtual Task<string?> ReadModelListErrorAsync(HttpResponseMessage response,
+        CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+
+    /// <summary>Applies provider-specific metadata of a <c>/models</c> entry to the model.</summary>
+    protected virtual void ApplyModelMetadata(ModelInfo model, JsonElement item)
+    {
+    }
+
+    /// <summary>Provider-specific additions to the runtime instructions of the system message.</summary>
+    protected virtual IEnumerable<string> GetRuntimeInstructions() => [];
+
+    protected virtual void ConfigureMessageOptions(MessageOptions options)
+    {
+    }
+
+    /// <summary>Handles a session error. Returning <c>true</c> suppresses the generic error message.</summary>
+    protected virtual bool HandleSessionError(SessionErrorEvent error, string? agentId) => false;
+
+    #endregion
+
+    protected virtual ByokConfiguration? GetByokConfiguration()
+    {
         var provider = settingsService.GetSettingValue<string>(CopilotModule.CopilotProviderSettingKey);
         if (provider == CopilotModule.ProviderGitHubCopilot) return null;
 
@@ -1574,11 +1433,10 @@ public abstract class CopilotChatServiceBase(
             ApiKey = ResolveByokApiKey(_byokConfiguration)
         };
 
-        if (_byokConfiguration.UsesOneWareCloud)
-            provider.BearerTokenProvider = _ => cloudAccess!.GetAccessTokenAsync();
-
         if (_byokConfiguration.Type == "openai")
             provider.WireApi = _byokConfiguration.WireApi;
+
+        ConfigureProvider(provider, _byokConfiguration);
 
         return provider;
     }
@@ -1595,7 +1453,7 @@ public abstract class CopilotChatServiceBase(
         return apiKey;
     }
 
-    private string GetByokDataDirectory(ByokConfiguration configuration)
+    protected string GetByokDataDirectory(ByokConfiguration configuration)
     {
         var identity = Encoding.UTF8.GetBytes(
             $"{configuration.Type}\n{configuration.BaseUrl}");
@@ -1617,36 +1475,13 @@ public abstract class CopilotChatServiceBase(
             : $"{configuration.BaseUrl}/models";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, modelsUrl);
-        var apiKey = ResolveByokApiKey(configuration);
-        if (configuration.UsesOneWareCloud)
-        {
-            request.Headers.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue(
-                    "Bearer", await cloudAccess!.GetAccessTokenAsync(cancellationToken));
-        }
-        else if (!string.IsNullOrWhiteSpace(apiKey))
-        {
-            if (configuration.Type == "anthropic")
-            {
-                request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
-                request.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
-            }
-            else
-            {
-                request.Headers.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-            }
-        }
+        await AuthorizeModelListRequestAsync(request, configuration, cancellationToken);
 
         using var response = await ByokHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            var (providerMessage, providerCode) = configuration.UsesOneWareCloud
-                ? await ReadProviderErrorAsync(response, cancellationToken)
-                : default;
-            if (providerCode is CloudAiNotInPlanErrorCode or CloudAiDisabledByOrganizationErrorCode)
-                throw new CloudAiBlockedException(providerCode, providerMessage);
+            var providerMessage = await ReadModelListErrorAsync(response, cancellationToken);
 
             throw new InvalidOperationException(
                 $"Could not list models from {configuration.DisplayName}: " +
@@ -1675,7 +1510,7 @@ public abstract class CopilotChatServiceBase(
                     ? nameProperty.GetString()
                     : null;
             var model = CreateByokModel(id, string.IsNullOrWhiteSpace(name) ? id : name);
-            if (configuration.UsesOneWareCloud) ApplyCloudReasoningEfforts(model, item);
+            ApplyModelMetadata(model, item);
             models.Add(model);
         }
 
@@ -1689,150 +1524,7 @@ public abstract class CopilotChatServiceBase(
             .ToList();
     }
 
-    /// <summary>Detects the 402 the OneWare Cloud endpoint returns when the organization is out of credits.</summary>
-    private static bool IsInsufficientCreditsError(string? message)
-    {
-        return message is not null &&
-               (message.Contains("insufficient_credits", StringComparison.OrdinalIgnoreCase) ||
-                message.Contains("Payment Required", StringComparison.OrdinalIgnoreCase) ||
-                InsufficientCreditsStatusRegex.IsMatch(message));
-    }
-
-    /// <summary>Reads <c>error.message</c> and <c>error.code</c> of a OneWare Cloud error response.</summary>
-    private static async Task<(string? Message, string? Code)> ReadProviderErrorAsync(
-        HttpResponseMessage response,
-        CancellationToken cancellationToken)
-    {
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        try
-        {
-            using var document = JsonDocument.Parse(content);
-            if (!document.RootElement.TryGetProperty("error", out var error) ||
-                error.ValueKind != JsonValueKind.Object)
-                return default;
-
-            return (ReadString(error, "message"), ReadString(error, "code"));
-        }
-        catch (JsonException)
-        {
-            return default;
-        }
-
-        static string? ReadString(JsonElement element, string name) =>
-            element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
-                ? value.GetString()
-                : null;
-    }
-
-    private static CloudAiBlockedException? FindCloudAiBlocked(Exception exception)
-    {
-        for (Exception? current = exception; current != null; current = current.InnerException)
-        {
-            if (current is CloudAiBlockedException blocked) return blocked;
-            if (current is AggregateException aggregate &&
-                aggregate.InnerExceptions.Select(FindCloudAiBlocked).FirstOrDefault(x => x != null) is { } inner)
-                return inner;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// The runtime only reports "Authentication failed (HTTP 403)" without the response body, so the reason is
-    /// read from the model list, which applies the same organization and plan checks.
-    /// </summary>
-    private async Task ReportCloudAccessDeniedAsync(string? agentId)
-    {
-        (string? Message, string? Code) problem = default;
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"{cloudAccess!.BaseUrl.TrimEnd('/')}/api/copilot/v1/models");
-            request.Headers.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue(
-                    "Bearer", await cloudAccess.GetAccessTokenAsync());
-            using var response = await ByokHttpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-                problem = await ReadProviderErrorAsync(response, CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                "Could not read why OneWare Cloud rejected the OneWare Cloud AI request.");
-        }
-
-        if (problem.Code == CloudAiNotInPlanErrorCode)
-        {
-            ReportCloudAiUpgradeRequired();
-            return;
-        }
-
-        if (problem.Code == CloudAiDisabledByOrganizationErrorCode)
-        {
-            ReportCloudAiDisabledByOrganization(problem.Message);
-            return;
-        }
-
-        EventReceived?.Invoke(this, new ChatErrorEvent(
-            problem.Message ?? "OneWare Cloud rejected the request. Check the organization selected in your account.")
-        {
-            AgentId = agentId
-        });
-    }
-
-    private void ReportCloudAiUpgradeRequired()
-    {
-        Blocker = new ChatServiceBlocker("OneWare Cloud Pro required",
-            "OneWare Cloud AI is included in the Pro plans. Upgrade your organization, then refresh.")
-        {
-            ActionText = "Upgrade to Pro",
-            ActionCommand = new RelayCommand<Control?>(_ =>
-                PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}/organization/credits"))
-        };
-    }
-
-    private void ReportCloudAiDisabledByOrganization(string? message)
-    {
-        Blocker = new ChatServiceBlocker("OneWare Cloud AI disabled",
-            (message ?? "OneWare Cloud AI is turned off for this organization by its administrators.") +
-            " Ask an organization admin to allow it, or switch to another organization or provider.");
-    }
-
-    /// <summary>OneWare Cloud refused Cloud AI for the organization (not in the plan or turned off by its admins).</summary>
-    private sealed class CloudAiBlockedException(string code, string? message)
-        : InvalidOperationException(message ?? "OneWare Cloud AI is not available for this organization.")
-    {
-        public string Code { get; } = code;
-    }
-
-    /// <summary>
-    /// Enables the reasoning effort picker for OneWare Cloud models that report
-    /// <c>supports_reasoning_effort</c> with their <c>reasoning_efforts</c>.
-    /// </summary>
-    private static void ApplyCloudReasoningEfforts(ModelInfo model, JsonElement item)
-    {
-        if (!item.TryGetProperty("supports_reasoning_effort", out var supports) ||
-            supports.ValueKind != JsonValueKind.True ||
-            !item.TryGetProperty("reasoning_efforts", out var effortsProperty) ||
-            effortsProperty.ValueKind != JsonValueKind.Array)
-            return;
-
-        var efforts = effortsProperty.EnumerateArray()
-            .Where(x => x.ValueKind == JsonValueKind.String)
-            .Select(x => x.GetString()!)
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .ToList();
-        if (efforts.Count == 0) return;
-
-        model.Capabilities.Supports.ReasoningEffort = true;
-        model.SupportedReasoningEfforts = efforts;
-        if (item.TryGetProperty("default_reasoning_effort", out var defaultEffort) &&
-            defaultEffort.ValueKind == JsonValueKind.String &&
-            efforts.Contains(defaultEffort.GetString()!))
-            model.DefaultReasoningEffort = defaultEffort.GetString();
-    }
-
-    private static ModelInfo CreateByokModel(string id, string name) => new()
+    protected static ModelInfo CreateByokModel(string id, string name) => new()
     {
         Id = id,
         Name = name,
@@ -1915,6 +1607,7 @@ public abstract class CopilotChatServiceBase(
                 Provider = BuildProviderConfig(),
                 ContextTier = ResolveContextTier(),
                 IncludeSubAgentStreamingEvents = true,
+                SystemMessage = BuildSystemMessageConfig(),
                 Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
                 AvailableTools = BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
@@ -2076,7 +1769,7 @@ public abstract class CopilotChatServiceBase(
         };
 
         // Inject dynamic plugin prompt additions into RuntimeInstructions
-        var additions = toolProvider.GetPromptAdditions();
+        var additions = toolProvider.GetPromptAdditions().Concat(GetRuntimeInstructions()).ToList();
         if (additions.Count > 0)
         {
             overrides[SystemMessageSection.RuntimeInstructions] = new SectionOverride
@@ -2135,13 +1828,7 @@ public abstract class CopilotChatServiceBase(
                 _ => null
             }
         };
-        if (IsOneWareCloud)
-        {
-            options.RequestHeaders = new Dictionary<string, string>
-            {
-                [IdempotencyHeader] = Guid.NewGuid().ToString("N")
-            };
-        }
+        ConfigureMessageOptions(options);
 
         // The instructions are only for the model; the timeline keeps showing what the user wrote.
         if (!string.Equals(options.Prompt, prompt, StringComparison.Ordinal)) options.DisplayPrompt = prompt;
@@ -2445,43 +2132,7 @@ public abstract class CopilotChatServiceBase(
                 break;
             }
             case SessionErrorEvent error:
-                if (IsOneWareCloud && error.Data.StatusCode is 403)
-                {
-                    _ = ReportCloudAccessDeniedAsync(agentId);
-                    break;
-                }
-
-                if (IsOneWareCloud && IsInsufficientCreditsError(error.Data.Message))
-                {
-                    // Cloud AI is paid with Compute Credits. The 402 body carries the reason (MemberBudget when the
-                    // member's own monthly budget ran out, SpendingSuspended after a chargeback, else OrganizationCredits).
-                    var message = error.Data.Message ?? string.Empty;
-                    if (message.Contains("SpendingSuspended", StringComparison.OrdinalIgnoreCase) ||
-                        message.Contains("suspended", StringComparison.OrdinalIgnoreCase))
-                    {
-                        EventReceived?.Invoke(this, new ChatErrorEvent(
-                            "Spending is suspended for this organization. Please contact OneWare support.")
-                        {
-                            AgentId = agentId
-                        });
-                        break;
-                    }
-
-                    var budgetExceeded = message.Contains("MemberBudget", StringComparison.OrdinalIgnoreCase) ||
-                                         message.Contains("budget", StringComparison.OrdinalIgnoreCase);
-                    var path = budgetExceeded ? "/organization" : "/credits";
-                    EventReceived?.Invoke(this, new ChatButtonEvent(
-                        budgetExceeded
-                            ? "This request exceeds your monthly OneWare Cloud budget in this organization."
-                            : "This organization does not have enough OneWare Cloud credits for this request.",
-                        budgetExceeded ? "View budget" : "Add credits",
-                        new RelayCommand<Control?>(_ =>
-                            PlatformHelper.OpenHyperLink($"{cloudAccess!.BaseUrl.TrimEnd('/')}{path}")))
-                    {
-                        AgentId = agentId
-                    });
-                    break;
-                }
+                if (HandleSessionError(error, agentId)) break;
 
                 EventReceived?.Invoke(this,
                     new ChatErrorEvent(error.Data.Message) { AgentId = agentId });

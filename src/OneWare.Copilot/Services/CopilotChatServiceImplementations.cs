@@ -2,6 +2,7 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Copilot.Services;
 
+/// <summary>GitHub Copilot, or a user-configured BYOK provider.</summary>
 public sealed class CopilotChatService(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
@@ -19,28 +20,7 @@ public sealed class CopilotChatService(
         windowService,
         mainDockService,
         paths,
-        agentService,
-        null,
-        false);
-
-public sealed class OneWareCloudChatService(
-    ISettingsService settingsService,
-    IAiFunctionProvider toolProvider,
-    IPackageService packageService,
-    IPackageWindowService packageWindowService,
-    IWindowService windowService,
-    IMainDockService mainDockService,
-    IPaths paths,
-    IChatAgentService agentService,
-    IOneWareCloudAccess cloudAccess)
-    : CopilotChatServiceBase(
-        settingsService,
-        toolProvider,
-        packageService,
-        packageWindowService,
-        windowService,
-        mainDockService,
-        paths,
-        agentService,
-        cloudAccess,
-        true), IChatServiceWithHistoryReset;
+        agentService)
+{
+    public override string Name => "GitHub Copilot";
+}
