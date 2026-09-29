@@ -18,10 +18,14 @@
             <Setter Property="Height" Value="{DynamicResource ThemeIconSize}" />
             <Setter Property="Template">
                 <ControlTemplate>
+                    <!-- Viewbox centers non-square geometries (e.g. the DropDownButton chevron) -->
                     <Border Background="{TemplateBinding Background}">
-                        <Path Data="{TemplateBinding Data}"
-                              Fill="{TemplateBinding Foreground}"
-                              Stretch="Uniform" />
+                        <Viewbox Width="{TemplateBinding Width}"
+                                 Height="{TemplateBinding Height}">
+                            <Path Data="{TemplateBinding Data}"
+                                  Fill="{TemplateBinding Foreground}"
+                                  Stretch="Uniform" />
+                        </Viewbox>
                     </Border>
                 </ControlTemplate>
             </Setter>
