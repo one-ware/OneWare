@@ -130,10 +130,9 @@
                 </StackPanel>
             </Border>
 
-            <ProgressBar IsIndeterminate="{Binding PackageState.IsIndeterminate}"
+            <ProgressBar Classes="large" IsIndeterminate="{Binding PackageState.IsIndeterminate}"
                          Value="{Binding PackageState.Progress}" ShowProgressText="True"
                          Maximum="1.0"
-                         Height="24"
                          IsVisible="{Binding PackageState.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
         </StackPanel>

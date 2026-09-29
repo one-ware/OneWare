@@ -107,8 +107,7 @@
                                            FontSize="11" HorizontalAlignment="Right" />
                             </Grid>
                             <ProgressBar Minimum="0" Maximum="{Binding ContextTokenLimit}"
-                                         Value="{Binding ContextCurrentTokens}"
-                                         Height="4" />
+                                         Value="{Binding ContextCurrentTokens}" />
                             <TextBlock FontSize="10" HorizontalAlignment="Right"
                                        Foreground="{DynamicResource ThemeForegroundLowBrush}">
                                 <TextBlock.Text>

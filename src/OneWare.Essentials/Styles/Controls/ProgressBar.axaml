@@ -1,0 +1,165 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="using:Avalonia.Controls.Converters">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="12" Width="300">
+            <ProgressBar Value="40" />
+            <ProgressBar Value="0.65" Maximum="1" ShowProgressText="True" />
+            <ProgressBar Classes="large" Value="0.65" Maximum="1" ShowProgressText="True" />
+            <ProgressBar IsIndeterminate="True" />
+            <ProgressBar Value="30" Orientation="Vertical" Height="80" HorizontalAlignment="Left" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!--
+        One look for every ProgressBar: a rounded track with an accent fill, 6 px thick by default.
+        Use the "large" class (12 px) for prominent bars, or set Height (horizontal) / Width (vertical)
+        for a custom thickness. ShowProgressText puts the percentage next to the bar instead of inside it.
+    -->
+    <Styles.Resources>
+        <converters:StringFormatConverter x:Key="OneWareProgressTextConverter" />
+
+        <ControlTheme x:Key="{x:Type ProgressBar}" TargetType="ProgressBar">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
+            <Setter Property="Template">
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid Name="PART_Root" ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+                        <Border Name="PART_Track"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}"
+                                ClipToBounds="True">
+                            <Panel>
+                                <Border Name="PART_Indicator"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="{TemplateBinding CornerRadius}"
+                                        IsVisible="{Binding !IsIndeterminate, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Border Name="PART_IndeterminateIndicator"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="{TemplateBinding CornerRadius}"
+                                        IsVisible="{Binding IsIndeterminate, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </Panel>
+                        </Border>
+                        <TextBlock Name="PART_ProgressText"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                   VerticalAlignment="Center" HorizontalAlignment="Right"
+                                   TextAlignment="Right"
+                                   IsVisible="{TemplateBinding ShowProgressText}">
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource OneWareProgressTextConverter}">
+                                    <TemplateBinding Property="ProgressTextFormat" />
+                                    <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    <TemplateBinding Property="Percentage" />
+                                    <TemplateBinding Property="Minimum" />
+                                    <TemplateBinding Property="Maximum" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+
+            <!-- Horizontal -->
+            <Style Selector="^:horizontal">
+                <Setter Property="MinWidth" Value="40" />
+                <Setter Property="Height" Value="6" />
+            </Style>
+            <Style Selector="^:horizontal /template/ Border#PART_Track">
+                <Setter Property="Grid.ColumnSpan" Value="2" />
+            </Style>
+            <Style Selector="^:horizontal /template/ Border#PART_Indicator">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+            </Style>
+            <Style Selector="^:horizontal /template/ TextBlock#PART_ProgressText">
+                <Setter Property="Grid.Column" Value="1" />
+                <Setter Property="MinWidth" Value="32" />
+                <Setter Property="Margin" Value="8 0 0 0" />
+            </Style>
+            <Style Selector="^.large:horizontal">
+                <Setter Property="Height" Value="12" />
+            </Style>
+            <!-- With text the row sizes to the text; the track keeps the bar's Height (at least 6) and is centered -->
+            <Style Selector="^:horizontal[ShowProgressText=True]">
+                <Setter Property="Height" Value="NaN" />
+            </Style>
+            <Style Selector="^.large:horizontal[ShowProgressText=True]">
+                <Setter Property="Height" Value="12" />
+            </Style>
+            <Style Selector="^:horizontal[ShowProgressText=True] /template/ Border#PART_Track">
+                <Setter Property="Grid.ColumnSpan" Value="1" />
+                <Setter Property="Height" Value="{Binding Height, RelativeSource={RelativeSource TemplatedParent}}" />
+                <Setter Property="MinHeight" Value="6" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <!-- Vertical -->
+            <Style Selector="^:vertical">
+                <Setter Property="MinHeight" Value="40" />
+                <Setter Property="Width" Value="6" />
+            </Style>
+            <Style Selector="^.large:vertical">
+                <Setter Property="Width" Value="12" />
+            </Style>
+            <Style Selector="^:vertical /template/ Border#PART_Track">
+                <Setter Property="Grid.ColumnSpan" Value="2" />
+                <Setter Property="Grid.RowSpan" Value="2" />
+            </Style>
+            <Style Selector="^:vertical /template/ Border#PART_Indicator">
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="VerticalAlignment" Value="Bottom" />
+            </Style>
+            <Style Selector="^:vertical /template/ TextBlock#PART_ProgressText">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+
+            <!-- Indeterminate -->
+            <Style Selector="^:horizontal:indeterminate /template/ Border#PART_IndeterminateIndicator">
+                <Style.Animations>
+                    <Animation Easing="LinearEasing" IterationCount="Infinite" Duration="0:0:2">
+                        <KeyFrame Cue="0%">
+                            <Setter Property="TranslateTransform.X"
+                                    Value="{Binding $parent[ProgressBar].TemplateSettings.IndeterminateStartingOffset}" />
+                        </KeyFrame>
+                        <KeyFrame Cue="100%">
+                            <Setter Property="TranslateTransform.X"
+                                    Value="{Binding $parent[ProgressBar].TemplateSettings.IndeterminateEndingOffset}" />
+                        </KeyFrame>
+                    </Animation>
+                </Style.Animations>
+                <Setter Property="Width"
+                        Value="{Binding TemplateSettings.ContainerWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+            </Style>
+            <Style Selector="^:vertical:indeterminate /template/ Border#PART_IndeterminateIndicator">
+                <Style.Animations>
+                    <Animation Easing="LinearEasing" IterationCount="Infinite" Duration="0:0:2">
+                        <KeyFrame Cue="0%">
+                            <Setter Property="TranslateTransform.Y"
+                                    Value="{Binding $parent[ProgressBar].TemplateSettings.IndeterminateStartingOffset}" />
+                        </KeyFrame>
+                        <KeyFrame Cue="100%">
+                            <Setter Property="TranslateTransform.Y"
+                                    Value="{Binding $parent[ProgressBar].TemplateSettings.IndeterminateEndingOffset}" />
+                        </KeyFrame>
+                    </Animation>
+                </Style.Animations>
+                <Setter Property="Height"
+                        Value="{Binding TemplateSettings.ContainerWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <!-- Fills its container, e.g. as a progress background behind a button's content -->
+    <Style Selector="ProgressBar.fill">
+        <Setter Property="Height" Value="NaN" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+
+</Styles>

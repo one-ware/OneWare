@@ -84,7 +84,7 @@
                                         <TextBlock Grid.Column="1" Text="{Binding BudgetText}"
                                                    Classes="semibold" />
                                     </Grid>
-                                    <ProgressBar IsVisible="{Binding HasBudgetLimit}" MinHeight="6"
+                                    <ProgressBar IsVisible="{Binding HasBudgetLimit}"
                                                  Minimum="0" Maximum="{Binding BudgetLimit}"
                                                  Value="{Binding BudgetUsed}" />
                                     <TextBlock Classes="caption" Text="{Binding BudgetHint}" />

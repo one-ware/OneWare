@@ -153,6 +153,10 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
 - `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.
 - `ListBox`: `transparent`, `InvisibleSelection`
+- `ProgressBar`: a rounded track with an accent fill, 6 px thick by default. Use `large` (12 px) for prominent
+  progress such as downloads and installs; set `Height` only when a custom thickness is really needed. Don't set
+  `Background` or `CornerRadius`. `ShowProgressText` shows the percentage next to the bar. `fill` stretches the bar over its container, e.g. as a
+  progress background behind a button's content.
 
 ### Flyouts
 

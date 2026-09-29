@@ -81,7 +81,7 @@
             </Border>
 
             <!-- Content when loaded -->
-            <Border IsVisible="{Binding !IsLoading}">
+            <Border IsVisible="{Binding !IsLoading}" Margin="0 15 0 0">
                 <Grid RowDefinitions="Auto, *" RowSpacing="15">
 
                     <!-- Installation Progress -->
@@ -90,11 +90,10 @@
                                       ConverterParameter={x:Static enums:PackageStatus.Installing}}">
                         <StackPanel Classes="spacing-large">
                             <TextBlock Text="Installing..." Classes="h4" />
-                            <ProgressBar IsIndeterminate="{Binding Package.IsIndeterminate}"
+                            <ProgressBar Classes="large" IsIndeterminate="{Binding Package.IsIndeterminate}"
                                          Value="{Binding Package.Progress}"
                                          ShowProgressText="True"
-                                         Maximum="1.0"
-                                         Height="28" />
+                                         Maximum="1.0" />
                         </StackPanel>
                     </Border>
 

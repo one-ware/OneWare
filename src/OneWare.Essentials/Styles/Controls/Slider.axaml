@@ -88,9 +88,9 @@
                 <Setter Property="MinHeight" Value="20" />
                 <Setter Property="Template">
                     <ControlTemplate>
-                        <Grid Name="grid" RowDefinitions="Auto,Auto,Auto">
+                        <Grid Name="grid" RowDefinitions="*,Auto,*">
                             <TickBar Name="TopTickBar" Grid.Row="0"
-                                     Height="4" Margin="0 0 0 2"
+                                     Height="4" Margin="0 0 0 2" VerticalAlignment="Bottom"
                                      Placement="Top" Orientation="Horizontal" IsVisible="False"
                                      Fill="{DynamicResource ThemeBorderMidBrush}"
                                      Minimum="{TemplateBinding Minimum}"
@@ -118,7 +118,7 @@
                                 <Thumb Name="thumb" Theme="{StaticResource OneWareSliderThumb}" />
                             </Track>
                             <TickBar Name="BottomTickBar" Grid.Row="2"
-                                     Height="4" Margin="0 2 0 0"
+                                     Height="4" Margin="0 2 0 0" VerticalAlignment="Top"
                                      Placement="Bottom" Orientation="Horizontal" IsVisible="False"
                                      Fill="{DynamicResource ThemeBorderMidBrush}"
                                      Minimum="{TemplateBinding Minimum}"
@@ -137,9 +137,9 @@
                 <Setter Property="MinHeight" Value="40" />
                 <Setter Property="Template">
                     <ControlTemplate>
-                        <Grid Name="grid" ColumnDefinitions="Auto,Auto,Auto">
+                        <Grid Name="grid" ColumnDefinitions="*,Auto,*">
                             <TickBar Name="TopTickBar" Grid.Column="0"
-                                     Width="4" Margin="0 0 2 0"
+                                     Width="4" Margin="0 0 2 0" HorizontalAlignment="Right"
                                      Placement="Left" Orientation="Vertical" IsVisible="False"
                                      Fill="{DynamicResource ThemeBorderMidBrush}"
                                      Minimum="{TemplateBinding Minimum}"
@@ -167,7 +167,7 @@
                                 <Thumb Name="thumb" Theme="{StaticResource OneWareSliderThumb}" />
                             </Track>
                             <TickBar Name="BottomTickBar" Grid.Column="2"
-                                     Width="4" Margin="2 0 0 0"
+                                     Width="4" Margin="2 0 0 0" HorizontalAlignment="Left"
                                      Placement="Right" Orientation="Vertical" IsVisible="False"
                                      Fill="{DynamicResource ThemeBorderMidBrush}"
                                      Minimum="{TemplateBinding Minimum}"

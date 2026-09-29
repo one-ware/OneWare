@@ -44,7 +44,7 @@
                            Classes="muted" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
 
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSetupLoading}"
-                             HorizontalAlignment="Stretch" Height="4" />
+                             HorizontalAlignment="Stretch" />
 
                 <!-- Toolchain selector (only when not set) -->
                 <StackPanel Spacing="4"
@@ -78,7 +78,7 @@
                          IsIndeterminate="True"
                          HorizontalAlignment="Center"
                          VerticalAlignment="Center"
-                         Width="100" Height="100" />
+                         Width="200" />
             <Grid RowDefinitions="*, Auto" IsVisible="{Binding !IsLoading}" IsEnabled="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNotNull}}"
                   Opacity="{Binding $self.IsEnabled, Converter={x:Static converters:SharedConverters.BoolToOpacityConverter}, ConverterParameter=0.5}">
             <Border Padding="4">

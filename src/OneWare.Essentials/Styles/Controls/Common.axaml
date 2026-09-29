@@ -56,14 +56,6 @@
         <Setter Property="Opacity" Value="1" />
     </Style>
 
-    <!-- ProgressBar (Slider: see Slider.axaml) -->
-    <Style Selector="ProgressBar">
-        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-        <Setter Property="BorderThickness" Value="0" />
-    </Style>
-
     <!-- Toolbar (aliases: ToolBar) -->
     <Style Selector="StackPanel.ToolBar, StackPanel.toolbar">
         <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingSmall}" />

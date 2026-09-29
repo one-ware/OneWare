@@ -201,8 +201,11 @@
         <Setter Property="Padding" Value="3" />
     </Style>
 
+    <!-- Fixed height with centered content, so it also works inside WindowButtons (which sets Height) -->
     <Style Selector="Button.large, ToggleButton.large">
-        <Setter Property="Padding" Value="14 6" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeightLarge}" />
+        <Setter Property="Padding" Value="14 0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
 </Styles>
