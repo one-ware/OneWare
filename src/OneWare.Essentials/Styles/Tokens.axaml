@@ -23,6 +23,9 @@
     <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{DynamicResource ThemeAccentColor}" Opacity="0.2" />
     <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
     <SolidColorBrush x:Key="ThemeAccentLowBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.14" />
+    <!-- Hover / pressed overlays for controls placed on an accent fill (e.g. the status bar) -->
+    <SolidColorBrush x:Key="HighlightForegroundLowBrush" Color="{StaticResource HighlightForegroundColor}" Opacity="0.15" />
+    <SolidColorBrush x:Key="HighlightForegroundMidBrush" Color="{StaticResource HighlightForegroundColor}" Opacity="0.25" />
 
     <!-- Status -->
     <Color x:Key="ErrorColor">#FFE5534B</Color>

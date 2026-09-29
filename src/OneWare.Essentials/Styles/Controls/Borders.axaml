@@ -94,6 +94,36 @@
         <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
     </Style>
 
+    <!-- Status bar: accent strip at the bottom of the window. Content is white in both theme variants. -->
+    <Style Selector="Border.statusbar">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.statusbar Button:not(Popup Button), Border.statusbar ToggleButton:not(Popup ToggleButton),
+                     Border.statusbar Menu > MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.statusbar Button:not(Popup Button):pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Border.statusbar ToggleButton:not(Popup ToggleButton):pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource HighlightForegroundLowBrush}" />
+    </Style>
+
+    <Style Selector="Border.statusbar Button:not(Popup Button):pressed /template/ ContentPresenter#PART_ContentPresenter,
+                     Border.statusbar ToggleButton:not(Popup ToggleButton):pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource HighlightForegroundMidBrush}" />
+    </Style>
+
+    <!-- Flyouts / menus opened from the status bar are logical descendants; restore the normal foreground there -->
+    <Style Selector="Border.statusbar Popup">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
+    <Style Selector="Border.statusbar MenuItem MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
     <!-- Divider -->
     <Style Selector="Border.divider">
         <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />

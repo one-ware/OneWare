@@ -145,6 +145,9 @@
                 <Expander Header="Expander">
                     <TextBlock Text="Expanded content" />
                 </Expander>
+                <Expander Classes="card" Header="Card expander" IsExpanded="True">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

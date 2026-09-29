@@ -28,6 +28,11 @@ because they get it from the host at runtime.
 4. **No local `<UserControl.Styles>` for generic looks.** Local styles are fine for behavior that only one view has,
    such as template tweaks or data-driven states. If two views need the same look, add a class to
    `OneWare.Essentials/Styles/Controls` instead.
+5. **Inside a `DataTemplate`/`ControlTemplate`, a `{DynamicResource}` attribute does not override a class style.**
+   Avalonia applies it with `Template` priority, which is lower than a class selector (`StyleTrigger`), so
+   `<Border Classes="card" Background="{DynamicResource ...}">` in an item template keeps the card background.
+   Override the property with a style instead, for example a `Style Selector="Border.card.my-item"` in the
+   parent's `Styles`, or put the brush on a child `Panel` that has no class.
 
 ## Tokens
 
@@ -47,6 +52,7 @@ Each key exists as a `...Color` and a `...Brush`.
 | `ThemeForegroundBrush` / `ThemeForegroundLowBrush` | Primary / secondary text |
 | `ThemeAccentBrush`, `ThemeAccentBrush2-4`, `ThemeAccentLowBrush` | Accent (100 %, 60 %, 40 %, 20 %, 14 %) |
 | `HighlightBrush`, `HighlightForegroundBrush` | Accent fill and the text drawn on it |
+| `HighlightForegroundLowBrush`, `HighlightForegroundMidBrush` | Hover / pressed overlay for controls on an accent fill |
 | `SuccessBrush`, `WarningBrush`, `ErrorBrush`, `InfoBrush` | Status colors |
 | `SuccessLowBrush`, `WarningLowBrush`, `ErrorLowBrush`, `InfoLowBrush` | Tinted status backgrounds |
 
@@ -125,6 +131,8 @@ button, follow hover and selection colors, and switch with the theme automatical
 | `small` / `large` | Size modifiers |
 
 Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Classes="WindowButtons">` for dialog button rows.
+`secondary`, `primary`, `danger` and `ghost` buttons share the input height (`ThemeControlHeight`, or
+`ThemeControlHeightSmall` with `small`), so they line up with text boxes and combo boxes in a row.
 
 ### Surfaces (`Border`)
 
@@ -134,6 +142,7 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
 | `panel` | Flat bordered block on the panel background |
 | `inset` | Recessed area (lists, previews) |
 | `header` / `footer` | Bar with a bottom / top divider |
+| `statusbar` | Accent strip at the bottom of the window; text, icons, buttons and top-level menu items are white in both themes (popups opened from it keep the normal colors) |
 | `divider` (+ `vertical`) | 1 px line |
 | `overlay` | Floating popup surface with shadow |
 | `badge` (+ `accent` `success` `warning` `error`) | Pill label; put a `TextBlock` inside |
@@ -150,10 +159,16 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
   search icon and a clear button. Set `SearchButtonVisible="False"` for live filtering, and bind `IsBusy` to show a
   spinner. Do not wrap it in extra borders or give it a background. Put it in a strip with `Padding="4"`.
 - `ComboBox`: `small`
+- `NumericUpDown`: `small`. Same frame and padding as `TextBox`, with a compact up/down column on the right.
 - `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.
-- `ListBox`: `transparent`, `InvisibleSelection`
-- `ProgressBar`: a rounded track with an accent fill, 6 px thick by default. Use `large` (12 px) for prominent
+- `ListBox`: `transparent`, `InvisibleSelection`. By default it is an inset field (control background, low border,
+  same corner radius as `TextBox`). Setting `BorderThickness="0"` makes it square for lists that sit edge-to-edge in a panel.
+  Items are rounded rows with a hover highlight and an accent selection.
+- `Expander`: `card`. By default it is a flat header row with a rotating chevron and a ghost-button hover, with no padding
+  around the content. `card` turns it into a bordered section with a divider between header and content. Set
+  `HorizontalContentAlignment="Stretch"` to stretch custom header content (e.g. a trailing badge).
+- `ProgressBar`: a flat, square-cornered track with an accent fill, 6 px thick by default. Use `large` (12 px) for prominent
   progress such as downloads and installs; set `Height` only when a custom thickness is really needed. Don't set
   `Background` or `CornerRadius`. `ShowProgressText` shows the percentage next to the bar. `fill` stretches the bar over its container, e.g. as a
   progress background behind a button's content.

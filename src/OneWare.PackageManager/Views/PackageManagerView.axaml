@@ -23,6 +23,7 @@
         </Style>
         <Style Selector="Button.PackageSeparatorButton">
             <Setter Property="Padding" Value="0" />
+            <Setter Property="Height" Value="NaN" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
@@ -82,7 +83,7 @@
                             <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
                                               ItemsSource="{Binding SubCategories}">
                                 <Grid ColumnDefinitions="*, Auto" Margin="2 5">
-                                    <TextBlock Margin="3 0" Classes="h4" Text="{Binding Header}"
+                                    <TextBlock Margin="3 0" FontSize="{DynamicResource FontSizeMedium}" Text="{Binding Header}"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Column="1" Margin="3 0" HorizontalAlignment="Right"
                                                TextAlignment="Center" Text="{Binding DisplayCount}"

@@ -187,4 +187,16 @@
         <Setter Property="Padding" Value="2" />
     </Style>
 
+    <!-- Status bar rows are only 20 px high: no vertical padding so headers stay on the text baseline -->
+    <Style Selector="Border.statusbar Menu > MenuItem">
+        <Setter Property="Padding" Value="6 1" />
+    </Style>
+
+    <!-- Top-level menu items in the accent status bar (see Border.statusbar): translucent white highlight -->
+    <Style Selector="Border.statusbar Menu > MenuItem:pointerover /template/ Border#root,
+                     Border.statusbar Menu > MenuItem:selected /template/ Border#root,
+                     Border.statusbar Menu > MenuItem:open /template/ Border#root">
+        <Setter Property="Background" Value="{DynamicResource HighlightForegroundLowBrush}" />
+    </Style>
+
 </Styles>

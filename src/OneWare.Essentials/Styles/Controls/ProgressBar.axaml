@@ -13,7 +13,7 @@
     </Design.PreviewWith>
 
     <!--
-        One look for every ProgressBar: a rounded track with an accent fill, 6 px thick by default.
+        One look for every ProgressBar: a flat, square-cornered track with an accent fill, 6 px thick by default.
         Use the "large" class (12 px) for prominent bars, or set Height (horizontal) / Width (vertical)
         for a custom thickness. ShowProgressText puts the percentage next to the bar instead of inside it.
     -->
@@ -24,7 +24,7 @@
             <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
+            <Setter Property="CornerRadius" Value="0" />
             <Setter Property="Template">
                 <ControlTemplate TargetType="ProgressBar">
                     <Grid Name="PART_Root" ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">

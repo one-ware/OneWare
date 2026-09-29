@@ -210,7 +210,7 @@
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ScrollViewer.VerticalScrollBarVisibility="Visible"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
-                 Classes="Scroll">
+                 Classes="Scroll transparent" Padding="0">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0" />

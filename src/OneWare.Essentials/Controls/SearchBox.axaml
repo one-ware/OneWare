@@ -19,7 +19,8 @@
                         Command="{Binding #SearchBoxView.StartSearch}">
                     <PathIcon Classes="small muted" Data="{StaticResource Icon.Search}" />
                 </Button>
-                <PathIcon Classes="small muted" Margin="4 0 0 0" Data="{StaticResource Icon.Search}"
+                <!-- Same footprint as the small icon button above, so the text starts at the same position -->
+                <PathIcon Classes="small muted" Margin="4 0" Data="{StaticResource Icon.Search}"
                           IsVisible="{Binding !#SearchBoxView.SearchButtonVisible}" />
             </Panel>
         </TextBox.InnerLeftContent>
