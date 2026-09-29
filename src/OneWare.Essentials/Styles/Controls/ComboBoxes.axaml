@@ -43,4 +43,14 @@
         <Setter Property="Padding" Value="4 0" />
     </Style>
 
+    <!-- Ghost: borderless and transparent like a toolbar button, highlighted on hover / while open -->
+    <Style Selector="ComboBox.ghost">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
+    </Style>
+    <Style Selector="ComboBox.ghost:pointerover /template/ Border#border, ComboBox.ghost:dropdownopen /template/ Border#border">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+    </Style>
+
 </Styles>

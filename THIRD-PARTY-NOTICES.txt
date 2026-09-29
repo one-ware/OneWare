@@ -58,8 +58,20 @@ This software is provided "as is" without express or implied warranty, and
 with no claim as to its suitability for any purpose.
 
 ================================================================================
+FILE ICONS
+================================================================================
+The file icons in src/OneWare.Core/Styles/FileIcons.axaml were
+converted from the Material Icon Theme for Visual Studio Code (version 5.38.1):
+https://github.com/material-extensions/vscode-material-icon-theme
+Copyright (c) 2025 Material Extensions. They are licensed under the MIT License
+reproduced below.
+
+================================================================================
 COMPONENTS UNDER THE MIT LICENSE
 ================================================================================
+  - Material Icon Theme file icons (version 5.38.1)
+    Copyright (c) 2025 Material Extensions
+    Source: https://github.com/material-extensions/vscode-material-icon-theme
   - VSCode-SystemVerilog syntax grammar (revision e6a5a2b76055dd7acbdc7420060e0314cb86e8dd)
     Copyright (c) 2018 Eirik Prestegårdshus
     Source: https://github.com/mshr-h/vscode-verilog-hdl-support

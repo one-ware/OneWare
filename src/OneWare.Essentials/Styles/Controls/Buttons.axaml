@@ -73,19 +73,22 @@
     </Style>
 
     <!--
-        Text buttons share the input height (TextBox, ComboBox, ...). Declared before WindowButtons / large / small,
-        which override it. It is a normal Height, so an inline Height on a view still wins.
+        Text buttons share the input height (TextBox, ComboBox, ...) as a MinHeight, so a plain text button is exactly
+        ThemeControlHeight but larger content (images, multi-line text) still grows. Centered vertically so they don't
+        stretch to the row height. Declared before WindowButtons / icon / large / small, which override it.
+        Override inline with Height (at least MinHeight) or MinHeight="0".
     -->
     <Style Selector="Button.secondary, Button.SecondaryButton, Button.primary, Button.PrimaryButton,
-                     Button.danger, Button.ghost,
-                     ToggleButton.secondary, ToggleButton.primary, ToggleButton.PrimaryButton, ToggleButton.ghost">
-        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+                     Button.danger, Button.ghost, Button.RoundButton,
+                     ToggleButton.secondary, ToggleButton.primary, ToggleButton.PrimaryButton, ToggleButton.ghost,
+                     ToggleButton.RoundButton">
+        <Setter Property="MinHeight" Value="{DynamicResource ThemeControlHeight}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
     <Style Selector="Button.RoundButton, ToggleButton.RoundButton">
         <Setter Property="Padding" Value="2" />
-        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
     </Style>
 
     <Style Selector="Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
@@ -112,7 +115,7 @@
 
     <Style Selector="Button.WindowButton, StackPanel.WindowButtons > Button">
         <Setter Property="MinWidth" Value="72" />
-        <Setter Property="Height" Value="26" />
+        <Setter Property="MinHeight" Value="26" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
     </Style>
 
@@ -191,8 +194,9 @@
         <Setter Property="TextDecorations" Value="Underline" />
     </Style>
 
-    <!-- Icon -->
+    <!-- Icon: a fixed square, so an inline Width/Height of any size wins -->
     <Style Selector="Button.icon, ToggleButton.icon">
+        <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="{DynamicResource ThemePaddingSmall}" />
         <Setter Property="Width" Value="{DynamicResource ThemeControlHeight}" />
         <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
@@ -202,21 +206,22 @@
 
     <!-- Sizes -->
     <Style Selector="Button.small, ToggleButton.small">
-        <Setter Property="Height" Value="{DynamicResource ThemeControlHeightSmall}" />
+        <Setter Property="MinHeight" Value="{DynamicResource ThemeControlHeightSmall}" />
         <Setter Property="Padding" Value="6 0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
     </Style>
 
     <Style Selector="Button.icon.small, ToggleButton.icon.small">
+        <Setter Property="MinHeight" Value="0" />
         <Setter Property="Width" Value="{DynamicResource ThemeControlHeightSmall}" />
         <Setter Property="Height" Value="{DynamicResource ThemeControlHeightSmall}" />
         <Setter Property="Padding" Value="3" />
     </Style>
 
-    <!-- Fixed height with centered content, so it also works inside WindowButtons (which sets Height) -->
+    <!-- Declared after WindowButtons so large also wins there -->
     <Style Selector="Button.large, ToggleButton.large">
-        <Setter Property="Height" Value="{DynamicResource ThemeControlHeightLarge}" />
+        <Setter Property="MinHeight" Value="{DynamicResource ThemeControlHeightLarge}" />
         <Setter Property="Padding" Value="14 0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>

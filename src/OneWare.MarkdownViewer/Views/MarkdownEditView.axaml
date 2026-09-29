@@ -18,38 +18,32 @@
         <!-- Reuse the standard editor for full editing support -->
         <dockViews:EditView Grid.Column="0" IsVisible="{Binding ShowEditor}" />
 
-        <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"
-                      Background="{DynamicResource ThemeBorderLowBrush}"
+        <GridSplitter Grid.Column="1" Width="5" ResizeDirection="Columns"
+                      Background="Transparent" BorderThickness="1 0 0 0"
+                      BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                       IsVisible="{Binding IsSplitterVisible}" />
 
         <controls:MarkdownViewer Grid.Column="2"
                                  IsVisible="{Binding ShowPreview}"
                                  SelectionEnabled="True"
-                                 Margin="8,4"
+                                 Margin="12,8"
                                  Markdown="{Binding MarkdownText}" />
 
-        <!-- Floating toggle buttons in the top-right corner, overlaying all columns -->
-        <Border Grid.Column="0" Grid.ColumnSpan="3"
-                HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,8,30,0"
-                Classes="overlay" Padding="2">
-            <StackPanel Orientation="Horizontal" Spacing="2">
-                <ToggleButton Classes="icon" IsChecked="{Binding ShowEditor, Mode=TwoWay}"
-                              ToolTip.Tip="Toggle editor"
-                              Padding="4" Width="20" Height="20">
-                    <PathIcon Width="12"
-                           Height="12"
-                           Data="{StaticResource Icon.Edit}" />
-                </ToggleButton>
-                <ToggleButton Classes="icon" IsChecked="{Binding ShowPreview, Mode=TwoWay}"
-                              ToolTip.Tip="Toggle preview"
-                              Padding="4" Width="20" Height="20">
-                    <PathIcon Width="12"
-                           Height="12"
-                           Data="{StaticResource Icon.Eye}" />
-                </ToggleButton>
-            </StackPanel>
-        </Border>
+        <!-- Floating layout switcher in the top-right corner, clear of the vertical scrollbar -->
+        <controls:SegmentedControl Grid.Column="0" Grid.ColumnSpan="3"
+                                   HorizontalAlignment="Right" VerticalAlignment="Top"
+                                   Margin="0,8,20,0"
+                                   SelectedIndex="{Binding ViewModeIndex, Mode=TwoWay}">
+            <controls:SegmentedControlItem ToolTip.Tip="Editor only">
+                <PathIcon Classes="small" Data="{StaticResource Icon.Edit}" />
+            </controls:SegmentedControlItem>
+            <controls:SegmentedControlItem ToolTip.Tip="Editor and preview">
+                <PathIcon Classes="small" Data="{StaticResource Icon.SplitView}" />
+            </controls:SegmentedControlItem>
+            <controls:SegmentedControlItem ToolTip.Tip="Preview only">
+                <PathIcon Classes="small" Data="{StaticResource Icon.Eye}" />
+            </controls:SegmentedControlItem>
+        </controls:SegmentedControl>
     </Grid>
 </UserControl>
 

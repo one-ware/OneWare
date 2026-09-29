@@ -206,12 +206,12 @@
                     <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
                                TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0 6 0 0">
-                        <Button Classes="RoundButton PrimaryButton" Padding="10 5" Height="NaN"
+                        <Button Classes="RoundButton PrimaryButton" Padding="10 5"
                                 Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding $self}"
                                 Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
                                 IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
-                        <Button Classes="RoundButton" Padding="10 5" Height="NaN"
+                        <Button Classes="RoundButton" Padding="10 5"
                                 Command="{Binding InitializeCurrentCommand}"
                                 IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
                                 ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">

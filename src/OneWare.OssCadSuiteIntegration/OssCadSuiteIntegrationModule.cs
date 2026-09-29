@@ -80,8 +80,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadSuiteHelper.OssCadPackage);
-        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
-            ".pcf");
+        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("FileIcon.Tune", ".pcf");
 
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
             new OneWareUiExtension(x =>
@@ -353,7 +352,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
             }
         });
         
-        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("Material.Pulse", GtkWaveService.GtkWaveformEndings);
+        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("FileIcon.Waveform", GtkWaveService.GtkWaveformEndings);
 
         RegisterToolchainSkill(serviceProvider);
     }

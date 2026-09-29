@@ -8,15 +8,15 @@
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView"
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
 
-    <StackPanel Orientation="Horizontal" Classes="ToolBar">
-        <Button Command="{Binding OpenFeedbackDialogAsync}"
+    <StackPanel Orientation="Horizontal" Classes="toolbar">
+        <Button Classes="icon" Command="{Binding OpenFeedbackDialogAsync}"
                 CommandParameter="{Binding $self}" ToolTip.Tip="Feedback">
             <Button.Content>
                 <PathIcon Data="{StaticResource Icon.CommentMessage}" />
             </Button.Content>
         </Button>
 
-        <Button Width="24">
+        <Button Classes="icon" Padding="2" ToolTip.Tip="OneWare Cloud account">
             <Button.Content>
                 <DockPanel LastChildFill="True">
                     <Border DockPanel.Dock="Left" ClipToBounds="True"

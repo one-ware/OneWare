@@ -98,6 +98,11 @@ button, follow hover and selection colors, and switch with the theme automatical
   `StaticResource` fails when the key is not in the referenced package.
 - Multi-color icons, such as file types, debugger actions and status badges, stay `DrawingImage` resources in
   `OneWare.Core/Styles/Icons.axaml` and are used with `<Image Source="{DynamicResource ...}" />`.
+- File type icons are `FileIcon.*` `DrawingImage` resources in `OneWare.Core/Styles/FileIcons.axaml`,
+  converted from the MIT-licensed [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme)
+  for VS Code. Register them for extensions with `IFileIconService.RegisterFileIcon("FileIcon.Json", ".json")`.
+  To add one, convert its SVG into a `DrawingGroup` with a transparent frame the size of the SVG `viewBox`, and
+  use `F1` geometries, because SVG fills are nonzero.
 - The old single-color `DrawingImage` keys (for example `BoxIcons.RegularSearch` and `Material.SettingsOutline`)
   still exist as thin wrappers around the `Icon.*` geometries. They keep `IconModel` and C# code working, but new
   views should use `PathIcon`.
@@ -131,8 +136,11 @@ button, follow hover and selection colors, and switch with the theme automatical
 | `small` / `large` | Size modifiers |
 
 Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Classes="WindowButtons">` for dialog button rows.
-`secondary`, `primary`, `danger` and `ghost` buttons share the input height (`ThemeControlHeight`, or
-`ThemeControlHeightSmall` with `small`), so they line up with text boxes and combo boxes in a row.
+`secondary`, `primary`, `danger` and `ghost` buttons get the input height as a `MinHeight` (`ThemeControlHeight`, or
+`ThemeControlHeightSmall` / `ThemeControlHeightLarge` with `small` / `large`) and are centered vertically, so they line up
+with text boxes and combo boxes in a row. Larger content (images, multi-line text) grows the button, no `Height="NaN"`
+needed. To go below the minimum, set `MinHeight="0"` (or a smaller `MinHeight`) together with `Height`. `icon` buttons are
+a fixed square instead, so an inline `Width` / `Height` of any size wins.
 
 ### Surfaces (`Border`)
 
@@ -151,6 +159,11 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
 | `interactive` / `selected` | Hover and selection modifiers for clickable cards |
 | `RoundBorder`, `ValidBorder`, `InvalidBorder` | Legacy |
 
+Docking (`OneWare.Core/Styles/Dock.axaml`): every tool and document dock sits in a rounded, clipped card
+(`Border.dock-card`, outline drawn on top by `Border.dock-card-outline`), with the 4 px splitters as gaps between
+cards. Document tabs sit above the card on the background; the accent separator forms the card's top edge. Tool and document views therefore need no outer
+border or corner radius of their own, and should not add margins to keep content away from the card edge.
+
 ### Inputs and lists
 
 - `TextBox`: `small`, `bare` (no border/background), `multiline` (legacy `MultilineTextBox`),
@@ -158,7 +171,7 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
 - `SearchBox` (`OneWare.Essentials.Controls`): the standard search/filter field, a single `TextBox` with a leading
   search icon and a clear button. Set `SearchButtonVisible="False"` for live filtering, and bind `IsBusy` to show a
   spinner. Do not wrap it in extra borders or give it a background. Put it in a strip with `Padding="4"`.
-- `ComboBox`: `small`
+- `ComboBox`: `small`, `ghost` (borderless and transparent like a toolbar button, highlighted on hover / while open)
 - `NumericUpDown`: `small`. Same frame and padding as `TextBox`, with a compact up/down column on the right.
 - `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.

@@ -11,51 +11,49 @@
     <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
 
         <!--Icon Tray-->
-        <DockPanel Margin="3 0" Grid.Row="0" Name="IconTray" Height="30" Classes="ToolBar" LastChildFill="False">
+        <DockPanel Margin="4 0" Grid.Row="0" Name="IconTray" Height="32" LastChildFill="False">
 
-            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Left" Classes="ToolBar">
+            <StackPanel DockPanel.Dock="Left" Classes="toolbar" VerticalAlignment="Center">
 
-                <Button ToolTip.Tip="Undo" x:CompileBindings="False"
+                <Button Classes="icon" ToolTip.Tip="Undo" x:CompileBindings="False"
                         Command="{Binding DockService.CurrentDocument.Undo}">
                     <PathIcon Data="{StaticResource Icon.Undo}" />
                 </Button>
-                <Button ToolTip.Tip="Redo" x:CompileBindings="False"
+                <Button Classes="icon" ToolTip.Tip="Redo" x:CompileBindings="False"
                         Command="{Binding DockService.CurrentDocument.Redo}">
                     <PathIcon Data="{StaticResource Icon.Redo}" />
                 </Button>
 
-                <Border Classes="RoundBorder" Margin="5 0 0 0" Height="24">
-
-                    <StackPanel Classes="ToolBar">
+                <Border Classes="RoundBorder" Margin="4 0 0 0" Height="28" Padding="1">
+                    <StackPanel Classes="toolbar">
                         <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
-                        <StackPanel Orientation="Horizontal"
+                        <StackPanel Classes="toolbar"
                                     IsVisible="{Binding ApplicationStateService.ActiveProcess.Terminate, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}"
-                                       Height="24" />
-                            <Button Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
-                                <Image Height="20" Source="{DynamicResource VSImageLib2019.Stop_16x}" />
+                            <Separator />
+                            <Button Classes="icon" ToolTip.Tip="Stop"
+                                    Command="{Binding ApplicationStateService.TerminateActiveDialogAsync}">
+                                <PathIcon Classes="error" Data="{StaticResource Icon.Stop}" />
                             </Button>
                         </StackPanel>
                     </StackPanel>
-
                 </Border>
 
                 <controls:UiExtensionCollection Extensions="{Binding LeftToolBarExtension}" />
 
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Classes="ToolBar">
+            <StackPanel DockPanel.Dock="Right" Name="RightButtons" Classes="toolbar" VerticalAlignment="Center">
                 <controls:UiExtensionCollection Extensions="{Binding RightToolBarExtension}">
                     <controls:UiExtensionCollection.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Classes="ToolBar" />
+                            <StackPanel Classes="toolbar" />
                         </ItemsPanelTemplate>
                     </controls:UiExtensionCollection.ItemsPanel>
                 </controls:UiExtensionCollection>
-                <Button ToolTip.Tip="Search Everywhere" Command="{Binding OpenCommandManager}">
+                <Button Classes="icon" ToolTip.Tip="Search Everywhere" Command="{Binding OpenCommandManager}">
                     <PathIcon Data="{StaticResource Icon.Search}" />
                 </Button>
-                <Button ToolTip.Tip="Notifications" Command="{Binding MarkNotificationsReadCommand}">
+                <Button Classes="icon" ToolTip.Tip="Notifications" Command="{Binding MarkNotificationsReadCommand}">
                     <Panel>
                         <PathIcon Data="{StaticResource Icon.Notifications}" />
                         <Ellipse Height="6" Width="6" Fill="{DynamicResource ErrorBrush}" VerticalAlignment="Top"
@@ -143,7 +141,7 @@
                     </Button.Flyout>
 
                 </Button>
-                <Button ToolTip.Tip="Settings">
+                <Button Classes="icon" ToolTip.Tip="Settings">
                     <Button.Flyout>
                         <MenuFlyout Placement="BottomEdgeAlignedRight">
                             <MenuItem Header="Find..." Command="{Binding OpenCommandManager}">
@@ -170,6 +168,6 @@
             </StackPanel>
         </DockPanel>
 
-        <DockControl Name="DockControl" Grid.Row="1" Layout="{Binding MainDockService.Layout}" />
+        <DockControl Name="DockControl" Grid.Row="1" Margin="4 0 4 4" Layout="{Binding MainDockService.Layout}" />
     </Grid>
 </UserControl>

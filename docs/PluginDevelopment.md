@@ -405,7 +405,7 @@ Common extension patterns used across the built-in modules:
   `MainWindow_MainMenu/File/New`.
 - Show tools or documents using `IMainDockService.Show<T>()` and `IMainDockService.OpenFileAsync`.
 - Register settings for your module via `ISettingsService.RegisterSetting`.
-- Attach file icons with `IFileIconService.RegisterFileIcon`.
+- Attach file icons with `IFileIconService.RegisterFileIcon`. Prefer the built-in `FileIcon.*` resources (see `docs/Styling.md`).
 - Emit build or tool output via `IOutputService.WriteLine` and report errors via `IErrorService`.
 
 

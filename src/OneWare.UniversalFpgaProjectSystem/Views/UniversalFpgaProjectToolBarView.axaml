@@ -8,109 +8,121 @@
              x:Class="OneWare.UniversalFpgaProjectSystem.Views.UniversalFpgaProjectToolBarView"
              x:DataType="viewModels:UniversalFpgaProjectToolBarViewModel">
 
-    <StackPanel Orientation="Horizontal">
-        <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
-        <Button ToolTip.Tip="Constraint Editor"
-                Command="{Binding OpenPinPlannerAsync}">
-            <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
-                <Image Source="{DynamicResource CreateIcon}" Width="14" Height="14" VerticalAlignment="Center" />
-                <TextBlock Text="Constraints" VerticalAlignment="Center" />
-            </StackPanel>
-        </Button>
-        <Button>
-            <Button.Flyout>
-                <Flyout FlyoutPresenterClasses="list">
-                    <StackPanel>
-                        <MenuItem Header="Project Settings"
-                                  Command="{Binding OpenProjectSettingsAsync}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource Icon.Settings}" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <controls:UiExtensionCollection
-                            Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
-                            Extensions="{Binding PinPlannerMenuExtension}">
-                            <controls:UiExtensionCollection.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical" />
-                                </ItemsPanelTemplate>
-                            </controls:UiExtensionCollection.ItemsPanel>
-                        </controls:UiExtensionCollection>
-                    </StackPanel>
-                </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" Margin="1 0" />
-        </Button>
-        <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
-        <Button ToolTip.Tip="Run Toolchain" Command="{Binding CompileAsync}"
-                IsEnabled="{Binding Project.Toolchain, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
-                <Image
-                    Source="{DynamicResource VsImageLib.StartWithoutDebug16X}"
-                    Height="14" Width="14" VerticalAlignment="Center" />
-                <TextBlock Text="Compile" VerticalAlignment="Center" />
-            </StackPanel>
-        </Button>
-        <Button>
-            <Button.Flyout>
-                <Flyout FlyoutPresenterClasses="list">
-                    <StackPanel>
-                        <controls:UiExtensionCollection
-                            Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
-                            Extensions="{Binding CompileMenuExtension}">
-                            <controls:UiExtensionCollection.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical" />
-                                </ItemsPanelTemplate>
-                            </controls:UiExtensionCollection.ItemsPanel>
-                        </controls:UiExtensionCollection>
-                    </StackPanel>
-                </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource Icon.ChevronDown}" Width="10" Height="10" Margin="1 0" />
-        </Button>
-        <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
-        <Button ToolTip.Tip="Configures the FPGA or writes the FLASH memory" Command="{Binding DownloadAsync}"
-                IsEnabled="{Binding Project.Loader, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <StackPanel Margin="2 0 0 0" Orientation="Horizontal" Spacing="5">
-                <Grid VerticalAlignment="Center">
-                    <Image
-                        IsVisible="{Binding !LongTermProgramming}"
-                        Source="{DynamicResource VsImageLib.Download16X}"
-                        Height="14" Width="14" VerticalAlignment="Center" />
-                    <Image
-                        IsVisible="{Binding LongTermProgramming}"
-                        Source="{DynamicResource VsImageLib.DownloadAlternative16X}"
-                        Height="14" Width="14" VerticalAlignment="Center" />
-                </Grid>
-                <TextBlock Text="Config FPGA" VerticalAlignment="Center" />
-            </StackPanel>
-        </Button>
-        <Button>
-            <Button.Flyout>
-                <Flyout FlyoutPresenterClasses="list">
-                    <StackPanel Orientation="Vertical">
-                        <MenuItem Header="Write FLASH Memory"
-                                  Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleLongTermProgramming, FallbackValue={x:Null}}"
-                                  CommandParameter="{Binding}">
-                            <MenuItem.Icon>
-                                <CheckBox BorderThickness="0" IsChecked="{Binding LongTermProgramming}" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <controls:UiExtensionCollection
-                            Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
-                            Extensions="{Binding DownloaderConfigurationExtension}">
-                            <controls:UiExtensionCollection.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical" />
-                                </ItemsPanelTemplate>
-                            </controls:UiExtensionCollection.ItemsPanel>
-                        </controls:UiExtensionCollection>
-                    </StackPanel>
-                </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" Margin="1 0" />
-        </Button>
+    <UserControl.Styles>
+        <!-- Split buttons: a labelled action plus a narrow menu button, both ghost -->
+        <Style Selector="StackPanel.split > Button">
+            <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+            <Setter Property="Padding" Value="6 0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="StackPanel.split > Button.menu">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Classes="toolbar">
+        <Separator />
+        <StackPanel Classes="split" Orientation="Horizontal">
+            <Button ToolTip.Tip="Constraint Editor"
+                    Command="{Binding OpenPinPlannerAsync}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Image Source="{DynamicResource CreateIcon}" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="Constraints" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Classes="menu" ToolTip.Tip="Constraint options">
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterClasses="list">
+                        <StackPanel>
+                            <MenuItem Header="Project Settings"
+                                      Command="{Binding OpenProjectSettingsAsync}">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource Icon.Settings}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <controls:UiExtensionCollection
+                                Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
+                                Extensions="{Binding PinPlannerMenuExtension}">
+                                <controls:UiExtensionCollection.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </controls:UiExtensionCollection.ItemsPanel>
+                            </controls:UiExtensionCollection>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+                <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" />
+            </Button>
+        </StackPanel>
+        <StackPanel Classes="split" Orientation="Horizontal">
+            <Button ToolTip.Tip="Run Toolchain" Command="{Binding CompileAsync}"
+                    IsEnabled="{Binding Project.Toolchain, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Classes="success small" Data="{StaticResource Icon.Play}" />
+                    <TextBlock Text="Compile" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Classes="menu" ToolTip.Tip="Toolchain options">
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterClasses="list">
+                        <StackPanel>
+                            <controls:UiExtensionCollection
+                                Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
+                                Extensions="{Binding CompileMenuExtension}">
+                                <controls:UiExtensionCollection.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </controls:UiExtensionCollection.ItemsPanel>
+                            </controls:UiExtensionCollection>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+                <PathIcon Data="{StaticResource Icon.ChevronDown}" Width="10" Height="10" />
+            </Button>
+        </StackPanel>
+        <StackPanel Classes="split" Orientation="Horizontal">
+            <Button ToolTip.Tip="Configures the FPGA or writes the FLASH memory" Command="{Binding DownloadAsync}"
+                    IsEnabled="{Binding Project.Loader, FallbackValue={x:Null}, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Panel VerticalAlignment="Center">
+                        <PathIcon Classes="accent small" IsVisible="{Binding !LongTermProgramming}"
+                                  Data="{StaticResource Icon.Download}" />
+                        <PathIcon Classes="accent small" IsVisible="{Binding LongTermProgramming}"
+                                  Data="{StaticResource Icon.DownloadTray}" />
+                    </Panel>
+                    <TextBlock Text="Config FPGA" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Classes="menu" ToolTip.Tip="Programming options">
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterClasses="list">
+                        <StackPanel Orientation="Vertical">
+                            <MenuItem Header="Write FLASH Memory"
+                                      Command="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).ToggleLongTermProgramming, FallbackValue={x:Null}}"
+                                      CommandParameter="{Binding}">
+                                <MenuItem.Icon>
+                                    <CheckBox BorderThickness="0" IsChecked="{Binding LongTermProgramming}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <controls:UiExtensionCollection
+                                Context="{Binding $parent[UserControl].((viewModels:UniversalFpgaProjectToolBarViewModel)DataContext).Project, FallbackValue={x:Null}}"
+                                Extensions="{Binding DownloaderConfigurationExtension}">
+                                <controls:UiExtensionCollection.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </controls:UiExtensionCollection.ItemsPanel>
+                            </controls:UiExtensionCollection>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+                <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" />
+            </Button>
+        </StackPanel>
     </StackPanel>
 
 </UserControl>

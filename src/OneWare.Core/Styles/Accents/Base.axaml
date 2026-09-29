@@ -13,6 +13,10 @@
     <FontFamily x:Key="EditorFont">avares://OneWare.Core/Assets/Fonts#JetBrains Mono NL</FontFamily>
     <FontFamily x:Key="ContentControlThemeFontFamily">avares://OneWare.Core/Assets/Fonts#Noto Sans</FontFamily>
 
+    <ResourceDictionary.MergedDictionaries>
+        <MergeResourceInclude Source="avares://OneWare.Core/Styles/FileIcons.axaml" />
+    </ResourceDictionary.MergedDictionaries>
+
     <ResourceDictionary.ThemeDictionaries>
 
         <ResourceDictionary x:Key="Dark">

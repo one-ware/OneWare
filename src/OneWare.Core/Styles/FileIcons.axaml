@@ -1,0 +1,243 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        File icons, converted from the Material Icon Theme for VS Code (v5.38.1).
+        https://github.com/material-extensions/vscode-material-icon-theme
+        Copyright (c) 2025 Material Extensions, licensed under the MIT License (see THIRD-PARTY-NOTICES.txt).
+
+        Each icon keeps its original viewBox via a transparent frame, so all of them scale to the same box.
+        Register them for file extensions through IFileIconService (see FileIconService).
+    -->
+
+    <DrawingImage x:Key="FileIcon.File">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Brush="#90A4AE" Geometry="F1 m8.668 6 h3.664 l-3.664 -3.668 v3.668 m-4.668 -4.668 h5.332 l4 4 v8 c0 0.738 -0.594 1.336 -1.332 1.336 h-8 c-0.738 0 -1.332 -0.598 -1.332 -1.336 v-10.664 c0 -0.742 0.594 -1.336 1.332 -1.336 m3.332 1.336 h-3.332 v10.664 h8 v-6 h-4.668 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Arduino">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#0097A7" Geometry="F1 M2 14 h10 v2 H2 Z m22 -4 h2 v10 h-2 Z" />
+            <GeometryDrawing Brush="#0097A7" Geometry="F1 M20 14 h10 v2 H20 Z" />
+            <GeometryDrawing Geometry="F1 M2 5 h4 a10 10 0 0 1 10 10 a10 10 0 0 0 10 10 h4">
+                <GeometryDrawing.Pen><Pen Brush="#0097A7" Thickness="2" /></GeometryDrawing.Pen>
+            </GeometryDrawing>
+            <GeometryDrawing Brush="#0097A7" Geometry="F1 M11.644 22 A8.95 8.95 0 0 1 6 24 H2 v2 h4 a10.98 10.98 0 0 0 8.479 -4 Z M26 4 a10.98 10.98 0 0 0 -8.479 4 h2.835 A8.95 8.95 0 0 1 26 6 h4 V4 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.JavaScript">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Brush="#FFCA28" Geometry="F1 M2 2 v12 h12 V2 Z m6 6 h1 v4 a1.003 1.003 0 0 1 -1 1 H7 a1.003 1.003 0 0 1 -1 -1 v-1 h1 v1 h1 Z m3 0 h2 v1 h-2 v1 h1 a1.003 1.003 0 0 1 1 1 v1 a1.003 1.003 0 0 1 -1 1 h-2 v-1 h2 v-1 h-1 a1.003 1.003 0 0 1 -1 -1 V9 a1.003 1.003 0 0 1 1 -1" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.TypeScript">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M2 2 v12 h12 V2 Z m4 6 h3 v1 H8 v4 H7 V9 H6 Z m5 0 h2 v1 h-2 v1 h1 a1.003 1.003 0 0 1 1 1 v1 a1.003 1.003 0 0 1 -1 1 h-2 v-1 h2 v-1 h-1 a1.003 1.003 0 0 1 -1 -1 V9 a1.003 1.003 0 0 1 1 -1" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Python">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M9.86 2 A2.86 2.86 0 0 0 7 4.86 v1.68 h4.29 c0.39 0 0.71 0.57 0.71 0.96 H4.86 A2.86 2.86 0 0 0 2 10.36 v3.781 a2.86 2.86 0 0 0 2.86 2.86 h1.18 v-2.68 a2.85 2.85 0 0 1 2.85 -2.86 h5.25 c1.58 0 2.86 -1.271 2.86 -2.851 V4.86 A2.86 2.86 0 0 0 14.14 2 Z m-0.72 1.61 c0.4 0 0.72 0.12 0.72 0.71 s-0.32 0.891 -0.72 0.891 c-0.39 0 -0.71 -0.3 -0.71 -0.89 s0.32 -0.711 0.71 -0.711" />
+            <GeometryDrawing Brush="#FDD835" Geometry="F1 M17.959 7 v2.68 a2.85 2.85 0 0 1 -2.85 2.859 H9.86 A2.85 2.85 0 0 0 7 15.389 v3.75 a2.86 2.86 0 0 0 2.86 2.86 h4.28 A2.86 2.86 0 0 0 17 19.14 v-1.68 h-4.291 c-0.39 0 -0.709 -0.57 -0.709 -0.96 h7.14 A2.86 2.86 0 0 0 22 13.64 V9.86 A2.86 2.86 0 0 0 19.14 7 Z M8.32 11.513 l-0.004 0.004 l0.038 -0.004 Z m6.54 7.276 c0.39 0 0.71 0.3 0.71 0.89 a0.71 0.71 0 0 1 -0.71 0.71 c-0.4 0 -0.72 -0.12 -0.72 -0.71 s0.32 -0.89 0.72 -0.89" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.CSharp">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M30 14 v-2 h-2 V8 h-2 v4 h-2 V8 h-2 v4 h-2 v2 h2 v2 h-2 v2 h2 v4 h2 v-4 h2 v4 h2 v-4 h2 v-2 h-2 v-2 Z m-4 2 h-2 v-2 h2 Z m-12.437 6 A5.57 5.57 0 0 1 8 16.437 v-2.873 A5.57 5.57 0 0 1 13.563 8 H18 V2 h-4.437 A11.563 11.563 0 0 0 2 13.563 v2.873 A11.564 11.564 0 0 0 13.563 28 H18 v-6 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.C">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M19.563 22 A5.57 5.57 0 0 1 14 16.437 v-2.873 A5.57 5.57 0 0 1 19.563 8 H24 V2 h-4.437 A11.563 11.563 0 0 0 8 13.563 v2.873 A11.564 11.564 0 0 0 19.563 28 H24 v-6 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Cpp">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M28 14 v-4 h-2 v4 h-6 v-4 h-2 v4 h-4 v2 h4 v4 h2 v-4 h6 v4 h2 v-4 h4 v-2 Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M13.563 22 A5.57 5.57 0 0 1 8 16.437 v-2.873 A5.57 5.57 0 0 1 13.563 8 H18 V2 h-4.437 A11.563 11.563 0 0 0 2 13.563 v2.873 A11.564 11.564 0 0 0 13.563 28 H18 v-6 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.H">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M18.5 11 a5.49 5.49 0 0 0 -4.5 2.344 V4 H8 v24 h6 V17 a2 2 0 0 1 4 0 v11 h6 V16.5 a5.5 5.5 0 0 0 -5.5 -5.5" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Hpp">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#0288D1" Geometry="F1 M28 6 V2 h-2 v4 h-6 V2 h-2 v4 h-4 v2 h4 v4 h2 V8 h6 v4 h2 V8 h4 V6 Z m-15.5 5 A5.49 5.49 0 0 0 8 13.344 V4 H2 v24 h6 V17 a2 2 0 0 1 4 0 v11 h6 V16.5 a5.5 5.5 0 0 0 -5.5 -5.5" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Markdown">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#42A5F5" Geometry="F1 m14 10 l-4 3.5 L6 10 H4 v12 h4 v-6 l2 2 l2 -2 v6 h4 V10 Z m12 6 v-6 h-4 v6 h-4 l6 8 l6 -8 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Json">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 -960h960v960h-960Z" />
+            <GeometryDrawing Brush="#F9A825" Geometry="F1 M560 -160 v-80 h120 q17 0 28.5 -11.5 T720 -280 v-80 q0 -38 22 -69 t58 -44 v-14 q-36 -13 -58 -44 t-22 -69 v-80 q0 -17 -11.5 -28.5 T680 -720 H560 v-80 h120 q50 0 85 35 t35 85 v80 q0 17 11.5 28.5 T840 -560 h40 v160 h-40 q-17 0 -28.5 11.5 T800 -360 v80 q0 50 -35 85 t-85 35 Z m-280 0 q-50 0 -85 -35 t-35 -85 v-80 q0 -17 -11.5 -28.5 T120 -400 H80 v-160 h40 q17 0 28.5 -11.5 T160 -600 v-80 q0 -50 35 -85 t85 -35 h120 v80 H280 q-17 0 -28.5 11.5 T240 -680 v80 q0 38 -22 69 t-58 44 v14 q36 13 58 44 t22 69 v80 q0 17 11.5 28.5 T280 -240 h120 v80 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Settings">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#42A5F5" Geometry="F1 M19.43 12.98 c0.04 -0.32 0.07 -0.64 0.07 -0.98 s-0.03 -0.66 -0.07 -0.98 l2.11 -1.65 c0.19 -0.15 0.24 -0.42 0.12 -0.64 l-2 -3.46 a0.5 0.5 0 0 0 -0.61 -0.22 l-2.49 1 c-0.52 -0.4 -1.08 -0.73 -1.69 -0.98 l-0.38 -2.65 A0.49 0.49 0 0 0 14 2 h-4 c-0.25 0 -0.46 0.18 -0.49 0.42 l-0.38 2.65 c-0.61 0.25 -1.17 0.59 -1.69 0.98 l-2.49 -1 a0.6 0.6 0 0 0 -0.18 -0.03 c-0.17 0 -0.34 0.09 -0.43 0.25 l-2 3.46 c-0.13 0.22 -0.07 0.49 0.12 0.64 l2.11 1.65 c-0.04 0.32 -0.07 0.65 -0.07 0.98 s0.03 0.66 0.07 0.98 l-2.11 1.65 c-0.19 0.15 -0.24 0.42 -0.12 0.64 l2 3.46 a0.5 0.5 0 0 0 0.61 0.22 l2.49 -1 c0.52 0.4 1.08 0.73 1.69 0.98 l0.38 2.65 c0.03 0.24 0.24 0.42 0.49 0.42 h4 c0.25 0 0.46 -0.18 0.49 -0.42 l0.38 -2.65 c0.61 -0.25 1.17 -0.59 1.69 -0.98 l2.49 1 q0.09 0.03 0.18 0.03 c0.17 0 0.34 -0.09 0.43 -0.25 l2 -3.46 c0.12 -0.22 0.07 -0.49 -0.12 -0.64 Z m-1.98 -1.71 c0.04 0.31 0.05 0.52 0.05 0.73 s-0.02 0.43 -0.05 0.73 l-0.14 1.13 l0.89 0.7 l1.08 0.84 l-0.7 1.21 l-1.27 -0.51 l-1.04 -0.42 l-0.9 0.68 c-0.43 0.32 -0.84 0.56 -1.25 0.73 l-1.06 0.43 l-0.16 1.13 l-0.2 1.35 h-1.4 l-0.19 -1.35 l-0.16 -1.13 l-1.06 -0.43 c-0.43 -0.18 -0.83 -0.41 -1.23 -0.71 l-0.91 -0.7 l-1.06 0.43 l-1.27 0.51 l-0.7 -1.21 l1.08 -0.84 l0.89 -0.7 l-0.14 -1.13 c-0.03 -0.31 -0.05 -0.54 -0.05 -0.74 s0.02 -0.43 0.05 -0.73 l0.14 -1.13 l-0.89 -0.7 l-1.08 -0.84 l0.7 -1.21 l1.27 0.51 l1.04 0.42 l0.9 -0.68 c0.43 -0.32 0.84 -0.56 1.25 -0.73 l1.06 -0.43 l0.16 -1.13 l0.2 -1.35 h1.39 l0.19 1.35 l0.16 1.13 l1.06 0.43 c0.43 0.18 0.83 0.41 1.23 0.71 l0.91 0.7 l1.06 -0.43 l1.27 -0.51 l0.7 1.21 l-1.07 0.85 l-0.89 0.7 Z M12 8 c-2.21 0 -4 1.79 -4 4 s1.79 4 4 4 s4 -1.79 4 -4 s-1.79 -4 -4 -4 m0 6 c-1.1 0 -2 -0.9 -2 -2 s0.9 -2 2 -2 s2 0.9 2 2 s-0.9 2 -2 2" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Tune">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#FBC02D" Geometry="F1 M12 10 h10 v2 H12 Z" />
+            <GeometryDrawing Brush="#FBC02D" Geometry="F1 M16 4 h2 v8 h-2 Z m4 18 h10 v2 H20 Z m4 2 h2 v4 h-2 Z m0 -20 h2 v14 h-2 Z M2 18 h10 v2 H2 Z" />
+            <GeometryDrawing Brush="#FBC02D" Geometry="F1 M6 18 h2 v10 H6 Z M6 4 h2 v10 H6 Z m10 12 h2 v12 h-2 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Console">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Brush="#FF7043" Geometry="F1 M2 2 a1 1 0 0 0 -1 1 v10 c0 0.554 0.446 1 1 1 h12 c0.554 0 1 -0.446 1 -1 V3 a1 1 0 0 0 -1 -1 Z m0 3 h12 v8 H2 Z m1 2 l2 2 l-2 2 l1 1 l3 -3 l-3 -3 Z m5 3.5 V12 h5 v-1.5 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Tcl">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#EF5350" Geometry="F1 M21.492 2.51 S14.24 2.157 8.526 9.988 c-4.385 6.008 -6.018 11.504 -6.018 11.504 l1.842 -0.95 c1.366 -2.372 2.078 -3.35 3.417 -4.745 c2.401 0.702 4.907 0.617 7.08 -1.899 c-1.898 -0.53 -3.416 -0.408 -5.657 -0.18 C11.706 12 13.424 11.62 15.797 12 l0.949 -1.898 c-1.709 -0.323 -2.848 -0.352 -4.537 0.038 c1.87 -1.32 3.17 -2.06 5.486 -1.937 l1.148 -1.832 c-1.48 -0.104 -2.372 0.057 -4.072 0.475 C16.3 5.46 17.695 4.834 19.726 4.71 c0 0 0.997 -1.793 1.766 -2.202 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Xml">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#8BC34A" Geometry="F1 M13 9 h5.5 L13 3.5 Z M6 2 h8 l6 6 v12 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2 -2 V4 c0 -1.11 0.89 -2 2 -2 m0.12 13.5 l3.74 3.74 l1.42 -1.41 l-2.33 -2.33 l2.33 -2.33 l-1.42 -1.41 Z m11.16 0 l-3.74 -3.74 l-1.42 1.41 l2.33 2.33 l-2.33 2.33 l1.42 1.41 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Yaml">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#FF5252" Geometry="F1 M13 9 h5.5 L13 3.5 Z M6 2 h8 l6 6 v12 c0 1.1 -0.9 2 -2 2 H6 c-1.1 0 -2 -0.9 -2 -2 V4 c0 -1.1 0.9 -2 2 -2 m12 16 v-2 H9 v2 Z m-4 -4 v-2 H6 v2 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Log">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#AFB42B" Geometry="F1 M19 5 v9 h-5 v5 H5 V5 Z m0 -2 H5 c-1.1 0 -2 0.9 -2 2 v14 c0 1.1 0.9 2 2 2 h10 l6 -6 V5 c0 -1.1 -0.9 -2 -2 -2 m-7 11 H7 v-2 h5 Z m5 -4 H7 V8 h10 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Document">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#42A5F5" Geometry="F1 M8 16 h8 v2 H8 Z m0 -4 h8 v2 H8 Z m6 -10 H6 c-1.1 0 -2 0.9 -2 2 v16 c0 1.1 0.89 2 1.99 2 H18 c1.1 0 2 -0.9 2 -2 V8 Z m4 18 H6 V4 h7 v5 h5 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Table">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#8BC34A" Geometry="F1 M6 2 h8 l6 6 v12 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2 -2 V4 a2 2 0 0 1 2 -2 m7 1.5 V9 h5.5 Z m4 7.5 h-4 v2 h1 l-2 1.67 L10 13 h1 v-2 H7 v2 h1 l3 2.5 L8 18 H7 v2 h4 v-2 h-1 l2 -1.67 L14 18 h-1 v2 h4 v-2 h-1 l-3 -2.5 l3 -2.5 h1 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Image">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Brush="#26A69A" Geometry="F1 M8.5 6 h4 l-4 -4 Z M3.875 1 H9.5 l4 4 v8.6 c0 0.773 -0.616 1.4 -1.375 1.4 h-8.25 c-0.76 0 -1.375 -0.627 -1.375 -1.4 V2.4 c0 -0.777 0.612 -1.4 1.375 -1.4 M4 13.6 h8 V8 l-2.625 2.8 L8 9.4 Z m1.25 -7.7 c-0.76 0 -1.375 0.627 -1.375 1.4 s0.616 1.4 1.375 1.4 c0.76 0 1.375 -0.627 1.375 -1.4 S6.009 5.9 5.25 5.9" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Svg">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#FFB300" Geometry="F1 M29.168 14.03 a2.7 2.7 0 0 0 -1.968 -0.83 a2.51 2.51 0 0 0 -1.929 0.8 h-4.443 l3.078 -3.078 a2.835 2.835 0 0 0 2.857 -2.842 a2.6 2.6 0 0 0 -0.831 -1.969 a2.82 2.82 0 0 0 -2.014 -0.788 a2.67 2.67 0 0 0 -1.968 0.788 a2.36 2.36 0 0 0 -0.812 1.922 L18 11.17 V6.726 a2.51 2.51 0 0 0 0.8 -1.929 a2.7 2.7 0 0 0 -0.832 -1.968 a2.745 2.745 0 0 0 -3.936 0 a2.7 2.7 0 0 0 -0.832 1.968 a2.51 2.51 0 0 0 0.8 1.93 v4.443 l-3.138 -3.138 a2.36 2.36 0 0 0 -0.812 -1.922 a2.66 2.66 0 0 0 -1.968 -0.788 a2.83 2.83 0 0 0 -2.014 0.788 a2.6 2.6 0 0 0 -0.831 1.969 a2.74 2.74 0 0 0 0.831 2.013 a2.8 2.8 0 0 0 2.026 0.829 l3.078 3.078 H6.729 a2.51 2.51 0 0 0 -1.929 -0.8 a2.7 2.7 0 0 0 -1.968 0.831 a2.745 2.745 0 0 0 0 3.937 a2.7 2.7 0 0 0 1.968 0.832 a2.51 2.51 0 0 0 1.929 -0.8 h4.443 l-3.078 3.077 a2.835 2.835 0 0 0 -2.857 2.842 a2.6 2.6 0 0 0 0.831 1.969 a2.82 2.82 0 0 0 2.014 0.788 a2.67 2.67 0 0 0 1.968 -0.788 a2.36 2.36 0 0 0 0.812 -1.922 L14 20.827 v4.444 a2.51 2.51 0 0 0 -0.8 1.929 a2.784 2.784 0 0 0 4.768 1.968 A2.7 2.7 0 0 0 18.8 27.2 a2.51 2.51 0 0 0 -0.8 -1.929 v-4.444 l3.138 3.138 a2.36 2.36 0 0 0 0.812 1.922 a2.66 2.66 0 0 0 1.968 0.788 a2.83 2.83 0 0 0 2.014 -0.788 a2.6 2.6 0 0 0 0.831 -1.969 a2.74 2.74 0 0 0 -0.831 -2.013 a2.8 2.8 0 0 0 -2.026 -0.829 L20.828 18 h4.443 a2.51 2.51 0 0 0 1.93 0.8 a2.784 2.784 0 0 0 1.967 -4.769 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Pdf">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#EF5350" Geometry="F1 M13 9 h5.5 L13 3.5 Z M6 2 h8 l6 6 v12 a2 2 0 0 1 -2 2 H6 a2 2 0 0 1 -2 -2 V4 a2 2 0 0 1 2 -2 m4.93 10.44 c0.41 0.9 0.93 1.64 1.53 2.15 l0.41 0.32 c-0.87 0.16 -2.07 0.44 -3.34 0.93 l-0.11 0.04 l0.5 -1.04 c0.45 -0.87 0.78 -1.66 1.01 -2.4 m6.48 3.81 c0.18 -0.18 0.27 -0.41 0.28 -0.66 c0.03 -0.2 -0.02 -0.39 -0.12 -0.55 c-0.29 -0.47 -1.04 -0.69 -2.28 -0.69 l-1.29 0.07 l-0.87 -0.58 c-0.63 -0.52 -1.2 -1.43 -1.6 -2.56 l0.04 -0.14 c0.33 -1.33 0.64 -2.94 -0.02 -3.6 a0.85 0.85 0 0 0 -0.61 -0.24 h-0.24 c-0.37 0 -0.7 0.39 -0.79 0.77 c-0.37 1.33 -0.15 2.06 0.22 3.27 v0.01 c-0.25 0.88 -0.57 1.9 -1.08 2.93 l-0.96 1.8 l-0.89 0.49 c-1.2 0.75 -1.77 1.59 -1.88 2.12 c-0.04 0.19 -0.02 0.36 0.05 0.54 l0.03 0.05 l0.48 0.31 l0.44 0.11 c0.81 0 1.73 -0.95 2.97 -3.07 l0.18 -0.07 c1.03 -0.33 2.31 -0.56 4.03 -0.75 c1.03 0.51 2.24 0.74 3 0.74 c0.44 0 0.74 -0.11 0.91 -0.3 m-0.41 -0.71 l0.09 0.11 c-0.01 0.1 -0.04 0.11 -0.09 0.13 h-0.04 l-0.19 0.02 c-0.46 0 -1.17 -0.19 -1.9 -0.51 c0.09 -0.1 0.13 -0.1 0.23 -0.1 c1.4 0 1.8 0.25 1.9 0.35 M7.83 17 c-0.65 1.19 -1.24 1.85 -1.69 2 c0.05 -0.38 0.5 -1.04 1.21 -1.69 Z m3.02 -6.91 c-0.23 -0.9 -0.24 -1.63 -0.07 -2.05 l0.07 -0.12 l0.15 0.05 c0.17 0.24 0.19 0.56 0.09 1.1 l-0.03 0.16 l-0.16 0.82 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Zip">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h24v24h-24Z" />
+            <GeometryDrawing Brush="#AFB42B" Geometry="F1 M14 17 h-2 v-2 h-2 v-2 h2 v2 h2 m0 -6 h-2 v2 h2 v2 h-2 v-2 h-2 V9 h2 V7 h-2 V5 h2 v2 h2 m5 -4 H5 c-1.11 0 -2 0.89 -2 2 v14 a2 2 0 0 0 2 2 h14 a2 2 0 0 0 2 -2 V5 a2 2 0 0 0 -2 -2" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Hex">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#26A69A" Geometry="F1 M4 8 v16 a2 2 0 0 0 2 2 h8 a2 2 0 0 0 2 -2 V8 a2 2 0 0 0 -2 -2 H6 a2 2 0 0 0 -2 2 m4 14 V10 h4 v12 Z m11.999 -6 L18 18.001 L21 21 l-3 3.001 L19.999 26 l3.003 -3 l3 2.999 L28 24 l-3 -2.999 l3 -3 L26.001 16 l-3 3 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Video">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#FF9800" Geometry="F1 m24 6 l2 6 h-4 l-2 -6 h-3 l2 6 h-4 l-2 -6 h-3 l2 6 H8 L6 6 H5 a3 3 0 0 0 -3 3 v14 a3 3 0 0 0 3 3 h22 a3 3 0 0 0 3 -3 V6 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Audio">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#EF5350" Geometry="F1 M16 2 a14 14 0 1 0 14 14 A14 14 0 0 0 16 2 m6 10 h-4 v8 a4 4 0 1 1 -4 -4 a3.96 3.96 0 0 1 2 0.555 V8 h6 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Onnx">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Brush="#40C4FF" Geometry="F0 m8.019 8.019 l-0.772 4.873 l4.873 0.772 Z m0 0 l-4.873 0.772 l0.772 4.873 Z m0 0 l-2.24 -4.396 l-4.396 2.24 Z m0 0 l3.489 -3.489 l-3.49 -3.488 Z m0 0 l4.396 2.24 l2.24 -4.396 Z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <DrawingImage x:Key="FileIcon.Git">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h32v32h-32Z" />
+            <GeometryDrawing Brush="#E64A19" Geometry="F1 M13.172 2.828 L11.78 4.22 l1.91 1.91 l2 2 A2.986 2.986 0 0 1 20 10.81 a3.25 3.25 0 0 1 -0.31 1.31 l2.06 2 a2.68 2.68 0 0 1 3.37 0.57 a2.86 2.86 0 0 1 0.88 2.117 a3.02 3.02 0 0 1 -0.856 2.109 A2.9 2.9 0 0 1 23 19.81 a2.93 2.93 0 0 1 -2.13 -0.87 a2.694 2.694 0 0 1 -0.56 -3.38 l-2 -2.06 a3 3 0 0 1 -0.31 0.12 V20 a3 3 0 0 1 1.44 1.09 a2.92 2.92 0 0 1 0.56 1.72 a2.88 2.88 0 0 1 -0.878 2.128 a2.98 2.98 0 0 1 -2.048 0.871 a2.981 2.981 0 0 1 -2.514 -4.719 A3 3 0 0 1 16 20 v-6.38 a2.96 2.96 0 0 1 -1.44 -1.09 a2.9 2.9 0 0 1 -0.56 -1.72 a2.9 2.9 0 0 1 0.31 -1.31 l-3.9 -3.9 l-7.579 7.572 a4 4 0 0 0 -0.001 5.658 l10.342 10.342 a4 4 0 0 0 5.656 0 l10.344 -10.344 a4 4 0 0 0 0 -5.656 L18.828 2.828 a4 4 0 0 0 -5.656 0" />
+        </DrawingGroup>
+    </DrawingImage>
+
+
+    <!-- Not part of the Material Icon Theme: a digital waveform drawn in the same style -->
+    <DrawingImage x:Key="FileIcon.Waveform">
+        <DrawingGroup>
+            <GeometryDrawing Brush="Transparent" Geometry="M0 0h16v16h-16Z" />
+            <GeometryDrawing Geometry="M1 11.5 H3.5 V4.5 H7.5 V11.5 H10.5 V4.5 H13 V11.5 H15">
+                <GeometryDrawing.Pen><Pen Brush="#26A69A" Thickness="1.6" LineJoin="Round" LineCap="Round" /></GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingGroup>
+    </DrawingImage>
+
+</ResourceDictionary>
