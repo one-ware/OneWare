@@ -1,0 +1,208 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Default" />
+                <Button Classes="primary" Content="Primary" />
+                <Button Classes="secondary" Content="Secondary" />
+                <Button Classes="ghost" Content="Ghost" />
+                <Button Classes="danger" Content="Danger" />
+                <Button Classes="link" Content="Link" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ToggleButton Content="Toggle" />
+                <ToggleButton Classes="secondary" Content="Secondary" IsChecked="True" />
+                <ToggleButton Classes="primary" Content="Primary" IsChecked="True" />
+            </StackPanel>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!--
+        Button vocabulary:
+          (none)     transparent toolbar / icon button (legacy default)
+          ghost      same as default, explicit
+          secondary  bordered neutral button (aliases: RoundButton, WindowButton, SecondaryButton)
+          primary    solid accent button (alias: PrimaryButton)
+          danger     solid error button
+          link       text-only accent button
+          icon       square icon button
+          small      compact height
+    -->
+
+    <!-- Base: transparent, borderless -->
+    <Style Selector="Button, ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
+    </Style>
+
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+    </Style>
+
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightHighBrush}" />
+    </Style>
+
+    <!-- Checked toggles use a subtle accent tint instead of SimpleTheme's bright grey -->
+    <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush2}" />
+    </Style>
+
+    <Style Selector="ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush3}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+    <!-- Secondary -->
+    <Style Selector="Button.secondary, Button.SecondaryButton, Button.RoundButton, Button.WindowButton,
+                     StackPanel.WindowButtons > Button,
+                     ToggleButton.secondary, ToggleButton.RoundButton">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemeControlPadding}" />
+    </Style>
+
+    <Style Selector="Button.RoundButton, ToggleButton.RoundButton">
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+    </Style>
+
+    <Style Selector="Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.SecondaryButton:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.RoundButton:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.WindowButton:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     StackPanel.WindowButtons > Button:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.RoundButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+    </Style>
+
+    <Style Selector="ToggleButton.secondary:checked /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.RoundButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush2}" />
+    </Style>
+
+    <Style Selector="StackPanel.WindowButtons">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacing}" />
+    </Style>
+
+    <Style Selector="Button.WindowButton, StackPanel.WindowButtons > Button">
+        <Setter Property="MinWidth" Value="72" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- Primary -->
+    <Style Selector="Button.primary, Button.PrimaryButton, ToggleButton.primary, ToggleButton.PrimaryButton,
+                     StackPanel.WindowButtons > Button.primary, StackPanel.WindowButtons > Button.PrimaryButton">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemeControlPadding}" />
+    </Style>
+
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.PrimaryButton:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.PrimaryButton:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     StackPanel.WindowButtons > Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     StackPanel.WindowButtons > Button.PrimaryButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeForegroundLowBrush}" />
+        <Setter Property="Opacity" Value="0.92" />
+    </Style>
+
+    <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.PrimaryButton:pressed /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.primary:pressed /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.PrimaryButton:pressed /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.primary:checked /template/ ContentPresenter#PART_ContentPresenter,
+                     ToggleButton.PrimaryButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- Danger -->
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemeControlPadding}" />
+    </Style>
+
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <!-- Ghost -->
+    <Style Selector="Button.ghost, ToggleButton.ghost">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="{DynamicResource ThemeControlPadding}" />
+    </Style>
+
+    <!-- Link -->
+    <Style Selector="Button.link">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     Button.link:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Button.link:pointerover AccessText, Button.link:pointerover TextBlock">
+        <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+
+    <!-- Icon -->
+    <Style Selector="Button.icon, ToggleButton.icon">
+        <Setter Property="Padding" Value="{DynamicResource ThemePaddingSmall}" />
+        <Setter Property="Width" Value="{DynamicResource ThemeControlHeight}" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- Sizes -->
+    <Style Selector="Button.small, ToggleButton.small">
+        <Setter Property="Padding" Value="6 1" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+    </Style>
+
+    <Style Selector="Button.icon.small, ToggleButton.icon.small">
+        <Setter Property="Width" Value="{DynamicResource ThemeControlHeightSmall}" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeightSmall}" />
+        <Setter Property="Padding" Value="3" />
+    </Style>
+
+    <Style Selector="Button.large, ToggleButton.large">
+        <Setter Property="Padding" Value="14 6" />
+    </Style>
+
+</Styles>

@@ -1,0 +1,162 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ControlTheme x:Key="FlyoutNoPadding"
+                      TargetType="FlyoutPresenter">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="LayoutRoot"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <ScrollViewer
+                            HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                            VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              HorizontalContentAlignment="Stretch"
+                                              VerticalContentAlignment="Stretch"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <!-- Separator -->
+    <Style Selector="Separator">
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+
+    <!-- ToolTip -->
+    <Style Selector="ToolTip">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="8 4" />
+        <Setter Property="MaxWidth" Value="600" />
+        <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="ToolTip TextBlock">
+        <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+    </Style>
+
+    <!-- CheckBox / RadioButton -->
+    <Style Selector="CheckBox">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+    </Style>
+
+    <Style Selector="CheckBox:checked /template/ Border#border">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+    <Style Selector="CheckBox:checked /template/ Path#checkMark">
+        <Setter Property="Fill" Value="{DynamicResource HighlightForegroundBrush}" />
+    </Style>
+
+    <!-- ToggleSwitch -->
+    <Style Selector="ToggleSwitch:pointerover /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderHighBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+    </Style>
+
+    <Style Selector="ToggleSwitch:checked /template/ Border#OuterBorder">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- Slider / ProgressBar -->
+    <Style Selector="ProgressBar">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- Toolbar (aliases: ToolBar) -->
+    <Style Selector="StackPanel.ToolBar, StackPanel.toolbar">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingSmall}" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar > Separator, StackPanel.toolbar > Separator">
+        <Setter Property="Margin" Value="2 0" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar Button, StackPanel.toolbar Button">
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+    </Style>
+
+    <Style Selector="StackPanel.ToolBar TextBlock, StackPanel.toolbar TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Layout helpers -->
+    <Style Selector="StackPanel.form">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacing}" />
+    </Style>
+
+    <Style Selector="StackPanel.form-row">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacing}" />
+    </Style>
+
+    <Style Selector="StackPanel.form-row > TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="StackPanel.section">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingSmall}" />
+    </Style>
+
+    <Style Selector="StackPanel.page">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingLarge}" />
+        <Setter Property="Margin" Value="{DynamicResource ThemePaddingXLarge}" />
+    </Style>
+
+    <Style Selector="StackPanel.spacing-small">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingSmall}" />
+    </Style>
+
+    <Style Selector="StackPanel.spacing">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacing}" />
+    </Style>
+
+    <Style Selector="StackPanel.spacing-large">
+        <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingLarge}" />
+    </Style>
+
+</Styles>

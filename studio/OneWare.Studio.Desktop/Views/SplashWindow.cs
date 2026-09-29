@@ -18,6 +18,11 @@ public class SplashWindow : Window
     private const double CardHeight = 304;
     private const double ShadowMargin = 16;
     private const double IndicatorWidth = 140;
+    private static readonly Color BackgroundColor = Color.Parse("#2B2D30");
+    private static readonly Color BorderColor = Color.Parse("#3C3F44");
+    private static readonly Color ForegroundColor = Color.Parse("#DFE1E5");
+    private static readonly Color MutedColor = Color.Parse("#9DA0A8");
+    private static readonly Color AccentColor = Color.Parse("#009688");
 
     // Paths from branding/logo-oneware.svg, cropped to the glyph bounds (35.6, 29.4, 368.2 x 52.6).
     private const double LogoOffsetX = -35.6;
@@ -43,9 +48,6 @@ public class SplashWindow : Window
     private const string LogoAccentPath = "M224.3,48.2 h15.1 v15.1 h-15.1 Z";
 
     private static readonly CornerRadius Radius = new(8);
-    private static readonly Color Accent = Color.Parse("#00C8AA");
-    private static readonly Color MutedText = Color.Parse("#9CA3AF");
-
     private readonly Border _card;
     private readonly Border _indicator;
 
@@ -60,23 +62,21 @@ public class SplashWindow : Window
         Background = Brushes.Transparent;
         TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
 
-        // Background layers mirror the cloud.one-ware.com login page.
         var baseLayer = new Border
         {
-            Background = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                GradientStops =
-                {
-                    new GradientStop(Color.Parse("#081017"), 0),
-                    new GradientStop(Color.Parse("#03060C"), 1)
-                }
-            }
+            Background = new SolidColorBrush(BackgroundColor)
         };
 
-        var highlightLayer = new Border { Background = CreateGlow(0.22, 0.22, 164, Color.FromArgb(13, 255, 255, 255)) };
-        var glowLayer = new Border { Background = CreateGlow(0.78, 0.30, 198, Color.FromArgb(31, 0, 200, 170)) };
+        var highlightLayer = new Border
+        {
+            Background = CreateGlow(0.22, 0.22, 164, Color.FromArgb(
+                13, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B))
+        };
+        var glowLayer = new Border
+        {
+            Background = CreateGlow(0.78, 0.30, 198, Color.FromArgb(
+                31, AccentColor.R, AccentColor.G, AccentColor.B))
+        };
 
         var grid = new GridPattern
         {
@@ -105,8 +105,8 @@ public class SplashWindow : Window
                 Height = LogoHeight,
                 Children =
                 {
-                    CreateLogoPath(LogoWhitePath, Brushes.White),
-                    CreateLogoPath(LogoAccentPath, new SolidColorBrush(Color.Parse("#00FFD1")))
+                    CreateLogoPath(LogoWhitePath, new SolidColorBrush(ForegroundColor)),
+                    CreateLogoPath(LogoAccentPath, new SolidColorBrush(AccentColor))
                 }
             }
         };
@@ -117,7 +117,7 @@ public class SplashWindow : Window
             FontSize = 13,
             FontWeight = FontWeight.Medium,
             LetterSpacing = 9,
-            Foreground = new SolidColorBrush(MutedText),
+            Foreground = new SolidColorBrush(MutedColor),
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(9, 18, 0, 0)
         };
@@ -141,13 +141,13 @@ public class SplashWindow : Window
                 {
                     Text = "Starting\u2026",
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(MutedText, 0.8)
+                    Foreground = new SolidColorBrush(MutedColor, 0.8)
                 },
                 new TextBlock
                 {
                     Text = $"v{Global.VersionCode}",
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(MutedText, 0.8),
+                    Foreground = new SolidColorBrush(MutedColor, 0.8),
                     [Grid.ColumnProperty] = 1
                 }
             }
@@ -163,9 +163,9 @@ public class SplashWindow : Window
                 EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
                 GradientStops =
                 {
-                    new GradientStop(Color.FromArgb(0, Accent.R, Accent.G, Accent.B), 0),
-                    new GradientStop(Accent, 0.5),
-                    new GradientStop(Color.FromArgb(0, Accent.R, Accent.G, Accent.B), 1)
+                    new GradientStop(Color.FromArgb(0, AccentColor.R, AccentColor.G, AccentColor.B), 0),
+                    new GradientStop(AccentColor, 0.5),
+                    new GradientStop(Color.FromArgb(0, AccentColor.R, AccentColor.G, AccentColor.B), 1)
                 }
             }
         };
@@ -174,7 +174,7 @@ public class SplashWindow : Window
         {
             Height = 2,
             VerticalAlignment = VerticalAlignment.Bottom,
-            Background = new SolidColorBrush(Colors.White, 0.06),
+            Background = new SolidColorBrush(ForegroundColor, 0.06),
             ClipToBounds = true,
             Child = _indicator
         };
@@ -183,7 +183,7 @@ public class SplashWindow : Window
         {
             CornerRadius = Radius,
             BorderThickness = new Thickness(1),
-            BorderBrush = new SolidColorBrush(Colors.White, 0.08),
+            BorderBrush = new SolidColorBrush(BorderColor),
             IsHitTestVisible = false
         };
 
@@ -201,12 +201,12 @@ public class SplashWindow : Window
         {
             Margin = new Thickness(ShadowMargin),
             CornerRadius = Radius,
-            Background = new SolidColorBrush(Color.Parse("#061212")),
+            Background = new SolidColorBrush(BackgroundColor),
             BoxShadow = new BoxShadows(new BoxShadow
             {
                 OffsetY = 6,
                 Blur = 18,
-                Color = Color.FromArgb(0x70, 0, 0, 0)
+                Color = Color.FromArgb(0x70, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B)
             }),
             Child = clip
         };

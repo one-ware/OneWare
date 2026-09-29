@@ -8,24 +8,24 @@
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView"
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
 
-    <StackPanel Orientation="Horizontal" Spacing="5">
+    <StackPanel Orientation="Horizontal" Classes="ToolBar">
         <Button Command="{Binding OpenFeedbackDialogAsync}"
                 CommandParameter="{Binding $self}" ToolTip.Tip="Feedback">
             <Button.Content>
-                <Image Source="{DynamicResource Unicons.CommentMessage}" />
+                <PathIcon Data="{StaticResource Icon.CommentMessage}" />
             </Button.Content>
         </Button>
 
-        <Button Padding="1">
+        <Button Width="24">
             <Button.Content>
                 <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
+                    <Border DockPanel.Dock="Left" ClipToBounds="True"
+                            CornerRadius="{DynamicResource ThemeCornerRadiusPill}">
                         <Panel>
-                            <Image Source="{Binding SettingViewModel.Setting.Image}" />
-                            <Image
-                                IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
+                            <Image Width="20" Height="20" Source="{Binding SettingViewModel.Setting.Image}" />
+                            <PathIcon IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
                             Converter={x:Static ObjectConverters.IsNull}}"
-                                Source="{DynamicResource CodeIcons.Account}" Margin="2" />
+                                Data="{StaticResource Icon.Account}" />
                         </Panel>
                     </Border>
                 </DockPanel>
@@ -36,7 +36,7 @@
 
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="2">
 
-                        <TextBlock Text="OneWare Cloud" FontWeight="Bold" />
+                        <TextBlock Classes="h4" Text="OneWare Cloud" />
 
                         <ContentControl Content="{Binding SettingViewModel}" />
 
@@ -50,14 +50,13 @@
                             <StackPanel IsVisible="{Binding HasActiveOrganization}" Spacing="6" Margin="6,2"
                                         MinWidth="220">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding OrganizationName}" FontWeight="SemiBold"
+                                    <TextBlock Classes="semibold" Text="{Binding OrganizationName}"
                                                TextTrimming="CharacterEllipsis" MaxWidth="240" />
-                                    <TextBlock Text="{Binding OrganizationDetails}" FontSize="11"
-                                               TextTrimming="CharacterEllipsis" MaxWidth="240"
-                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                    <TextBlock Text="{Binding PlanStatusText}" FontSize="11"
+                                    <TextBlock Classes="caption" Text="{Binding OrganizationDetails}"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="240" />
+                                    <TextBlock Classes="caption" Text="{Binding PlanStatusText}"
                                                IsVisible="{Binding ShowPlanStatus}"
-                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                               />
                                 </StackPanel>
 
                                 <!-- Owners / administrators: Compute Credits total with its monthly allowance / prepaid split -->
@@ -66,32 +65,29 @@
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Compute Credits"
                                                ToolTip.Tip="Used for training, AI Copilot and exports" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ComputeCreditsText}"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Monthly allowance" Margin="10,0,0,0"
-                                               FontSize="11" ToolTip.Tip="Included in the plan, used first, resets monthly"
-                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                               Classes="semibold" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="caption" Text="Monthly allowance" Margin="10,0,0,0"
+                                               ToolTip.Tip="Included in the plan, used first, resets monthly" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding IncludedCreditsText}"
-                                               FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Prepaid" Margin="10,0,0,0"
-                                               FontSize="11" ToolTip.Tip="Purchased, used after the monthly allowance, never expires"
-                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                               Classes="caption" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Classes="caption" Text="Prepaid" Margin="10,0,0,0"
+                                               ToolTip.Tip="Purchased, used after the monthly allowance, never expires" />
                                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PrepaidCreditsText}"
-                                               FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                               Classes="caption" />
                                 </Grid>
 
                                 <!-- Members: personal monthly budget -->
                                 <StackPanel Spacing="3" IsVisible="{Binding ShowPersonalBudget}">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Text="Your Compute Credit budget"
-                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                   Classes="muted" />
                                         <TextBlock Grid.Column="1" Text="{Binding BudgetText}"
-                                                   FontWeight="SemiBold" />
+                                                   Classes="semibold" />
                                     </Grid>
                                     <ProgressBar IsVisible="{Binding HasBudgetLimit}" MinHeight="6"
                                                  Minimum="0" Maximum="{Binding BudgetLimit}"
                                                  Value="{Binding BudgetUsed}" />
-                                    <TextBlock Text="{Binding BudgetHint}" FontSize="11"
-                                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                    <TextBlock Classes="caption" Text="{Binding BudgetHint}" />
                                 </StackPanel>
 
                                 <StackPanel Orientation="Vertical">
@@ -113,7 +109,7 @@
 
                             <TextBlock IsVisible="{Binding !HasActiveOrganization}"
                                        Text="No active organization" Margin="6,0"
-                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                       Classes="muted" />
             
                         </StackPanel>
 

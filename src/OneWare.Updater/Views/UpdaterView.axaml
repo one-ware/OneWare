@@ -5,7 +5,7 @@
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          xmlns:viewModels="clr-namespace:OneWare.Updater.ViewModels"
                          xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
-                         PrefWidth="400" SizeToContent="Height" Padding="8"
+                         PrefWidth="400" SizeToContent="Height" Padding="{DynamicResource ThemePadding}"
                          mc:Ignorable="d"
                          x:Class="OneWare.Updater.Views.UpdaterView"
                          CustomIcon="{DynamicResource VsImageLib.DownloadDefault16X}"
@@ -19,8 +19,8 @@
 
                 <TextBlock Text="{Binding VersionInfo}" HorizontalAlignment="Center" />
 
-                <TextBlock Text="{Binding UpdateMessage}" FontSize="20" TextWrapping="Wrap"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"
+                <TextBlock Text="{Binding UpdateMessage}" Classes="h2" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
                            TextAlignment="Center" />
 
                 <ProgressBar DockPanel.Dock="Right"
@@ -28,16 +28,14 @@
                              Minimum="0"
                              Maximum="100" Value="{Binding Progress}" IsIndeterminate="{Binding IsIndeterminate}" />
 
-                <Button DockPanel.Dock="Left" Classes="RoundButton PrimaryButton" Content="Download Update"
-                        Padding="10 5" Height="NaN"
+                <Button DockPanel.Dock="Left" Classes="primary large" Content="Download Update"
                         IsEnabled="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.UpdateAvailable}}"
                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
                         Command="{Binding DownloadUpdateAsync}"
                         CommandParameter="{Binding $self}"
                         HorizontalAlignment="Center" />
 
-                <Button DockPanel.Dock="Left" Classes="RoundButton PrimaryButton" Content="Restart"
-                        Padding="10 5" Height="NaN"
+                <Button DockPanel.Dock="Left" Classes="primary large" Content="Restart"
                         IsVisible="{Binding Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static viewModels:UpdaterStatus.RestartRequired}}"
                         Command="{Binding TryRestart}"
                         HorizontalAlignment="Center" />

@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -481,7 +483,8 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
         _ = RunRepositoryOperationAsync(async repository =>
         {
             var checkedOut = await Task.Run(() => GitOperations.CheckoutBranch(repository, branch));
-            _logger.Log("Switched to branch '" + checkedOut.FriendlyName + "'", true, Brushes.Green);
+            _logger.Log("Switched to branch '" + checkedOut.FriendlyName + "'", true,
+                Application.Current?.FindResource("SuccessBrush") as IBrush ?? Brushes.Transparent);
         });
     }
 
@@ -601,7 +604,8 @@ public class SourceControlViewModel : ExtendedTool, IDisposable
             var author = await GetSignatureAsync(repository);
             if (author == null) return;
             var commit = await Task.Run(() => GitOperations.Commit(repository, message, author, staged));
-            _logger.Log($"Commit {commit.Message}", true, Brushes.Green);
+            _logger.Log($"Commit {commit.Message}", true,
+                Application.Current?.FindResource("SuccessBrush") as IBrush ?? Brushes.Transparent);
             if (CommitMessage == message) CommitMessage = "";
         });
     }

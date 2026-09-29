@@ -4,29 +4,21 @@
 
     <Styles.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Default">
-                    <SolidColorBrush x:Key="TreeDataGridGridLinesBrush" Color="Black" Opacity="0.1" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBackgroundPointerOverBrush" Color="Black" Opacity="0.1" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBackgroundPressedBrush" Color="Black" Opacity="0.6" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBorderBrushPointerOverBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBorderBrushPressedBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderForegroundPointerOverBrush" Color="Black" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderForegroundPressedBrush" Color="Black" />
-                    <SolidColorBrush x:Key="TreeDataGridSelectedCellBackgroundBrush" Color="Black" Opacity="0.2" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="TreeDataGridGridLinesBrush" Color="White" Opacity="0.1" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBackgroundPointerOverBrush" Color="White" Opacity="0.1" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBackgroundPressedBrush" Color="White" Opacity="0.6" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBorderBrushPointerOverBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderBorderBrushPressedBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderForegroundPointerOverBrush" Color="White" />
-                    <SolidColorBrush x:Key="TreeDataGridHeaderForegroundPressedBrush" Color="White" />
-                    <SolidColorBrush x:Key="TreeDataGridSelectedCellBackgroundBrush"
-                                     Color="{DynamicResource ThemeAccentColor}" Opacity="0.4" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
+            <SolidColorBrush x:Key="TreeDataGridGridLinesBrush" Color="{DynamicResource ThemeBorderLowColor}" />
+            <SolidColorBrush x:Key="TreeDataGridHeaderBackgroundPointerOverBrush"
+                             Color="{DynamicResource ThemeControlHighlightMidColor}" />
+            <SolidColorBrush x:Key="TreeDataGridHeaderBackgroundPressedBrush"
+                             Color="{DynamicResource ThemeControlHighlightHighColor}" />
+            <SolidColorBrush x:Key="TreeDataGridHeaderBorderBrushPointerOverBrush"
+                             Color="Transparent" />
+            <SolidColorBrush x:Key="TreeDataGridHeaderBorderBrushPressedBrush"
+                             Color="Transparent" />
+            <SolidColorBrush x:Key="TreeDataGridHeaderForegroundPointerOverBrush"
+                             Color="{DynamicResource ThemeForegroundColor}" />
+            <SolidColorBrush x:Key="TreeDataGridHeaderForegroundPressedBrush"
+                             Color="{DynamicResource ThemeForegroundColor}" />
+            <SolidColorBrush x:Key="TreeDataGridSelectedCellBackgroundBrush"
+                             Color="{DynamicResource ThemeAccentColor}" Opacity="0.2" />
 
             <StreamGeometry x:Key="TreeDataGridSortIconDescendingPath">M1875 1011l-787 787v-1798h-128v1798l-787 -787l-90 90l941 941l941 -941z</StreamGeometry>
             <StreamGeometry x:Key="TreeDataGridSortIconAscendingPath">M1965 947l-941 -941l-941 941l90 90l787 -787v1798h128v-1798l787 787z</StreamGeometry>
@@ -92,7 +84,7 @@
                                                Width="1" />
                                     <Thumb Name="PART_Resizer"
                                            DockPanel.Dock="Right"
-                                           Background="Transparent"
+                                           Background="{DynamicResource ThemeControlTransparentBrush}"
                                            Cursor="SizeWestEast"
                                            IsVisible="{TemplateBinding CanUserResize}"
                                            Width="5">
@@ -204,7 +196,7 @@
                 <Setter Property="Height" Value="8" />
                 <Setter Property="Template">
                     <ControlTemplate>
-                        <Border Background="Transparent"
+                        <Border Background="{DynamicResource ThemeControlTransparentBrush}"
                                 Width="{TemplateBinding Width}"
                                 Height="{TemplateBinding Height}"
                                 HorizontalAlignment="Center"

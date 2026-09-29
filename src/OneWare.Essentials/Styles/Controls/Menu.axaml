@@ -1,9 +1,9 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels;assembly=OneWare.Essentials"
+        xmlns:viewModels="clr-namespace:OneWare.Essentials.ViewModels"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
-        xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-        xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials">
+        xmlns:controls="clr-namespace:OneWare.Essentials.Controls"
+        xmlns:models="clr-namespace:OneWare.Essentials.Models">
 
     <Design.PreviewWith>
         <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}" Height="300" Width="300">
@@ -54,9 +54,10 @@
                            IsOpen="{TemplateBinding IsSubMenuOpen,
                                             Mode=TwoWay}"
                            Placement="RightEdgeAlignedTop">
-                        <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                        <Border Background="{DynamicResource ThemeElevatedBrush}"
                                 BorderBrush="{DynamicResource ThemeBorderMidBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}">
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{DynamicResource ThemeCornerRadiusLarge}">
                             <ScrollViewer Theme="{StaticResource SimpleMenuScrollViewer}">
                                 <ItemsPresenter Name="PART_ItemsPresenter"
                                                 Margin="2"
@@ -94,7 +95,20 @@
     </Style>
 
     <Style Selector="MenuItem:pointerover /template/ Border#root">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidColor}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+    </Style>
+
+    <!-- Left padding is small because the template already adds a 5 px column after the icon -->
+    <Style Selector="MenuItem">
+        <Setter Property="Padding" Value="3 4 8 4" />
+    </Style>
+
+    <Style Selector="MenuFlyoutPresenter.NoIcons MenuItem">
+        <Setter Property="Padding" Value="8 4" />
+    </Style>
+
+    <Style Selector="Menu > MenuItem">
+        <Setter Property="Padding" Value="8 3" />
     </Style>
 
     <Style Selector="MenuItem Image">
@@ -103,8 +117,10 @@
     </Style>
 
     <Style Selector="ContextMenu, MenuFlyoutPresenter">
-        <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="Padding" Value="2" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
     </Style>
 
     <!-- Needed to fix contextmenu on 175% scaling -->
@@ -119,7 +135,7 @@
 
     <Style Selector="Menu > MenuItem Border, ContextMenu > MenuItem Border, MenuFlyoutPresenter > MenuItem Border">
         <Setter Property="Padding" Value="0" />
-        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
     </Style>
 
     <Style Selector="Menu > MenuItem AccessText">
@@ -158,6 +174,17 @@
                 </Template>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Submenu / dropdown popups: same surface as ContextMenu and MenuFlyout
+         (SimpleTheme hard-codes ThemeBackgroundBrush here). Must come after the Border rules above.
+         :open gives the setters trigger priority, which is needed to beat values set inside the template. -->
+    <Style Selector="MenuItem:open /template/ Popup#PART_Popup > Border">
+        <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+        <Setter Property="Padding" Value="2" />
     </Style>
 
 </Styles>

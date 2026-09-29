@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Animation;
@@ -351,6 +351,13 @@ public class App : Application
                 DataContext = Services.Resolve<AboutViewModel>()
             }))
         });
+#if DEBUG
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("StyleGallery")
+        {
+            Header = "Style Gallery",
+            Command = new RelayCommand(() => windowService.Show(new StyleGalleryView()))
+        });
+#endif
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
         {
             Header = "Extras",

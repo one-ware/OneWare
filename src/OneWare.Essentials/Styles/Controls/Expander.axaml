@@ -5,28 +5,24 @@
             <StackPanel Width="350"
                         Orientation="Vertical"
                         Spacing="20">
-                <Expander CornerRadius="25"
-                          ExpandDirection="Up" Header="Changes">
+                <Expander ExpandDirection="Up" Header="Changes">
                     <StackPanel>
                         <TextBlock Text="Expanded content" />
                     </StackPanel>
                 </Expander>
-                <Expander CornerRadius="25"
-                          ExpandDirection="Down"
+                <Expander ExpandDirection="Down"
                           Header="Expand Down">
                     <StackPanel>
                         <TextBlock Text="Expanded content" />
                     </StackPanel>
                 </Expander>
-                <Expander CornerRadius="25"
-                          ExpandDirection="Left"
+                <Expander ExpandDirection="Left"
                           Header="Expand Left">
                     <StackPanel>
                         <TextBlock Text="Expanded content" />
                     </StackPanel>
                 </Expander>
-                <Expander CornerRadius="25"
-                          ExpandDirection="Right"
+                <Expander ExpandDirection="Right"
                           Header="Expand Right">
                     <StackPanel>
                         <TextBlock Text="Expanded content" />
@@ -35,10 +31,6 @@
             </StackPanel>
         </Border>
     </Design.PreviewWith>
-    
-    <Styles.Resources>
-        
-    </Styles.Resources>
     
     <Style Selector="Expander /template/ ToggleButton#PART_toggle:pointerover /template/ Border">
         <Setter Property="Background" Value="Transparent" />
@@ -61,5 +53,8 @@
     <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="VerticalAlignment" Value="Center"></Setter>
     </Style>
-    <!-- Add Styles Here -->
+
+    <Style Selector="Expander">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+    </Style>
 </Styles>

@@ -1,34 +1,38 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="24" Focusable="True"
-             IsTabStop="True" Background="Transparent"
+             IsTabStop="True" VerticalAlignment="Center"
              x:Class="OneWare.Essentials.Controls.SearchBox" Name="SearchBoxView">
 
-    <Grid VerticalAlignment="Center" RowDefinitions="Auto" ColumnDefinitions="*,Auto,Auto">
-        <Border Name="TextBoxBorder" Height="24" Margin="0">
-            <DockPanel LastChildFill="True">
-                <Button DockPanel.Dock="Right" Width="24" Name="ResetButton"
-                        Command="{Binding #SearchBoxView.Reset}">
-                    <Image Source="{DynamicResource Material.WindowClose}" Height="8" Width="8" />
+    <!-- One regular TextBox, so the search field looks and focuses like every other input. -->
+    <TextBox Name="SearchTextBox" Classes="search"
+             Watermark="{Binding #SearchBoxView.Label}"
+             Text="{Binding #SearchBoxView.SearchText}"
+             TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False">
+        <TextBox.InnerLeftContent>
+            <Panel Margin="0 0 4 0" VerticalAlignment="Center">
+                <Button Name="SearchButton" Classes="icon small" ToolTip.Tip="Search"
+                        IsVisible="{Binding #SearchBoxView.SearchButtonVisible}"
+                        Command="{Binding #SearchBoxView.StartSearch}">
+                    <PathIcon Classes="small muted" Data="{StaticResource Icon.Search}" />
                 </Button>
-                <TextBox Background="Transparent" Watermark="{Binding #SearchBoxView.Label}"
-                         CaretBrush="{DynamicResource ThemeForegroundBrush}"
-                         DockPanel.Dock="Left" TextWrapping="NoWrap" AcceptsReturn="False" Name="SearchTextBox"
-                         BorderThickness="0" AcceptsTab="False" VerticalContentAlignment="Center"
-                         Padding="6, 0, 0, 0" VerticalAlignment="Center"
-                         HorizontalAlignment="Stretch" Text="{Binding #SearchBoxView.SearchText}" />
-            </DockPanel>
-        </Border>
-
-        <Border Name="SearchBorder" IsVisible="{Binding #SearchButton.IsVisible}" Grid.Column="1"
-                BorderThickness="1,0,0,0" Height="24" />
-
-        <Button Name="SearchButton" Grid.Column="2" Width="24" Height="24"
-                IsVisible="{Binding #SearchBoxView.SearchButtonVisible}"
-                Command="{Binding #SearchBoxView.StartSearch}">
-            <Image Source="{DynamicResource VsImageLib.Search16XMd}" Height="12" Width="12" />
-        </Button>
-    </Grid>
+                <PathIcon Classes="small muted" Margin="4 0 0 0" Data="{StaticResource Icon.Search}"
+                          IsVisible="{Binding !#SearchBoxView.SearchButtonVisible}" />
+            </Panel>
+        </TextBox.InnerLeftContent>
+        <TextBox.InnerRightContent>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                <controls:Spinner Width="12" Height="12" Margin="0 0 4 0"
+                                  IsVisible="{Binding #SearchBoxView.IsBusy}" />
+                <Button Name="ResetButton" Classes="icon small" ToolTip.Tip="Clear"
+                        IsVisible="{Binding #SearchTextBox.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Command="{Binding #SearchBoxView.Reset}">
+                    <PathIcon Classes="small muted" Data="{StaticResource Icon.Close}" />
+                </Button>
+            </StackPanel>
+        </TextBox.InnerRightContent>
+    </TextBox>
 </UserControl>

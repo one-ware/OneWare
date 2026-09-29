@@ -6,12 +6,11 @@
              x:Class="OneWare.Essentials.Controls.TimeSelectorBox" Name="TimeSelectorBoxView">
     <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}">
         <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
-            <TextBox Grid.Column="0" Watermark="{Binding #TimeSelectorBoxView.Label}" BorderThickness="0"
-                     Background="Transparent"
+            <TextBox Grid.Column="0" Watermark="{Binding #TimeSelectorBoxView.Label}" Classes="bare"
                      Text="{Binding #TimeSelectorBoxView.Display}" />
             <Separator Grid.Column="1" />
             <ComboBox Grid.Column="2" SelectedIndex="{Binding #TimeSelectorBoxView.WaitUnit}"
-                      Background="Transparent" BorderThickness="0" Name="ComboBoxFrequencyUnit">
+                      Background="{DynamicResource ThemeControlTransparentBrush}" BorderThickness="0" Name="ComboBoxFrequencyUnit">
                 <ComboBoxItem>ps</ComboBoxItem>
                 <ComboBoxItem>ns</ComboBoxItem>
                 <ComboBoxItem>µs</ComboBoxItem>

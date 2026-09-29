@@ -5,7 +5,7 @@
                          xmlns:viewModels="clr-namespace:OneWare.PackageManager.ViewModels"
                          xmlns:models="clr-namespace:OneWare.PackageManager.Models"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                         PrefWidth="450" PrefHeight="280" Padding="4"
+                         PrefWidth="450" PrefHeight="280" Padding="{DynamicResource ThemePaddingSmall}"
                          mc:Ignorable="d"
                          x:Class="OneWare.PackageManager.Views.ConfigurationProfileImportView"
                          CustomIcon="{DynamicResource PackageManager}"
@@ -47,12 +47,11 @@
         <TextBlock DockPanel.Dock="Bottom" Margin="0 8 0 0"
                    Text="{Binding ErrorMessage}"
                    TextWrapping="Wrap"
-                   Foreground="{DynamicResource ErrorBrush}"
+                   Classes="error"
                    IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
         <!-- Steps -->
-        <Border BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}" CornerRadius="8"
-                Background="{DynamicResource ThemeControlLowBrush}" ClipToBounds="True" Padding="4">
+        <Border Classes="inset" ClipToBounds="True" Padding="{DynamicResource ThemePaddingSmall}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Steps}">
                     <ItemsControl.ItemTemplate>
@@ -73,7 +72,7 @@
                                                  Value="{Binding ProgressPercent}"
                                                  IsIndeterminate="{Binding !IsDeterminate}" />
                                     <TextBlock Text="{Binding Detail}"
-                                               FontSize="11" Opacity="0.7"
+                                               Classes="caption"
                                                TextTrimming="CharacterEllipsis"
                                                IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 </StackPanel>

@@ -106,6 +106,13 @@ You can generate `compatibility.txt` automatically during build by marking depen
 
 Use `serviceProvider.Resolve<T>()` or `ContainerLocator.Current` to resolve OneWare services.
 
+## Styling
+
+Plugins share the host's design system (tokens and style classes like `primary`, `card`, `badge`, `h3`, `muted`).
+Use the classes instead of inline colors, borders or font sizes. For monochrome icons use
+`<PathIcon Data="{DynamicResource Icon.Name}" />`, which follows the surrounding foreground color.
+See [Styling.md](./Styling.md).
+
 ## OneWare.Essentials interfaces
 
 Below is a concise guide to the public interfaces in `OneWare.Essentials`. Use them as stable

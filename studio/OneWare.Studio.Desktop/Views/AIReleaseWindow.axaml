@@ -11,8 +11,8 @@
                          x:DataType="viewModels:AiReleaseWindowViewModel">
     <DockPanel Margin="8">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
-            <TextBlock FontWeight="Bold" FontSize="18">ONE AI is now available</TextBlock>
-            <TextBlock FontWeight="SemiBold" FontSize="14">Enhance your experience with advanced AI capabilities.</TextBlock>
+            <TextBlock Classes="h2">ONE AI is now available</TextBlock>
+            <TextBlock Classes="h4">Enhance your experience with advanced AI capabilities.</TextBlock>
             <StackPanel Orientation="Horizontal" Spacing="4">
                 <Panel Width="100" Height="100">
                     <Image Margin="10" Source="{DynamicResource AI_Img}" />
@@ -38,7 +38,7 @@
                         CommandParameter="{Binding $self}">
                     Close
                 </Button>
-                <Button Background="{DynamicResource ThemeAccentBrush}"
+                <Button Classes="primary"
                         Command="{Binding InstallPluginAsync}"
                         CommandParameter="{Binding $self}">
                     Install now

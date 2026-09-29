@@ -1,4 +1,4 @@
-﻿<windows1:MainSingleView xmlns="https://github.com/avaloniaui"
+<windows1:MainSingleView xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -43,7 +43,7 @@
                                       IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
                     <TextBlock Margin="5, 2, 3, 2" Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}"
-                               Foreground="White" />
+                               Foreground="{DynamicResource ThemeForegroundBrush}" />
 
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
                                 VerticalAlignment="Center" Margin="10 0">
@@ -62,7 +62,7 @@
                                     <StackPanel Cursor="Hand">
                                         <TextBlock x:CompileBindings="False"
                                                    Text="{Binding MainDockService.CurrentDocument.Extension}"
-                                                   Foreground="White" />
+                                                   Foreground="{DynamicResource ThemeForegroundBrush}" />
                                     </StackPanel>
                                 </MenuItem.Header>
                             </MenuItem>
@@ -83,7 +83,7 @@
                                           CommandParameter="{x:Type windows:ArduinoBoardManagerWindow}">
                                     <MenuItem.Header>Arduino Board Manager</MenuItem.Header>
                                     <MenuItem.Icon>
-                                        <Image Source="{DynamicResource NiosIcon}" />
+                                        <PathIcon Data="{StaticResource Icon.Nios}" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </MenuItem.Items>
@@ -94,16 +94,16 @@
 
                         <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 
-                            <TextBlock Foreground="White"
+                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}"
                                        Text="Col " />
 
-                            <TextBlock Foreground="White"
+                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}"
                                        Text="{Binding CurrentEditor.Editor.TextArea.Caret.Column, FallbackValue=0}" />
 
-                            <TextBlock Foreground="White" Margin="10 0 0 0"
+                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Margin="10 0 0 0"
                                        Text="Ln " />
 
-                            <TextBlock Foreground="White"
+                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}"
                                        Text="{Binding CurrentEditor.Editor.TextArea.Caret.Line, FallbackValue=0}" />
                         </StackPanel>
                     </StackPanel>
@@ -120,10 +120,9 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Panel Background="#01000000">
-                            <Border BoxShadow="0 6 8 0 #4F000000" Background="{DynamicResource ThemeBackgroundBrush}"
-                                    VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="8"
-                                    BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+                        <Panel Background="{DynamicResource ThemeControlTransparentBrush}">
+                            <Border Classes="overlay" Padding="0"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <Grid RowDefinitions="30, *">
                                     <StackPanel Margin="8 0" Orientation="Horizontal" HorizontalAlignment="Left"
                                                 VerticalAlignment="Center">
@@ -133,7 +132,7 @@
                                     </StackPanel>
                                     <Button Grid.Row="0" HorizontalAlignment="Right" Margin="3"
                                             Command="{Binding Close}">
-                                        <Image Height="12" Source="{DynamicResource MaterialDesign.Close}" />
+                                        <PathIcon Height="12" Data="{StaticResource Icon.Close}" Width="12" />
                                     </Button>
                                     <ContentControl
                                         MaxHeight="{Binding #DialogControlPanel.Bounds.Height, Converter={x:Static converters:SharedConverters.AddConverter}, ConverterParameter=-35}"

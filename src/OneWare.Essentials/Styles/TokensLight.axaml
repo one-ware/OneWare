@@ -1,0 +1,54 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Surfaces: ControlLow (white, editors/lists/inputs) > Background (panels) -->
+    <Color x:Key="ThemeBackgroundColor">#FFF7F8FA</Color>
+    <Color x:Key="ThemeBorderLowColor">#FFE1E3E8</Color>
+    <Color x:Key="ThemeBorderMidColor">#FFC5C9D0</Color>
+    <Color x:Key="ThemeBorderHighColor">#FF6C707E</Color>
+    <Color x:Key="ThemeControlLowColor">#FFFFFFFF</Color>
+    <Color x:Key="ThemeControlMidColor">#FFFFFFFF</Color>
+    <Color x:Key="ThemeControlMidHighColor">#FFEBECF0</Color>
+    <Color x:Key="ThemeControlHighColor">#FFA8ADBD</Color>
+    <Color x:Key="ThemeControlVeryHighColor">#FF6C707E</Color>
+    <Color x:Key="ThemeControlHighlightLowColor">#26000000</Color>
+    <Color x:Key="ThemeControlHighlightMidColor">#0F000000</Color>
+    <Color x:Key="ThemeControlHighlightHighColor">#1A000000</Color>
+    <Color x:Key="ThemeForegroundColor">#FF1F2329</Color>
+    <Color x:Key="ThemeForegroundLowColor">#FF5E6370</Color>
+    <Color x:Key="ThemeEditorColor">#FF111827</Color>
+    <Color x:Key="ThemeElevatedColor">#FFFFFFFF</Color>
+
+    <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
+    <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.85" />
+    <SolidColorBrush x:Key="ThemeBorderLowBrush" Color="{StaticResource ThemeBorderLowColor}" />
+    <SolidColorBrush x:Key="ThemeBorderMidBrush" Color="{StaticResource ThemeBorderMidColor}" />
+    <SolidColorBrush x:Key="ThemeBorderHighBrush" Color="{StaticResource ThemeBorderHighColor}" />
+    <SolidColorBrush x:Key="ThemeControlLowBrush" Color="{StaticResource ThemeControlLowColor}" />
+    <SolidColorBrush x:Key="ThemeControlMidBrush" Color="{StaticResource ThemeControlMidColor}" />
+    <SolidColorBrush x:Key="ThemeControlMidHighBrush" Color="{StaticResource ThemeControlMidHighColor}" />
+    <SolidColorBrush x:Key="ThemeControlHighBrush" Color="{StaticResource ThemeControlHighColor}" />
+    <SolidColorBrush x:Key="ThemeControlVeryHighBrush" Color="{StaticResource ThemeControlVeryHighColor}" />
+    <SolidColorBrush x:Key="ThemeControlHighlightLowBrush" Color="{StaticResource ThemeControlHighlightLowColor}" />
+    <SolidColorBrush x:Key="ThemeControlHighlightMidBrush" Color="{StaticResource ThemeControlHighlightMidColor}" />
+    <SolidColorBrush x:Key="ThemeControlHighlightHighBrush" Color="{StaticResource ThemeControlHighlightHighColor}" />
+    <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{StaticResource ThemeForegroundColor}" />
+    <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="{StaticResource ThemeForegroundLowColor}" />
+    <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
+    <SolidColorBrush x:Key="ThemeElevatedBrush" Color="{StaticResource ThemeElevatedColor}" />
+
+    <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="EditorInputFooterBrush" Color="#FFF8FAFC" />
+
+    <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
+    <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
+    <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
+
+    <SolidColorBrush x:Key="IconContrastColor" Color="#FF424040" />
+
+    <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.97" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.97" Color="#FFFFFFFF" />
+
+    <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{DynamicResource ThemeAccentColor}" Opacity="0.25" />
+
+</ResourceDictionary>

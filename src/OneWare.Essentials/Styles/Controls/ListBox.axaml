@@ -1,8 +1,8 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Design.PreviewWith>
-        <Border Padding="10" Background="Gray">
+        <Border Padding="10" Background="{DynamicResource ThemeBackgroundBrush}">
             <ListBox Height="400" Width="400">
                 <ListBoxItem Content="Test" IsSelected="True" />
                 <ListBoxItem Content="Test2" />
@@ -16,11 +16,21 @@
     </Style>
 
     <Style Selector="ListBoxItem">
-        <Setter Property="Padding" Value="4" />
+        <Setter Property="Padding" Value="6 4" />
+    </Style>
+
+    <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
+    </Style>
+
+    <!-- Transparent list (lists placed on panels / cards) -->
+    <Style Selector="ListBox.transparent">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style Selector="ListBoxItem:disabled">
-        <Setter Property="Opacity" Value="0.5" />
+        <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
     </Style>
 
     <Style Selector="ListBox.InvisibleSelection ListBoxItem:selected > ContentPresenter">

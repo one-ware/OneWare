@@ -1,0 +1,126 @@
+<!--
+    OneWare design tokens.
+    Color keys intentionally follow the Avalonia SimpleTheme accent names
+    (https://github.com/AvaloniaUI/Avalonia/blob/main/src/Avalonia.Themes.Simple/Accents/Base.xaml)
+    so that SimpleTheme control templates pick them up automatically.
+    Additional keys (radius, spacing, status colors) are only added where SimpleTheme has no equivalent.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="using:System">
+
+    <x:Boolean x:Key="True">True</x:Boolean>
+    <x:Boolean x:Key="False">False</x:Boolean>
+
+    <!-- Accent -->
+    <Color x:Key="ThemeAccentColor">#FF3574F0</Color>
+    <Color x:Key="HighlightColor">#FF3574F0</Color>
+    <Color x:Key="HighlightForegroundColor">#FFFFFFFF</Color>
+    <SolidColorBrush x:Key="HighlightForegroundBrush" Color="{StaticResource HighlightForegroundColor}" />
+    <SolidColorBrush x:Key="ThemeAccentBrush" Color="{DynamicResource ThemeAccentColor}" />
+    <SolidColorBrush x:Key="ThemeAccentBrush2" Color="{DynamicResource ThemeAccentColor}" Opacity="0.6" />
+    <SolidColorBrush x:Key="ThemeAccentBrush3" Color="{DynamicResource ThemeAccentColor}" Opacity="0.4" />
+    <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{DynamicResource ThemeAccentColor}" Opacity="0.2" />
+    <SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource ThemeAccentColor}" />
+    <SolidColorBrush x:Key="ThemeAccentLowBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.14" />
+
+    <!-- Status -->
+    <Color x:Key="ErrorColor">#FFE5534B</Color>
+    <Color x:Key="ErrorLowColor">#1FE5534B</Color>
+    <Color x:Key="WarningColor">#FFE0A526</Color>
+    <Color x:Key="WarningLowColor">#1FE0A526</Color>
+    <Color x:Key="SuccessColor">#FF57AD68</Color>
+    <Color x:Key="SuccessLowColor">#1F57AD68</Color>
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}" />
+    <SolidColorBrush x:Key="ErrorLowBrush" Color="{StaticResource ErrorLowColor}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+    <SolidColorBrush x:Key="WarningLowBrush" Color="{StaticResource WarningLowColor}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+    <SolidColorBrush x:Key="SuccessLowBrush" Color="{StaticResource SuccessLowColor}" />
+    <SolidColorBrush x:Key="InfoBrush" Color="{DynamicResource ThemeAccentColor}" />
+    <SolidColorBrush x:Key="InfoLowBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.14" />
+
+    <!-- Legacy aliases, kept for plugin compatibility -->
+    <SolidColorBrush x:Key="GreenAccent" Color="{StaticResource SuccessColor}" />
+    <SolidColorBrush x:Key="DebuggerBreakLine" Opacity="0.3" Color="#c23f2f" />
+    <SolidColorBrush x:Key="ThemeControlTransparentBrush" Color="Transparent" />
+
+    <SolidColorBrush x:Key="NotificationCardSuccessBackgroundBrush" Opacity="0.95" Color="#FF2E8B47" />
+    <SolidColorBrush x:Key="NotificationCardWarningBackgroundBrush" Opacity="0.95" Color="#FFC98A10" />
+    <SolidColorBrush x:Key="NotificationCardErrorBackgroundBrush" Opacity="0.95" Color="#FFC93C37" />
+    <SolidColorBrush x:Key="DatePickerFlyoutPresenterHighlightFill" Opacity="0.4" Color="{DynamicResource ThemeAccentColor}" />
+    <SolidColorBrush x:Key="TimePickerFlyoutPresenterHighlightFill" Opacity="0.4" Color="{DynamicResource ThemeAccentColor}" />
+
+    <!-- Shape -->
+    <Thickness x:Key="ThemeBorderThickness">1</Thickness>
+    <sys:Double x:Key="ThemeDisabledOpacity">0.5</sys:Double>
+    <CornerRadius x:Key="ThemeCornerRadiusSmall">3</CornerRadius>
+    <CornerRadius x:Key="ThemeCornerRadius">4</CornerRadius>
+    <CornerRadius x:Key="ThemeCornerRadiusLarge">6</CornerRadius>
+    <CornerRadius x:Key="ThemeCornerRadiusPill">999</CornerRadius>
+
+    <!-- Sizing -->
+    <sys:Double x:Key="ThemeControlHeight">24</sys:Double>
+    <sys:Double x:Key="ThemeControlHeightSmall">20</sys:Double>
+    <sys:Double x:Key="ThemeControlHeightLarge">30</sys:Double>
+
+    <!-- Spacing (StackPanel.Spacing etc.) -->
+    <sys:Double x:Key="ThemeSpacingXSmall">2</sys:Double>
+    <sys:Double x:Key="ThemeSpacingSmall">4</sys:Double>
+    <sys:Double x:Key="ThemeSpacing">8</sys:Double>
+    <sys:Double x:Key="ThemeSpacingLarge">12</sys:Double>
+    <sys:Double x:Key="ThemeSpacingXLarge">16</sys:Double>
+
+    <!-- Padding -->
+    <Thickness x:Key="ThemePaddingSmall">4</Thickness>
+    <Thickness x:Key="ThemePadding">8</Thickness>
+    <Thickness x:Key="ThemePaddingLarge">12</Thickness>
+    <Thickness x:Key="ThemePaddingXLarge">16</Thickness>
+    <Thickness x:Key="ThemeControlPadding">8 2</Thickness>
+
+    <!-- Typography -->
+    <sys:Double x:Key="FontSizeSmall">11</sys:Double>
+    <sys:Double x:Key="FontSizeNormal">12</sys:Double>
+    <sys:Double x:Key="FontSizeMedium">13</sys:Double>
+    <sys:Double x:Key="FontSizeLarge">16</sys:Double>
+    <sys:Double x:Key="FontSizeXLarge">20</sys:Double>
+    <sys:Double x:Key="FontSizeXXLarge">26</sys:Double>
+
+    <sys:Double x:Key="ScrollBarThickness">12</sys:Double>
+    <sys:Double x:Key="ScrollBarThumbThickness">8</sys:Double>
+    <sys:Double x:Key="IconElementThemeHeight">20</sys:Double>
+    <sys:Double x:Key="IconElementThemeWidth">20</sys:Double>
+
+    <!-- Icon sizes (PathIcon, see Styles/Icons.axaml) -->
+    <sys:Double x:Key="ThemeIconSize">16</sys:Double>
+    <sys:Double x:Key="ThemeIconSizeSmall">12</sys:Double>
+    <sys:Double x:Key="ThemeIconSizeLarge">20</sys:Double>
+    <sys:Double x:Key="TextControlPlaceholderOpacity">0.5</sys:Double>
+
+    <SolidColorBrush x:Key="SelectionBrush">#603574F0</SolidColorBrush>
+    <SolidColorBrush x:Key="SearchResultBrush">#30808080</SolidColorBrush>
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- Dark (also used as Default) -->
+        <ResourceDictionary x:Key="Default">
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://OneWare.Essentials/Styles/TokensDark.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://OneWare.Essentials/Styles/TokensDark.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://OneWare.Essentials/Styles/TokensLight.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

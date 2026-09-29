@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -20,13 +20,12 @@
                                  HorizontalAlignment="Stretch"
                                  IsReadOnly="True"
                                  Foreground="{DynamicResource ThemeForegroundBrush}"
-                                 FontWeight="Regular"
                                  Document="{Binding OutputDocument}"
                                  FontFamily="{DynamicResource EditorFont}"
                                  FontSize="{DynamicResource EditorFontSize}"
                                  Padding="5" />
 
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2">
+        <Border Grid.Row="1" Classes="footer" Padding="2">
 
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
@@ -46,7 +45,7 @@
                 <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
                     <Button Command="{Binding SendText}"
                             CommandParameter="{Binding #CommandBox.Text}">
-                        <Image Source="{DynamicResource BoxIcons.SolidSend}" />
+                        <PathIcon Data="{StaticResource Icon.Send}" />
                     </Button>
                     <Separator />
                     <TextBlock Name="BaudLable" Text="Baud Rate:" />
@@ -61,7 +60,7 @@
                     <Button IsEnabled="{Binding AllowConnecting}"
                             Command="{Binding RefreshSerialPorts}"
                             ToolTip.Tip="Refresh serial ports">
-                        <Image Source="{DynamicResource Modern.Refresh}" Width="15" />
+                        <PathIcon Data="{StaticResource Icon.Refresh}" Width="15" Height="15" />
                     </Button>
                     <Button Command="{Binding Disconnect}"
                             IsEnabled="{Binding IsConnected}" ToolTip.Tip="Disconnect">
@@ -75,7 +74,7 @@
                         <Menu.Items>
                             <MenuItem Width="24" Height="24">
                                 <MenuItem.Header>
-                                    <Image Source="{DynamicResource BoxIcons.RegularMenu}" Width="14" />
+                                    <PathIcon Data="{StaticResource Icon.Menu}" Width="14" Height="14" />
                                 </MenuItem.Header>
                             </MenuItem>
                         </Menu.Items>

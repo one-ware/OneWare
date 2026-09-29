@@ -1,4 +1,4 @@
-﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -34,16 +34,14 @@
 
     <Panel>
         <!-- ── Setup overlay: shown when toolchain or top entity is not configured ── -->
-        <Border IsVisible="{Binding IsSetupRequired}"
-                Background="{DynamicResource ThemeControlLowBrush}"
+        <Border IsVisible="{Binding IsSetupRequired}" Classes="card"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                Padding="32" CornerRadius="8" MinWidth="360"
-                BoxShadow="0 4 24 0 #44000000">
+                Padding="32" MinWidth="360">
             <StackPanel Spacing="16">
-                <TextBlock Text="Configure Project" FontSize="18" FontWeight="Bold"
+                <TextBlock Classes="h2" Text="Configure Project"
                            HorizontalAlignment="Center" />
                 <TextBlock Text="Please configure the required settings before opening the Constraint Editor."
-                           TextWrapping="Wrap" Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" />
+                           Classes="muted" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
 
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSetupLoading}"
                              HorizontalAlignment="Stretch" Height="4" />
@@ -51,7 +49,7 @@
                 <!-- Toolchain selector (only when not set) -->
                 <StackPanel Spacing="4"
                             IsVisible="{Binding Toolchain, Converter={x:Static ObjectConverters.IsNull}}">
-                    <TextBlock Text="Toolchain:" FontWeight="SemiBold" />
+                    <TextBlock Text="Toolchain:" Classes="semibold" />
                     <ComboBox ItemsSource="{Binding SetupAvailableToolchains}"
                               SelectedItem="{Binding SetupSelectedToolchain, Mode=TwoWay}"
                               HorizontalAlignment="Stretch" />
@@ -60,7 +58,7 @@
                 <!-- Top Entity selector (only when not set) -->
                 <StackPanel Spacing="4"
                             IsVisible="{Binding TopEntity, Converter={x:Static ObjectConverters.IsNull}}">
-                    <TextBlock Text="Top Entity:" FontWeight="SemiBold" />
+                    <TextBlock Text="Top Entity:" Classes="semibold" />
                     <ComboBox ItemsSource="{Binding SetupAvailableTopEntities}"
                               SelectedItem="{Binding SetupSelectedTopEntity, Mode=TwoWay}"
                               HorizontalAlignment="Stretch"
@@ -102,13 +100,14 @@
                             <Button Command="{Binding RefreshFpgasButtonAsync}"
                                     CommandParameter="{Binding #UniversalFpgaProjectCompileViewView}"
                                     ToolTip.Tip="Reload FPGAs">
-                                <Image Source="{DynamicResource Modern.Refresh}" Height="16" Width="16" />
+                                <PathIcon Data="{StaticResource Icon.Refresh}" Height="16" Width="16" />
                             </Button>
 
                             <Button Command="{Binding #ZoomBorder.AutoFit}"
                                     IsEnabled="{Binding SelectedFpgaViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     ToolTip.Tip="Reset View">
-                                <Image Source="{DynamicResource FluentIconsFilled.FullScreenZoomFilled}" Height="16"
+                                <PathIcon Data="{StaticResource Icon.FullScreen}"
+                                       Height="16"
                                        Width="16" />
                             </Button>
 
@@ -162,10 +161,9 @@
                             <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
                                     BorderThickness="1">
                                 <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
-                                    <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
-                                                        Background="{DynamicResource ThemeBackgroundBrush}"
+                                    <controls:SearchBox DockPanel.Dock="Top" Margin="4"
                                                         SearchText="{Binding SearchTextPins}"
-                                                        VerticalContentAlignment="Center" SearchButtonVisible="False">
+                                                        SearchButtonVisible="False">
                                         <Interaction.Behaviors>
                                             <behaviors:DataGridNavigationBehavior
                                                 AssociatedDataGrid="{Binding #VisiblePinDataGrid}" />
@@ -193,10 +191,11 @@
                                                                     IsVisible="{Binding ConnectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                                     Height="20" Width="20"
                                                                     ToolTip.Tip="Disconnect">
-                                                                <Image Source="{DynamicResource MaterialDesign.Close}"
+                                                                <PathIcon Data="{StaticResource Icon.Close}"
                                                                        Height="10"
                                                                        HorizontalAlignment="Center"
-                                                                       VerticalAlignment="Center" />
+                                                                       VerticalAlignment="Center"
+                                                                       Width="10" />
                                                             </Button>
                                                             <TextBlock DockPanel.Dock="Left"
                                                                        VerticalAlignment="Center"
@@ -231,9 +230,8 @@
                             <Border Grid.Column="2" Grid.Row="1" Background="{DynamicResource ThemeControlLowBrush}"
                                     BorderThickness="1">
                                 <DockPanel Background="{DynamicResource ThemeControlLowBrush}">
-                                    <controls:SearchBox DockPanel.Dock="Top" VerticalAlignment="Center"
-                                                        Background="{DynamicResource ThemeBackgroundBrush}"
-                                                        VerticalContentAlignment="Center" SearchButtonVisible="False"
+                                    <controls:SearchBox DockPanel.Dock="Top" Margin="4"
+                                                        SearchButtonVisible="False"
                                                         SearchText="{Binding SearchTextNodes}">
                                         <Interaction.Behaviors>
                                             <behaviors:DataGridNavigationBehavior
@@ -263,10 +261,11 @@
                                                                     IsVisible="{Binding ConnectedPin, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                                     Height="20" Width="20"
                                                                     ToolTip.Tip="Disconnect">
-                                                                <Image Source="{DynamicResource MaterialDesign.Close}"
+                                                                <PathIcon Data="{StaticResource Icon.Close}"
                                                                        Height="10"
                                                                        HorizontalAlignment="Center"
-                                                                       VerticalAlignment="Center" />
+                                                                       VerticalAlignment="Center"
+                                                                       Width="10" />
                                                             </Button>
                                                             <TextBlock DockPanel.Dock="Left"
                                                                        VerticalAlignment="Center"

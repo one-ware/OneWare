@@ -1,0 +1,219 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="8" Width="320">
+            <Border Classes="card"><TextBlock Text="card" /></Border>
+            <Border Classes="panel"><TextBlock Text="panel" /></Border>
+            <Border Classes="inset"><TextBlock Text="inset" /></Border>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Classes="badge"><TextBlock Text="badge" /></Border>
+                <Border Classes="badge accent"><TextBlock Text="accent" /></Border>
+                <Border Classes="badge success"><TextBlock Text="success" /></Border>
+                <Border Classes="badge warning"><TextBlock Text="warning" /></Border>
+                <Border Classes="badge error"><TextBlock Text="error" /></Border>
+            </StackPanel>
+            <Border Classes="divider" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!--
+        Surface vocabulary:
+          card        raised, bordered, rounded content block
+          panel       flat bordered section on the panel background
+          inset       recessed area (lists, editors, previews)
+          header      top bar of a panel/page (bottom divider)
+          footer      bottom bar of a panel/page (top divider)
+          divider     1px horizontal line (add .vertical for a vertical line)
+          badge       small pill label (+ accent / success / warning / error)
+          overlay     floating popup/flyout surface
+          empty-state centered placeholder area
+          interactive add hover highlight (e.g. to clickable cards)
+          selected    accent selection state (e.g. selected cards)
+    -->
+
+    <Style Selector="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+
+    <Style Selector="Border.RoundBorder">
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+    </Style>
+
+    <Style Selector="Border.ValidBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+
+    <Style Selector="Border.InvalidBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+
+    <!-- Card -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemePaddingLarge}" />
+    </Style>
+
+    <Style Selector="Border.card.compact">
+        <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+    </Style>
+
+    <!-- Panel -->
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+    </Style>
+
+    <!-- Inset -->
+    <Style Selector="Border.inset">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+    </Style>
+
+    <!-- Header / footer bars -->
+    <Style Selector="Border.header">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="0 0 0 1" />
+        <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+    </Style>
+
+    <Style Selector="Border.footer">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="0 1 0 0" />
+        <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+    </Style>
+
+    <!-- Divider -->
+    <Style Selector="Border.divider">
+        <Setter Property="Background" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Height" Value="1" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector="Border.divider.vertical">
+        <Setter Property="Height" Value="NaN" />
+        <Setter Property="Width" Value="1" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- Overlay (popups / flyouts / floating toolbars) -->
+    <Style Selector="Border.overlay">
+        <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+        <Setter Property="BoxShadow" Value="0 4 16 0 #40000000" />
+    </Style>
+
+    <!-- Interactive / selected modifiers -->
+    <Style Selector="Border.interactive">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Border.interactive:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+    </Style>
+
+    <Style Selector="Border.selected, Border.interactive.selected:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+    <!-- Badge -->
+    <Style Selector="Border.badge">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
+        <Setter Property="Padding" Value="8 1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector="Border.badge > TextBlock, Border.badge > StackPanel > TextBlock">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Border.badge.accent">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush3}" />
+    </Style>
+    <Style Selector="Border.badge.accent > TextBlock, Border.badge.accent > StackPanel > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+    <Style Selector="Border.badge.success">
+        <Setter Property="Background" Value="{DynamicResource SuccessLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="Border.badge.success > TextBlock, Border.badge.success > StackPanel > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+
+    <Style Selector="Border.badge.warning">
+        <Setter Property="Background" Value="{DynamicResource WarningLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}" />
+    </Style>
+    <Style Selector="Border.badge.warning > TextBlock, Border.badge.warning > StackPanel > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+    </Style>
+
+    <Style Selector="Border.badge.error">
+        <Setter Property="Background" Value="{DynamicResource ErrorLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+    <Style Selector="Border.badge.error > TextBlock, Border.badge.error > StackPanel > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+
+    <!-- Callouts (inline info / warning / error boxes) -->
+    <Style Selector="Border.callout">
+        <Setter Property="Background" Value="{DynamicResource InfoLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush3}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+    </Style>
+    <Style Selector="Border.callout.success">
+        <Setter Property="Background" Value="{DynamicResource SuccessLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="Border.callout.warning">
+        <Setter Property="Background" Value="{DynamicResource WarningLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}" />
+    </Style>
+    <Style Selector="Border.callout.error">
+        <Setter Property="Background" Value="{DynamicResource ErrorLowBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+
+    <!-- Empty state -->
+    <Style Selector="Border.empty-state">
+        <Setter Property="Padding" Value="{DynamicResource ThemePaddingXLarge}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.empty-state TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+</Styles>

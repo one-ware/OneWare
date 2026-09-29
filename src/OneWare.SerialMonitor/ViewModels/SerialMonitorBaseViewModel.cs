@@ -2,6 +2,7 @@
 using System.IO.Ports;
 using System.Text;
 using System.Text.RegularExpressions;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using DynamicData;
@@ -125,12 +126,12 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
             try
             {
                 _currentPort.Open();
-                WriteLine("Successfully opened connection on " + value, Brushes.Green);
+                WriteLine("Successfully opened connection on " + value, GetThemeBrush("SuccessBrush"));
                 IsConnected = true;
             }
             catch (Exception e)
             {
-                WriteLine("Could not open serial connection: " + e.Message, Brushes.Red);
+                WriteLine("Could not open serial connection: " + e.Message, GetThemeBrush("ErrorBrush"));
                 IsConnected = false;
             }
         }
@@ -144,8 +145,10 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
         SerialPorts.AddRange(SerialPort.GetPortNames());
         SelectedSerialPort = selectedPort;
 
-        if (SerialPorts.Count == 1) WriteLine("Found " + SerialPorts.Count + " usable port!", Brushes.Gray);
-        else WriteLine("Found " + SerialPorts.Count + " usable ports!", Brushes.Gray);
+        if (SerialPorts.Count == 1)
+            WriteLine("Found " + SerialPorts.Count + " usable port!", GetThemeBrush("ThemeForegroundLowBrush"));
+        else
+            WriteLine("Found " + SerialPorts.Count + " usable ports!", GetThemeBrush("ThemeForegroundLowBrush"));
     }
 
     public new void Clear()
@@ -169,7 +172,7 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
     {
         if (_currentPort == null)
         {
-            WriteLine("[Error] No serial port selected!", Brushes.Red);
+            WriteLine("[Error] No serial port selected!", GetThemeBrush("ErrorBrush"));
         }
         else
         {
@@ -180,7 +183,7 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
                 }
                 catch (Exception e)
                 {
-                    WriteLine("[Error] Can't open connection: " + e.Message, Brushes.Red);
+                    WriteLine("[Error] Can't open connection: " + e.Message, GetThemeBrush("ErrorBrush"));
                     return;
                 }
 
@@ -203,7 +206,7 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
             }
             catch (Exception e)
             {
-                WriteLine("Sending failed: " + e.Message, Brushes.Red);
+                WriteLine("Sending failed: " + e.Message, GetThemeBrush("ErrorBrush"));
             }
 
             if (_lastCommands.Count == 0 || _lastCommands[0] != text) _lastCommands.Insert(0, text);
@@ -213,6 +216,12 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
             //Clear commandbox    
             CommandBoxText = string.Empty;
         }
+    }
+
+    private static IBrush? GetThemeBrush(string key)
+    {
+        var app = Avalonia.Application.Current;
+        return app?.FindResource(app.RequestedThemeVariant, key) as IBrush;
     }
 
     public void TextReceived(object? sender, SerialDataReceivedEventArgs e)
@@ -258,7 +267,7 @@ public abstract class SerialMonitorBaseViewModel : OutputBaseViewModel
         }
         catch (Exception e)
         {
-            WriteLine(e.Message, Brushes.Red);
+            WriteLine(e.Message, GetThemeBrush("ErrorBrush"));
         }
     }
 

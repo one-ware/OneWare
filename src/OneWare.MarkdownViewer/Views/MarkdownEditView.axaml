@@ -32,27 +32,24 @@
         <Border Grid.Column="0" Grid.ColumnSpan="3"
                 HorizontalAlignment="Right" VerticalAlignment="Top"
                 Margin="0,8,30,0"
-                Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                BorderThickness="1" CornerRadius="3"
-                Padding="2" BoxShadow="0 1 4 0 #20000000">
+                Classes="overlay" Padding="2">
             <StackPanel Orientation="Horizontal" Spacing="2">
-                <ToggleButton IsChecked="{Binding ShowEditor, Mode=TwoWay}"
+                <ToggleButton Classes="icon" IsChecked="{Binding ShowEditor, Mode=TwoWay}"
                               ToolTip.Tip="Toggle editor"
                               Padding="4" Width="20" Height="20">
-                    <Image Width="12" Height="12"
-                           Source="{DynamicResource Cool.Edit}" />
+                    <PathIcon Width="12"
+                           Height="12"
+                           Data="{StaticResource Icon.Edit}" />
                 </ToggleButton>
-                <ToggleButton IsChecked="{Binding ShowPreview, Mode=TwoWay}"
+                <ToggleButton Classes="icon" IsChecked="{Binding ShowPreview, Mode=TwoWay}"
                               ToolTip.Tip="Toggle preview"
                               Padding="4" Width="20" Height="20">
-                    <Image Width="12" Height="12"
-                           Source="{DynamicResource FontAwesome.EyeSolid}" />
+                    <PathIcon Width="12"
+                           Height="12"
+                           Data="{StaticResource Icon.Eye}" />
                 </ToggleButton>
             </StackPanel>
         </Border>
     </Grid>
 </UserControl>
-
-
 

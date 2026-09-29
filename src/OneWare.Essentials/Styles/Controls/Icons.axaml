@@ -1,0 +1,56 @@
+<!--
+    PathIcon theme.
+    Replaces the SimpleTheme PathIcon theme so icons inherit Foreground from their container
+    (buttons, menu items, selected list items, ...) instead of always using ThemeForegroundColor.
+
+    Classes:
+        small / large            12px / 20px (default 16px)
+        muted                    ThemeForegroundLowBrush
+        accent / success / warning / error
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type PathIcon}" TargetType="PathIcon">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="{DynamicResource ThemeIconSize}" />
+            <Setter Property="Height" Value="{DynamicResource ThemeIconSize}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}">
+                        <Path Data="{TemplateBinding Data}"
+                              Fill="{TemplateBinding Foreground}"
+                              Stretch="Uniform" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <Style Selector="PathIcon.small">
+        <Setter Property="Width" Value="{DynamicResource ThemeIconSizeSmall}" />
+        <Setter Property="Height" Value="{DynamicResource ThemeIconSizeSmall}" />
+    </Style>
+    <Style Selector="PathIcon.large">
+        <Setter Property="Width" Value="{DynamicResource ThemeIconSizeLarge}" />
+        <Setter Property="Height" Value="{DynamicResource ThemeIconSizeLarge}" />
+    </Style>
+
+    <Style Selector="PathIcon.muted">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+    </Style>
+    <Style Selector="PathIcon.accent">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+    <Style Selector="PathIcon.success">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="PathIcon.warning">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+    </Style>
+    <Style Selector="PathIcon.error">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+
+</Styles>

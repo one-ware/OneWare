@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,9 +16,11 @@
         <StackPanel Spacing="3" Orientation="Horizontal">
             <TextBlock Text="{Binding Setting.Title}"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                <PathIcon Data="{StaticResource Icon.Help}"
+                       Height="14"
+                       Width="14"
                        VerticalAlignment="Center" />
                 <Button.Flyout>
                     <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
@@ -28,26 +30,25 @@
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border Background="{DynamicResource ThemeControlMidBrush}" BorderThickness="1">
+        <Border Classes="inset">
             <Grid RowDefinitions="20, *">
                 <StackPanel Classes="ToolBar">
                     <Button Command="{Binding AddNewAsync}" CommandParameter="{Binding $self}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}">
-                        <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="12" />
+                        <PathIcon Data="{StaticResource Icon.Add}" Height="12" Width="12" />
                     </Button>
                     <Button Command="{Binding RemoveSelected}" CommandParameter="{Binding $self}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}">
-                        <Image Source="{DynamicResource MaterialDesign.Close}" Height="12" />
+                        <PathIcon Data="{StaticResource Icon.Close}" Height="12" Width="12" />
                     </Button>
                     <Button Command="{Binding EditSelectedAsync}" CommandParameter="{Binding $self}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}">
-                        <Image Source="{DynamicResource Cool.Edit}" Height="12" />
+                        <PathIcon Data="{StaticResource Icon.Edit}" Height="12" Width="12" />
                     </Button>
                 </StackPanel>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Setting.Items}" Height="100"
                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                          SelectedIndex="{Binding SelectedIndex}"
-                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                          BorderThickness="0 1 0 0" />
             </Grid>
         </Border>

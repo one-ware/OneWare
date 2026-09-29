@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -22,9 +22,8 @@
                                                Value="{Binding FileIcon}" Height="16" Width="16" />
                 <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding Name}"
                            TextTrimming="CharacterEllipsis" />
-                <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0" FontSize="11"
-                           Text="{Binding RelativeDirectory}" TextTrimming="CharacterEllipsis"
-                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0" Classes="caption"
+                           Text="{Binding RelativeDirectory}" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </DataTemplate>
     </UserControl.Resources>
@@ -56,7 +55,6 @@
             <Setter Property="Width" Value="20" />
             <Setter Property="Height" Value="20" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="CornerRadius" Value="3" />
         </Style>
 
         <Style Selector="Expander.Section">
@@ -81,41 +79,39 @@
         </Style>
 
         <Style Selector="Border.CountBadge">
-            <Setter Property="Background" Value="{DynamicResource ThemeControlHighBrush}" />
-            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="MinWidth" Value="18" />
             <Setter Property="Height" Value="16" />
-            <Setter Property="Padding" Value="5, 0" />
             <Setter Property="Margin" Value="6, 0, 2, 0" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
     <Grid RowDefinitions="30, *, Auto">
-        <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                BorderThickness="0 0 0 1">
+        <Border Classes="header" Padding="0">
             <DockPanel LastChildFill="False">
                 <Menu DockPanel.Dock="Right" Height="26" Width="26" Name="OptionsButton">
                     <MenuItem>
                         <MenuItem.Header>
-                            <Image VerticalAlignment="Center" Height="10" Width="10"
-                                   Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" />
+                            <PathIcon VerticalAlignment="Center"
+                                   Height="10"
+                                   Width="10"
+                                   Data="{StaticResource Icon.MoreVertical}" />
                         </MenuItem.Header>
                         <MenuItem Header="Account">
                             <MenuItem Header="Login to Github" Command="{Binding LoginGithubAsync}">
                                 <MenuItem.Icon>
-                                    <Image Source="{DynamicResource Bootstrap.Github}" />
+                                    <PathIcon Data="{StaticResource Icon.GitHub}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                         </MenuItem>
                         <MenuItem Header="Clone" Command="{Binding CloneDialogAsyncCommand}">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource FontAwesome.DownloadSolid}" />
+                                <PathIcon Data="{StaticResource Icon.Download}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
                         <MenuItem Header="Sync">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                                <PathIcon Data="{StaticResource Icon.RefreshSmall}" />
                             </MenuItem.Icon>
                             <MenuItem Header="Sync" Command="{Binding SyncAsyncCommand}"
                                       ToolTip.Tip="Pulls and Pushes changes" />
@@ -125,7 +121,7 @@
                         </MenuItem>
                         <MenuItem Header="Commit">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource BoxIcons.RegularGitCommit}" />
+                                <PathIcon Data="{StaticResource Icon.GitCommit}" />
                             </MenuItem.Icon>
                             <MenuItem Header="Commit Staged" Command="{Binding CommitAsyncCommand}"
                                       CommandParameter="{x:True}"
@@ -136,7 +132,7 @@
                         </MenuItem>
                         <MenuItem Header="Branches">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource BoxIcons.RegularGitBranch}" />
+                                <PathIcon Data="{StaticResource Icon.GitBranch}" />
                             </MenuItem.Icon>
                             <MenuItem Header="Create Branch..." Command="{Binding CreateBranchDialogAsyncCommand}" />
                             <MenuItem Header="Merge Branch..." Command="{Binding MergeBranchDialogAsyncCommand}" />
@@ -144,12 +140,12 @@
                         </MenuItem>
                         <MenuItem Header="Changes">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource BoxIcons.RegularGitCompare}" />
+                                <PathIcon Data="{StaticResource Icon.GitCompare}" />
                             </MenuItem.Icon>
                             <MenuItem Header="Undo All Changes" Command="{Binding DiscardAllAsyncCommand}"
                                       CommandParameter="{x:Static libgit:ResetMode.Hard}">
                                 <MenuItem.Icon>
-                                    <Image Source="{DynamicResource VsImageLib.Undo16X}" />
+                                    <PathIcon Data="{StaticResource Icon.Undo}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <MenuItem Header="Stage All" Command="{Binding StageAllCommand}" />
@@ -157,7 +153,7 @@
                         </MenuItem>
                         <MenuItem Header="Remotes">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource Material.Web}" />
+                                <PathIcon Data="{StaticResource Icon.Web}" />
                             </MenuItem.Icon>
                             <MenuItem Header="Add Remote..." Command="{Binding AddRemoteDialogAsyncCommand}" />
                             <MenuItem Header="Delete Remote..." Command="{Binding DeleteRemoteDialogAsyncCommand}" />
@@ -166,13 +162,13 @@
                         <MenuItem Header="Set Author Identity..." Command="{Binding SetUserIdentityAsyncCommand}"
                                   CommandParameter="{x:False}">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource MaterialDesign.PermIdentity}" />
+                                <PathIcon Data="{StaticResource Icon.Identity}" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
                 </Menu>
                 <Button DockPanel.Dock="Right" Height="26" Width="26" Command="{Binding RefreshAsyncCommand}">
-                    <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Width="15" ToolTip.Tip="Refresh" />
+                    <PathIcon Data="{StaticResource Icon.RefreshSmall}" Width="15" ToolTip.Tip="Refresh" Height="15" />
                 </Button>
 
                 <Menu IsEnabled="{Binding !IsLoading}"
@@ -183,8 +179,11 @@
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock VerticalAlignment="Center" Height="20" Margin="1, 4, 3, 2"
                                            Text="{Binding ActiveRepository.HeadBranch.FriendlyName}" />
-                                <Image VerticalAlignment="Center" Height="13" Margin="3"
-                                       Source="{DynamicResource BoxIcons.RegularGitBranch}" />
+                                <PathIcon VerticalAlignment="Center"
+                                       Height="13"
+                                       Margin="3"
+                                       Data="{StaticResource Icon.GitBranch}"
+                                       Width="13" />
                             </StackPanel>
                         </MenuItem.Header>
                     </MenuItem>
@@ -204,9 +203,12 @@
                     Command="{Binding InitializeRepositoryCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
-                                   Source="{DynamicResource BoxIcons.RegularGitRepoForked}"
-                                   IsVisible="{Binding !InitializeRepositoryCommand.IsRunning}" />
+                            <PathIcon Margin="0, 0, 10, 0"
+                                   Height="15"
+                                   VerticalAlignment="Center"
+                                   Data="{StaticResource Icon.GitFork}"
+                                   IsVisible="{Binding !InitializeRepositoryCommand.IsRunning}"
+                                   Width="15" />
                             <controls:Spinner Width="14" Height="14" VerticalAlignment="Center"
                                               IsVisible="{Binding InitializeRepositoryCommand.IsRunning}" />
                             <TextBlock VerticalAlignment="Center" Text="Initialize Repository"
@@ -225,8 +227,11 @@
                         Command="{Binding CloneDialogAsyncCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Margin="0, 0, 10, 0" Height="15" VerticalAlignment="Center"
-                                   Source="{DynamicResource FontAwesome.DownloadSolid}" />
+                            <PathIcon Margin="0, 0, 10, 0"
+                                   Height="15"
+                                   VerticalAlignment="Center"
+                                   Data="{StaticResource Icon.Download}"
+                                   Width="15" />
                             <TextBlock Text="Clone existing Repository" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button.Content>
@@ -245,8 +250,8 @@
                 <Expander.Header>
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Merge Changes" />
-                        <Border DockPanel.Dock="Right" Classes="CountBadge">
-                            <TextBlock FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        <Border DockPanel.Dock="Right" Classes="badge CountBadge">
+                            <TextBlock Classes="caption" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Text="{Binding ActiveRepository.MergeChanges.Count}" />
                         </Border>
                     </DockPanel>
@@ -265,11 +270,11 @@
                                     <Button Classes="RowAction" ToolTip.Tip="Accept Changes / Stage"
                                             Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).StageCommand, FallbackValue={x:Null}}"
                                             CommandParameter="{Binding Status.FilePath}">
-                                        <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                                        <PathIcon Data="{StaticResource Icon.Accept}" Width="13" Height="13" />
                                     </Button>
                                 </StackPanel>
                                 <TextBlock Grid.Column="2" Width="12" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" FontWeight="Bold"
+                                           VerticalAlignment="Center" Classes="bold"
                                            ToolTip.Tip="{Binding Status.State, Converter={x:Static converters:SharedConverters.EnumToStringConverter}}"
                                            Text="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusCharConverter}}"
                                            Foreground="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusBrushConverter}}" />
@@ -286,7 +291,7 @@
                                                   Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).StageCommand, FallbackValue={x:Null}}"
                                                   CommandParameter="{Binding Status.FilePath}">
                                             <MenuItem.Icon>
-                                                <Image Source="{DynamicResource PicolIcons.Accept}" />
+                                                <PathIcon Data="{StaticResource Icon.Accept}" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <Separator />
@@ -319,15 +324,15 @@
                 <Expander.Header>
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Staged Changes" />
-                        <Border DockPanel.Dock="Right" Classes="CountBadge">
-                            <TextBlock FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        <Border DockPanel.Dock="Right" Classes="badge CountBadge">
+                            <TextBlock Classes="caption" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Text="{Binding ActiveRepository.StagedChanges.Count}" />
                         </Border>
                         <StackPanel DockPanel.Dock="Right" Classes="SectionActions" Orientation="Horizontal"
                                     Spacing="1" VerticalAlignment="Center">
                             <Button Classes="RowAction" ToolTip.Tip="Unstage All Changes"
                                     Command="{Binding UnStageAllCommand}">
-                                <Image Source="{DynamicResource BoxIcons.RegularMinus}" Width="13" Height="13" />
+                                <PathIcon Data="{StaticResource Icon.Remove}" Width="13" Height="13" />
                             </Button>
                         </StackPanel>
                     </DockPanel>
@@ -351,11 +356,11 @@
                                     <Button Classes="RowAction" ToolTip.Tip="Unstage Changes"
                                             Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).UnStageCommand, FallbackValue={x:Null}}"
                                             CommandParameter="{Binding Status.FilePath}">
-                                        <Image Source="{DynamicResource BoxIcons.RegularMinus}" Width="13" Height="13" />
+                                        <PathIcon Data="{StaticResource Icon.Remove}" Width="13" Height="13" />
                                     </Button>
                                 </StackPanel>
                                 <TextBlock Grid.Column="2" Width="12" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" FontWeight="Bold"
+                                           VerticalAlignment="Center" Classes="bold"
                                            ToolTip.Tip="{Binding Status.State, Converter={x:Static converters:SharedConverters.EnumToStringConverter}}"
                                            Text="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusCharConverter}}"
                                            Foreground="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusBrushConverter}}" />
@@ -406,8 +411,8 @@
                 <Expander.Header>
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Changes" />
-                        <Border DockPanel.Dock="Right" Classes="CountBadge">
-                            <TextBlock FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        <Border DockPanel.Dock="Right" Classes="badge CountBadge">
+                            <TextBlock Classes="caption" HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Text="{Binding ActiveRepository.Changes.Count}" />
                         </Border>
                         <StackPanel DockPanel.Dock="Right" Classes="SectionActions" Orientation="Horizontal"
@@ -415,11 +420,11 @@
                             <Button Classes="RowAction" ToolTip.Tip="Discard All Changes"
                                     Command="{Binding DiscardAllAsyncCommand}"
                                     CommandParameter="{x:Static libgit:ResetMode.Hard}">
-                                <Image Source="{DynamicResource BoxIcons.RegularReset}" Width="13" Height="13" />
+                                <PathIcon Data="{StaticResource Icon.Reset}" Width="13" Height="13" />
                             </Button>
                             <Button Classes="RowAction" ToolTip.Tip="Stage All Changes"
                                     Command="{Binding StageAllCommand}">
-                                <Image Source="{DynamicResource BoxIcons.RegularPlus}" Width="13" Height="13" />
+                                <PathIcon Data="{StaticResource Icon.Add}" Width="13" Height="13" />
                             </Button>
                         </StackPanel>
                     </DockPanel>
@@ -438,16 +443,16 @@
                                     <Button Classes="RowAction" ToolTip.Tip="Undo Changes"
                                             Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).DiscardAsync, FallbackValue={x:Null}}"
                                             CommandParameter="{Binding Status.FilePath}">
-                                        <Image Source="{DynamicResource BoxIcons.RegularReset}" Width="13" Height="13" />
+                                        <PathIcon Data="{StaticResource Icon.Reset}" Width="13" Height="13" />
                                     </Button>
                                     <Button Classes="RowAction" ToolTip.Tip="Stage Changes"
                                             Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).StageCommand, FallbackValue={x:Null}}"
                                             CommandParameter="{Binding Status.FilePath}">
-                                        <Image Source="{DynamicResource BoxIcons.RegularPlus}" Width="13" Height="13" />
+                                        <PathIcon Data="{StaticResource Icon.Add}" Width="13" Height="13" />
                                     </Button>
                                 </StackPanel>
                                 <TextBlock Grid.Column="2" Width="12" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" FontWeight="Bold"
+                                           VerticalAlignment="Center" Classes="bold"
                                            ToolTip.Tip="{Binding Status.State, Converter={x:Static converters:SharedConverters.EnumToStringConverter}}"
                                            Text="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusCharConverter}}"
                                            Foreground="{Binding Status.State, Converter={x:Static converters1:SourceControlConverters.ChangeStatusBrushConverter}}" />
@@ -485,7 +490,7 @@
                                                   Command="{Binding #SourceControlViewView.((viewModels:SourceControlViewModel)DataContext).DiscardAsync}"
                                                   CommandParameter="{Binding Status.FilePath}">
                                             <MenuItem.Icon>
-                                                <Image Source="{DynamicResource VsImageLib.Undo16X}" />
+                                                <PathIcon Data="{StaticResource Icon.Undo}" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <Separator />
@@ -506,10 +511,9 @@
                 Background="{DynamicResource EditorInputSurfaceBrush}"
                 Classes="RoundBorder">
             <Grid RowDefinitions="Auto, Auto">
-                <TextBox
+                <TextBox Classes="bare"
                     IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Text="{Binding CommitMessage}" Name="CommitMessageBox"
-                    BorderThickness="0" Background="Transparent"
                     Watermark="Describe your changes..." Padding="10 10 10 8"
                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="52"
                     VerticalContentAlignment="Top" />
@@ -518,7 +522,7 @@
                         BorderThickness="0 1 0 0" Padding="6 4">
                     <DockPanel Height="24" LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
+                                   Classes="caption"
                                    Text="{Binding ActiveRepository.HeadBranch.FriendlyName, FallbackValue=No repository}" />
 
                         <Button DockPanel.Dock="Right" Command="{Binding CommitAsyncCommand}"
@@ -528,7 +532,7 @@
                                 IsVisible="{Binding ActiveRepository.StagedChanges.Count, FallbackValue={x:True}}"
                                 ToolTip.Tip="Commit staged changes">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                                <PathIcon Data="{StaticResource Icon.Accept}" Width="13" Height="13" />
                                 <TextBlock Text="Commit Staged" />
                             </StackPanel>
                         </Button>
@@ -540,7 +544,7 @@
                                 IsVisible="{Binding !ActiveRepository.StagedChanges.Count, FallbackValue={x:False}}"
                                 ToolTip.Tip="Stage all changes and commit">
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <Image Source="{DynamicResource PicolIcons.Accept}" Width="13" Height="13" />
+                                <PathIcon Data="{StaticResource Icon.Accept}" Width="13" Height="13" />
                                 <TextBlock Text="Commit" />
                             </StackPanel>
                         </Button>

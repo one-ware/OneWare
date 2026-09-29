@@ -13,7 +13,7 @@
 
     <ComboBox Width="200"
               IsEnabled="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Idle}}"
-              BorderThickness="0" Background="Transparent"
+              BorderThickness="0" Background="{DynamicResource ThemeControlTransparentBrush}"
               ItemsSource="{Binding Projects}"
               SelectedItem="{Binding ActiveProject}">
         <ComboBox.ItemTemplate>

@@ -17,9 +17,11 @@
         <StackPanel Spacing="3" Orientation="Horizontal">
             <TextBlock Text="{Binding AdvancedSetting.Title}"
                        ToolTip.Tip="{Binding AdvancedSetting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding AdvancedSetting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                <PathIcon Data="{StaticResource Icon.Help}"
+                       Height="14"
+                       Width="14"
                        VerticalAlignment="Center" />
                 <Button.Flyout>
                     <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
@@ -41,10 +43,12 @@
             <controls:SearchComboBox.ItemTemplate>
                 <DataTemplate DataType="models:AdvancedComboBoxOption">
                     <DockPanel>
-                        <Button Padding="0" VerticalAlignment="Center" DockPanel.Dock="Right"
+                        <Button Classes="icon" VerticalAlignment="Center" DockPanel.Dock="Right"
                                 HorizontalAlignment="Right"
                                 IsVisible="{Binding MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="13" Width="13"
+                            <PathIcon Data="{StaticResource Icon.Help}"
+                                   Height="13"
+                                   Width="13"
                                    VerticalAlignment="Center" />
                             <Button.Flyout>
                                 <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">

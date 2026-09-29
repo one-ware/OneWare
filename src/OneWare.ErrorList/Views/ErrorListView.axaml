@@ -15,8 +15,6 @@
         <Style Selector="Border.TopGrid">
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
             <Setter Property="BorderThickness" Value="1,0,0,1" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Padding" Value="5" />
             <Setter Property="Height" Value="30" />
         </Style>
 
@@ -39,7 +37,7 @@
 
     <Grid RowDefinitions="30,*">
 
-        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="2">
+        <Border Classes="header" Padding="2">
             <DockPanel Name="InformationPanel">
                 <StackPanel Classes="ToolBar">
 
@@ -76,7 +74,7 @@
                                   DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
                         <StackPanel Orientation="Horizontal">
                             <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusWarning16X}" />
-                            <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
+                            <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
                                        Text="{Binding WarningCountVisible}" />
                         </StackPanel>
                     </ToggleButton>
@@ -85,25 +83,24 @@
                                   DockPanel.Dock="Left" HorizontalAlignment="Left" Padding="5 2">
                         <StackPanel Orientation="Horizontal">
                             <Image Width="14" Height="14" Source="{DynamicResource VsImageLib.StatusInformation16X}" />
-                            <TextBlock VerticalAlignment="Center" Background="Transparent" Margin="6, 0, 0, 0"
+                            <TextBlock VerticalAlignment="Center" Margin="6, 0, 0, 0"
                                        Text="{Binding HintCountVisible}" />
                         </StackPanel>
                     </ToggleButton>
                 </StackPanel>
 
-                <Border Classes="RoundBorder" DockPanel.Dock="Right" Width="280"
-                        HorizontalAlignment="Right" Height="24" Background="{DynamicResource ThemeControlMidBrush}">
-                    <controls:SearchBox Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}"
-                                        Name="SearchErrors" BorderThickness="0" HorizontalAlignment="Stretch" />
-                </Border>
+                <controls:SearchBox DockPanel.Dock="Right" Width="280" HorizontalAlignment="Right"
+                                    Label="Filter..." SearchText="{Binding SearchString, Mode=TwoWay}"
+                                    SearchButtonVisible="False" Name="SearchErrors" />
             </DockPanel>
 
         </Border>
 
         <DataGrid Padding="2, 0, 2, 2" BorderThickness="0"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Background="Transparent"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1"
+                  Background="{DynamicResource ThemeControlTransparentBrush}"
                   ItemsSource="{Binding Collection}"
-                  RowBackground="Transparent" IsReadOnly="True" Name="ErrorList" SelectedItem="{Binding SelectedItem}"
+                  RowBackground="{DynamicResource ThemeControlTransparentBrush}" IsReadOnly="True" Name="ErrorList" SelectedItem="{Binding SelectedItem}"
                   CanUserResizeColumns="True" CanUserSortColumns="True">
             <DataGrid.Columns>
                 <DataGridTemplateColumn CanUserResize="False" Width="25" CanUserSort="False">

@@ -20,10 +20,11 @@
         <SolidColorBrush x:Key="DockApplicationAccentBrushMed" Opacity="0.8" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushHigh" Opacity="0.6"
                          Color="{DynamicResource ThemeAccentColor}" />
-        <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush">#F0F0F0</SolidColorBrush>
+        <SolidColorBrush x:Key="DockApplicationAccentForegroundBrush"
+                         Color="{DynamicResource ThemeForegroundColor}" />
         <SolidColorBrush x:Key="DockApplicationAccentBrushIndicator" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockTabActiveBackgroundBrush" Color="{DynamicResource ThemeAccentColor}" />
-        <SolidColorBrush x:Key="DockTabActiveForegroundBrush" Color="White" />
+        <SolidColorBrush x:Key="DockTabActiveForegroundBrush" Color="{DynamicResource HighlightForegroundColor}" />
         <SolidColorBrush x:Key="DockTabHoverBackgroundBrush" Color="{DynamicResource ThemeAccentColor}" />
         <SolidColorBrush x:Key="DockTabHoverForegroundBrush" Color="{DynamicResource ThemeForegroundColor}" />
         <SolidColorBrush x:Key="DockTabActiveIndicatorBrush" Color="{DynamicResource ThemeAccentColor}" />
@@ -233,7 +234,7 @@
     <Style Selector="DocumentTabStripItem">
         <Setter Property="MinHeight" Value="25" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeControlTransparentBrush}" />
         <Setter Property="Padding" Value="4 1 4 0" />
         <Style Selector="^:selected">
             <Setter Property="BorderThickness" Value="1 1 1 0" />
@@ -267,7 +268,7 @@
     </Style>
 
     <Style Selector="TextBlock.LoadingFailed">
-        <Setter Property="Foreground" Value="Red"/>
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
         <Setter Property="TextDecorations" Value="StrikeThrough" />
     </Style>
 

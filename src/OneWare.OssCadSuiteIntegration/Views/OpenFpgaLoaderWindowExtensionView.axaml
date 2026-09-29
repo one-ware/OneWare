@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,7 +10,7 @@
               Command="{Binding OpenSettingsAsync}"
               IsEnabled="{Binding IsEnabled}">
         <MenuItem.Icon>
-            <Image Source="{DynamicResource Material.SettingsOutline}" />
+            <PathIcon Data="{StaticResource Icon.Settings}" />
         </MenuItem.Icon>
     </MenuItem>
 </UserControl>

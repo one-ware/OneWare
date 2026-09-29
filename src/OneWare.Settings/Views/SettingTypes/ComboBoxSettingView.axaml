@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,9 +16,11 @@
         <StackPanel Spacing="3" Orientation="Horizontal">
             <TextBlock Text="{Binding Setting.Title}"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
+                <PathIcon Data="{StaticResource Icon.Help}"
+                       Height="14"
+                       Width="14"
                        VerticalAlignment="Center" />
                 <Button.Flyout>
                     <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
@@ -31,6 +33,6 @@
         <ComboBox ItemsSource="{Binding Setting.Options}"
                   IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                   SelectedItem="{Binding Setting.Value, Mode=TwoWay}" />
-        <TextBlock Classes="setting-validation" />
+        <TextBlock Classes="setting-validation warning caption" />
     </StackPanel>
 </UserControl>

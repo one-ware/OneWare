@@ -1,0 +1,36 @@
+<!--
+    OneWare design system entry point.
+    Include once after SimpleTheme:
+        <StyleInclude Source="avares://OneWare.Essentials/Styles/OneWareTheme.axaml" />
+    Plugins get this automatically from the host at runtime. Include it in Design.PreviewWith
+    or a design-time App to get identical previews.
+    See docs/Styling.md for the token and class reference.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://OneWare.Essentials/Styles/Tokens.axaml" />
+                <ResourceInclude Source="avares://OneWare.Essentials/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Common.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Typography.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Icons.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Buttons.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Borders.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TextBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ComboBoxes.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ListBox.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TreeView.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TabControl.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Menu.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ScrollViewer.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Expander.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Controls/SharedControls.axaml" />
+
+</Styles>

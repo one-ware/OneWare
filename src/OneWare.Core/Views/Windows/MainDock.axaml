@@ -17,11 +17,11 @@
 
                 <Button ToolTip.Tip="Undo" x:CompileBindings="False"
                         Command="{Binding DockService.CurrentDocument.Undo}">
-                    <Image Source="{DynamicResource VsImageLib.Undo16X}" Width="20" Margin="0 0 0 3" />
+                    <PathIcon Data="{StaticResource Icon.Undo}" />
                 </Button>
                 <Button ToolTip.Tip="Redo" x:CompileBindings="False"
                         Command="{Binding DockService.CurrentDocument.Redo}">
-                    <Image Source="{DynamicResource VsImageLib.Redo16X}" Width="20" Margin="0 0 0 3" />
+                    <PathIcon Data="{StaticResource Icon.Redo}" />
                 </Button>
 
                 <Border Classes="RoundBorder" Margin="5 0 0 0" Height="24">
@@ -53,12 +53,12 @@
                     </controls:UiExtensionCollection.ItemsPanel>
                 </controls:UiExtensionCollection>
                 <Button ToolTip.Tip="Search Everywhere" Command="{Binding OpenCommandManager}">
-                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
+                    <PathIcon Data="{StaticResource Icon.Search}" />
                 </Button>
                 <Button ToolTip.Tip="Notifications" Command="{Binding MarkNotificationsReadCommand}">
                     <Panel>
-                        <Image Source="{DynamicResource Ionicons.NotificationsOutlineMD}" />
-                        <Ellipse Height="6" Width="6" Fill="#BBFF0000" VerticalAlignment="Top"
+                        <PathIcon Data="{StaticResource Icon.Notifications}" />
+                        <Ellipse Height="6" Width="6" Fill="{DynamicResource ErrorBrush}" VerticalAlignment="Top"
                                  HorizontalAlignment="Right" Margin="1"
                                  IsVisible="{Binding NewNotificationsAvailable}" />
                     </Panel>
@@ -66,10 +66,10 @@
                     <Button.Flyout>
                         <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}"
                                 Placement="BottomEdgeAlignedRight">
-                            <Border Width="340" MaxHeight="280" Background="{DynamicResource ThemeBackgroundBrush}">
+                            <Border Width="340" MaxHeight="280" Background="{DynamicResource ThemeElevatedBrush}">
                                 <Grid RowDefinitions="30,*">
                                     <Panel>
-                                        <TextBlock FontWeight="Bold" Text="Notifications" HorizontalAlignment="Center"
+                                        <TextBlock Classes="semibold" Text="Notifications" HorizontalAlignment="Center"
                                                    VerticalAlignment="Center" />
                                     </Panel>
 
@@ -101,17 +101,17 @@
                                                                         <!-- Severity indicator -->
                                                                         <Border Width="3"
                                                                                 Background="{DynamicResource HighlightBrush}"
-                                                                                CornerRadius="2"
+                                                                                CornerRadius="{DynamicResource ThemeCornerRadiusSmall}"
                                                                                 Classes.Warning="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Warning}}"
                                                                                 Classes.Error="{Binding Kind, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:ApplicationNotificationKind.Error}}">
                                                                             <Border.Styles>
                                                                                 <Style Selector="Border.Warning">
                                                                                     <Setter Property="Background"
-                                                                                        Value="Orange" />
+                                                                                        Value="{DynamicResource WarningBrush}" />
                                                                                 </Style>
                                                                                 <Style Selector="Border.Error">
                                                                                     <Setter Property="Background"
-                                                                                        Value="Red" />
+                                                                                        Value="{DynamicResource ErrorBrush}" />
                                                                                 </Style>
                                                                             </Border.Styles>
                                                                         </Border>
@@ -123,7 +123,7 @@
                                                                         <!-- Timestamp -->
                                                                         <TextBlock Grid.Column="2"
                                                                                 Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}"
-                                                                                FontSize="11"
+                                                                                FontSize="{DynamicResource FontSizeSmall}"
                                                                                 Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                                                                     </Grid>
                                                                 </Border>
@@ -148,24 +148,24 @@
                         <MenuFlyout Placement="BottomEdgeAlignedRight">
                             <MenuItem Header="Find..." Command="{Binding OpenCommandManager}">
                                 <MenuItem.Icon>
-                                    <Image Source="{DynamicResource VsImageLib.Search16XMd}" />
+                                    <PathIcon Data="{StaticResource Icon.Search}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator />
                             <MenuItem Header="Settings" Command="{Binding OpenSettingsDialogAsync}">
                                 <MenuItem.Icon>
-                                    <Image Source="{DynamicResource Material.SettingsOutline}" />
+                                    <PathIcon Data="{StaticResource Icon.Settings}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <MenuItem Header="Extensions" Command="{Binding OpenPackageManagerAsync}">
                                 <MenuItem.Icon>
-                                    <Image Source="{DynamicResource PackageManager}" />
+                                    <PathIcon Data="{StaticResource Icon.Package}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                         </MenuFlyout>
                     </Button.Flyout>
 
-                    <Image Source="{DynamicResource Material.SettingsOutline}" />
+                    <PathIcon Data="{StaticResource Icon.Settings}" />
                 </Button>
             </StackPanel>
         </DockPanel>

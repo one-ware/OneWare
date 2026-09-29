@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -24,7 +24,7 @@
                         <MenuItem Header="Project Settings"
                                   Command="{Binding OpenProjectSettingsAsync}">
                             <MenuItem.Icon>
-                                <Image Source="{DynamicResource Material.SettingsOutline}" />
+                                <PathIcon Data="{StaticResource Icon.Settings}" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <controls:UiExtensionCollection
@@ -39,7 +39,7 @@
                     </StackPanel>
                 </Flyout>
             </Button.Flyout>
-            <Image Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" Width="10" Height="10" Margin="1 0" />
+            <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" Margin="1 0" />
         </Button>
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
         <Button ToolTip.Tip="Run Toolchain" Command="{Binding CompileAsync}"
@@ -67,7 +67,7 @@
                     </StackPanel>
                 </Flyout>
             </Button.Flyout>
-            <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10" Margin="1 0" />
+            <PathIcon Data="{StaticResource Icon.ChevronDown}" Width="10" Height="10" Margin="1 0" />
         </Button>
         <Separator Margin="0" Width="1" Background="{DynamicResource ThemeBorderLowBrush}" Height="24" />
         <Button ToolTip.Tip="Configures the FPGA or writes the FLASH memory" Command="{Binding DownloadAsync}"
@@ -109,7 +109,7 @@
                     </StackPanel>
                 </Flyout>
             </Button.Flyout>
-            <Image Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" Width="10" Height="10" Margin="1 0" />
+            <PathIcon Data="{StaticResource Icon.MoreVertical}" Width="10" Height="10" Margin="1 0" />
         </Button>
     </StackPanel>
 

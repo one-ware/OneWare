@@ -59,7 +59,8 @@
                                      IsVisible="{Binding ApplicationStateService.ActiveProcess.State, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static enums:AppState.Loading}}" />
 
                 <TextBlock VerticalAlignment="Center" Margin="5, 0, 3, 0"
-                           Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}" Foreground="White" />
+                           Text="{Binding ApplicationStateService.ActiveProcess.StatusMessage}"
+                           Foreground="{DynamicResource ThemeForegroundBrush}" />
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
                             VerticalAlignment="Center" Margin="10 0">
@@ -77,7 +78,7 @@
                                 <StackPanel Cursor="Hand">
                                     <TextBlock
                                         Text="{Binding CurrentEditor.Extension, FallbackValue={x:Null}}"
-                                        Foreground="White" />
+                                        Foreground="{DynamicResource ThemeForegroundBrush}" />
                                 </StackPanel>
                             </MenuItem.Header>
                         </MenuItem>
@@ -85,17 +86,19 @@
 
                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
 
-                        <TextBlock Foreground="White"
+                        <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}"
                                    Text="Col " />
 
-                        <TextBlock Foreground="White"
-                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Column, FallbackValue=0}" />
+                        <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}"
+                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Column, FallbackValue=0}"
+                                   />
 
-                        <TextBlock Foreground="White" Margin="10 0 0 0"
+                        <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Margin="10 0 0 0"
                                    Text="Ln " />
 
-                        <TextBlock Foreground="White"
-                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Line, FallbackValue=0}" />
+                        <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}"
+                                   Text="{Binding CurrentEditor.Editor.TextArea.Caret.Line, FallbackValue=0}"
+                                   />
                     </StackPanel>
                 </StackPanel>
             </DockPanel>

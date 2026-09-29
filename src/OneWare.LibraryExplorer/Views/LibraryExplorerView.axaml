@@ -11,18 +11,12 @@
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="OneWare.LibraryExplorer.Views.LibraryExplorerView"
              Background="{DynamicResource ThemeControlLowBrush}"
-             BorderBrush="{DynamicResource ThemeBorderLowBrush}"
              x:CompileBindings="True" x:DataType="viewModels:LibraryExplorerViewModel"
-             Name="ProjectExplorerViewView"
-             Foreground="{DynamicResource ThemeForegroundColor}"
-             BorderThickness="0">
+             Name="ProjectExplorerViewView">
 
     <UserControl.Styles>
         <Style Selector="TextBox">
-            <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
@@ -37,10 +31,8 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Border Grid.ColumnSpan="2" BorderThickness="0 1 0 1">
-            <controls:SearchBox Background="{DynamicResource ThemeBackgroundBrush}"
-                                SearchText="{Binding SearchString, Mode=TwoWay}" VerticalAlignment="Center"
-                                VerticalContentAlignment="Center" x:Name="SearchBox" Height="24" />
+        <Border Grid.ColumnSpan="2" Padding="4" BorderThickness="0 0 0 1">
+            <controls:SearchBox SearchText="{Binding SearchString, Mode=TwoWay}" x:Name="SearchBox" />
         </Border>
         <TreeDataGrid Name="ProjectTree" Grid.Row="1" CanUserSortColumns="False"
                       ShowColumnHeaders="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -76,7 +68,7 @@
             </TreeDataGrid.Styles>
             <TreeDataGrid.Resources>
                 <DataTemplate x:Key="ProjectExplorerColumnTemplate" DataType="models:IProjectExplorerNode">
-                    <Grid ColumnDefinitions="20, *" Background="Transparent">
+                    <Grid ColumnDefinitions="20, *" Background="{DynamicResource ThemeControlTransparentBrush}">
                         <Interaction.Behaviors>
                             <behaviors1:ProjectExplorerProjectEntryModificationBehavior />
                         </Interaction.Behaviors>
