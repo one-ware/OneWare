@@ -53,7 +53,7 @@ Each key exists as a `...Color` and a `...Brush`.
 | `ThemeAccentBrush`, `ThemeAccentBrush2-4`, `ThemeAccentLowBrush` | Accent (100 %, 60 %, 40 %, 20 %, 14 %) |
 | `HighlightBrush`, `HighlightForegroundBrush` | Accent fill and the text drawn on it |
 | `HighlightForegroundLowBrush`, `HighlightForegroundMidBrush` | Hover / pressed overlay for controls on an accent fill |
-| `SuccessBrush`, `WarningBrush`, `ErrorBrush`, `InfoBrush` | Status colors |
+| `SuccessBrush`, `WarningBrush`, `ErrorBrush`, `InfoBrush`, `NeutralBrush` | Status colors (`NeutralBrush` is the grey default badge fill) |
 | `SuccessLowBrush`, `WarningLowBrush`, `ErrorLowBrush`, `InfoLowBrush` | Tinted status backgrounds |
 
 Non-color tokens:
@@ -65,7 +65,7 @@ Non-color tokens:
 | `ThemeIconSizeSmall` / `ThemeIconSize` / `ThemeIconSizeLarge` | 12 / 16 / 20 |
 | `ThemeSpacingXSmall` … `ThemeSpacingXLarge` (double) | 2 / 4 / 8 / 12 / 16 |
 | `ThemePaddingSmall` / `ThemePadding` / `ThemePaddingLarge` / `ThemePaddingXLarge` (Thickness) | 4 / 8 / 12 / 16 |
-| `FontSizeSmall` / `Normal` / `Medium` / `Large` / `XLarge` / `XXLarge` | 11 / 12 / 13 / 16 / 20 / 26 |
+| `FontSizeBadge` / `Small` / `Normal` / `Medium` / `Large` / `XLarge` / `XXLarge` | 10 / 11 / 12 / 13 / 16 / 20 / 26 |
 
 Legacy keys such as `GreenAccent` are kept as aliases.
 
@@ -145,7 +145,7 @@ Checked `ToggleButton`s get an accent tint automatically. Use `<StackPanel Class
 | `statusbar` | Accent strip at the bottom of the window; text, icons, buttons and top-level menu items are white in both themes (popups opened from it keep the normal colors) |
 | `divider` (+ `vertical`) | 1 px line |
 | `overlay` | Floating popup surface with shadow |
-| `badge` (+ `accent` `success` `warning` `error`) | Pill label; put a `TextBlock` inside |
+| `badge` (+ `accent` `success` `warning` `error`) | Solid status pill (neutral grey by default) with small white text, dark on `success`; put a `TextBlock` inside. Not a container for buttons, use `inset` for that |
 | `callout` (+ `success` `warning` `error`) | Inline info box |
 | `empty-state` | Centered placeholder |
 | `interactive` / `selected` | Hover and selection modifiers for clickable cards |

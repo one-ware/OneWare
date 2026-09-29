@@ -42,6 +42,8 @@
     <SolidColorBrush x:Key="SuccessLowBrush" Color="{StaticResource SuccessLowColor}" />
     <SolidColorBrush x:Key="InfoBrush" Color="{DynamicResource ThemeAccentColor}" />
     <SolidColorBrush x:Key="InfoLowBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.14" />
+    <Color x:Key="NeutralColor">#FF6B7280</Color>
+    <SolidColorBrush x:Key="NeutralBrush" Color="{StaticResource NeutralColor}" />
 
     <!-- Legacy aliases, kept for plugin compatibility -->
     <SolidColorBrush x:Key="GreenAccent" Color="{StaticResource SuccessColor}" />
@@ -82,6 +84,7 @@
     <Thickness x:Key="ThemeControlPadding">8 2</Thickness>
 
     <!-- Typography -->
+    <sys:Double x:Key="FontSizeBadge">10</sys:Double>
     <sys:Double x:Key="FontSizeSmall">11</sys:Double>
     <sys:Double x:Key="FontSizeNormal">12</sys:Double>
     <sys:Double x:Key="FontSizeMedium">13</sys:Double>

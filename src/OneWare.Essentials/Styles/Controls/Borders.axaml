@@ -163,53 +163,43 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
     </Style>
 
-    <!-- Badge -->
+    <!-- Badge: solid status pill -->
     <Style Selector="Border.badge">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+        <Setter Property="Background" Value="{DynamicResource NeutralBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
-        <Setter Property="Padding" Value="8 1" />
+        <Setter Property="Padding" Value="12 1" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
 
     <Style Selector="Border.badge > TextBlock, Border.badge > StackPanel > TextBlock">
-        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeBadge}" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
+    </Style>
+    <Style Selector="Border.badge > PathIcon, Border.badge > StackPanel > PathIcon">
+        <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundBrush}" />
     </Style>
 
     <Style Selector="Border.badge.accent">
-        <Setter Property="Background" Value="{DynamicResource ThemeAccentLowBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush3}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
     </Style>
-    <Style Selector="Border.badge.accent > TextBlock, Border.badge.accent > StackPanel > TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-    </Style>
-
-    <Style Selector="Border.badge.success">
-        <Setter Property="Background" Value="{DynamicResource SuccessLowBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
-    </Style>
-    <Style Selector="Border.badge.success > TextBlock, Border.badge.success > StackPanel > TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
-    </Style>
-
     <Style Selector="Border.badge.warning">
-        <Setter Property="Background" Value="{DynamicResource WarningLowBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}" />
+        <Setter Property="Background" Value="{DynamicResource WarningBrush}" />
     </Style>
-    <Style Selector="Border.badge.warning > TextBlock, Border.badge.warning > StackPanel > TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
-    </Style>
-
     <Style Selector="Border.badge.error">
-        <Setter Property="Background" Value="{DynamicResource ErrorLowBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ErrorBrush}" />
     </Style>
-    <Style Selector="Border.badge.error > TextBlock, Border.badge.error > StackPanel > TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+    <Style Selector="Border.badge.success">
+        <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <!-- Dark text reads better on the light green -->
+    <Style Selector="Border.badge.success > TextBlock, Border.badge.success > StackPanel > TextBlock">
+        <Setter Property="Foreground" Value="Black" />
+    </Style>
+    <Style Selector="Border.badge.success > PathIcon, Border.badge.success > StackPanel > PathIcon">
+        <Setter Property="Foreground" Value="Black" />
     </Style>
 
     <!-- Callouts (inline info / warning / error boxes) -->
