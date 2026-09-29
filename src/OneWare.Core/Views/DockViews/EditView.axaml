@@ -39,7 +39,7 @@
                                         Context="{Binding UiExtensionContext}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <DockPanel />
+                    <StackPanel Orientation="Vertical" />
                 </ItemsPanelTemplate>
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
@@ -47,7 +47,7 @@
                                         Context="{Binding UiExtensionContext}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <DockPanel />
+                    <StackPanel Orientation="Vertical" />
                 </ItemsPanelTemplate>
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
