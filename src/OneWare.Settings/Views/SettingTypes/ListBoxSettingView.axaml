@@ -14,7 +14,7 @@
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
-            <TextBlock Text="{Binding Setting.Title}"
+            <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
             <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">

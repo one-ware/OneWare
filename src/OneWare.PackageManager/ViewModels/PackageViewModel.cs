@@ -64,7 +64,8 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
 
         UpdateCommand = new AsyncRelayCommand<Control?>(_ =>
                 _packageService.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
-            _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
+            _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease
+                or PackageStatus.Installed);
 
         CancelCommand = new RelayCommand(() => _packageService.CancelInstall(PackageState.Package.Id!),
             () => PackageState.Status is PackageStatus.Installing);
@@ -223,6 +224,8 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
                 break;
             case PackageStatus.UpdateAvailable when sV > iV:
             case PackageStatus.UpdateAvailablePrerelease when sV > iV:
+            // No update is offered, but the user explicitly picked a newer version (e.g. a prerelease)
+            case PackageStatus.Installed when iV != null && sV > iV:
                 PrimaryButtonText = "Update";
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeAccentBrush");
                 MainButtonCommand = UpdateCommand;

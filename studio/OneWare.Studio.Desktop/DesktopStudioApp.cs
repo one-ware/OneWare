@@ -207,7 +207,7 @@ public class DesktopStudioApp : StudioApp
             //step 3: Get dated plugins
             updatePackages = packageService.Packages
                 .Where(x => x.Value.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease
-                            && x.Value.ResolveStableUpdateVersion() != null)
+                            && x.Value.ResolveUpdateVersion() != null)
                 .Select(x => x.Value)
                 .ToList();
 
@@ -244,7 +244,7 @@ public class DesktopStudioApp : StudioApp
                     Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
                     {
                         Message =
-                            $"Update available: {updatePackage.Package.Name} {updatePackage.ResolveStableUpdateVersion()?.Version}",
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.ResolveUpdateVersion()?.Version}",
                         Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
                             .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
                     });

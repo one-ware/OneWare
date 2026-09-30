@@ -267,7 +267,8 @@
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    <Style Selector="Border.empty-state TextBlock">
+    <!-- Not inside buttons: the call-to-action buttons keep their own (e.g. primary) foreground -->
+    <Style Selector="Border.empty-state TextBlock:not(Button TextBlock)">
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
         <Setter Property="TextAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Center" />

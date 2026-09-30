@@ -8,6 +8,19 @@
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Core.Views.Windows.MainDock" x:DataType="windows:MainWindowViewModel">
+    <UserControl.Styles>
+        <!-- Top-right title bar icons are 2px larger than regular toolbar icons.
+             Buttons: direct children and toolbar buttons of extension views only (not flyout content). -->
+        <Style Selector="StackPanel#RightButtons > Button.icon, StackPanel#RightButtons :is(UserControl) > StackPanel.toolbar > Button.icon">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+        </Style>
+        <Style Selector="StackPanel#RightButtons Button.icon PathIcon:not(Popup PathIcon)">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+    </UserControl.Styles>
+
     <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
 
         <!--Icon Tray-->

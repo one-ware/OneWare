@@ -65,7 +65,7 @@
     <Style Selector="Button.secondary, Button.SecondaryButton, Button.RoundButton, Button.WindowButton,
                      StackPanel.WindowButtons > Button,
                      ToggleButton.secondary, ToggleButton.RoundButton">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeButtonSecondaryBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
         <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
@@ -98,7 +98,7 @@
                      StackPanel.WindowButtons > Button:pointerover /template/ ContentPresenter#PART_ContentPresenter,
                      ToggleButton.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter,
                      ToggleButton.RoundButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeButtonSecondaryHoverBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
     </Style>
 
@@ -224,6 +224,26 @@
         <Setter Property="MinHeight" Value="{DynamicResource ThemeControlHeightLarge}" />
         <Setter Property="Padding" Value="14 0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!--
+        DropDownButton reads like a ComboBox (bordered field with a chevron). SimpleTheme leaves its corners square and
+        the chevron oversized. No hover background and no MinHeight, the ColorPicker swatches reuse this control with
+        their own color and size.
+    -->
+    <Style Selector="DropDownButton">
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+        <Setter Property="Padding" Value="6 1" />
+    </Style>
+
+    <Style Selector="DropDownButton /template/ PathIcon#DropDownGlyph">
+        <Setter Property="Width" Value="9" />
+        <Setter Property="Height" Value="9" />
+        <Setter Property="Margin" Value="0 0 8 0" />
+    </Style>
+
+    <Style Selector="DropDownButton:flyout-open /template/ Border#RootBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
     </Style>
 
 </Styles>

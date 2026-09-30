@@ -25,6 +25,12 @@
         <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
     </Style>
 
+    <!-- Inner content (icon buttons, spinners) can be taller than a text line and stretches the text area with it,
+         which pins the text to the top. Center the text area itself so it lines up with a plain TextBox -->
+    <Style Selector="TextBox[VerticalContentAlignment=Center] /template/ ScrollViewer#PART_ScrollViewer">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
     <Style Selector="TextBox:pointerover /template/ Border#border">
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
     </Style>

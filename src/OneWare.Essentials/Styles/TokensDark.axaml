@@ -37,6 +37,11 @@
     <SolidColorBrush x:Key="ThemeEditorBrush" Color="{StaticResource ThemeEditorColor}" />
     <SolidColorBrush x:Key="ThemeElevatedBrush" Color="{StaticResource ThemeElevatedColor}" />
 
+    <!-- Secondary buttons are a raised surface (lighter than whatever they sit on) so they read the same size as the
+         solid primary button. Translucent so they also stay visible on elevated cards and popups. -->
+    <SolidColorBrush x:Key="ThemeButtonSecondaryBrush" Color="#10FFFFFF" />
+    <SolidColorBrush x:Key="ThemeButtonSecondaryHoverBrush" Color="#1EFFFFFF" />
+
     <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="{StaticResource ThemeControlMidColor}" />
     <SolidColorBrush x:Key="EditorInputFooterBrush" Color="{StaticResource ThemeControlMidColor}" />
 

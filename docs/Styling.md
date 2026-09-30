@@ -43,8 +43,9 @@ Each key exists as a `...Color` and a `...Brush`.
 |---|---|
 | `ThemeBackgroundBrush` | Panel / window background |
 | `ThemeControlLowBrush` | Deepest surface: editors, lists, insets |
-| `ThemeControlMidBrush` | Input surfaces (TextBox, ComboBox, secondary buttons) |
-| `ThemeControlMidHighBrush` | Hovered secondary button, progress track |
+| `ThemeControlMidBrush` | Input surfaces (TextBox, ComboBox) |
+| `ThemeControlMidHighBrush` | Progress track |
+| `ThemeButtonSecondaryBrush` / `ThemeButtonSecondaryHoverBrush` | Secondary button fill (raised: translucent white in dark so it reads the same size as a primary button on any surface) |
 | `ThemeControlHighBrush` / `ThemeControlVeryHighBrush` | Strong neutral fills / glyphs |
 | `ThemeElevatedBrush` | Cards, popups, menus, tooltips |
 | `ThemeControlHighlightMidBrush` / `...HighBrush` / `...LowBrush` | Hover / pressed overlays |
@@ -169,8 +170,9 @@ a fixed square instead, so an inline `Width` / `Height` of any size wins.
 
 Docking (`OneWare.Core/Styles/Dock.axaml`): every tool and document dock sits in a rounded, clipped card
 (`Border.dock-card`, outline drawn on top by `Border.dock-card-outline`), with the 4 px splitters as gaps between
-cards. Tool headers are `DockToolChromeHeaderHeight` (25 px) tall with a separator towards the content; while a tool
-is active its header and the surrounding outline (`Border.dock-card-header-outline`) use the accent color.
+cards. Tool headers have a 25 px surface plus a neutral 1 px separator towards the content (`DockToolChromeHeaderHeight`,
+26 px in total) in both states; while a tool is active its header surface and the surrounding outline
+(`Border.dock-card-header-outline`) use the accent color.
 Document tabs sit above the card on the background; the accent separator forms the card's top edge. Tool and document views therefore need no outer
 border or corner radius of their own, and should not add margins to keep content away from the card edge.
 
@@ -182,6 +184,8 @@ border or corner radius of their own, and should not add margins to keep content
   search icon and a clear button. Set `SearchButtonVisible="False"` for live filtering, and bind `IsBusy` to show a
   spinner. Do not wrap it in extra borders or give it a background. Put it in a strip with `Padding="4"`.
 - `ComboBox`: `small`, `ghost` (borderless and transparent like a toolbar button, highlighted on hover / while open)
+- `DropDownButton`: styled like a `ComboBox` field (rounded corners, compact chevron, accent border while the flyout
+  is open). Use it for "Sort by: …" style pickers that open a `MenuFlyout`.
 - `NumericUpDown`: `small`. Same frame and padding as `TextBox`, with a compact up/down column on the right.
 - `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.

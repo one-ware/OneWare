@@ -198,7 +198,7 @@ public class UpdaterViewModel : ObservableObject
         var updatablePackages = _packageService.Packages
             .Select(x => x.Value)
             .Where(x => x.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease)
-            .Select(x => (State: x, Target: x.ResolveStableUpdateVersion()))
+            .Select(x => (State: x, Target: x.ResolveUpdateVersion()))
             .Where(x => x.Target != null)
             .ToArray();
 
