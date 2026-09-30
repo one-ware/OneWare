@@ -64,7 +64,8 @@
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Spacing="20"
                             VerticalAlignment="Center" Margin="10 0">
                     <StackPanel.Styles>
-                        <Style Selector=":is(Control)">
+                        <!-- Popup content (flyouts, menus, tooltips) is styled through its placement target; keep it out -->
+                        <Style Selector=":is(Control):not(Popup :is(Control))">
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
                     </StackPanel.Styles>

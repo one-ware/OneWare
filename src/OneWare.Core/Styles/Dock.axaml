@@ -39,6 +39,10 @@
         <!-- The clip sits inside the 1px outline (radius - 1), so content never bleeds over the outline arc -->
         <CornerRadius x:Key="DockCardInnerCornerRadius">5</CornerRadius>
         <CornerRadius x:Key="DockDocumentCardInnerCornerRadius">0 0 5 5</CornerRadius>
+        <!-- Tool header (title + chrome buttons) height, including its 1px bottom separator -->
+        <system:Double x:Key="DockToolChromeHeaderHeight">25</system:Double>
+        <!-- Header height + the 1px outline above it, used by the accent outline of the active tool header -->
+        <system:Double x:Key="DockToolChromeHeaderOutlineHeight">26</system:Double>
         
 
         <ContextMenu x:Key="DocumentTabStripItemContextMenu" x:DataType="core:IDockable">
@@ -249,6 +253,16 @@
         <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
 
+    <!-- Recolors the outline around the active (accent) tool header, so the header reaches the card edge cleanly -->
+    <Style Selector="Border.dock-card-header-outline">
+        <Setter Property="BorderBrush" Value="{DynamicResource DockSurfaceHeaderActiveBrush}" />
+        <Setter Property="BorderThickness" Value="1 1 1 0" />
+        <Setter Property="CornerRadius" Value="6 6 0 0" />
+        <Setter Property="Height" Value="{DynamicResource DockToolChromeHeaderOutlineHeight}" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+
     <Style Selector="ToolDockControl">
         <Setter Property="Template">
             <ControlTemplate x:DataType="controls1:IToolDock">
@@ -264,6 +278,14 @@
                             </ToolChromeControl>
                         </Border>
                         <Border Classes="dock-card-outline" />
+                        <Border Classes="dock-card-header-outline">
+                            <Border.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="IsActive" />
+                                    <Binding Path="GripMode" Converter="{x:Static GripModeConverters.IsVisibleVisibleConverter}" />
+                                </MultiBinding>
+                            </Border.IsVisible>
+                        </Border>
                     </Panel>
                 </DockableControl>
             </ControlTemplate>
@@ -366,8 +388,23 @@
         </Setter>
     </Style>
 
+    <!-- Fixed height header with a separator towards the content (in the header color while active) -->
     <Style Selector="ToolChromeControl /template/ Border#PART_Border">
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Height" Value="{DynamicResource DockToolChromeHeaderHeight}" />
+        <Setter Property="BorderThickness" Value="0 0 0 1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+    </Style>
+    <Style Selector="ToolChromeControl:active /template/ Border#PART_Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource DockSurfaceHeaderActiveBrush}" />
+    </Style>
+    <!-- Dock shows this 1px divider above the header on hover; the header separator and card outline replace it.
+         Its IsVisible is driven by a triggered theme style, so it is hidden through Opacity instead. -->
+    <Style Selector="ToolChromeControl /template/ Panel#PART_Panel">
+        <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="ToolChromeControl /template/ TextBlock#PART_Title">
+        <Setter Property="Margin" Value="0 0 8 0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <Style Selector="ToolControl /template/ Border#PART_Border">

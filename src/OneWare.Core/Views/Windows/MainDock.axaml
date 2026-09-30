@@ -11,9 +11,9 @@
     <Grid Background="{DynamicResource ThemeBackgroundBrush}" RowDefinitions="Auto,*" ColumnDefinitions="*">
 
         <!--Icon Tray-->
-        <DockPanel Margin="4 0" Grid.Row="0" Name="IconTray" Height="32" LastChildFill="False">
+        <DockPanel Margin="4 4" Grid.Row="0" Name="IconTray" LastChildFill="False">
 
-            <StackPanel DockPanel.Dock="Left" Classes="toolbar" VerticalAlignment="Center">
+            <StackPanel DockPanel.Dock="Left" Classes="toolbar" Height="28" VerticalAlignment="Center">
 
                 <Button Classes="icon" ToolTip.Tip="Undo" x:CompileBindings="False"
                         Command="{Binding DockService.CurrentDocument.Undo}">
@@ -24,7 +24,7 @@
                     <PathIcon Data="{StaticResource Icon.Redo}" />
                 </Button>
 
-                <Border Classes="RoundBorder" Margin="4 0 0 0" Height="28" Padding="1">
+                <Border Classes="RoundBorder" Margin="4 0 0 0" Padding="1">
                     <StackPanel Classes="toolbar">
                         <controls:UiExtensionCollection Extensions="{Binding RoundToolBarExtension}" />
                         <StackPanel Classes="toolbar"

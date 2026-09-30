@@ -169,7 +169,9 @@ a fixed square instead, so an inline `Width` / `Height` of any size wins.
 
 Docking (`OneWare.Core/Styles/Dock.axaml`): every tool and document dock sits in a rounded, clipped card
 (`Border.dock-card`, outline drawn on top by `Border.dock-card-outline`), with the 4 px splitters as gaps between
-cards. Document tabs sit above the card on the background; the accent separator forms the card's top edge. Tool and document views therefore need no outer
+cards. Tool headers are `DockToolChromeHeaderHeight` (25 px) tall with a separator towards the content; while a tool
+is active its header and the surrounding outline (`Border.dock-card-header-outline`) use the accent color.
+Document tabs sit above the card on the background; the accent separator forms the card's top edge. Tool and document views therefore need no outer
 border or corner radius of their own, and should not add margins to keep content away from the card edge.
 
 ### Inputs and lists
