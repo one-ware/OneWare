@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\build\props\XUnit.props"/>
+    <Import Project="..\..\build\props\Avalonia.props"/>
+    <Import Project="..\..\build\props\Avalonia.Headless.XUnit.props"/>
+    <Import Project="..\..\build\props\Avalonia.Themes.Simple.props"/>
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <IsPackable>False</IsPackable>
+        <IsTestProject>True</IsTestProject>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="NSubstitute" Version="6.2.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\OneWare.ApplicationCommands\OneWare.ApplicationCommands.csproj"/>
+    </ItemGroup>
+
+</Project>
