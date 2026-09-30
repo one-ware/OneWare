@@ -125,11 +125,10 @@ public sealed class PythonInterpreterPickerTests
     }
 
     [Fact]
-    public void InitializeRegistersPaletteAndCodeMenuOnce()
+    public void InitializeRegistersPaletteCommandOnceWithoutMenu()
     {
         using var fixture = new PythonInterpreterServiceTests.InterpreterFixture();
         var commandCount = 0;
-        var menuCount = 0;
         var commands = Proxy<IApplicationCommandService>((method, args) =>
         {
             Assert.Equal("RegisterCommand", method.Name);
@@ -137,22 +136,13 @@ public sealed class PythonInterpreterPickerTests
             commandCount++;
             return null;
         });
-        var windows = Proxy<IWindowService>((method, args) =>
-        {
-            Assert.Equal("RegisterMenuItem", method.Name);
-            Assert.Equal("MainWindow_MainMenu/Code", args![0]);
-            var menu = Assert.Single((MenuItemModel[])args[1]!);
-            Assert.Equal("Python", menu.Header);
-            Assert.Equal("Select Interpreter...", Assert.Single(menu.Items!).Header);
-            menuCount++;
-            return null;
-        });
+        var windows = Proxy<IWindowService>((method, _) =>
+            throw new InvalidOperationException($"Unexpected window service call: {method.Name}"));
         var picker = new PythonInterpreterPickerService(fixture.Service, windows,
             Proxy<IMainDockService>(), Proxy<IProjectExplorerService>(), commands, fixture.Settings, Proxy<IPaths>());
         picker.Initialize();
         picker.Initialize();
         Assert.Equal(1, commandCount);
-        Assert.Equal(1, menuCount);
     }
 
     private static PythonInterpreterPickerService CreatePicker(

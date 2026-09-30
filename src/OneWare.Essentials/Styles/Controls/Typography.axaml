@@ -1,0 +1,97 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="4">
+            <TextBlock Classes="h1" Text="Heading 1" />
+            <TextBlock Classes="h2" Text="Heading 2" />
+            <TextBlock Classes="h3" Text="Heading 3" />
+            <TextBlock Classes="overline" Text="Section label" />
+            <TextBlock Text="Body text" />
+            <TextBlock Classes="muted" Text="Muted text" />
+            <TextBlock Classes="caption" Text="Caption text" />
+            <TextBlock Classes="mono" Text="Monospace text" />
+            <TextBlock Classes="error" Text="Error text" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!--
+        Text vocabulary (TextBlock / SelectableTextBlock):
+          h1 h2 h3   headings
+          overline   small uppercase-style section label
+          body       default body text (explicit)
+          muted      secondary foreground
+          caption    small secondary text
+          mono       editor font
+          bold / semibold
+          accent success warning error   colored text
+    -->
+
+    <Style Selector="TextBlock.h1, SelectableTextBlock.h1">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeXXLarge}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.h2, SelectableTextBlock.h2">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeXLarge}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.h3, SelectableTextBlock.h3">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeLarge}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.h4, SelectableTextBlock.h4">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMedium}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.overline, SelectableTextBlock.overline">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.body, SelectableTextBlock.body">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeNormal}" />
+    </Style>
+
+    <Style Selector="TextBlock.muted, SelectableTextBlock.muted">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.caption, SelectableTextBlock.caption">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.mono, SelectableTextBlock.mono">
+        <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
+    </Style>
+
+    <Style Selector="TextBlock.semibold, SelectableTextBlock.semibold">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.bold, SelectableTextBlock.bold">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.accent, SelectableTextBlock.accent">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.success, SelectableTextBlock.success">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.warning, SelectableTextBlock.warning">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.error, SelectableTextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+
+</Styles>

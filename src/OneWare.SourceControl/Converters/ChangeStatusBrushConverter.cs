@@ -15,16 +15,31 @@ public class ChangeStatusBrushConverter : IValueConverter
             return status switch
             {
                 FileStatus.Unaltered => Brushes.Transparent,
-                _ when status.HasFlag(FileStatus.Conflicted) => Brushes.Purple,
-                _ when (status & (FileStatus.DeletedFromIndex | FileStatus.DeletedFromWorkdir)) != 0 => Brushes.Red,
+                _ when status.HasFlag(FileStatus.Conflicted) => GetBrush("ErrorBrush"),
+                _ when (status & (FileStatus.DeletedFromIndex | FileStatus.DeletedFromWorkdir)) != 0 =>
+                    GetBrush("ErrorBrush"),
                 _ when (status & (FileStatus.ModifiedInIndex | FileStatus.ModifiedInWorkdir |
                                  FileStatus.RenamedInIndex | FileStatus.RenamedInWorkdir |
-                                 FileStatus.TypeChangeInIndex | FileStatus.TypeChangeInWorkdir)) != 0 => Brushes.Goldenrod,
+                                 FileStatus.TypeChangeInIndex | FileStatus.TypeChangeInWorkdir)) != 0 => GetBrush("WarningBrush"),
                 _ when (status & (FileStatus.NewInIndex | FileStatus.NewInWorkdir)) != 0 =>
-                    Application.Current?.FindResource("GreenAccent") ?? Brushes.Green,
-                _ => Application.Current?.FindResource("ThemeForegroundBrush")
+                                 GetBrush("SuccessBrush"),
+                _ => GetBrush("ThemeForegroundLowBrush")
+            };
+        if (value is ChangeKind kind)
+            return kind switch
+            {
+                ChangeKind.Added or ChangeKind.Copied => GetBrush("SuccessBrush"),
+                ChangeKind.Deleted => GetBrush("ErrorBrush"),
+                ChangeKind.Conflicted => GetBrush("ErrorBrush"),
+                ChangeKind.Unmodified => Brushes.Transparent,
+                _ => GetBrush("WarningBrush")
             };
         return null;
+    }
+
+    private static IBrush GetBrush(string key)
+    {
+        return Application.Current?.FindResource(key) as IBrush ?? Brushes.Transparent;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

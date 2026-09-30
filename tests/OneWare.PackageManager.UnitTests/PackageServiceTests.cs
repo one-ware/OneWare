@@ -169,6 +169,64 @@ public class PackageServiceTests
         }
     }
 
+    /// <summary>
+    ///     Prerelease updates are only offered on the prerelease channel, so a stable installation does not
+    ///     show up under updates just because a newer prerelease exists.
+    /// </summary>
+    [Theory]
+    [InlineData("1.0.0", PackageStatus.Installed)]
+    [InlineData("1.1.0-beta.1", PackageStatus.UpdateAvailablePrerelease)]
+    [InlineData(null, PackageStatus.Available)]
+    public async Task RefreshAsync_OffersPrereleaseUpdatesOnlyOnPrereleaseChannel(string? installed,
+        PackageStatus expected)
+    {
+        var package = new Package
+        {
+            Id = "plugin",
+            Type = "Plugin",
+            Name = "Plugin",
+            Versions =
+            [
+                new PackageVersion { Version = "1.0.0" },
+                new PackageVersion { Version = "1.1.0-beta.1", IsPrerelease = true },
+                new PackageVersion { Version = "1.1.0-beta.2", IsPrerelease = true }
+            ]
+        };
+        _catalog.Manifests.Returns(new Dictionary<string, Package> { ["plugin"] = package });
+        SetInstalled(installed == null
+            ? []
+            : [new InstalledPackage("plugin", "Plugin", "Plugin", null, null, null, installed)]);
+
+        await _service.RefreshAsync(true);
+
+        Assert.Equal(expected, _service.Packages["plugin"].Status);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_OffersStableUpdateOnStableChannel()
+    {
+        var package = new Package
+        {
+            Id = "plugin",
+            Type = "Plugin",
+            Name = "Plugin",
+            Versions =
+            [
+                new PackageVersion { Version = "1.0.0" },
+                new PackageVersion { Version = "1.1.0" },
+                new PackageVersion { Version = "1.2.0-beta.1", IsPrerelease = true }
+            ]
+        };
+        _catalog.Manifests.Returns(new Dictionary<string, Package> { ["plugin"] = package });
+        SetInstalled(new InstalledPackage("plugin", "Plugin", "Plugin", null, null, null, "1.0.0"));
+
+        await _service.RefreshAsync(true);
+
+        var state = _service.Packages["plugin"];
+        Assert.Equal(PackageStatus.UpdateAvailable, state.Status);
+        Assert.Equal("1.1.0", state.ResolveTargetVersion()?.Version);
+    }
+
     private void SetInstalled(params InstalledPackage[] packages)
     {
         _stateStore.LoadAsync().Returns(packages.ToDictionary(x => x.Id));

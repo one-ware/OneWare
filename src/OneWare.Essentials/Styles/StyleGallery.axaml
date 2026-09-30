@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:OneWare.Essentials.Controls"
+             x:Class="OneWare.Essentials.Styles.StyleGallery"
+             Background="{DynamicResource ThemeBackgroundBrush}">
+    <!-- Showcase of every shared style class. Used for visual review of the design system. -->
+    <ScrollViewer>
+        <StackPanel Classes="page">
+            <StackPanel Classes="section">
+                <TextBlock Classes="overline" Text="TYPOGRAPHY" />
+                <TextBlock Classes="h1" Text="Heading 1" />
+                <TextBlock Classes="h2" Text="Heading 2" />
+                <TextBlock Classes="h3" Text="Heading 3" />
+                <TextBlock Classes="h4" Text="Heading 4" />
+                <TextBlock Text="Body text, the default for everything." />
+                <TextBlock Classes="muted" Text="Muted secondary text" />
+                <TextBlock Classes="caption" Text="Caption text" />
+                <TextBlock Classes="mono" Text="let mono = &quot;editor font&quot;;" />
+                <StackPanel Classes="form-row">
+                    <TextBlock Classes="accent" Text="accent" />
+                    <TextBlock Classes="success" Text="success" />
+                    <TextBlock Classes="warning" Text="warning" />
+                    <TextBlock Classes="error" Text="error" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Classes="section">
+                <TextBlock Classes="overline" Text="ICONS" />
+                <WrapPanel ItemSpacing="12" LineSpacing="8">
+                    <PathIcon Classes="small" Data="{StaticResource Icon.Search}" />
+                    <PathIcon Data="{StaticResource Icon.Search}" />
+                    <PathIcon Classes="large" Data="{StaticResource Icon.Search}" />
+                    <PathIcon Classes="muted" Data="{StaticResource Icon.Info}" />
+                    <PathIcon Classes="accent" Data="{StaticResource Icon.Info}" />
+                    <PathIcon Classes="success" Data="{StaticResource Icon.Check}" />
+                    <PathIcon Classes="warning" Data="{StaticResource Icon.Warning}" />
+                    <PathIcon Classes="error" Data="{StaticResource Icon.ErrorOutline}" />
+                </WrapPanel>
+                <WrapPanel x:Name="IconPanel" ItemSpacing="4" LineSpacing="4" />
+            </StackPanel>
+
+            <StackPanel Classes="section">
+                <TextBlock Classes="overline" Text="BUTTONS" />
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
+                    <Button Classes="primary" Content="Primary" />
+                    <Button Classes="secondary" Content="Secondary" />
+                    <Button Classes="ghost" Content="Ghost" />
+                    <Button Classes="danger" Content="Danger" />
+                    <Button Classes="link" Content="Link" />
+                    <Button Content="Default" />
+                    <Button Classes="primary" Content="Disabled" IsEnabled="False" />
+                </WrapPanel>
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
+                    <Button Classes="primary small" Content="Small" />
+                    <Button Classes="secondary small" Content="Small" />
+                    <Button Classes="primary large" Content="Large" />
+                    <Button Classes="secondary icon">
+                        <PathIcon Data="{StaticResource Icon.Settings}" />
+                    </Button>
+                    <Button Classes="icon">
+                        <PathIcon Data="{StaticResource Icon.Refresh}" />
+                    </Button>
+                    <Button Classes="primary">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="small" Data="{StaticResource Icon.Play}" />
+                            <TextBlock Text="Run" />
+                        </StackPanel>
+                    </Button>
+                    <ToggleButton Content="Toggle" IsChecked="True" />
+                    <ToggleButton Classes="secondary" Content="Secondary Toggle" IsChecked="True" />
+                    <ToggleButton Classes="primary" Content="Primary Toggle" />
+                </WrapPanel>
+                <StackPanel Classes="WindowButtons" HorizontalAlignment="Right">
+                    <Button Content="Cancel" />
+                    <Button Classes="primary" Content="OK" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Classes="section">
+                <TextBlock Classes="overline" Text="INPUTS" />
+                <StackPanel Classes="form" MaxWidth="360" HorizontalAlignment="Left">
+                    <TextBox Watermark="TextBox" />
+                    <controls:SearchBox />
+                    <controls:SearchBox SearchText="query" SearchButtonVisible="False" IsBusy="True" />
+                    <TextBox Text="Invalid" Classes="small" />
+                    <ComboBox SelectedIndex="0">
+                        <ComboBoxItem Content="ComboBox" />
+                        <ComboBoxItem Content="Option 2" />
+                    </ComboBox>
+                    <NumericUpDown Value="42" />
+                    <StackPanel Classes="form-row">
+                        <CheckBox Content="CheckBox" IsChecked="True" />
+                        <CheckBox Content="Unchecked" />
+                        <RadioButton Content="Radio" IsChecked="True" />
+                        <ToggleSwitch IsChecked="True" />
+                    </StackPanel>
+                    <Slider Value="40" />
+                    <ProgressBar Value="60" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Classes="section">
+                <TextBlock Classes="overline" Text="SURFACES" />
+                <Border Classes="card">
+                    <StackPanel Classes="section">
+                        <TextBlock Classes="h4" Text="Card" />
+                        <TextBlock Classes="muted" Text="Raised, bordered content block." TextWrapping="Wrap" />
+                        <StackPanel Classes="form-row">
+                            <Border Classes="badge"><TextBlock Text="badge" /></Border>
+                            <Border Classes="badge accent"><TextBlock Text="accent" /></Border>
+                            <Border Classes="badge success"><TextBlock Text="success" /></Border>
+                            <Border Classes="badge warning"><TextBlock Text="warning" /></Border>
+                            <Border Classes="badge error"><TextBlock Text="error" /></Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Classes="card interactive"><TextBlock Text="Interactive card (hover)" /></Border>
+                <Border Classes="card selected"><TextBlock Text="Selected card" /></Border>
+                <Border Classes="panel"><TextBlock Text="Panel" /></Border>
+                <Border Classes="inset" Padding="8"><TextBlock Text="Inset" /></Border>
+                <Border Classes="callout"><TextBlock Text="Info callout" /></Border>
+                <Border Classes="callout warning"><TextBlock Text="Warning callout" /></Border>
+                <Border Classes="callout error"><TextBlock Text="Error callout" /></Border>
+                <Border Classes="divider" />
+                <Border Classes="empty-state">
+                    <StackPanel Classes="section">
+                        <TextBlock Classes="h4" Text="Nothing here yet" />
+                        <TextBlock Text="Empty state placeholder" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Classes="section">
+                <TextBlock Classes="overline" Text="LISTS &amp; TABS" />
+                <ListBox Height="90" SelectedIndex="1">
+                    <ListBoxItem Content="Item 1" />
+                    <ListBoxItem Content="Item 2 (selected)" />
+                    <ListBoxItem Content="Item 3" />
+                </ListBox>
+                <TabControl>
+                    <TabItem Header="Tab 1"><TextBlock Margin="8" Text="Tab content" /></TabItem>
+                    <TabItem Header="Tab 2" />
+                    <TabItem Header="Tab 3" />
+                </TabControl>
+                <Expander Header="Expander">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+                <Expander Classes="card" Header="Card expander" IsExpanded="True">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

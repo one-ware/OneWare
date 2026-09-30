@@ -57,10 +57,11 @@
                             </MultiBinding>
                         </Button.IsVisible>
                         <Button.Flyout>
-                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                            <Flyout FlyoutPresenterClasses="list"
                                     Placement="BottomEdgeAlignedRight">
                                 <ListBox ItemsSource="{Binding SessionHistory}"
                                          SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                          Width="300" MaxHeight="500">
                                     <Interaction.Behaviors>
                                         <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
@@ -74,10 +75,10 @@
                                     </ListBox.ItemsPanel>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="6">
+                                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
                                                 <TextBlock Text="{Binding DisplayName}"
                                                            TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Grid.Column="2" Text="{Binding UpdatedAtLabel}"
+                                                <TextBlock Grid.Column="1" Text="{Binding UpdatedAtLabel}"
                                                            Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                                            FontSize="11" />
                                             </Grid>
@@ -205,12 +206,12 @@
                     <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
                                TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0 6 0 0">
-                        <Button Classes="RoundButton PrimaryButton" Padding="10 5" Height="NaN"
+                        <Button Classes="RoundButton PrimaryButton" Padding="10 5"
                                 Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
                                 CommandParameter="{Binding $self}"
                                 Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
                                 IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
-                        <Button Classes="RoundButton" Padding="10 5" Height="NaN"
+                        <Button Classes="RoundButton" Padding="10 5"
                                 Command="{Binding InitializeCurrentCommand}"
                                 IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
                                 ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">
@@ -316,7 +317,8 @@
                          Text="{Binding CurrentMessage, Mode=TwoWay}" />
 
                 <Border Grid.Row="2" Background="{DynamicResource EditorInputFooterBrush}"
-                        BorderThickness="0 1 0 0" Padding="6 4">
+                        BorderThickness="0 1 0 0"
+                        CornerRadius="0 0 3 3" Padding="6 4">
                     <DockPanel Height="22" LastChildFill="False" VerticalAlignment="Bottom">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button Command="{Binding AbortCommand}" IsVisible="{Binding IsBusy}">
@@ -364,7 +366,7 @@
             <DockPanel LastChildFill="False" VerticalAlignment="Center">
                 <Button Name="MenuButton" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <Button.Flyout>
-                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        <Flyout FlyoutPresenterClasses="flush"
                                 Placement="Top">
                             <ListBox ItemsSource="{Binding ChatServices}"
                                      SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
@@ -403,7 +405,7 @@
                         IsVisible="{Binding !IsBlocked}"
                         ToolTip.Tip="{Binding AgentService.SelectedAgent.Description}">
                     <Button.Flyout>
-                        <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                        <Flyout FlyoutPresenterClasses="flush"
                                 Placement="Top">
                             <ListBox ItemsSource="{Binding AgentService.Agents}"
                                      SelectedItem="{Binding AgentService.SelectedAgent}" BorderThickness="0"

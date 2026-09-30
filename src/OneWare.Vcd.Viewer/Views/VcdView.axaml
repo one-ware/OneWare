@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -23,11 +23,11 @@
         </Grid.ColumnDefinitions>
 
         <Grid RowDefinitions="30, *, 5, *">
-            <Border BorderThickness="0 0 0 1">
+            <Border Classes="header" Padding="0">
                 <DockPanel>
                     <StackPanel Classes="ToolBar" DockPanel.Dock="Left">
                         <Button Command="{Binding Refresh}">
-                            <Image Height="15" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
+                            <PathIcon Height="15" Data="{StaticResource Icon.RefreshSmall}" Width="15" />
                         </Button>
                         <TextBlock VerticalAlignment="Center" Text="Threads" />
                     </StackPanel>
@@ -84,21 +84,25 @@
                         <Grid ColumnDefinitions="*, 16">
                             <Grid ColumnDefinitions="16, 5, *">
                                 <Panel VerticalAlignment="Center">
-                                    <Image
-                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Wire}}"
-                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}"
+                                    <PathIcon IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Wire}}"
+                                        Height="16"
+                                        Width="16"
+                                        Data="{StaticResource Icon.Pulse}"
                                         VerticalAlignment="Center" />
-                                    <Image
-                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Reg}}"
-                                        Height="16" Width="16" Source="{DynamicResource Material.Pulse}"
+                                    <PathIcon IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Reg}}"
+                                        Height="16"
+                                        Width="16"
+                                        Data="{StaticResource Icon.Pulse}"
                                         VerticalAlignment="Center" />
-                                    <Image
-                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Integer}}"
-                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}"
+                                    <PathIcon IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Integer}}"
+                                        Height="16"
+                                        Width="16"
+                                        Data="{StaticResource Icon.Integer}"
                                         VerticalAlignment="Center" />
-                                    <Image
-                                        IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Real}}"
-                                        Height="16" Width="16" Source="{DynamicResource VSImageLib.Integer_16x}"
+                                    <PathIcon IsVisible="{Binding Type, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static data:VcdLineType.Real}}"
+                                        Height="16"
+                                        Width="16"
+                                        Data="{StaticResource Icon.Integer}"
                                         VerticalAlignment="Center" />
                                 </Panel>
                                 <TextBlock Grid.Column="2" TextTrimming="CharacterEllipsis" Text="{Binding Name}"
@@ -107,7 +111,7 @@
                             <Button Grid.Column="1"
                                     Command="{Binding $parent[ListBox].((viewModels:VcdViewModel)DataContext).AddSignal, FallbackValue={x:Null}}"
                                     CommandParameter="{Binding}" Height="16">
-                                <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="10" />
+                                <PathIcon Data="{StaticResource Icon.Add}" Height="10" Width="10" />
                             </Button>
                         </Grid>
                     </DataTemplate>

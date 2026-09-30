@@ -7,7 +7,7 @@
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          x:Class="OneWare.Core.Views.Windows.WaitCalculatorWindow"
                          Width="300" SizeToContent="Height" x:DataType="windows1:WaitCalculatorWindowViewModel"
-                         Title="Wait Calculator" Padding="5"
+                         Title="Wait Calculator" Padding="{DynamicResource ThemePaddingSmall}"
                          Icon="avares://OneWare.Core/Assets/Images/Icons/WaitCalc_White.png"
                          CustomIcon="{DynamicResource WaitCalculatorIcon}"
                          Background="{DynamicResource ThemeBackgroundBrush}"

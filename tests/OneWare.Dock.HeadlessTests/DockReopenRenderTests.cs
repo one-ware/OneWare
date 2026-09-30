@@ -222,4 +222,66 @@ public class DockReopenRenderTests
         ReopenLeft(factory, root, t2);
         Assert.True(ToolIsRendered(window, "Tool2"), "Second reopen cycle failed");
     }
+
+    // Mirrors MainDockService.Show/FindOrCreateToolDock for DockShowLocation.Right.
+    // "RightPane" is the center column, so the right tool column uses "RightSidePane".
+    private static void ShowRight(TestFactory factory, RootDock root, Tool tool)
+    {
+        var mainLayout = SearchView<ProportionalDock>(root).First(p => p.Id == "MainLayout");
+        var toolDock = SearchView<ToolDock>(root).FirstOrDefault(t => t.Id == "RightPaneTop");
+        if (toolDock == null)
+        {
+            toolDock = new ToolDock
+            {
+                Id = "RightPaneTop", Title = "RightPaneTop", Alignment = Alignment.Right,
+                Proportion = double.NaN, VisibleDockables = factory.CreateList<IDockable>()
+            };
+            var parentDock = SearchView<ProportionalDock>(root).FirstOrDefault(p => p.Id == "RightSidePane");
+            if (parentDock == null)
+            {
+                parentDock = new ProportionalDock
+                {
+                    Id = "RightSidePane", Title = "RightSidePane", Proportion = 0.25,
+                    Orientation = Orientation.Vertical, VisibleDockables = factory.CreateList<IDockable>()
+                };
+                foreach (var child in mainLayout.VisibleDockables!)
+                    if (child is not IProportionalDockSplitter &&
+                        (child.Id == "RightPane" || !(child.Proportion > 0)))
+                        child.Proportion = double.NaN;
+                factory.AddDockable(mainLayout, new ProportionalDockSplitter());
+                factory.AddDockable(mainLayout, parentDock);
+            }
+            factory.AddDockable(parentDock, toolDock);
+        }
+        factory.AddDockable(toolDock, tool);
+        factory.SetActiveDockable(tool);
+    }
+
+    private static Rect ToolBounds(Window window, string toolTitle)
+    {
+        Pump(window);
+        return window.GetVisualDescendants().OfType<Control>()
+            .Where(c => c.DataContext is Tool t && t.Title == toolTitle)
+            .Select(c => c.Bounds).FirstOrDefault();
+    }
+
+    [AvaloniaFact]
+    public void Right_tool_opens_as_new_column_and_reopens()
+    {
+        var (window, root, factory) = CreateHosted();
+        var leftWidthBefore = ToolBounds(window, "Tool1").Width;
+
+        var rTool = new Tool { Id = "RTool", Title = "RTool" };
+        ShowRight(factory, root, rTool);
+        Assert.True(ToolIsRendered(window, "RTool"), "Right tool must render");
+        var bounds = window.GetVisualDescendants().OfType<Control>()
+            .Where(c => c.DataContext is Tool { Title: "RTool" }).Max(c => c.Bounds.Height);
+        Assert.True(bounds > 300, "Right tool should span the full height as its own column");
+        Assert.Equal(leftWidthBefore, ToolBounds(window, "Tool1").Width, 0);
+
+        factory.CloseDockable(rTool);
+        Pump(window);
+        ShowRight(factory, root, rTool);
+        Assert.True(ToolIsRendered(window, "RTool"), "Right tool must render after reopening");
+    }
 }

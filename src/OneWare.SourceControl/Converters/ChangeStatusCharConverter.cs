@@ -19,6 +19,18 @@ public class ChangeStatusCharConverter : IValueConverter
                 _ when (status & (FileStatus.NewInIndex | FileStatus.NewInWorkdir)) != 0 => "+",
                 _ => ""
             };
+        if (value is ChangeKind kind)
+            return kind switch
+            {
+                ChangeKind.Added => "A",
+                ChangeKind.Deleted => "D",
+                ChangeKind.Modified => "M",
+                ChangeKind.Renamed => "R",
+                ChangeKind.Copied => "C",
+                ChangeKind.TypeChanged => "T",
+                ChangeKind.Conflicted => "U",
+                _ => ""
+            };
         return null;
     }
 

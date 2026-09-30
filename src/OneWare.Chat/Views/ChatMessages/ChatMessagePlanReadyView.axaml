@@ -25,14 +25,14 @@
             <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding PlanMarkdown}" />
 
             <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsAnswered}">
-                <Button Height="NaN"
+                <Button
                         Classes="RoundButton PrimaryButton"
                         Command="{Binding StartImplementation}"
                         Padding="5 3"
                         ToolTip.Tip="Switches to Agent mode and carries the plan out"
                         Content="{Binding Event.StartImplementationButtonText}" />
 
-                <Button Height="NaN"
+                <Button
                         Classes="RoundButton"
                         Command="{Binding UpdatePlan}"
                         Padding="5 3"

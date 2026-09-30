@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Commands;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
-using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Python;
@@ -33,19 +32,6 @@ public sealed class PythonInterpreterPickerService(
         {
             Detail = "Select the Python interpreter for the active workspace"
         });
-        windows.RegisterMenuItem("MainWindow_MainMenu/Code",
-            new MenuItemModel("Python")
-            {
-                Header = "Python",
-                Items =
-                [
-                    new MenuItemModel("SelectInterpreter")
-                    {
-                        Header = "Select Interpreter...",
-                        Command = command
-                    }
-                ]
-            });
     }
 
     public string? GetActiveWorkspace()

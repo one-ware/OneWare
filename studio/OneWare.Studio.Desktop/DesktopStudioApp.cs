@@ -25,6 +25,7 @@ using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
@@ -205,7 +206,8 @@ public class DesktopStudioApp : StudioApp
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages
-                .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
+                .Where(x => x.Value.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease
+                            && x.Value.ResolveUpdateVersion() != null)
                 .Select(x => x.Value)
                 .ToList();
 
@@ -242,7 +244,7 @@ public class DesktopStudioApp : StudioApp
                     Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
                     {
                         Message =
-                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.ResolveUpdateVersion()?.Version}",
                         Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
                             .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
                     });

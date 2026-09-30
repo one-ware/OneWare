@@ -24,4 +24,9 @@ public interface IProjectExplorerNode : INotifyPropertyChanged
     public FontWeight FontWeight { get; set; }
 
     public float TextOpacity { get; set; }
+
+    /// <summary>
+    ///     Pills shown after the header (e.g. "Top", "Testbench")
+    /// </summary>
+    public IReadOnlyList<ProjectExplorerTag> Tags => [];
 }

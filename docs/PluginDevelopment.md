@@ -106,6 +106,13 @@ You can generate `compatibility.txt` automatically during build by marking depen
 
 Use `serviceProvider.Resolve<T>()` or `ContainerLocator.Current` to resolve OneWare services.
 
+## Styling
+
+Plugins share the host's design system (tokens and style classes like `primary`, `card`, `badge`, `h3`, `muted`).
+Use the classes instead of inline colors, borders or font sizes. For monochrome icons use
+`<PathIcon Data="{DynamicResource Icon.Name}" />`, which follows the surrounding foreground color.
+See [Styling.md](./Styling.md).
+
 ## OneWare.Essentials interfaces
 
 Below is a concise guide to the public interfaces in `OneWare.Essentials`. Use them as stable
@@ -398,7 +405,7 @@ Common extension patterns used across the built-in modules:
   `MainWindow_MainMenu/File/New`.
 - Show tools or documents using `IMainDockService.Show<T>()` and `IMainDockService.OpenFileAsync`.
 - Register settings for your module via `ISettingsService.RegisterSetting`.
-- Attach file icons with `IFileIconService.RegisterFileIcon`.
+- Attach file icons with `IFileIconService.RegisterFileIcon`. Prefer the built-in `FileIcon.*` resources (see `docs/Styling.md`).
 - Emit build or tool output via `IOutputService.WriteLine` and report errors via `IErrorService`.
 
 
@@ -468,7 +475,9 @@ Project-specific files:
 - `RegisterPreCompileStep<T>()` for pre-compile hooks.
 - `RegisterNodeProvider<T>()` for HDL node extraction.
 - `RegisterProjectPropertyMigration(...)` for project property migrations.
-- `RegisterProjectEntryModification(Action<IProjectEntry>)` for custom project explorer adornments.
+- `RegisterProjectEntryModification(Action<IProjectEntry>)` for custom project explorer adornments. To mark a file
+  (e.g. top entity, testbench), prefer `entry.AddTag(key, new ProjectExplorerTag("Top", ProjectExplorerTagKind.Accent))`
+  / `entry.RemoveTag(key)`, which shows a pill after the name, over icon overlays.
 
 ### Hardware packages
 
@@ -560,7 +569,9 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - `UniversalFpgaToolBar_PinPlannerMenuExtension`: pin planner menu.
 - `UniversalFpgaToolBar_DownloaderConfigurationExtension`: download configuration area.
 - `CompileWindow_TopRightExtension`: pin planner window (top right region).
-- `EditView_Top`: top editor panel (used for test bench toolbar).
+- `EditView_Top`: top editor panel (used for test bench toolbar). Use the `Border.editor-bar` /
+  `WrapPanel.editor-bar-items` style classes so the bar matches the others and wraps on small screens
+  (see `docs/Styling.md`, "Editor bar").
 
 ## Suggested validation and troubleshooting
 

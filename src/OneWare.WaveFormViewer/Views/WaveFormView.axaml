@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -59,18 +59,13 @@
                       Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).RemoveSignal, FallbackValue={x:Null}}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
-                    <Image Source="{DynamicResource MaterialDesign.Delete}" />
+                    <PathIcon Data="{StaticResource Icon.Delete}" />
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <Style Selector="ListBox.Scroll">
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
         <Style Selector="ListBox.Scroll ListBoxItem">
             <Setter Property="Padding" Value="3 0" />
         </Style>
@@ -85,19 +80,18 @@
         </Grid.ColumnDefinitions>
 
         <Border Grid.Row="0" Grid.Column="0" Height="30" Grid.ColumnSpan="3"
-                Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="0, 0, 0, 1">
+                Classes="header" Padding="0">
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
 
                     <Button Command="{Binding XOffsetMinus}"
                             IsEnabled="{Binding Offset, Converter={x:Static converters:SharedConverters.NoComparisonConverter}, ConverterParameter=0}"
                             ToolTip.Tip="Moves offset to left">
-                        <Image Source="{DynamicResource BoxIcons.RegularChevronLeft}" />
+                        <PathIcon Data="{StaticResource Icon.ChevronLeft}" />
                     </Button>
 
                     <Button Command="{Binding XOffsetPlus}" ToolTip.Tip="Moves offset to right">
-                        <Image Source="{DynamicResource BoxIcons.RegularChevronRight}" />
+                        <PathIcon Data="{StaticResource Icon.ChevronRight}" />
                     </Button>
 
                     <controls1:TimeSelectorBox AdjustDisplayToWaitUnit="True" Width="130"
@@ -107,19 +101,19 @@
                     <Separator />
 
                     <Button Command="{Binding ResetView}" ToolTip.Tip="Reset View">
-                        <Image Source="{DynamicResource FluentIconsFilled.FullScreenZoomFilled}" />
+                        <PathIcon Data="{StaticResource Icon.FullScreen}" />
                     </Button>
                     <Button Command="{Binding ZoomOut}" ToolTip.Tip="Zooms out">
-                        <Image Source="{DynamicResource BoxIcons.RegularZoomOut}" />
+                        <PathIcon Data="{StaticResource Icon.ZoomOut}" />
                     </Button>
                     <Button Command="{Binding ZoomIn}" ToolTip.Tip="Zooms in">
-                        <Image Source="{DynamicResource BoxIcons.RegularZoomIn}" />
+                        <PathIcon Data="{StaticResource Icon.ZoomIn}" />
                     </Button>
 
                     <Button>
                         <Button.Flyout>
-                            <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
-                                <StackPanel Orientation="Vertical" Spacing="2" Margin="3">
+                            <Flyout>
+                                <StackPanel Orientation="Vertical" Spacing="2">
                                     <StackPanel Orientation="Horizontal" Spacing="3">
                                         <TextBlock Text="Zoom:" />
                                         <TextBlock Text="{Binding ZoomLevel}" />
@@ -132,7 +126,9 @@
                                 </StackPanel>
                             </Flyout>
                         </Button.Flyout>
-                        <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="10" Height="10"
+                        <PathIcon Data="{StaticResource Icon.ChevronDown}"
+                               Width="10"
+                               Height="10"
                                Margin="1 0" />
                     </Button>
                 </StackPanel>
@@ -165,7 +161,7 @@
                  Bounds="{Binding #SimulatorScaleRenderer.TextAreaBounds, Mode=OneWayToSource}"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
                  Name="TextPartScroll"
-                 Classes="Scroll" Padding="1 0 0 0">
+                 Classes="Scroll transparent" Padding="1 0 0 0">
             <Interaction.Behaviors>
                 <ContextDropBehavior Handler="{StaticResource WaveListDropBehavior}" />
             </Interaction.Behaviors>
@@ -214,7 +210,7 @@
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ScrollViewer.VerticalScrollBarVisibility="Visible"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
-                 Classes="Scroll">
+                 Classes="Scroll transparent" Padding="0">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0" />

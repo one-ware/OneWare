@@ -8,20 +8,21 @@
              x:DataType="viewModels:OneWareCloudAccountSettingViewModel">
     <Grid ColumnDefinitions="40, 5, *" RowDefinitions="20, 20" Margin="0 5">
         <Border ClipToBounds="True" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
-                Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="50">
+                Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="{DynamicResource ThemeCornerRadiusPill}">
             <Panel>
                 <Image Source="{Binding Setting.Image}" />
-                <Image IsVisible="{Binding Setting.Image, Converter={x:Static ObjectConverters.IsNull}}"
-                       Source="{DynamicResource CodeIcons.Account}" Margin="6" />
+                <PathIcon IsVisible="{Binding Setting.Image, Converter={x:Static ObjectConverters.IsNull}}"
+                       Data="{StaticResource Icon.Account}"
+                       Margin="6" />
             </Panel>
 
         </Border>
         <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Setting.Email}" VerticalAlignment="Top" />
         <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
             <Button IsVisible="{Binding !Setting.IsLoggedIn}" Command="{Binding LoginAsync}"
-                    CommandParameter="{Binding $self}" Content="Login" Classes="RoundButton" Padding="5 0" Height="20" />
+                    CommandParameter="{Binding $self}" Content="Login" Classes="secondary small" />
             <Button IsVisible="{Binding Setting.IsLoggedIn}" Command="{Binding Logout}" Content="Logout"
-                    Classes="RoundButton" Padding="5 0" Height="20" />
+                    Classes="secondary small" />
         </StackPanel>
     </Grid>
 </UserControl>

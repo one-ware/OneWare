@@ -23,10 +23,10 @@ public class MergeService : IBackgroundRenderer
 {
     private readonly TextEditor _textEditor;
 
-    public IBrush BorderBrush = new SolidColorBrush(Color.FromArgb(255, 57, 57, 57));
-    public IBrush CurrentBackgroundBrush = new SolidColorBrush(Color.FromArgb(50, 50, 100, 140));
+    public IBrush BorderBrush = GetThemeBrush("ThemeBorderLowBrush");
+    public IBrush CurrentBackgroundBrush = GetThemeBrush("SuccessLowBrush");
 
-    public IBrush HeadBackgroundBrush = new SolidColorBrush(Color.FromArgb(50, 50, 115, 100));
+    public IBrush HeadBackgroundBrush = GetThemeBrush("InfoLowBrush");
 
     public MergeService(TextEditor textEditor, ElementGenerator elementGenerator)
     {
@@ -88,6 +88,11 @@ public class MergeService : IBackgroundRenderer
     }
 
     public Pen BorderPen { get; set; }
+
+    private static IBrush GetThemeBrush(string key)
+    {
+        return Application.Current?.FindResource(key) as IBrush ?? Brushes.Transparent;
+    }
 
     public List<MergeEntry> Merges { get; private set; } = new();
 

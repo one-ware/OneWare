@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,12 +9,13 @@
              xmlns:enums="clr-namespace:OneWare.Essentials.Enums;assembly=OneWare.Essentials"
              xmlns:packageManager="clr-namespace:OneWare.Essentials.PackageManager;assembly=OneWare.Essentials"
              xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Padding="5"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             Padding="{DynamicResource ThemePaddingSmall}"
              x:Class="OneWare.PackageManager.Views.PackageView" x:DataType="viewModels:PackageViewModel">
 
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="12">
-            <TextBlock Text="{Binding PackageState.Package.Name}" FontSize="18" FontWeight="Bold" />
+            <TextBlock Text="{Binding PackageState.Package.Name}" Classes="h2" />
             <ItemsControl ItemsSource="{Binding Links}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -43,8 +44,8 @@
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <TextBlock Text="{Binding Version.Version}" VerticalAlignment="Center" />
                                 <Border VerticalAlignment="Center" IsVisible="{Binding Version.IsPrerelease}"
-                                        Background="DarkOrange" CornerRadius="18">
-                                    <TextBlock FontSize="10" Foreground="Black" Text="Prerelease" Margin="8,0" />
+                                        Classes="badge warning">
+                                    <TextBlock Text="Prerelease" />
                                 </Border>
                             </StackPanel>
                         </DataTemplate>
@@ -56,14 +57,14 @@
                             Command="{Binding MainButtonCommand}"
                             CommandParameter="{Binding $self}"
                             Background="{Binding PrimaryButtonBrush}"
-                            Classes="RoundButton" Padding="8 3" />
+                            Classes="secondary" />
                     <Button>
                         <Button.Flyout>
                             <MenuFlyout>
                                 <MenuItem Header="Remove" Command="{Binding RemoveCommand}" />
                             </MenuFlyout>
                         </Button.Flyout>
-                        <Image Source="{DynamicResource Octicons.KebabVertical}" Width="12" Height="12" />
+                        <PathIcon Data="{StaticResource Icon.KebabVertical}" Width="12" Height="12" />
                     </Button>
                 </StackPanel>
 
@@ -72,7 +73,7 @@
                     <Image Source="{DynamicResource VsImageLib.StatusWarning16X}"
                            Height="12" VerticalAlignment="Center"
                            ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
-                    <TextBlock VerticalAlignment="Center" Foreground="DarkOrange"
+                    <TextBlock VerticalAlignment="Center" Classes="warning"
                                Text="Installed version incompatible!" />
                 </StackPanel>
             </StackPanel>
@@ -86,7 +87,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.DataTemplates>
                     <DataTemplate x:DataType="packageManager:PackageTarget">
-                        <TextBlock Text="{Binding Target}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <TextBlock Text="{Binding Target}" Classes="muted" />
                     </DataTemplate>
                 </ItemsControl.DataTemplates>
             </ItemsControl>
@@ -100,15 +101,13 @@
                 <TextBlock Text="This version is a prerelease. Please report any issues!" />
             </StackPanel>
 
-            <Border Background="{DynamicResource ThemeControlLowBrush}"
-                    Classes="RoundBorder"
+            <Border Classes="panel"
                     Classes.ValidBorder="{Binding SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
-                    Classes.InvalidBorder="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}"
-                    Padding="5">
+                    Classes.InvalidBorder="{Binding !SelectedVersionModel.CompatibilityReport.IsCompatible, FallbackValue={x:False}}">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Spacing="5" Orientation="Vertical"
                                 IsVisible="{Binding SelectedVersionModel.CompatibilityReport, Converter={x:Static ObjectConverters.IsNull}, FallbackValue={x:False}}">
-                        <TextBlock Text="Checking Compatibility..." HorizontalAlignment="Center" />
+                        <TextBlock Text="Checking Compatibility..." HorizontalAlignment="Center" Classes="muted" />
                         <controls:Spinner Height="20" Width="20" />
                     </StackPanel>
 
@@ -131,10 +130,9 @@
                 </StackPanel>
             </Border>
 
-            <ProgressBar IsIndeterminate="{Binding PackageState.IsIndeterminate}"
+            <ProgressBar Classes="large" IsIndeterminate="{Binding PackageState.IsIndeterminate}"
                          Value="{Binding PackageState.Progress}" ShowProgressText="True"
                          Maximum="1.0"
-                         Height="24"
                          IsVisible="{Binding PackageState.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                      ConverterParameter={x:Static enums:PackageStatus.Installing}}" />
         </StackPanel>
@@ -149,7 +147,7 @@
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="models:TabModel">
-                        <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlLowBrush}">
+                        <Border Classes="inset">
                             <controls:MarkdownViewer VirtualizationEnabled="False" Markdown="{Binding Content}"
                                                      Margin="10 5 0 0" />
                         </Border>

@@ -21,7 +21,11 @@ public abstract class OutputBaseViewModel : ExtendedTool
 
     private int _currentLineNumber = 1;
 
+    private bool _hasOutput;
+
     private bool _isLoading;
+
+    private bool _wordWrap;
 
     private TextDocument _outputDocument = new();
 
@@ -53,6 +57,18 @@ public abstract class OutputBaseViewModel : ExtendedTool
     {
         get => _autoScroll;
         set => SetProperty(ref _autoScroll, value);
+    }
+
+    public bool WordWrap
+    {
+        get => _wordWrap;
+        set => SetProperty(ref _wordWrap, value);
+    }
+
+    public bool HasOutput
+    {
+        get => _hasOutput;
+        private set => SetProperty(ref _hasOutput, value);
     }
 
     public void WriteLine(string text, IBrush? textColor = null, IProjectRoot? owner = null)
@@ -103,6 +119,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
         }
 
         OutputDocument.EndUpdate();
+        HasOutput = OutputDocument.TextLength > 0;
     }
 
     public void Clear()
@@ -117,5 +134,7 @@ public abstract class OutputBaseViewModel : ExtendedTool
         OutputDocument.UndoStack.ClearAll();
         LineContexts.Clear();
         _currentLineNumber = 1;
+        _currentLineLength = 0;
+        HasOutput = false;
     }
 }

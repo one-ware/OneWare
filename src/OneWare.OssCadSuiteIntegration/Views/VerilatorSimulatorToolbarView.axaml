@@ -3,15 +3,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.OssCadSuiteIntegration.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="30"
              x:Class="OneWare.OssCadSuiteIntegration.Views.VerilatorSimulatorToolbarView"
              x:DataType="viewModels:VerilatorSimulatorToolbarViewModel">
-    <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
-        <TextBlock Text="Top Module:" />
-        <TextBox Width="140" Text="{Binding TopModule}" />
-        <TextBlock Text="Verilator Arguments:" />
-        <TextBox Width="220" Text="{Binding VerilatorArguments}" />
-        <TextBlock Text="Runtime Arguments:" />
-        <TextBox Width="180" Text="{Binding VerilatorRuntimeArguments}" />
-    </StackPanel>
+    <WrapPanel Classes="editor-bar-items">
+        <StackPanel Classes="form-row">
+            <TextBlock Text="Top Module" />
+            <TextBox Width="130" Text="{Binding TopModule}" />
+        </StackPanel>
+        <StackPanel Classes="form-row">
+            <TextBlock Text="Arguments" ToolTip.Tip="Additional arguments passed to Verilator" />
+            <TextBox Width="180" Watermark="verilator arguments" Text="{Binding VerilatorArguments}" />
+        </StackPanel>
+        <StackPanel Classes="form-row">
+            <TextBlock Text="Runtime" ToolTip.Tip="Arguments passed to the simulation executable" />
+            <TextBox Width="150" Watermark="runtime arguments" Text="{Binding VerilatorRuntimeArguments}" />
+        </StackPanel>
+    </WrapPanel>
 </UserControl>

@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Animation;
@@ -54,6 +54,9 @@ namespace OneWare.Core;
 
 public class App : Application
 {
+    // Bundled in Assets/Fonts and registered as resources in Styles/Accents/Base.axaml; the first one is the default
+    private static readonly string[] BundledEditorFonts = ["JetBrains Mono NL", "Fira Code", "Cascadia Mono"];
+
     private OneWareModuleManager? _moduleManager;
     private ModuleServiceRegistry? _moduleServiceRegistry;
     protected OneWareModuleCatalog ModuleCatalog { get; } = new();
@@ -229,8 +232,10 @@ public class App : Application
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
-            new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL",
-                ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
+            new ComboBoxSetting("Editor Font Family", BundledEditorFonts[0], BundledEditorFonts.Cast<object>().ToArray())
+            {
+                HoverDescription = "Bundled fonts are listed first, followed by the monospace fonts installed on this system"
+            });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize",
             new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>().ToArray()));
@@ -351,6 +356,13 @@ public class App : Application
                 DataContext = Services.Resolve<AboutViewModel>()
             }))
         });
+#if DEBUG
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("StyleGallery")
+        {
+            Header = "Style Gallery",
+            Command = new RelayCommand(() => windowService.Show(new StyleGalleryView()))
+        });
+#endif
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
         {
             Header = "Extras",
@@ -764,15 +776,16 @@ public class App : Application
 
         Services.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
         {
-            if (FontManager.Current.SystemFonts.Contains(x))
-            {
+            if (!string.IsNullOrWhiteSpace(x) && BundledEditorFonts.Contains(x) &&
+                this.TryFindResource(x, out var resourceFont) && resourceFont is FontFamily bundledFont)
+                Resources["EditorFont"] = bundledFont;
+            else if (!string.IsNullOrWhiteSpace(x) && FontManager.Current.SystemFonts.Contains(x))
                 Resources["EditorFont"] = new FontFamily(x);
-                return;
-            }
-
-            var findFont = this.TryFindResource(x, out var resourceFont);
-            if (findFont && resourceFont is FontFamily fFamily) Resources["EditorFont"] = this.FindResource(x);
+            else
+                // Fonts that are no longer bundled or installed (e.g. IntelOne Mono) fall back to the default
+                Resources["EditorFont"] = this.FindResource(BundledEditorFonts[0]);
         });
+        _ = AddInstalledMonospaceFontsAsync();
 
         Services.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
         {
@@ -813,6 +826,59 @@ public class App : Application
                 logger.LogDebug(e, "Binary cache cleanup failed");
             }
         });
+    }
+
+    private async Task AddInstalledMonospaceFontsAsync()
+    {
+        if (PlatformHelper.Platform is PlatformId.Wasm) return;
+        if (Services.Resolve<ISettingsService>().GetSetting("Editor_FontFamily") is not ComboBoxSetting setting) return;
+
+        var fontManager = FontManager.Current;
+        var logger = Services.Resolve<ILogger>();
+
+        try
+        {
+            // Loading every system typeface takes a moment, so keep it off the UI thread and out of the startup phase
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            var installed = await Task.Run(() => fontManager.SystemFonts
+                .Select(x => x.Name)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(x => !BundledEditorFonts.Contains(x, StringComparer.OrdinalIgnoreCase) && IsMonospace(fontManager, x))
+                .ToArray());
+
+            // Some systems split weights / widths into separate families ("Noto Sans Mono Condensed Black"), keep the base family
+            var families = installed
+                .Where(x => !installed.Any(y => x.Length > y.Length && x.StartsWith(y + " ", StringComparison.OrdinalIgnoreCase)))
+                .Order(StringComparer.OrdinalIgnoreCase);
+
+            setting.Options = BundledEditorFonts.Concat(families).Cast<object>().ToArray();
+        }
+        catch (Exception e)
+        {
+            logger.LogDebug(e, "Listing installed monospace fonts failed");
+        }
+    }
+
+    private static bool IsMonospace(FontManager fontManager, string familyName)
+    {
+        try
+        {
+            // The fixed pitch flag is unreliable (set by emoji / CJK fonts, missing in some code fonts), so compare the
+            // advances of a few Latin glyphs instead; symbol fonts without letters are skipped as well
+            if (!fontManager.TryGetGlyphTypeface(new Typeface(familyName), out var glyphTypeface) ||
+                !glyphTypeface.FamilyName.Equals(familyName, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var glyphs = "iMW0_".Select(c => glyphTypeface.GetGlyph(c)).ToArray();
+            if (glyphs.Any(x => x == 0)) return false;
+
+            var advance = glyphTypeface.GetGlyphAdvance(glyphs[0]);
+            return advance > 0 && glyphs.All(x => glyphTypeface.GetGlyphAdvance(x) == advance);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void ReportStartupTimings(object? sender, EventArgs e)
