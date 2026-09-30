@@ -12,6 +12,7 @@ public class WaveFormEffects : Control
 {
     private readonly IPen _loadingMarkerBrushPen;
     private readonly IPen _markerBrushPen;
+    private readonly IPen _secondMarkerBrushPen;
 
     private CompositeDisposable _disposableReg = new();
 
@@ -19,6 +20,7 @@ public class WaveFormEffects : Control
     {
         ClipToBounds = true;
         _markerBrushPen = new Pen(Brushes.DarkRed, 2);
+        _secondMarkerBrushPen = new Pen(Brushes.DodgerBlue, 2);
         _loadingMarkerBrushPen = new Pen(Brushes.Chartreuse, 5);
     }
 
@@ -61,7 +63,7 @@ public class WaveFormEffects : Control
             var xxx = (vm.SecondMarkerOffset - vm.Offset) / (multiplier / vm.ZoomMultiply);
 
             if (xxx > 0 && xxx < Bounds.Width)
-                context.DrawLine(_markerBrushPen, new Point(xxx, 0), new Point(xxx, Bounds.Height));
+                context.DrawLine(_secondMarkerBrushPen, new Point(xxx, 0), new Point(xxx, Bounds.Height));
         }
 
         if (vm.LoadingMarkerOffset != long.MaxValue)
@@ -73,12 +75,22 @@ public class WaveFormEffects : Control
         }
     }
 
+    /// <summary>
+    ///     Converts an x position on this control to a time offset.
+    /// </summary>
+    public long GetOffsetFromPosition(double x)
+    {
+        if (DataContext is not WaveFormViewModel vm) return 0;
+
+        var multiplier = Wave.CalcMult(vm.Max, Bounds.Width - 10);
+        return (long)((vm.Offset * vm.ZoomMultiply + x * multiplier) / vm.ZoomMultiply);
+    }
+
     public void SetPos(double x, bool pointerPressed, bool cursorOnly = false)
     {
         if (DataContext is not WaveFormViewModel vm) return;
 
-        var multiplier = Wave.CalcMult(vm.Max, Bounds.Width - 10);
-        var offset = (long)((vm.Offset * vm.ZoomMultiply + x * multiplier) / vm.ZoomMultiply);
+        var offset = GetOffsetFromPosition(x);
         vm.CursorOffset = offset;
 
         if (cursorOnly) return;

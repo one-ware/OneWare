@@ -79,6 +79,20 @@ public partial class WaveModel : ObservableObject
 
     public IVcdSignal Signal { get; }
 
+    /// <summary>
+    ///     Label of a separator bar shown above this signal. <see langword="null" /> means no separator.
+    /// </summary>
+    public string? SeparatorLabel
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(HasSeparator));
+        }
+    }
+
+    public bool HasSeparator => SeparatorLabel != null;
+
     [GeneratedRegex(@"\[(-?\d+):(-?\d+)\]")]
     private static partial Regex FixedPointShiftRegex();
 

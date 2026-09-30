@@ -1,10 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.Vcd.Parser;
@@ -50,7 +53,8 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
         WaveFormViewer.Signals.ToObservableChangeSet().Transform(signal =>
                 Observable.Merge(signal.WhenValueChanged(x => x.FixedPointShift).Select(object? (_) => null),
                     signal.WhenValueChanged(x => x.AutomaticFixedPointShift).Select(object? (_) => null),
-                    signal.WhenValueChanged(x => x.DataType).Select(object? (_) => null)))
+                    signal.WhenValueChanged(x => x.DataType).Select(object? (_) => null),
+                    signal.WhenValueChanged(x => x.SeparatorLabel).Select(object? (_) => null)))
             .MergeMany(x => x)
             .Subscribe(_ => MarkIfDirty());
     }
@@ -197,18 +201,12 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                     model.DataType = signal.DataType;
                     model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
                     model.FixedPointShift = signal.FixedPointShift;
+                    model.SeparatorLabel = signal.SeparatorLabel;
                 }
         }
         else
         {
-            foreach (var signal in context.OpenSignals)
-                if (_vcdFile.Definition.SignalRegister.TryGetValue(signal.Id, out var vcdSignal))
-                {
-                    var model = WaveFormViewer.AddSignal(vcdSignal);
-                    model.DataType = signal.DataType;
-                    model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
-                    model.FixedPointShift = signal.FixedPointShift;
-                }
+            ApplyContext(context, _vcdFile.Definition.SignalRegister);
         }
 
         if (lastTime.HasValue) WaveFormViewer.Max = lastTime.Value;
@@ -243,6 +241,66 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
                 s.Invalidate();
 
         return true;
+    }
+
+    private void ApplyContext(VcdContext context, IReadOnlyDictionary<string, IVcdSignal> signalRegister)
+    {
+        foreach (var (signal, vcdSignal) in VcdContextManager.ResolveSignals(context, signalRegister))
+        {
+            var model = WaveFormViewer.AddSignal(vcdSignal);
+            model.DataType = signal.DataType;
+            model.AutomaticFixedPointShift = signal.AutomaticFixedPointShift;
+            model.FixedPointShift = signal.FixedPointShift;
+            model.SeparatorLabel = signal.SeparatorLabel;
+        }
+    }
+
+    private VcdContext CreateContext()
+    {
+        return new VcdContext(WaveFormViewer.Signals.Select(x =>
+                new VcdContextSignal(x.Signal.Id, x.DataType, x.AutomaticFixedPointShift, x.FixedPointShift)
+                {
+                    Name = x.Signal.Name,
+                    SeparatorLabel = x.SeparatorLabel
+                })
+            .ToArray());
+    }
+
+    private static readonly FilePickerFileType ProfileFileType = new("Waveform Profile")
+    {
+        Patterns = ["*.vcdconf"]
+    };
+
+    /// <summary>
+    ///     Saves the displayed signals, their formats and separators to a profile file.
+    /// </summary>
+    public async Task SaveProfileAsync(Control owner)
+    {
+        if (TopLevel.GetTopLevel(owner) is not { } topLevel) return;
+
+        var path = await StorageProviderHelper.SelectSaveFileAsync(topLevel, "Save Waveform Profile",
+            Path.GetDirectoryName(FullPath), ".vcdconf", Path.GetFileNameWithoutExtension(FullPath) + ".vcdconf",
+            true, ProfileFileType);
+
+        if (path != null) await VcdContextManager.SaveContextAsync(path, CreateContext());
+    }
+
+    /// <summary>
+    ///     Replaces the displayed signals with the signals of a profile file.
+    /// </summary>
+    public async Task LoadProfileAsync(Control owner)
+    {
+        if (_vcdFile == null || TopLevel.GetTopLevel(owner) is not { } topLevel) return;
+
+        var path = await StorageProviderHelper.SelectFileAsync(topLevel, "Load Waveform Profile",
+            Path.GetDirectoryName(FullPath), ProfileFileType);
+
+        if (path == null || await VcdContextManager.LoadContextAsync(path) is not { } context || _vcdFile == null)
+            return;
+
+        WaveFormViewer.Signals.Clear();
+        ApplyContext(context, _vcdFile.Definition.SignalRegister);
+        MarkIfDirty();
     }
 
     private void ReportProgress(int progress)
@@ -296,8 +354,7 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
     public override async Task<bool> SaveAsync()
     {
         if (!_settingsService.GetSettingValue<bool>("VcdViewer_SaveView_Enable")) return true;
-        var context = new VcdContext(WaveFormViewer.Signals.Select(x =>
-            new VcdContextSignal(x.Signal.Id, x.DataType, x.AutomaticFixedPointShift, x.FixedPointShift)));
+        var context = CreateContext();
         var result = await VcdContextManager.SaveContextAsync(GetSaveFilePath(FullPath), context);
         if (result)
         {
@@ -325,7 +382,8 @@ public class VcdViewModel : ExtendedDocument, IStreamableDocument
             if (openSignalsContext[i].Id != WaveFormViewer.Signals[i].Signal.Id ||
                 openSignalsContext[i].DataType != WaveFormViewer.Signals[i].DataType
                 || openSignalsContext[i].AutomaticFixedPointShift != WaveFormViewer.Signals[i].AutomaticFixedPointShift
-                || openSignalsContext[i].FixedPointShift != WaveFormViewer.Signals[i].FixedPointShift)
+                || openSignalsContext[i].FixedPointShift != WaveFormViewer.Signals[i].FixedPointShift
+                || openSignalsContext[i].SeparatorLabel != WaveFormViewer.Signals[i].SeparatorLabel)
                 return true;
         return false;
     }
