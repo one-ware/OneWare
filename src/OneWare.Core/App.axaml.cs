@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Animation;
@@ -54,6 +54,9 @@ namespace OneWare.Core;
 
 public class App : Application
 {
+    // Bundled in Assets/Fonts and registered as resources in Styles/Accents/Base.axaml; the first one is the default
+    private static readonly string[] BundledEditorFonts = ["JetBrains Mono NL", "Fira Code", "Cascadia Mono"];
+
     private OneWareModuleManager? _moduleManager;
     private ModuleServiceRegistry? _moduleServiceRegistry;
     protected OneWareModuleCatalog ModuleCatalog { get; } = new();
@@ -76,6 +79,7 @@ public class App : Application
             provider.GetRequiredService<ILoggerFactory>().CreateLogger("OneWare"));
 
         //Services
+        services.AddSingleton<IBinaryCacheService, BinaryCacheService>();
         services.AddSingleton<IPluginService, PluginService>();
         services.AddSingleton<OnnxRuntimeBootstrapper>();
         services.AddSingleton<IOnnxRuntimeService, OnnxRuntimeService>();
@@ -228,8 +232,10 @@ public class App : Application
             });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontFamily",
-            new ComboBoxSetting("Editor Font Family", "JetBrains Mono NL",
-                ["JetBrains Mono NL", "IntelOne Mono", "Consolas", "Comic Sans MS", "Fira Code"]));
+            new ComboBoxSetting("Editor Font Family", BundledEditorFonts[0], BundledEditorFonts.Cast<object>().ToArray())
+            {
+                HoverDescription = "Bundled fonts are listed first, followed by the monospace fonts installed on this system"
+            });
 
         settingsService.RegisterSetting("Editor", "Appearance", "Editor_FontSize",
             new ComboBoxSetting("Font Size", 15, Enumerable.Range(10, 30).Cast<object>().ToArray()));
@@ -350,6 +356,13 @@ public class App : Application
                 DataContext = Services.Resolve<AboutViewModel>()
             }))
         });
+#if DEBUG
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Help", new MenuItemModel("StyleGallery")
+        {
+            Header = "Style Gallery",
+            Command = new RelayCommand(() => windowService.Show(new StyleGalleryView()))
+        });
+#endif
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Extras")
         {
             Header = "Extras",
@@ -604,8 +617,75 @@ public class App : Application
     {
     }
 
+    /// <summary>
+    ///     Optional window shown while the application initializes (desktop only).
+    ///     Return null to show the main window directly after initialization.
+    /// </summary>
+    protected virtual Window? CreateSplashWindow()
+    {
+        return null;
+    }
+
+    /// <summary>
+    ///     Called once services, modules and the shell are initialized, right before content is loaded.
+    ///     Use this instead of code after <c>base.OnFrameworkInitializationCompleted()</c>, since initialization
+    ///     may run deferred while a splash window is visible.
+    /// </summary>
+    protected virtual void OnInitializationCompleted()
+    {
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
+        StartupTimer.Mark("Avalonia framework initialized");
+
+        var splashWindow = ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+            ? CreateSplashWindow()
+            : null;
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && splashWindow != null)
+        {
+            desktop.MainWindow = splashWindow;
+            splashWindow.Show();
+
+            var initialized = false;
+
+            void RunDeferredInitialization()
+            {
+                if (initialized) return;
+                initialized = true;
+
+                try
+                {
+                    InitializeApplication();
+                }
+                finally
+                {
+                    if (desktop.MainWindow is { } mainWindow && mainWindow != splashWindow)
+                        mainWindow.Show();
+
+                    splashWindow.Close();
+                }
+            }
+
+            // Wait until the splash window has been committed for rendering, then run the heavy initialization.
+            // The timer is a fallback in case no frame is rendered (e.g. window not mapped).
+            splashWindow.RequestAnimationFrame(_ =>
+                Dispatcher.UIThread.Post(RunDeferredInitialization, DispatcherPriority.Background));
+            DispatcherTimer.RunOnce(RunDeferredInitialization, TimeSpan.FromMilliseconds(500));
+        }
+        else
+        {
+            InitializeApplication();
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private void InitializeApplication()
+    {
+        StartupTimer.Mark("Initialization started");
+
         DeferredContentPresentationSettings.BudgetMode = DeferredContentPresentationBudgetMode.ItemCount;
         DeferredContentPresentationSettings.MaxPresentationsPerPass = 1000;
         DeferredContentPresentationSettings.InitialDelay = TimeSpan.Zero;
@@ -636,6 +716,7 @@ public class App : Application
         var compositeProvider = provider.Resolve<ICompositeServiceProvider>();
         
         ContainerLocator.SetContainer(compositeProvider);
+        StartupTimer.Mark("Services registered");
 
         var logger = compositeProvider.GetRequiredService<ILogger>();
         _moduleManager.SetLogger(logger);
@@ -644,11 +725,13 @@ public class App : Application
             $"App Started: {Global.VersionCode} OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
 
         compositeProvider.Resolve<OnnxRuntimeBootstrapper>().Initialize();
+        StartupTimer.Mark("ONNX runtime initialized");
 
-        
         LoadStartupPlugins();
+        StartupTimer.Mark("Startup plugins loaded");
 
         var shell = CreateShell();
+        StartupTimer.Mark("Shell created");
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime &&
             shell is Window shellWindow)
             desktopLifetime.MainWindow = shellWindow;
@@ -657,6 +740,7 @@ public class App : Application
             singleViewLifetime.MainView = shellView;
 
         _moduleManager.InitializeModules(compositeProvider);
+        StartupTimer.Mark("Modules initialized");
 
         Dispatcher.UIThread.UnhandledException += (s, e) => { Console.WriteLine($"Unhandled: {e.Exception}"); };
 
@@ -684,6 +768,7 @@ public class App : Application
         Services.Resolve<ILogger>().Log("Framework initialization complete!");
         Services.Resolve<BackupService>().LoadAutoSaveFile();
         Services.Resolve<IMainDockService>().LoadLayout(GetDefaultLayoutName);
+        StartupTimer.Mark("Layout loaded");
         Services.Resolve<WelcomeScreenViewModel>().LoadRecentProjects();
         Services.Resolve<BackupService>().Init();
 
@@ -691,24 +776,123 @@ public class App : Application
 
         Services.Resolve<ISettingsService>().GetSettingObservable<string>("Editor_FontFamily").Subscribe(x =>
         {
-            if (FontManager.Current.SystemFonts.Contains(x))
-            {
+            if (!string.IsNullOrWhiteSpace(x) && BundledEditorFonts.Contains(x) &&
+                this.TryFindResource(x, out var resourceFont) && resourceFont is FontFamily bundledFont)
+                Resources["EditorFont"] = bundledFont;
+            else if (!string.IsNullOrWhiteSpace(x) && FontManager.Current.SystemFonts.Contains(x))
                 Resources["EditorFont"] = new FontFamily(x);
-                return;
-            }
-
-            var findFont = this.TryFindResource(x, out var resourceFont);
-            if (findFont && resourceFont is FontFamily fFamily) Resources["EditorFont"] = this.FindResource(x);
+            else
+                // Fonts that are no longer bundled or installed (e.g. IntelOne Mono) fall back to the default
+                Resources["EditorFont"] = this.FindResource(BundledEditorFonts[0]);
         });
+        _ = AddInstalledMonospaceFontsAsync();
 
         Services.Resolve<ISettingsService>().GetSettingObservable<int>("Editor_FontSize").Subscribe(x =>
         {
             Resources["EditorFontSize"] = (double)x;
         });
 
-        _ = LoadContentAsync();
+        OnInitializationCompleted();
 
-        base.OnFrameworkInitializationCompleted();
+        ScheduleBinaryCacheCleanup();
+
+        _ = LoadContentAsync();
+        StartupTimer.Mark("Content loading started");
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } shownWindow })
+            shownWindow.Opened += ReportStartupTimings;
+        else
+            Dispatcher.UIThread.Post(() => StartupTimer.Report(Services.Resolve<ILogger>()),
+                DispatcherPriority.Background);
+    }
+
+    private void ScheduleBinaryCacheCleanup()
+    {
+        if (PlatformHelper.Platform is PlatformId.Wasm) return;
+
+        var binaryCacheService = Services.Resolve<IBinaryCacheService>();
+        var logger = Services.Resolve<ILogger>();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Keep IO away from the startup phase
+                await Task.Delay(TimeSpan.FromSeconds(15));
+                binaryCacheService.CleanupUnusedEntries();
+            }
+            catch (Exception e)
+            {
+                logger.LogDebug(e, "Binary cache cleanup failed");
+            }
+        });
+    }
+
+    private async Task AddInstalledMonospaceFontsAsync()
+    {
+        if (PlatformHelper.Platform is PlatformId.Wasm) return;
+        if (Services.Resolve<ISettingsService>().GetSetting("Editor_FontFamily") is not ComboBoxSetting setting) return;
+
+        var fontManager = FontManager.Current;
+        var logger = Services.Resolve<ILogger>();
+
+        try
+        {
+            // Loading every system typeface takes a moment, so keep it off the UI thread and out of the startup phase
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            var installed = await Task.Run(() => fontManager.SystemFonts
+                .Select(x => x.Name)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(x => !BundledEditorFonts.Contains(x, StringComparer.OrdinalIgnoreCase) && IsMonospace(fontManager, x))
+                .ToArray());
+
+            // Some systems split weights / widths into separate families ("Noto Sans Mono Condensed Black"), keep the base family
+            var families = installed
+                .Where(x => !installed.Any(y => x.Length > y.Length && x.StartsWith(y + " ", StringComparison.OrdinalIgnoreCase)))
+                .Order(StringComparer.OrdinalIgnoreCase);
+
+            setting.Options = BundledEditorFonts.Concat(families).Cast<object>().ToArray();
+        }
+        catch (Exception e)
+        {
+            logger.LogDebug(e, "Listing installed monospace fonts failed");
+        }
+    }
+
+    private static bool IsMonospace(FontManager fontManager, string familyName)
+    {
+        try
+        {
+            // The fixed pitch flag is unreliable (set by emoji / CJK fonts, missing in some code fonts), so compare the
+            // advances of a few Latin glyphs instead; symbol fonts without letters are skipped as well
+            if (!fontManager.TryGetGlyphTypeface(new Typeface(familyName), out var glyphTypeface) ||
+                !glyphTypeface.FamilyName.Equals(familyName, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var glyphs = "iMW0_".Select(c => glyphTypeface.GetGlyph(c)).ToArray();
+            if (glyphs.Any(x => x == 0)) return false;
+
+            var advance = glyphTypeface.GetGlyphAdvance(glyphs[0]);
+            return advance > 0 && glyphs.All(x => glyphTypeface.GetGlyphAdvance(x) == advance);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void ReportStartupTimings(object? sender, EventArgs e)
+    {
+        if (sender is Window window)
+        {
+            window.Opened -= ReportStartupTimings;
+            StartupTimer.Mark("Main window opened");
+            window.RequestAnimationFrame(_ =>
+            {
+                StartupTimer.Mark("First frame");
+                StartupTimer.Report(Services.Resolve<ILogger>());
+            });
+        }
     }
 
     protected virtual Task LoadContentAsync()

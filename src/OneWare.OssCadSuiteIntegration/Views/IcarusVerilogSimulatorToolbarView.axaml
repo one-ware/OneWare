@@ -3,17 +3,19 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.OssCadSuiteIntegration.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="30"
              x:Class="OneWare.OssCadSuiteIntegration.Views.IcarusVerilogSimulatorToolbarView"
              x:DataType="viewModels:IcarusVerilogSimulatorToolbarViewModel">
-    <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
-        <TextBlock Text="IVerilog Arguments:" />
-        <TextBox Width="200" Text="{Binding IcarusVerilogArguments}" />
-        <TextBlock VerticalAlignment="Center" Text="Format"
-                   ToolTip.Tip="Select the output format to use. VCD can be opened inside the IDE, while GHW and FST require GTKWave." />
-        <Border Classes="RoundToolBar">
-            <ComboBox Width="100" ItemsSource="{Binding AvailableWaveOutputFormats}" SelectedIndex="0"
+    <WrapPanel Classes="editor-bar-items">
+        <StackPanel Classes="form-row">
+            <TextBlock Text="Arguments" ToolTip.Tip="Additional arguments passed to iverilog" />
+            <TextBox Width="180" Watermark="iverilog arguments" Text="{Binding IcarusVerilogArguments}" />
+        </StackPanel>
+        <StackPanel Classes="form-row">
+            <TextBlock Text="Format"
+                       ToolTip.Tip="Select the output format to use. VCD can be opened inside the IDE, while LXT2 and FST require GTKWave." />
+            <ComboBox Width="80" ItemsSource="{Binding AvailableWaveOutputFormats}"
                       SelectedItem="{Binding WaveOutputFormat, Mode=TwoWay}" />
-        </Border>
-    </StackPanel>
+        </StackPanel>
+    </WrapPanel>
 </UserControl>

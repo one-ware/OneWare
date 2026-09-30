@@ -16,14 +16,14 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="10" Margin="0 10">
             <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsWaitingForBrowserResponse}"
                         HorizontalAlignment="Center">
-                <TextBlock Text="Waiting for login from browser..." VerticalAlignment="Center" FontWeight="Bold" />
+                <TextBlock Classes="semibold" Text="Waiting for login from browser..." VerticalAlignment="Center" />
                 <controls:Spinner Height="16" VerticalAlignment="Center" />
             </StackPanel>
             <Button Command="{Binding LoginAsync}"
                     CommandParameter="{Binding #AuthenticateCloudViewView}"
                     HorizontalAlignment="Stretch"
                     Height="35"
-                    Classes="PrimaryButton"
+                    Classes="primary"
                     Content="Retry Login" />
         </StackPanel>
 
@@ -35,8 +35,7 @@
                               VerticalAlignment="Center"
                               IsVisible="{Binding IsLoading}" />
 
-            <TextBlock Text="{Binding ErrorText}"
-                       Foreground="OrangeRed"
+            <TextBlock Classes="error" Text="{Binding ErrorText}"
                        TextWrapping="Wrap"
                        VerticalAlignment="Center"
                        IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />

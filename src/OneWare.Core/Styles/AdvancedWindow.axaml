@@ -20,7 +20,7 @@
                             BorderThickness="{x:Static helpers:PlatformHelper.WindowsOnlyBorder}"
                             IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}" />
                     <Panel Margin="{TemplateBinding WindowDecorationMargin}"
-                           Background="Transparent" />
+                           Background="{DynamicResource ThemeControlTransparentBrush}" />
                     <VisualLayerManager>
                         <VisualLayerManager.ChromeOverlayLayer>
                             <TitleBar />
@@ -31,7 +31,8 @@
                                     <Grid RowDefinitions="Auto,*, Auto">
                                         <Border
                                             IsVisible="{TemplateBinding IsExtendedIntoWindowDecorations, Converter={x:Static BoolConverters.Not}}"
-                                            Height="{Binding #TitleBarContent.Bounds.Height}" Background="Transparent"
+                                            Height="{Binding #TitleBarContent.Bounds.Height}"
+                                            Background="{DynamicResource ThemeControlTransparentBrush}"
                                             Width="1" />
                                         <ContentPresenter Grid.Row="1"
                                                           Margin="{TemplateBinding Padding}"

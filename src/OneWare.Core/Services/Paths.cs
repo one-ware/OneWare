@@ -24,6 +24,10 @@ public class Paths : IPaths
                                ? Environment.SpecialFolder.LocalApplicationData
                                : Environment.SpecialFolder.ApplicationData), AppFolderName);
 
+        CacheDirectory = Environment.GetEnvironmentVariable("ONEWARE_APPDATA_DIR") is { Length: > 0 }
+            ? Path.Combine(AppDataDirectory, "Cache")
+            : Path.Combine(GetPlatformCacheRoot(), AppFolderName);
+
         ProjectsDirectory = Environment.GetEnvironmentVariable("ONEWARE_PROJECTS_DIR")
                             ?? Path.Combine(DocumentsDirectory, "Projects");
 
@@ -38,7 +42,7 @@ public class Paths : IPaths
         //...
 
         var sessionsDir = Path.Combine(TempDirectory, "OneWare", "Sessions");
-        CleanupSessions(sessionsDir);
+        var previousSessions = Directory.Exists(sessionsDir) ? Directory.GetDirectories(sessionsDir) : [];
 
         SessionDirectory = Path.Combine(sessionsDir, "OneWareStudioSession").CheckNameDirectory();
         Directory.CreateDirectory(SessionDirectory);
@@ -46,6 +50,9 @@ public class Paths : IPaths
         //Lock file
         _fileStreamLock = new FileStream(Path.Combine(SessionDirectory, ".session_lock"), FileMode.OpenOrCreate,
             FileAccess.ReadWrite, FileShare.None, 32, FileOptions.DeleteOnClose);
+
+        // Deleting old sessions can take a while (they may contain large files), so do it off the startup path
+        if (previousSessions.Length > 0) _ = Task.Run(() => CleanupSessions(previousSessions));
     }
 
     public string AppName { get; }
@@ -57,6 +64,7 @@ public class Paths : IPaths
     public string TempDirectory => Path.GetTempPath();
 
     public string SessionDirectory { get; }
+    public string CacheDirectory { get; }
     public string LayoutDirectory => Path.Combine(AppDataDirectory, "Layouts");
     public string SettingsPath => Path.Combine(AppDataDirectory, "Settings.json");
 
@@ -75,39 +83,45 @@ public class Paths : IPaths
 
     public string UpdateInfoUrl => "https://cdn.one-ware.com/onewarestudio";
 
-    private static void CleanupSessions(string sessionsDir)
+    private static string GetPlatformCacheRoot()
     {
-        try
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return Path.Combine(home, "Library", "Caches");
+
+        return Environment.GetEnvironmentVariable("XDG_CACHE_HOME") is { Length: > 0 } xdgCache
+            ? xdgCache
+            : Path.Combine(home, ".cache");
+    }
+
+    private static void CleanupSessions(IEnumerable<string> sessionFolders)
+    {
+        foreach (var session in sessionFolders)
         {
-            if (Directory.Exists(sessionsDir))
+            try
             {
-                var sessionFolders = Directory.GetDirectories(sessionsDir);
+                var lockFilePath = Path.Combine(session, ".session_lock");
+                var fileInfo = new FileInfo(lockFilePath);
 
-                foreach (var session in sessionFolders)
+                if (fileInfo.Exists)
                 {
-                    var lockFilePath = Path.Combine(session, ".session_lock");
-                    var fileInfo = new FileInfo(lockFilePath);
-
-                    try
-                    {
-                        if (fileInfo.Exists)
-                        {
-                            using var stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.None);
-                            stream.Close();
-                        }
-
-                        Directory.Delete(session, true);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.Write(e.Message);
-                    }
+                    using var stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+                    stream.Close();
                 }
+
+                // Move the folder away first so a new session can never pick up a half deleted directory
+                var deletePath = Path.Combine(Path.GetDirectoryName(session)!, $".deleting-{Guid.NewGuid():N}");
+                Directory.Move(session, deletePath);
+                Directory.Delete(deletePath, true);
             }
-        }
-        catch (Exception e)
-        {
-            Debug.Write(e.Message);
+            catch (Exception e)
+            {
+                Debug.Write(e.Message);
+            }
         }
     }
 }

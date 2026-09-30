@@ -25,9 +25,9 @@
                                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                                         <ItemsPresenter Name="PART_ItemsPresenter"
                                                         ItemsPanel="{TemplateBinding ItemsPanel}" />
-                                        <Button Command="{Binding NewTerminal}" Margin="5 0 5 1" Height="18" Width="18"
-                                                CornerRadius="2">
-                                            <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8" />
+                                        <Button Classes="icon small" Command="{Binding NewTerminal}" Margin="5 0 5 1" Height="18" Width="18"
+                                                CornerRadius="{DynamicResource ThemeCornerRadiusSmall}">
+                                            <PathIcon Data="{StaticResource Icon.Add}" Height="10" Width="10" />
                                         </Button>
                                     </StackPanel>
                                     <ContentPresenter DockPanel.Dock="Bottom" Name="PART_SelectedContentHost"
@@ -49,10 +49,10 @@
             </TabControl.ItemsPanel>
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel Orientation="Horizontal" Classes="spacing">
                         <TextBlock Text="{Binding Title}" />
-                        <Button Command="{Binding Close}">
-                            <Image Height="8" Width="8" Source="{DynamicResource Material.WindowClose}" />
+                        <Button Height="NaN" Classes="icon" Command="{Binding Close}">
+                            <PathIcon Height="10" Width="10" Data="{StaticResource Icon.WindowClose}" />
                         </Button>
                     </StackPanel>
                 </DataTemplate>

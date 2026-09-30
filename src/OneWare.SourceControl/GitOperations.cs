@@ -130,4 +130,27 @@ public static class GitOperations
                 new ExplicitPathsOptions(), options)
             : repository.Diff.Compare<Patch>(paths, true, new ExplicitPathsOptions(), options);
     }
+
+    public sealed record CommitChange(string Path, string OldPath, ChangeKind Status);
+
+    /// <summary>Files changed by a commit compared to its first parent (or the empty tree for a root commit).</summary>
+    public static IReadOnlyList<CommitChange> GetCommitChanges(Repository repository, string sha)
+    {
+        var commit = repository.Lookup<Commit>(sha) ??
+                     throw new ArgumentException($"Commit '{sha}' was not found.", nameof(sha));
+        var changes = repository.Diff.Compare<TreeChanges>(commit.Parents.FirstOrDefault()?.Tree, commit.Tree,
+            new CompareOptions { Similarity = SimilarityOptions.Renames });
+        return changes.Select(x => new CommitChange(x.Path.Replace('\\', '/'), x.OldPath.Replace('\\', '/'), x.Status))
+            .ToArray();
+    }
+
+    public static Patch GetCommitPatch(Repository repository, string sha, string path, string? oldPath,
+        int contextLines)
+    {
+        var commit = repository.Lookup<Commit>(sha) ??
+                     throw new ArgumentException($"Commit '{sha}' was not found.", nameof(sha));
+        var paths = oldPath != null && oldPath != path ? new[] { oldPath, path } : new[] { path };
+        return repository.Diff.Compare<Patch>(commit.Parents.FirstOrDefault()?.Tree, commit.Tree, paths,
+            new ExplicitPathsOptions(), new CompareOptions { ContextLines = contextLines });
+    }
 }

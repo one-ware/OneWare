@@ -8,7 +8,7 @@
              xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Copilot.Views.CopilotChatExtensionView" x:DataType="services:CopilotChatService">
+             x:Class="OneWare.Copilot.Views.CopilotChatExtensionView" x:DataType="services:CopilotChatServiceBase">
     <UserControl.Resources>
         <DataTemplate x:Key="ModelTooltipTemplate" x:DataType="converters:ModelTooltipInfo">
             <StackPanel Spacing="5" MaxWidth="300">
@@ -61,12 +61,18 @@
         <!-- Model selector -->
         <Button Name="MenuButton" VerticalAlignment="Center" Margin="0 0 0 0">
             <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                <Flyout FlyoutPresenterClasses="flush"
                         Placement="TopEdgeAlignedRight">
                     <DockPanel MinWidth="200" MaxHeight="360">
                         <TextBox DockPanel.Dock="Top" Padding="4 5" Height="30"
                                  Watermark="Search models..." BorderThickness="0"
                                  Text="{Binding ModelSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <!-- OneWare Cloud AI passes requests on to the model providers (terms 3.15) -->
+                        <TextBlock DockPanel.Dock="Bottom" Margin="8 4 8 6" MaxWidth="260"
+                                   HorizontalAlignment="Left" TextWrapping="Wrap" FontSize="10"
+                                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                   IsVisible="{Binding IsOneWareCloud}"
+                                   Text="Prompts, images and project files read by the chat are sent to the model provider (Microsoft; for Global models also Anthropic). Do not share personal data." />
                         <ListBox ItemsSource="{Binding FilteredModels}"
                                  SelectedItem="{Binding SelectedModel}" BorderThickness="0">
                             <Interaction.Behaviors>
@@ -108,7 +114,7 @@
                 IsVisible="{Binding ShowAutoTier}"
                 ToolTip.Tip="Auto routing preference">
             <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                <Flyout FlyoutPresenterClasses="flush"
                         Placement="TopEdgeAlignedRight">
                     <ListBox ItemsSource="{Binding AutoTiers}"
                              SelectedItem="{Binding SelectedAutoTier}" BorderThickness="0"
@@ -145,7 +151,7 @@
                 IsVisible="{Binding ShowReasoningEffort}"
                 ToolTip.Tip="Reasoning effort">
             <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                <Flyout FlyoutPresenterClasses="flush"
                         Placement="TopEdgeAlignedRight">
                     <ListBox ItemsSource="{Binding ReasoningEfforts}"
                              SelectedItem="{Binding SelectedReasoningEffort}" BorderThickness="0"
@@ -182,7 +188,7 @@
                 IsVisible="{Binding ShowContextSize}"
                 ToolTip.Tip="Context length">
             <Button.Flyout>
-                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}"
+                <Flyout FlyoutPresenterClasses="flush"
                         Placement="TopEdgeAlignedRight">
                     <ListBox ItemsSource="{Binding ContextSizes}"
                              SelectedItem="{Binding SelectedContextSize}" BorderThickness="0"

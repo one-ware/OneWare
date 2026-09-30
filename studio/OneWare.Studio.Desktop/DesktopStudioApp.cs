@@ -25,6 +25,7 @@ using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
 using OneWare.OssCadSuiteIntegration;
 using OneWare.PackageManager;
@@ -86,9 +87,14 @@ public class DesktopStudioApp : StudioApp
         }
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    protected override Window? CreateSplashWindow()
     {
-        base.OnFrameworkInitializationCompleted();
+        return new SplashWindow();
+    }
+
+    protected override void OnInitializationCompleted()
+    {
+        base.OnInitializationCompleted();
 
         Services.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
         Services.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
@@ -200,7 +206,8 @@ public class DesktopStudioApp : StudioApp
 
             //step 3: Get dated plugins
             updatePackages = packageService.Packages
-                .Where(x => x.Value.Status == PackageStatus.UpdateAvailable)
+                .Where(x => x.Value.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease
+                            && x.Value.ResolveUpdateVersion() != null)
                 .Select(x => x.Value)
                 .ToList();
 
@@ -237,7 +244,7 @@ public class DesktopStudioApp : StudioApp
                     Services.Resolve<IApplicationStateService>().AddNotification(new ApplicationNotification()
                     {
                         Message =
-                            $"Update available: {updatePackage.Package.Name} {updatePackage.Package.Versions?.Last().Version}",
+                            $"Update available: {updatePackage.Package.Name} {updatePackage.ResolveUpdateVersion()?.Version}",
                         Command = new AsyncRelayCommand(() => Services.Resolve<IPackageWindowService>()
                             .ShowExtensionManagerAsync(updatePackage.Package!.Id!))
                     });

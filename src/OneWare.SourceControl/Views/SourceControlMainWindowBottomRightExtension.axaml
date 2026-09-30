@@ -13,7 +13,7 @@
             Command="{Binding SyncAsyncCommand}"
             ToolTip.Tip="Synchronize Changes">
         <StackPanel Orientation="Horizontal" Spacing="3">
-            <controls:Spinner Foreground="White" Height="13"
+            <controls:Spinner Foreground="{DynamicResource ThemeForegroundBrush}" Height="13"
                               CustomIcon="{DynamicResource VsCode.SyncWhite}"
                               IsIntermediate="True"
                               IsAnimationRunning="{Binding IsLoading}" />

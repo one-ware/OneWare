@@ -6,8 +6,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Dialogs;
-using Avalonia.Media;
 using Microsoft.Extensions.Logging;
+using OneWare.Core.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
@@ -29,11 +29,7 @@ internal abstract class Program
                     ? Environment.OSVersion.Version.Build >= 22000 ? 8 : 0
                     : 0
             })
-            //.WithInterFont()
-            .With(new FontManagerOptions
-            {
-                DefaultFamilyName = "avares://OneWare.Core/Assets/Fonts#Noto Sans"
-            })
+            .WithOneWareFonts()
             .LogToTrace();
 
         if (DemoApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))

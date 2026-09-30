@@ -15,6 +15,12 @@
 - Updated ONNX Runtime to 1.28, OpenCvSharp and Avalonia to 11.3.22
 - Fixed a possible crash when showing a message box
 
+## 1.0.40
+
+- New: OneWare Cloud Powered Copilot
+- Improve Startup Speed
+- Restore SplashScreen
+
 ## 1.0.31
 
 - Fix preventing plugin updates forcing a restart

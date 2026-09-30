@@ -9,7 +9,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Border x:Name="HeaderBorder"
-                        Background="Transparent" Height="23"
+                        Background="{DynamicResource ThemeControlTransparentBrush}" Height="23"
                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                         BorderThickness="0 0 0 1"
                         CornerRadius="{TemplateBinding CornerRadius}">

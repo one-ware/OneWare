@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:OneWare.Core.ViewModels.Controls"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="100"
              x:DataType="controls:CustomNotificationViewModel">
-    <Border Padding="12" MinHeight="20" UseLayoutRounding="False" BorderThickness="0">
+    <Border Padding="{DynamicResource ThemePaddingLarge}" MinHeight="20" UseLayoutRounding="False">
         <Grid ColumnDefinitions="Auto,*">
             <Panel IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0,0,12,0"
                    Width="25" Height="25" VerticalAlignment="Top">
@@ -14,7 +14,7 @@
             </Panel>
             <DockPanel Grid.Column="1" LastChildFill="false">
                 <TextBlock DockPanel.Dock="Top" Text="{Binding Title}" TextWrapping="Wrap"
-                           FontWeight="Medium" />
+                           Classes="semibold" />
                 <TextBlock DockPanel.Dock="Top" Text="{Binding Message}" TextWrapping="Wrap"
                            Opacity=".8"
                            Margin="0,8,0,0" />
@@ -22,11 +22,11 @@
                 <StackPanel IsVisible="{Binding ButtonText, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Margin="0,8, 0, 0" DockPanel.Dock="Bottom" Spacing="0" Orientation="Horizontal">
                     <Border>
-                        <Button NotificationCard.CloseOnClick="True" Classes="RoundButton PrimaryButton"
+                        <Button NotificationCard.CloseOnClick="True" Classes="primary"
                                 Cursor="Hand" Height="30"
                                 Command="{Binding ExecuteButton}">
-                            <TextBlock Foreground="{DynamicResource ThemeForegroundBrush}" Text="{Binding ButtonText}"
-                                       FontSize="13" Margin="4" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding ButtonText}" Classes="h4"
+                                       Margin="4" VerticalAlignment="Center" />
                         </Button>
                     </Border>
                 </StackPanel>

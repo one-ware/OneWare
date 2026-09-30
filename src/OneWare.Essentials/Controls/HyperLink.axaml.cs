@@ -41,6 +41,19 @@ public partial class HyperLink : UserControl
         set => SetValue(TextDecorationsProperty, value);
     }
 
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var size = base.MeasureOverride(availableSize);
+
+        // Inside an InlineUIContainer, Avalonia treats the control's bottom as its baseline unless BaselineOffset
+        // is set, which lifts the link above the surrounding text and makes the line taller.
+        var baseline = Padding.Top + BorderThickness.Top + PartButton.Padding.Top + PartButton.BorderThickness.Top +
+                       Urltext.TextLayout.Baseline;
+        TextBlock.SetBaselineOffset(this, baseline);
+
+        return size;
+    }
+
     public void Open_Click(object? sender, RoutedEventArgs e)
     {
         if (File.Exists(Url))

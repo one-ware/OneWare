@@ -20,6 +20,9 @@ public partial class SearchBox : UserControl
     public static readonly StyledProperty<string> LabelProperty =
         AvaloniaProperty.Register<SearchBox, string>(nameof(Label), "Search...", false, BindingMode.TwoWay);
 
+    public static readonly StyledProperty<bool> IsBusyProperty =
+        AvaloniaProperty.Register<SearchBox, bool>(nameof(IsBusy));
+
     public static readonly StyledProperty<string> SearchTextProperty =
         AvaloniaProperty.Register<SearchBox, string>(nameof(SearchText), "", false, BindingMode.TwoWay);
 
@@ -50,6 +53,15 @@ public partial class SearchBox : UserControl
     {
         get => GetValue(LabelProperty);
         set => SetValue(LabelProperty, value);
+    }
+
+    /// <summary>
+    ///     Shows a small spinner inside the field while a search is running.
+    /// </summary>
+    public bool IsBusy
+    {
+        get => GetValue(IsBusyProperty);
+        set => SetValue(IsBusyProperty, value);
     }
 
     public bool SearchButtonVisible

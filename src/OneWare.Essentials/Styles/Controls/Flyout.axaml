@@ -1,0 +1,87 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="12" Background="{DynamicResource ThemeBackgroundBrush}">
+            <FlyoutPresenter>
+                <TextBlock Text="Default flyout" />
+            </FlyoutPresenter>
+            <FlyoutPresenter Classes="list">
+                <ListBox>
+                    <ListBoxItem Content="List flyout" IsSelected="True" />
+                    <ListBoxItem Content="Second item" />
+                </ListBox>
+            </FlyoutPresenter>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <!--
+            Default for every Flyout: rounded, elevated, comfortable padding.
+            Variants via FlyoutPresenterClasses on the Flyout:
+              list  - small padding for ListBox / MenuItem content (matches menus)
+              flush - no padding for content that brings its own layout
+        -->
+        <ControlTheme x:Key="{x:Type FlyoutPresenter}" TargetType="FlyoutPresenter">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+            <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+            <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <!-- Content is clipped to the rounded shape; the outline is drawn on top so flush content can't cover it -->
+                <ControlTemplate>
+                    <Panel>
+                        <Border Name="LayoutRoot"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding BorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}"
+                                ClipToBounds="True">
+                            <ScrollViewer
+                                HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                                <ContentPresenter Name="PART_ContentPresenter"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  VerticalContentAlignment="Stretch"
+                                                  Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </ScrollViewer>
+                        </Border>
+                        <Border Name="PART_Outline"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                IsHitTestVisible="False" />
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+        <!-- Legacy key kept for plugins; identical to the default flyout -->
+        <ControlTheme x:Key="FlyoutNoPadding" TargetType="FlyoutPresenter"
+                      BasedOn="{StaticResource {x:Type FlyoutPresenter}}" />
+    </Styles.Resources>
+
+    <Style Selector="FlyoutPresenter.list">
+        <Setter Property="Padding" Value="{DynamicResource ThemePaddingSmall}" />
+    </Style>
+
+    <Style Selector="FlyoutPresenter.list ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="FlyoutPresenter.flush">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+</Styles>

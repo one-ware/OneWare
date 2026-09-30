@@ -168,7 +168,7 @@ public class TypeScriptModule : OneWareModuleBase
         languageManager.RegisterService(typeof(LanguageServiceTypeScript), true, SupportedExtensions);
 
         var fileIconService = serviceProvider.Resolve<IFileIconService>();
-        fileIconService.RegisterFileIcon("SimpleIcons.TypeScript", ".ts", ".tsx", ".mts", ".cts");
-        fileIconService.RegisterFileIcon("Ionicons.LogoJavascript", ".jsx", ".mjs", ".cjs");
+        fileIconService.RegisterFileIcon("FileIcon.TypeScript", ".ts", ".tsx", ".mts", ".cts");
+        fileIconService.RegisterFileIcon("FileIcon.JavaScript", ".jsx", ".mjs", ".cjs");
     }
 }

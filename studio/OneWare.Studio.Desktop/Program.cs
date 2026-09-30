@@ -11,15 +11,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Dialogs;
-using Avalonia.Media;
 using Avalonia.Threading;
 using Dock.Settings;
 using Microsoft.Extensions.Logging;
-using OneWare.CloudIntegration;
-using OneWare.CloudIntegration.Services;
 using OneWare.Core.Data;
+using OneWare.Core.Extensions;
 using OneWare.Core.Services;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Helpers;
@@ -92,11 +89,7 @@ internal abstract class Program
                     : 0
             })
             .With(new MacOSPlatformOptions())
-            //.WithInterFont()
-            .With(new FontManagerOptions
-            {
-                DefaultFamilyName = "avares://OneWare.Core/Assets/Fonts#Noto Sans"
-            })
+            .WithOneWareFonts()
             .LogToTrace();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && StudioApp.SettingsService.GetSettingValue<bool>("Experimental_UseManagedFileDialog"))
@@ -228,30 +221,6 @@ internal abstract class Program
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}");
 
-            if (target == "shutdown")
-            {
-                logger?.Log("Shutting down via IPC request");
-
-                if (ContainerLocator.Container?.Resolve<IApplicationStateService>() is { } applicationStateService)
-                    _ = applicationStateService.TryShutdownAsync();
-                else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
-                    desktopApp.Shutdown();
-
-                return;
-            }
-
-            if (target == OneWareCloudIntegrationModule.LogoutIpcMessage)
-            {
-                var settingsService = ContainerLocator.Container?.Resolve<ISettingsService>();
-                var userId = settingsService?.GetSettingValue<string>(
-                    OneWareCloudIntegrationModule.OneWareAccountUserIdKey);
-
-                if (!string.IsNullOrWhiteSpace(userId))
-                    ContainerLocator.Container?.Resolve<OneWareCloudLoginService>().Logout(userId);
-
-                return;
-            }
-
             var mainWindow = ContainerLocator.Container?.Resolve<MainWindow>();
             if (mainWindow != null)
             {
@@ -295,6 +264,7 @@ internal abstract class Program
     {
         try
         {
+            StartupTimer.Mark("Main entered");
             var startupSymbols = OneWareStartupCommandLine.CreateSymbols();
             var rootCommand = OneWareStartupCommandLine.CreateRootCommand(startupSymbols);
 
@@ -346,7 +316,10 @@ internal abstract class Program
 
             _ = Task.Run(() => RunIpcServerAsync(_ipcCancellation.Token));
 
-            var result = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            var appBuilder = BuildAvaloniaApp();
+            StartupTimer.Mark("Settings loaded, Avalonia setup started");
+
+            var result = appBuilder.StartWithClassicDesktopLifetime(args);
 
             return result;
         }

@@ -1,0 +1,184 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Width="350" Spacing="12">
+                <Expander Header="Expander" IsExpanded="True">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+                <Expander Header="Collapsed">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+                <Expander Classes="card" Header="Card expander" IsExpanded="True">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+                <Expander ExpandDirection="Up" Header="Expand up" IsExpanded="True">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+                <Expander ExpandDirection="Right" Header="Right" IsExpanded="True">
+                    <TextBlock Text="Expanded content" />
+                </Expander>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <!--
+        Expander: a flat header row (rotating chevron + header, ghost-button hover) above the content.
+        Use the "card" class for a bordered, self-contained section with a divider under the header.
+        Replaces SimpleTheme's template (triangle glyph, no hover state).
+    -->
+    <Styles.Resources>
+        <ControlTheme x:Key="OneWareExpanderToggle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
+            <Setter Property="Padding" Value="4 2" />
+            <Setter Property="MinHeight" Value="{DynamicResource ThemeControlHeight}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Name="PART_Border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Name="PART_ToggleContent"
+                                          Content="{TemplateBinding Content}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover /template/ Border#PART_Border">
+                <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+            </Style>
+            <Style Selector="^:pressed /template/ Border#PART_Border">
+                <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightHighBrush}" />
+            </Style>
+        </ControlTheme>
+
+        <ControlTheme x:Key="{x:Type Expander}" TargetType="Expander">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ContentTransition">
+                <CrossFade Duration="0:0:0.15" />
+            </Setter>
+            <Setter Property="Template">
+                <ControlTemplate TargetType="Expander">
+                    <Border Name="PART_Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <DockPanel>
+                            <ToggleButton Name="PART_toggle"
+                                          Theme="{StaticResource OneWareExpanderToggle}"
+                                          IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}">
+                                <DockPanel>
+                                    <PathIcon Name="PART_Chevron"
+                                              DockPanel.Dock="Left"
+                                              Width="10" Height="10"
+                                              Margin="2 0 6 0"
+                                              VerticalAlignment="Center"
+                                              RenderTransformOrigin="50%,50%"
+                                              Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                              Data="{DynamicResource Icon.ChevronRight}" />
+                                    <ContentPresenter Name="PART_HeaderPresenter"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Header}"
+                                                      ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalContentAlignment="Center" />
+                                </DockPanel>
+                            </ToggleButton>
+                            <ContentPresenter Name="PART_ContentPresenter"
+                                              Padding="{TemplateBinding Padding}"
+                                              BorderBrush="{TemplateBinding BorderBrush}"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              IsVisible="{TemplateBinding IsExpanded}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+
+            <Style Selector="^ /template/ PathIcon#PART_Chevron">
+                <Setter Property="RenderTransform" Value="rotate(0deg)" />
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                    </Transitions>
+                </Setter>
+            </Style>
+            <Style Selector="^:pointerover /template/ PathIcon#PART_Chevron">
+                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            </Style>
+            <Style Selector="^:disabled">
+                <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+            </Style>
+
+            <!-- Directions: the header docks opposite to where the content opens -->
+            <Style Selector="^[ExpandDirection=Down] /template/ ToggleButton#PART_toggle">
+                <Setter Property="DockPanel.Dock" Value="Top" />
+            </Style>
+            <Style Selector="^[ExpandDirection=Down]:expanded /template/ PathIcon#PART_Chevron">
+                <Setter Property="RenderTransform" Value="rotate(90deg)" />
+            </Style>
+
+            <Style Selector="^[ExpandDirection=Up] /template/ ToggleButton#PART_toggle">
+                <Setter Property="DockPanel.Dock" Value="Bottom" />
+            </Style>
+            <Style Selector="^[ExpandDirection=Up]:expanded /template/ PathIcon#PART_Chevron">
+                <Setter Property="RenderTransform" Value="rotate(-90deg)" />
+            </Style>
+
+            <Style Selector="^[ExpandDirection=Left] /template/ ToggleButton#PART_toggle">
+                <Setter Property="DockPanel.Dock" Value="Right" />
+            </Style>
+            <Style Selector="^[ExpandDirection=Left] /template/ PathIcon#PART_Chevron">
+                <Setter Property="RenderTransform" Value="rotate(180deg)" />
+            </Style>
+            <Style Selector="^[ExpandDirection=Left]:expanded /template/ PathIcon#PART_Chevron">
+                <Setter Property="RenderTransform" Value="rotate(0deg)" />
+            </Style>
+
+            <Style Selector="^[ExpandDirection=Right] /template/ ToggleButton#PART_toggle">
+                <Setter Property="DockPanel.Dock" Value="Left" />
+            </Style>
+            <Style Selector="^[ExpandDirection=Right]:expanded /template/ PathIcon#PART_Chevron">
+                <Setter Property="RenderTransform" Value="rotate(180deg)" />
+            </Style>
+
+            <!-- Card: bordered section, divider between header and content -->
+            <Style Selector="^.card">
+                <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+                <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+                <Setter Property="Padding" Value="{DynamicResource ThemePadding}" />
+            </Style>
+            <Style Selector="^.card /template/ ToggleButton#PART_toggle">
+                <Setter Property="Margin" Value="2" />
+            </Style>
+            <Style Selector="^.card[ExpandDirection=Down]:expanded /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderThickness" Value="0 1 0 0" />
+            </Style>
+            <Style Selector="^.card[ExpandDirection=Up]:expanded /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderThickness" Value="0 0 0 1" />
+            </Style>
+            <Style Selector="^.card[ExpandDirection=Left]:expanded /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderThickness" Value="0 0 1 0" />
+            </Style>
+            <Style Selector="^.card[ExpandDirection=Right]:expanded /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderThickness" Value="1 0 0 0" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
+</Styles>

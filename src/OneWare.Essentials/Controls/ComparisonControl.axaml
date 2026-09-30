@@ -38,7 +38,7 @@
                                 <Setter Property="Cursor" Value="Arrow" />
                                 <Setter Property="Template">
                                     <ControlTemplate>
-                                        <Border Background="Transparent"
+                                        <Border Background="{DynamicResource ThemeControlTransparentBrush}"
                                                 UseLayoutRounding="False">
                                             <Grid RowDefinitions="*">
                                                 <controls:ScrollBarRenderer CodeBox="{Binding $parent[avaloniaEdit:TextEditor]}"
@@ -84,7 +84,7 @@
                                 <Setter Property="Cursor" Value="Arrow" />
                                 <Setter Property="Template">
                                     <ControlTemplate>
-                                        <Border Background="Transparent"
+                                        <Border Background="{DynamicResource ThemeControlTransparentBrush}"
                                                 UseLayoutRounding="False">
                                             <Grid RowDefinitions="*">
                                                 <controls:ScrollBarRenderer CodeBox="{Binding $parent[avaloniaEdit:TextEditor]}"

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -29,6 +30,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     private readonly IAiFunctionProvider _aiFunctionProvider;
     private readonly ISettingsService _settingsService;
     private ChatMessageErrorViewModel? _notConnectedMessage;
+
+    // Set while the conversation shows errors or service prompts that a successful answer resolves.
+    private bool _hasResolvableMessages;
     private readonly string _statePath;
     private readonly string _historyRootPath;
 
@@ -283,17 +287,47 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 oldValue.EventReceived -= OnEventReceived;
                 oldValue.StatusChanged -= OnStatusChanged;
                 oldValue.SessionReset -= OnSessionReset;
+                oldValue.PropertyChanged -= OnChatServicePropertyChanged;
                 ReleaseConnectionWaiters(false);
             }
+
+            Blocker = value?.Blocker;
 
             if (value == null) return;
 
             value.EventReceived += OnEventReceived;
             value.StatusChanged += OnStatusChanged;
             value.SessionReset += OnSessionReset;
+            value.PropertyChanged += OnChatServicePropertyChanged;
             
             _ = InitializeAndRestoreCurrentServiceAsync(value);
         }
+    }
+
+    /// <summary>
+    /// Set while the selected service cannot be used (e.g. login or subscription required). The chat is hidden
+    /// and replaced by a panel describing the blocker until the service clears it.
+    /// </summary>
+    public ChatServiceBlocker? Blocker
+    {
+        get;
+        private set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(IsBlocked));
+        }
+    }
+
+    public bool IsBlocked => Blocker != null;
+
+    private void OnChatServicePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(IChatService.Blocker)) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ReferenceEquals(sender, SelectedChatService))
+                Blocker = SelectedChatService?.Blocker;
+        });
     }
 
     public AiFileEditService AiFileEditService { get; }
@@ -334,6 +368,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         {
             return await running;
         }
+
+        // Prompts and errors from an earlier attempt (e.g. "Upgrade to Pro") are stale now; the
+        // service reports them again if the problem persists.
+        DismissResolvedMessages();
 
         var task = InitializeServiceAsync(service);
         _initializeTask = task;
@@ -422,6 +460,31 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         if (string.IsNullOrWhiteSpace(targetSessionId)) return;
 
         await serviceWithSessions.LoadSessionAsync(targetSessionId);
+        ShowReplacementSessionIfNeeded(chatService, targetSessionId);
+    }
+
+    /// <summary>
+    /// A session that no longer exists in the backend is replaced by a new one; the transcript of
+    /// the requested session must not stay visible, otherwise it would be saved into the new session.
+    /// </summary>
+    private void ShowReplacementSessionIfNeeded(IChatService service, string requestedSessionId)
+    {
+        if (SelectedChatService != service ||
+            service is not IChatServiceWithSessions sessions ||
+            string.IsNullOrWhiteSpace(sessions.CurrentSessionId) ||
+            string.Equals(sessions.CurrentSessionId, requestedSessionId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Messages.Clear();
+        _assistantMessagesById.Clear();
+        _turnAssistantMessages.Clear();
+        _assistantReasoningById.Clear();
+        _subAgents.Clear();
+        _pendingSubAgentTools.Clear();
+
+        UpdateSelectedSessionFromService(service);
     }
 
     private async Task NewChatAsync()
@@ -491,6 +554,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 _notConnectedMessage =
                     new ChatMessageErrorViewModel($"{chatService.Name} is not connected yet.");
                 AddMessage(_notConnectedMessage);
+                _hasResolvableMessages = true;
                 return;
             }
         }
@@ -591,8 +655,20 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             if (queueCleared)
                 CancelQueuedMessagesLocally();
 
+            RemoveOpenRequests();
+
             IsBusy = !queueCleared && QueuedMessages.Count > 0;
         }
+    }
+
+    /// <summary>Removes questions and permission prompts the stopped turn no longer waits for.</summary>
+    private void RemoveOpenRequests()
+    {
+        foreach (var message in Messages
+                     .Where(m => m is ChatMessageUserInputRequestViewModel { IsAnswered: false }
+                         or ChatMessagePermissionRequestViewModel)
+                     .ToList())
+            Messages.Remove(message);
     }
 
     private async Task RemoveQueuedMessageAsync(ChatMessageUserViewModel? message)
@@ -705,6 +781,23 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             : message;
 
         AddMessage(new ChatMessageErrorViewModel(errorMessage), agentId);
+        _hasResolvableMessages = true;
+    }
+
+    /// <summary>
+    /// Removes earlier errors and service prompts (e.g. "Upgrade to Pro") from the conversation once the
+    /// main agent answers again, since the problem they reported is resolved.
+    /// </summary>
+    private void DismissResolvedMessages()
+    {
+        if (!_hasResolvableMessages) return;
+        _hasResolvableMessages = false;
+
+        foreach (var message in Messages
+                     .Where(m => m is ChatMessageErrorViewModel or ChatMessageWithButtonViewModel)
+                     .ToList())
+            Messages.Remove(message);
+        _notConnectedMessage = null;
     }
 
     private ChatMessageReasoningViewModel GetOrCreateAssistantReasoningMessage(string? reasoningId,
@@ -884,6 +977,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 if (string.IsNullOrWhiteSpace(x.Content)) break;
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (x.AgentId == null) DismissResolvedMessages();
                     var message = GetOrCreateAssistantMessage(x.MessageId, x.AgentId);
                     message.IsStreaming = true;
                     message.Content += x.Content;
@@ -897,6 +991,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 if (string.IsNullOrWhiteSpace(x.Content)) break;
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (x.AgentId == null) DismissResolvedMessages();
                     var message = GetOrCreateAssistantMessage(x.MessageId, x.AgentId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
@@ -1011,7 +1106,13 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
+                    // Replace (don't stack) a prompt that is repeated, e.g. on every send while the plan lacks Cloud AI.
+                    foreach (var existing in Messages.OfType<ChatMessageWithButtonViewModel>()
+                                 .Where(m => m.Event.Message == x.Message && m.Event.ButtonText == x.ButtonText)
+                                 .ToList())
+                        Messages.Remove(existing);
                     AddMessage(new ChatMessageWithButtonViewModel(x));
+                    _hasResolvableMessages = true;
                     NotifyContentAdded();
                 });
                 break;
@@ -1157,7 +1258,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
         Dispatcher.UIThread.Post(() =>
         {
-            if (SelectedChatService == service)
+            if (SelectedChatService != service) return;
+
+            if (!string.Equals(sessions.CurrentSessionId, sessionId, StringComparison.Ordinal))
+                ShowReplacementSessionIfNeeded(service, sessionId);
+            else
                 UpdateSelectedSessionFromService(service);
         });
     }
@@ -1165,6 +1270,61 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public void RegisterChatService(IChatService chatService)
     {
         ChatServices.Add(chatService);
+
+        if (chatService is IChatServiceWithHistoryReset historyReset)
+            historyReset.HistoryCleared += OnServiceHistoryCleared;
+    }
+
+    private void OnServiceHistoryCleared(object? sender, EventArgs e)
+    {
+        if (sender is not IChatService service) return;
+
+        if (Dispatcher.UIThread.CheckAccess())
+            ClearServiceHistory(service);
+        else
+            Dispatcher.UIThread.Post(() => ClearServiceHistory(service));
+    }
+
+    /// <summary>
+    /// Discards every stored chat of a service, e.g. because a different account logged in.
+    /// </summary>
+    private void ClearServiceHistory(IChatService service)
+    {
+        var serviceName = service.Name;
+
+        _selectedSessionByService.Remove(serviceName);
+        _historyByService.Remove(serviceName);
+
+        var serviceDirectory = GetServiceHistoryDirectory(serviceName);
+        try
+        {
+            if (Directory.Exists(serviceDirectory))
+                Directory.Delete(serviceDirectory, true);
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning($"Deleting chat history of '{serviceName}' failed", ex);
+        }
+
+        if (SelectedChatService == service)
+        {
+            // Drop the visible transcript too, otherwise it would be saved into the new account's session.
+            SessionHistory.Clear();
+            SelectedSessionHistory = null;
+            Messages.Clear();
+            _notConnectedMessage = null;
+            _assistantMessagesById.Clear();
+            _turnAssistantMessages.Clear();
+            _assistantReasoningById.Clear();
+            _subAgents.Clear();
+            _pendingSubAgentTools.Clear();
+            QueuedMessages.Clear();
+            _pendingLocalMessages.Clear();
+            _cancelledQueuedMessages.Clear();
+        }
+
+        if (_initialized) SaveState();
     }
 
     private void OnFunctionStarted(object? sender, AiFunctionStartedEvent function)
@@ -1462,8 +1622,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
                     PruneAllSessionHistory();
 
-                    SelectedChatService = ChatServices.FirstOrDefault(x => x.Name == state.SelectedChatServiceName) ??
-                                          ChatServices.FirstOrDefault();
+                    // States from before the default service changed switch once to the new default.
+                    var savedService = state.Version >= ChatState.CurrentVersion
+                        ? ChatServices.FirstOrDefault(x => x.Name == state.SelectedChatServiceName)
+                        : null;
+                    SelectedChatService = savedService ?? ChatServices.FirstOrDefault();
                     return;
                 }
             }
@@ -1568,6 +1731,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     {
         return new ChatState
         {
+            Version = ChatState.CurrentVersion,
             SelectedChatServiceName = SelectedChatService?.Name,
             SelectedSessionByService = _selectedSessionByService
         };
@@ -1807,6 +1971,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             var loaded = await serviceWithSessions.LoadSessionAsync(item.SessionId);
             if (!loaded)
             {
+                ShowReplacementSessionIfNeeded(SelectedChatService, item.SessionId);
                 AddErrorMessage($"Failed to load session '{item.SessionId}'.");
                 return;
             }
@@ -2046,6 +2211,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private sealed class ChatState
     {
+        /// <summary>Version 1: OneWare Cloud became the default chat service.</summary>
+        public const int CurrentVersion = 1;
+
+        public int Version { get; set; }
+
         public string? SelectedChatServiceName { get; set; }
 
         public Dictionary<string, string> SelectedSessionByService { get; set; } = new(StringComparer.Ordinal);

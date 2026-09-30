@@ -8,34 +8,35 @@
              x:Class="OneWare.CloudIntegration.Views.OneWareCloudAccountFlyoutView"
              x:DataType="viewModels:OneWareCloudAccountFlyoutViewModel">
 
-    <StackPanel Orientation="Horizontal" Spacing="5">
-        <Button Command="{Binding OpenFeedbackDialogAsync}"
+    <StackPanel Orientation="Horizontal" Classes="toolbar">
+        <Button Classes="icon" Command="{Binding OpenFeedbackDialogAsync}"
                 CommandParameter="{Binding $self}" ToolTip.Tip="Feedback">
             <Button.Content>
-                <Image Source="{DynamicResource Unicons.CommentMessage}" />
+                <PathIcon Data="{StaticResource Icon.CommentMessage}" />
             </Button.Content>
         </Button>
 
-        <Button Padding="1">
+        <Button Classes="icon" Padding="2" ToolTip.Tip="OneWare Cloud account">
             <Button.Content>
                 <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Left" ClipToBounds="True" CornerRadius="24">
+                    <Border DockPanel.Dock="Left" ClipToBounds="True"
+                            CornerRadius="{DynamicResource ThemeCornerRadiusPill}">
                         <Panel>
-                            <Image Source="{Binding SettingViewModel.Setting.Image}" />
-                            <Image
-                                IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
+                            <Image Width="20" Height="20" Source="{Binding SettingViewModel.Setting.Image}" />
+                            <PathIcon IsVisible="{Binding  SettingViewModel.Setting.Image, FallbackValue={x:Null}, 
                             Converter={x:Static ObjectConverters.IsNull}}"
-                                Source="{DynamicResource CodeIcons.Account}" Margin="2" />
+                                Data="{StaticResource Icon.Account}" />
                         </Panel>
                     </Border>
                 </DockPanel>
             </Button.Content>
             <Button.Flyout>
-                <Flyout Placement="BottomEdgeAlignedRight" FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                <Flyout Placement="BottomEdgeAlignedRight"
+                        Opened="OnFlyoutOpened">
 
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Margin="4" Spacing="2">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" MinWidth="180" Spacing="2">
 
-                        <TextBlock Text="OneWare Cloud" FontWeight="Bold" />
+                        <TextBlock Classes="h4" Text="OneWare Cloud" />
 
                         <ContentControl Content="{Binding SettingViewModel}" />
 
@@ -45,52 +46,71 @@
                         <StackPanel Orientation="Vertical" Spacing="5"
                                     IsVisible="{Binding CurrentAccountService.CurrentUser, Converter={x:Static ObjectConverters.IsNotNull}}">
 
-                            <StackPanel Name="BalanceInfoPanel" Orientation="Vertical"
-                                        IsVisible="{Binding CurrentAccountService.IsConnected}" Spacing="5">
-                                <StackPanel.Styles>
-                                    <Style Selector="TextBlock">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                    </Style>
-                                </StackPanel.Styles>
+                            <!-- Active organization -->
+                            <StackPanel IsVisible="{Binding HasActiveOrganization}" Spacing="6" Margin="6,2"
+                                        MinWidth="220">
+                                <StackPanel>
+                                    <TextBlock Classes="semibold" Text="{Binding OrganizationName}"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="240" />
+                                    <TextBlock Classes="caption" Text="{Binding OrganizationDetails}"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="240" />
+                                    <TextBlock Classes="caption" Text="{Binding PlanStatusText}"
+                                               IsVisible="{Binding ShowPlanStatus}"
+                                               />
+                                </StackPanel>
 
-                                <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Bootstrap.Wallet2}" Height="14" />
-                                    <TextBlock Text="Prepaid" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
-                                    <TextBlock
-                                        Text="{Binding CurrentAccountService.CurrentBalance.Balance, FallbackValue=Error}"
-                                        Grid.Column="2" HorizontalAlignment="Right" />
+                                <!-- Owners / administrators: Compute Credits total with its monthly allowance / prepaid split -->
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="2"
+                                      IsVisible="{Binding ShowOrganizationCredits}">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Compute Credits"
+                                               ToolTip.Tip="Used for training, AI Copilot and exports" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ComputeCreditsText}"
+                                               Classes="semibold" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="caption" Text="Monthly allowance" Margin="10,0,0,0"
+                                               ToolTip.Tip="Included in the plan, used first, resets monthly" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding IncludedCreditsText}"
+                                               Classes="caption" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Classes="caption" Text="Prepaid" Margin="10,0,0,0"
+                                               ToolTip.Tip="Purchased, used after the monthly allowance, never expires" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PrepaidCreditsText}"
+                                               Classes="caption" />
                                 </Grid>
 
-                                <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Bootstrap.Clock}" Height="14" />
-                                    <TextBlock Text="Free Monthly" Grid.Column="1" HorizontalAlignment="Left"
-                                               Margin="4,0" />
-                                    <TextBlock Foreground="Green"
-                                               Text="{Binding CurrentAccountService.MonthlyIncludedCreditsValue, FallbackValue=Error}"
-                                               Grid.Column="2" HorizontalAlignment="Right" />
-                                </Grid>
+                                <!-- Members: personal monthly budget -->
+                                <StackPanel Spacing="3" IsVisible="{Binding ShowPersonalBudget}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="Your Compute Credit budget"
+                                                   Classes="muted" />
+                                        <TextBlock Grid.Column="1" Text="{Binding BudgetText}"
+                                                   Classes="semibold" />
+                                    </Grid>
+                                    <ProgressBar IsVisible="{Binding HasBudgetLimit}"
+                                                 Minimum="0" Maximum="{Binding BudgetLimit}"
+                                                 Value="{Binding BudgetUsed}" />
+                                    <TextBlock Classes="caption" Text="{Binding BudgetHint}" />
+                                </StackPanel>
 
-                                <Grid ColumnDefinitions="14,*,Auto" VerticalAlignment="Center">
-                                    <Image Source="{DynamicResource Bootstrap.Clipboard}" Height="14" />
-                                    <TextBlock Text="Plan" Grid.Column="1" HorizontalAlignment="Left" Margin="4,0" />
-                                    <TextBlock
-                                        Text="{Binding CurrentAccountService.CurrentUser.UserPlan.Name, FallbackValue=Error}"
-                                        Grid.Column="2" HorizontalAlignment="Right" />
-                                </Grid>
-
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                                        <controls:HyperLink Label="Add Compute Credits"
+                                                            Url="{Binding AddCreditsUrl}"
+                                                            IsVisible="{Binding ShowOrganizationCredits}" />
+                                        <controls:HyperLink Label="Upgrade to Pro"
+                                                            Url="{Binding UpgradeUrl}"
+                                                            IsVisible="{Binding ShowUpgrade}" />
+                                    </StackPanel>
+                                
+                                    <controls:HyperLink Label="Manage Account"
+                                                        Url="{Binding Url}"
+                                                        HorizontalAlignment="Left" />
+                                </StackPanel>
+                                
                             </StackPanel>
 
-                            <Panel IsVisible="{Binding !#BalanceInfoPanel.IsVisible}">
-                                <controls:Spinner HorizontalAlignment="Center" VerticalAlignment="Center" Width="12"
-                                                  Height="12" />
-                            </Panel>
-
-                            <Separator Margin="0" Padding="0" />
-
-                            <controls:HyperLink Label="Manage Account"
-                                                Url="{Binding Url}"
-                                                Margin="6,0, 6, 0"
-                                                HorizontalContentAlignment="Center" HorizontalAlignment="Center" />
+                            <TextBlock IsVisible="{Binding !HasActiveOrganization}"
+                                       Text="No active organization" Margin="6,0"
+                                       Classes="muted" />
+            
                         </StackPanel>
 
                         <!-- Logged Out View -->

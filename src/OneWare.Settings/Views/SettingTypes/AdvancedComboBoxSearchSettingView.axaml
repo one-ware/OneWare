@@ -15,14 +15,13 @@
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
-            <TextBlock Text="{Binding AdvancedSetting.Title}"
+            <TextBlock Text="{Binding AdvancedSetting.Title}" VerticalAlignment="Center"
                        ToolTip.Tip="{Binding AdvancedSetting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding AdvancedSetting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
-                       VerticalAlignment="Center" />
+                <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                 <Button.Flyout>
-                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <Flyout>
                         <controls:MarkdownViewer Markdown="{Binding AdvancedSetting.MarkdownDocumentation}"
                                                  MaxWidth="900" MaxHeight="500" />
                     </Flyout>
@@ -41,19 +40,18 @@
             <controls:SearchComboBox.ItemTemplate>
                 <DataTemplate DataType="models:AdvancedComboBoxOption">
                     <DockPanel>
-                        <Button Padding="0" VerticalAlignment="Center" DockPanel.Dock="Right"
+                        <Button Classes="icon small" VerticalAlignment="Center" DockPanel.Dock="Right"
                                 HorizontalAlignment="Right"
                                 IsVisible="{Binding MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="13" Width="13"
-                                   VerticalAlignment="Center" />
+                            <PathIcon Classes="small muted" Data="{StaticResource Icon.Help}" />
                             <Button.Flyout>
-                                <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                                <Flyout>
                                     <controls:MarkdownViewer Markdown="{Binding MarkdownDocumentation}"
                                                              MaxWidth="900" MaxHeight="500" />
                                 </Flyout>
                             </Button.Flyout>
                         </Button>
-                        <TextBlock Text="{Binding Title}" DockPanel.Dock="Left"
+                        <TextBlock Text="{Binding Title}" DockPanel.Dock="Left" VerticalAlignment="Center"
                                    ToolTip.Tip="{Binding HoverDescription}" />
                     </DockPanel>
                 </DataTemplate>
