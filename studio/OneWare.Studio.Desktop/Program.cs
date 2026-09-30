@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Dialogs;
 using Avalonia.Threading;
 using Dock.Settings;
@@ -220,6 +221,18 @@ internal abstract class Program
 
             var logger = ContainerLocator.Container?.Resolve<ILogger>();
             logger?.Log($"Received IPC message: {target}");
+
+            if (target == "shutdown")
+            {
+                logger?.Log("Shutting down via IPC request");
+
+                if (ContainerLocator.Container?.Resolve<IApplicationStateService>() is { } applicationStateService)
+                    _ = applicationStateService.TryShutdownAsync();
+                else if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
+                    desktopApp.Shutdown();
+
+                return;
+            }
 
             var mainWindow = ContainerLocator.Container?.Resolve<MainWindow>();
             if (mainWindow != null)
