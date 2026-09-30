@@ -545,7 +545,9 @@ public class MainDockService : Factory, IMainDockService
         {
             DockShowLocation.Left => "LeftPane",
             DockShowLocation.Bottom => "BottomRow",
-            DockShowLocation.Right => "RightPane",
+            // "RightPane" is the center column (documents + bottom row), so the
+            // right-side tool column needs its own id.
+            DockShowLocation.Right => "RightSidePane",
             _ => null
         };
 
@@ -636,7 +638,13 @@ public class MainDockService : Factory, IMainDockService
             }
             else if (location == DockShowLocation.Right)
             {
-                ResetChildProportions(mainLayout);
+                // Keep the left pane's width; only let the center column and any
+                // collapsed siblings share the remaining space.
+                if (mainLayout.VisibleDockables != null)
+                    foreach (var child in mainLayout.VisibleDockables)
+                        if (child is not IProportionalDockSplitter &&
+                            (child.Id == "RightPane" || !(child.Proportion > 0)))
+                            child.Proportion = double.NaN;
                 AddDockable(mainLayout, new ProportionalDockSplitter());
                 AddDockable(mainLayout, proportionalDock);
                 actualParent = mainLayout;
@@ -736,6 +744,7 @@ public class MainDockService : Factory, IMainDockService
         // InitLayout throws a NullReferenceException and prevents the app from
         // starting. Removing them lets the rest of the saved layout load.
         RemoveInvalidDockables(layout);
+        var misplacedRightTools = DetachMisplacedRightToolDock(layout);
 
         try
         {
@@ -757,6 +766,9 @@ public class MainDockService : Factory, IMainDockService
         }
 
         Layout = layout;
+
+        foreach (var tool in misplacedRightTools)
+            Show(tool, DockShowLocation.Right);
         
         // Only merge registrations if layout was loaded from file (to add new plugins)
         // Skip if it's a fresh default layout (already has everything)
@@ -795,6 +807,41 @@ public class MainDockService : Factory, IMainDockService
             foreach (var child in dock.VisibleDockables!.ToList())
                 RemoveInvalidDockables(child);
         }
+    }
+
+    /// <summary>
+    /// Older versions attached the right tool dock ("RightPaneTop") to the center
+    /// column ("RightPane"), where it rendered with zero height. Removes such a dock
+    /// from a saved layout and returns its tools so they can be re-shown correctly.
+    /// </summary>
+    private static List<IDockable> DetachMisplacedRightToolDock(IDockable layout)
+    {
+        var result = new List<IDockable>();
+        var centerColumns = new List<IDock>();
+        CollectDocks(layout, "RightPane", centerColumns);
+
+        foreach (var center in centerColumns)
+        {
+            var list = center.VisibleDockables!;
+            for (var i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] is not IDock { Id: "RightPaneTop" } misplaced) continue;
+                if (misplaced.VisibleDockables != null) result.AddRange(misplaced.VisibleDockables);
+                list.RemoveAt(i);
+                if (i > 0 && i - 1 < list.Count && list[i - 1] is IProportionalDockSplitter)
+                    list.RemoveAt(i - 1);
+            }
+        }
+
+        return result;
+    }
+
+    private static void CollectDocks(IDockable? dockable, string id, List<IDock> result)
+    {
+        if (dockable is not IDock { VisibleDockables: { } children } dock) return;
+        if (dock.Id == id) result.Add(dock);
+        foreach (var child in children)
+            CollectDocks(child, id, result);
     }
 
     private static void RemoveNullEntries(IList<IDockable>? list)

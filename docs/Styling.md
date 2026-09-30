@@ -45,7 +45,7 @@ Each key exists as a `...Color` and a `...Brush`.
 | `ThemeControlLowBrush` | Deepest surface: editors, lists, insets |
 | `ThemeControlMidBrush` | Input surfaces (TextBox, ComboBox) |
 | `ThemeControlMidHighBrush` | Progress track |
-| `ThemeButtonSecondaryBrush` / `ThemeButtonSecondaryHoverBrush` | Secondary button fill (raised: translucent white in dark so it reads the same size as a primary button on any surface) |
+| `ThemeButtonSecondaryBrush` / `ThemeButtonSecondaryHoverBrush` | Secondary button fill (opaque and slightly lighter than the background and elevated cards in dark, so it reads raised like a primary button and stays visible over images) |
 | `ThemeControlHighBrush` / `ThemeControlVeryHighBrush` | Strong neutral fills / glyphs |
 | `ThemeElevatedBrush` | Cards, popups, menus, tooltips |
 | `ThemeControlHighlightMidBrush` / `...HighBrush` / `...LowBrush` | Hover / pressed overlays |

@@ -39,8 +39,8 @@
 
     <!-- Secondary buttons are a raised surface (lighter than whatever they sit on) so they read the same size as the
          solid primary button. Translucent so they also stay visible on elevated cards and popups. -->
-    <SolidColorBrush x:Key="ThemeButtonSecondaryBrush" Color="#10FFFFFF" />
-    <SolidColorBrush x:Key="ThemeButtonSecondaryHoverBrush" Color="#1EFFFFFF" />
+    <SolidColorBrush x:Key="ThemeButtonSecondaryBrush" Color="#3A3A3A" />
+    <SolidColorBrush x:Key="ThemeButtonSecondaryHoverBrush" Color="#444444" />
 
     <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="{StaticResource ThemeControlMidColor}" />
     <SolidColorBrush x:Key="EditorInputFooterBrush" Color="{StaticResource ThemeControlMidColor}" />

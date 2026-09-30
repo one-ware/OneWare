@@ -51,7 +51,7 @@
                                 </Flyout>
                             </Button.Flyout>
                         </Button>
-                        <TextBlock Text="{Binding Title}" DockPanel.Dock="Left"
+                        <TextBlock Text="{Binding Title}" DockPanel.Dock="Left" VerticalAlignment="Center"
                                    ToolTip.Tip="{Binding HoverDescription}" />
                     </DockPanel>
                 </DataTemplate>
