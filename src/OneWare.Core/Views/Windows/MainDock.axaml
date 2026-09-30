@@ -28,12 +28,12 @@
 
             <StackPanel DockPanel.Dock="Left" Classes="toolbar" Height="28" VerticalAlignment="Center">
 
-                <Button Classes="icon" ToolTip.Tip="Undo" x:CompileBindings="False"
-                        Command="{Binding DockService.CurrentDocument.Undo}">
+                <Button Classes="icon" ToolTip.Tip="Undo"
+                        Command="{Binding MainDockService.CurrentDocument.Undo}">
                     <PathIcon Data="{StaticResource Icon.Undo}" />
                 </Button>
-                <Button Classes="icon" ToolTip.Tip="Redo" x:CompileBindings="False"
-                        Command="{Binding DockService.CurrentDocument.Redo}">
+                <Button Classes="icon" ToolTip.Tip="Redo"
+                        Command="{Binding MainDockService.CurrentDocument.Redo}">
                     <PathIcon Data="{StaticResource Icon.Redo}" />
                 </Button>
 
