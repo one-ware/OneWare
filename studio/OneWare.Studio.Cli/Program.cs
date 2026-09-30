@@ -23,7 +23,8 @@ cliModuleLoader.RegisterBuiltInCliModules(
     studioProcessController.StopStudio);
 
 cliModuleLoader.LoadBundledCliModules();
-cliModuleLoader.LoadPluginCliModules();
+if (!ExtensionStoreCliModule.IsExtensionStoreCommand(args))
+    cliModuleLoader.LoadPluginCliModules();
 
 using var cliHost = cliHostBuilder.Build();
 foreach (var command in cliHost.ModuleManager.RegisterCommands(cliHost.ServiceProvider))

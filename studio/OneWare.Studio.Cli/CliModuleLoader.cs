@@ -14,6 +14,7 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
         Func<CancellationToken, Task<int>> stopStudio)
     {
         cliHostBuilder.ModuleCatalog.AddModule(new StudioCliModule(startStudio, stopStudio));
+        cliHostBuilder.ModuleCatalog.AddModule(new ExtensionStoreCliModule());
     }
 
     public void LoadBundledCliModules()
