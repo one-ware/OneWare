@@ -94,7 +94,7 @@
                         Background="{DynamicResource ThemeControlMidBrush}"
                         Height="24" Margin="0 0 5 0">
                     <TextBox Classes="bare"
-                             Watermark="Replace..." Text="{Binding ReplaceString}"
+                             Watermark="{Binding ReplaceWatermark}" Text="{Binding ReplaceString}"
                              Padding="6,0,0,0" VerticalContentAlignment="Center" />
                 </Border>
             </DockPanel>
