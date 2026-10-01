@@ -191,7 +191,7 @@
 
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <controls:EstimatingVirtualizingStackPanel Spacing="5"/>
+                                <controls:EstimatingVirtualizingStackPanel Spacing="7" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
