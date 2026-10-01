@@ -46,16 +46,6 @@
         <Setter Property="Fill" Value="{DynamicResource HighlightForegroundBrush}" />
     </Style>
 
-    <!-- ToggleSwitch -->
-    <Style Selector="ToggleSwitch:pointerover /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderHighBrush}" />
-        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
-    </Style>
-
-    <Style Selector="ToggleSwitch:checked /template/ Border#OuterBorder">
-        <Setter Property="Opacity" Value="1" />
-    </Style>
-
     <!-- Toolbar (aliases: ToolBar) -->
     <Style Selector="StackPanel.ToolBar, StackPanel.toolbar">
         <Setter Property="Spacing" Value="{DynamicResource ThemeSpacingSmall}" />

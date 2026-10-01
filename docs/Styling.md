@@ -190,6 +190,8 @@ border or corner radius of their own, and should not add margins to keep content
 - `NumericUpDown`: `small`. Same frame and padding as `TextBox`, with a compact up/down column on the right.
 - `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.
+- `ToggleSwitch`: `small` (compact 32×16 track with `Content` as a label to its right, fits a 24 px toolbar). Applied
+  automatically inside `StackPanel.toolbar`. `OnContent` / `OffContent` are not shown in this variant.
 - `ListBox`: `transparent`, `InvisibleSelection`. By default it is an inset field (control background, low border,
   same corner radius as `TextBox`). Setting `BorderThickness="0"` makes it square for lists that sit edge-to-edge in a panel.
   Items are rounded rows with a hover highlight and an accent selection.

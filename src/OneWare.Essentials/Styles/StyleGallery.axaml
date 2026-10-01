@@ -93,6 +93,15 @@
                         <CheckBox Content="Unchecked" />
                         <RadioButton Content="Radio" IsChecked="True" />
                         <ToggleSwitch IsChecked="True" />
+                        <ToggleSwitch Classes="small" Content="small" IsChecked="True" />
+                    </StackPanel>
+                    <StackPanel Classes="toolbar">
+                        <Button Classes="icon">
+                            <PathIcon Data="{StaticResource Icon.Refresh}" />
+                        </Button>
+                        <Separator />
+                        <ToggleSwitch Content="Toolbar switch" IsChecked="True" />
+                        <ToggleSwitch Content="Off" />
                     </StackPanel>
                     <Slider Value="40" />
                     <ProgressBar Value="60" />

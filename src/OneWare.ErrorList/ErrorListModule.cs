@@ -32,7 +32,7 @@ public class ErrorListModule : OneWareModuleBase
 
         settingsService.Register(KeyErrorListFilterMode, 0);
         settingsService.RegisterSetting("Experimental", "Errors", KeyErrorListShowExternalErrors,
-            new CheckBoxSetting("Show external errors", false)
+            new ToggleSwitchSetting("Show external errors", false)
             {
                 HoverDescription = "Sets if errors from files outside of your project should be visible"
             });
