@@ -179,7 +179,7 @@
         <Setter Property="Background" Value="{DynamicResource NeutralBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusPill}" />
-        <Setter Property="Padding" Value="12 1" />
+        <Setter Property="Padding" Value="6 2" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
