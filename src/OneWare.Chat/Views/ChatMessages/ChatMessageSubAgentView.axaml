@@ -8,7 +8,7 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageSubAgentView"
              x:DataType="chatMessages:ChatMessageSubAgentViewModel">
 
-    <Expander Margin="0 2" VerticalAlignment="Top" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+    <Expander VerticalAlignment="Top" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
               ToolTip.Tip="{Binding Description}">
         <Expander.Header>
             <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="5" VerticalAlignment="Center">
@@ -25,8 +25,8 @@
                                Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                IsVisible="{Binding HasModel}" />
                     <Panel IsVisible="{Binding IsFinished}" VerticalAlignment="Center">
-                        <TextBlock Text=" ✓" Foreground="Lime" IsVisible="{Binding IsSuccessful}" />
-                        <TextBlock Text=" x" Foreground="Red" IsVisible="{Binding !IsSuccessful}" />
+                        <TextBlock Text=" ✓" Foreground="{DynamicResource SuccessBrush}" IsVisible="{Binding IsSuccessful}" />
+                        <TextBlock Text=" x" Foreground="{DynamicResource ErrorBrush}" IsVisible="{Binding !IsSuccessful}" />
                     </Panel>
                 </StackPanel>
 

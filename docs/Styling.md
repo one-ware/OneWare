@@ -48,6 +48,7 @@ Each key exists as a `...Color` and a `...Brush`.
 | `ThemeButtonSecondaryBrush` / `ThemeButtonSecondaryHoverBrush` | Secondary button fill (opaque and slightly lighter than the background and elevated cards in dark, so it reads raised like a primary button and stays visible over images) |
 | `ThemeControlHighBrush` / `ThemeControlVeryHighBrush` | Strong neutral fills / glyphs |
 | `ThemeElevatedBrush` | Cards, popups, menus, tooltips |
+| `ChatBubbleBrush` | Chat message, tool and reasoning blocks (Brush only; `ThemeControlMidHighColor` in light, `ThemeControlMidColor` in dark) |
 | `ThemeControlHighlightMidBrush` / `...HighBrush` / `...LowBrush` | Hover / pressed overlays |
 | `ThemeBorderLowBrush` / `...MidBrush` / `...HighBrush` | Subtle / default / strong borders |
 | `ThemeForegroundBrush` / `ThemeForegroundLowBrush` | Primary / secondary text |

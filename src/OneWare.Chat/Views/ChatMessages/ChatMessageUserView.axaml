@@ -8,8 +8,8 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageUserView"
              x:DataType="chatMessages:ChatMessageUserViewModel">
 
-    <Border Margin="0 2" HorizontalAlignment="Right" CornerRadius="6" Padding="8" BorderThickness="0"
-            Background="{DynamicResource ThemeControlMidBrush}">
+    <Border HorizontalAlignment="Right" CornerRadius="6" Padding="8" BorderThickness="0"
+            Background="{DynamicResource ChatBubbleBrush}">
         <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13" />
     </Border>
 

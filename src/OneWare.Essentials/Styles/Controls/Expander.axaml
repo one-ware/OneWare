@@ -34,7 +34,7 @@
             <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
-            <Setter Property="Padding" Value="4 2" />
+            <Setter Property="Padding" Value="4" />
             <Setter Property="MinHeight" Value="{DynamicResource ThemeControlHeight}" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />

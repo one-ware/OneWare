@@ -1725,7 +1725,7 @@ public abstract class CopilotChatServiceBase(
                 Content = """
 
                           OneWare Studio file & terminal tools:
-                          - `readFile`           — reads from the live editor buffer when the file is open; use for ALL file reads
+                          - `readFile`           — reads from the live editor buffer when the file is open; use for ALL file reads. Image files (png, jpg, gif, webp) are returned as images you can see directly
                           - `editFile`           — opens a diff view in the IDE for review; use for ALL file writes/edits (creates missing files automatically)
                           - `runTerminalCommand` — executes in the IDE terminal panel; output is returned; use for all shell commands
 

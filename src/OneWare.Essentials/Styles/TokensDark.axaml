@@ -45,6 +45,9 @@
     <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="{StaticResource ThemeControlMidColor}" />
     <SolidColorBrush x:Key="EditorInputFooterBrush" Color="{StaticResource ThemeControlMidColor}" />
 
+    <!-- Chat message/tool blocks -->
+    <SolidColorBrush x:Key="ChatBubbleBrush" Color="{StaticResource ThemeControlMidColor}" />
+
     <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
     <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
     <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />
