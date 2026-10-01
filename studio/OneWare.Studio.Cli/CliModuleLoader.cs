@@ -9,11 +9,9 @@ using OneWare.Essentials.Services;
 
 internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
 {
-    public void RegisterBuiltInCliModules(
-        Func<ParseResult, string?, bool, CancellationToken, Task<int>> startStudio,
-        Func<CancellationToken, Task<int>> stopStudio)
+    public void RegisterBuiltInCliModules(Func<CancellationToken, Task<int>> stopStudio)
     {
-        cliHostBuilder.ModuleCatalog.AddModule(new StudioCliModule(startStudio, stopStudio));
+        cliHostBuilder.ModuleCatalog.AddModule(new StudioCliModule(stopStudio));
         cliHostBuilder.ModuleCatalog.AddModule(new ExtensionStoreCliModule());
     }
 

@@ -8,19 +8,20 @@ bootstrapCommand.TreatUnmatchedTokensAsErrors = false;
 var bootstrapParseResult = bootstrapCommand.Parse(args);
 OneWareStartupCommandLine.ApplyEnvironmentVariables(bootstrapParseResult, bootstrapSymbols);
 
-var cliSymbols = OneWareStartupCommandLine.CreateSymbols("oneware:// URI to open");
+var cliSymbols = OneWareStartupCommandLine.CreateSymbols(
+    "File, folder or oneware:// URI to open. Starts OneWare Studio without opening a target when omitted.");
 var rootCommand = OneWareStartupCommandLine.CreateRootCommand(cliSymbols);
+var detachOption = new Option<bool>("--detach", "-d")
+{
+    Description = "Start OneWare Studio detached from the current terminal."
+};
+rootCommand.Options.Add(detachOption);
+
 var studioProcessController = new StudioProcessController();
 var cliHostBuilder = CliHostFactory.Create();
 var cliModuleLoader = new CliModuleLoader(cliHostBuilder);
 
-cliModuleLoader.RegisterBuiltInCliModules(
-    (parseResult, openTarget, detach, cancellationToken) =>
-    {
-        OneWareStartupCommandLine.ApplyEnvironmentVariables(parseResult, cliSymbols);
-        return studioProcessController.StartStudio(openTarget, detach, cancellationToken);
-    },
-    studioProcessController.StopStudio);
+cliModuleLoader.RegisterBuiltInCliModules(studioProcessController.StopStudio);
 
 cliModuleLoader.LoadBundledCliModules();
 if (!ExtensionStoreCliModule.IsExtensionStoreCommand(args))
@@ -30,20 +31,14 @@ using var cliHost = cliHostBuilder.Build();
 foreach (var command in cliHost.ModuleManager.RegisterCommands(cliHost.ServiceProvider))
     rootCommand.Subcommands.Add(command);
 
-if (OneWareStartupCommandLine.ContainsOneWareUriArgument(args))
+rootCommand.SetAction((parseResult, cancellationToken) =>
 {
-    rootCommand.SetAction(parseResult =>
-    {
-        if (parseResult.GetValue(cliSymbols.OpenArgument) is null)
-            return Task.FromResult(0);
-
-        OneWareStartupCommandLine.ApplyEnvironmentVariables(parseResult, cliSymbols);
-        return studioProcessController.StartStudio(
-            parseResult.GetValue(cliSymbols.OpenArgument),
-            false,
-            CancellationToken.None);
-    });
-}
+    OneWareStartupCommandLine.ApplyEnvironmentVariables(parseResult, cliSymbols);
+    return studioProcessController.StartStudio(
+        parseResult.GetValue(cliSymbols.OpenArgument),
+        parseResult.GetValue(detachOption),
+        cancellationToken);
+});
 
 var parseResult = rootCommand.Parse(args);
 return parseResult.Invoke();
