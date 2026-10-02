@@ -9,6 +9,8 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia.Diagnostics" Version="11.3.22" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
         <AvaloniaResource Include="Assets\TOML.tmLanguage.json"/>
     </ItemGroup>
 </Project>

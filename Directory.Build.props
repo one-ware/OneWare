@@ -1,5 +1,5 @@
 <Project>
   <PropertyGroup>
-    <OnnxRuntimeVersion>1.28.0</OnnxRuntimeVersion>
+    <OnnxRuntimeVersion>1.30.0</OnnxRuntimeVersion>
   </PropertyGroup>
 </Project>
