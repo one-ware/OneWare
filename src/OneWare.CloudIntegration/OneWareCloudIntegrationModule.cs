@@ -20,6 +20,7 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
     public const string OneWareCloudHostKey = "General_OneWareCloud_Host";
     public const string OneWareAccountUserIdKey = "General_OneWareCloud_AccountUserId";
     public const string CredentialStore = OfficialHost;
+    public const string LogoutIpcMessage = "cloud-logout";
 
     public override void RegisterServices(IServiceCollection services)
     {

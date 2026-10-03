@@ -125,6 +125,11 @@ public interface ISettingsService
     public void Save(string path, bool autoSave = true);
 
     /// <summary>
+    /// Updates selected values in the latest version of a settings file.
+    /// </summary>
+    public void SaveValues(string path, IReadOnlyDictionary<string, object?> values, bool autoSave = true);
+
+    /// <summary>
     /// Runs an action once settings are loaded.
     /// </summary>
     public void WhenLoaded(Action action);

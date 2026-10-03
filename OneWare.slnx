@@ -130,6 +130,7 @@
   </Folder>
   <Folder Name="/Studio/">
     <Project Path="studio/OneWare.Studio.Browser/OneWare.Studio.Browser.csproj" />
+    <Project Path="studio/OneWare.Studio.Cli/OneWare.Studio.Cli.csproj" />
     <Project Path="studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj" />
     <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj" />
   </Folder>
@@ -142,6 +143,7 @@
     <Project Path="tests/OneWare.Python.UnitTests/OneWare.Python.UnitTests.csproj" />
     <Project Path="tests/OneWare.SearchList.UnitTests/OneWare.SearchList.UnitTests.csproj" />
     <Project Path="tests/OneWare.SourceControl.UnitTests/OneWare.SourceControl.UnitTests.csproj" />
+    <Project Path="tests/OneWare.Studio.Cli.UnitTests/OneWare.Studio.Cli.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
     <Project Path="tests/OneWare.Terminal.UnitTests/OneWare.Terminal.UnitTests.csproj" />
     <Project Path="tests/OneWare.TestPlugin/OneWare.TestPlugin.csproj" />
