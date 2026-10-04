@@ -68,7 +68,7 @@
             <!-- Horizontal -->
             <Style Selector="^:horizontal">
                 <Setter Property="MinWidth" Value="40" />
-                <Setter Property="Height" Value="6" />
+                <Setter Property="Height" Value="10" />
             </Style>
             <Style Selector="^:horizontal /template/ Border#PART_Track">
                 <Setter Property="Grid.ColumnSpan" Value="2" />
@@ -83,26 +83,26 @@
                 <Setter Property="Margin" Value="8 0 0 0" />
             </Style>
             <Style Selector="^.large:horizontal">
-                <Setter Property="Height" Value="12" />
+                <Setter Property="Height" Value="20" />
             </Style>
             <!-- With text the row sizes to the text; the track keeps the bar's Height (at least 6) and is centered -->
             <Style Selector="^:horizontal[ShowProgressText=True]">
                 <Setter Property="Height" Value="NaN" />
             </Style>
             <Style Selector="^.large:horizontal[ShowProgressText=True]">
-                <Setter Property="Height" Value="12" />
+                <Setter Property="Height" Value="20" />
             </Style>
             <Style Selector="^:horizontal[ShowProgressText=True] /template/ Border#PART_Track">
                 <Setter Property="Grid.ColumnSpan" Value="1" />
                 <Setter Property="Height" Value="{Binding Height, RelativeSource={RelativeSource TemplatedParent}}" />
-                <Setter Property="MinHeight" Value="6" />
+                <Setter Property="MinHeight" Value="10" />
                 <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
 
             <!-- Vertical -->
             <Style Selector="^:vertical">
                 <Setter Property="MinHeight" Value="40" />
-                <Setter Property="Width" Value="6" />
+                <Setter Property="Width" Value="10" />
             </Style>
             <Style Selector="^.large:vertical">
                 <Setter Property="Width" Value="12" />
