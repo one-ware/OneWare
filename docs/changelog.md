@@ -1,25 +1,30 @@
-## 1.0.32
+## 1.0.42
 
+- New: OneWare Cloud AI provider for Copilot, with Compute Credits, plan gating and an improved browser login/logout
 - Added AI planning mode that proposes a plan for review before making changes
 - Added AI sub agents, including their own chat messages and progress display
 - Added /remote command to toggle a remote Copilot session
+- Copilot can now view images
 - Added Python Pyrefly language server with automatic installation and workspace interpreter selection
 - Added Python indentation support
+- Waveform viewer: multi-selection, separators, a persistent second marker for deltas, jump to next/previous edge and saving/loading signal profiles
+- Editor shortcuts (AvaloniaEdit) can now be rebound in the key binding settings
+- Find in Files replace now supports regex capture groups
+- Tool Engine: background process support and configurable execution strategies for plugins
 - Reworked the Package Manager UI with featured packages, faster list updates and better filtering
 - Improved Git support: safer commit, discard and sync workflows, more reliable refresh and staged diffs
 - Improved the diff comparison control
 - Added Copy Path to the Project Explorer and document tabs
 - Open documents are now shown in the Copilot attachments by default
-- Refreshed icons and UI styling
+- Reworked UI styling with a shared design system, refreshed icons and toggle switch settings
+- New splash screen and faster app startup
+- Updates and downloads are now served from cdn.one-ware.com, so they also work where GitHub is blocked
 - More reliable language server auto downloads
-- Updated ONNX Runtime to 1.28, OpenCvSharp and Avalonia to 11.3.22
+- Updated ONNX Runtime to 1.28, OpenCvSharp, Avalonia to 11.3.22 and AvaloniaEdit to 11.3.20
+- Fixed undo/redo toolbar buttons
+- Fixed session restore and reopening docked panels
+- Fixed prerelease package visibility and update version resolution
 - Fixed a possible crash when showing a message box
-
-## 1.0.40
-
-- New: OneWare Cloud Powered Copilot
-- Improve Startup Speed
-- Restore SplashScreen
 
 ## 1.0.31
 

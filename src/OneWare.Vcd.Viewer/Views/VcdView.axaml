@@ -29,6 +29,27 @@
                         <Button Command="{Binding Refresh}">
                             <PathIcon Height="15" Data="{StaticResource Icon.RefreshSmall}" Width="15" />
                         </Button>
+                        <Button ToolTip.Tip="Waveform profiles">
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="Save Profile..."
+                                              Command="{Binding SaveProfileAsync}"
+                                              CommandParameter="{Binding $parent[UserControl]}">
+                                        <MenuItem.Icon>
+                                            <PathIcon Data="{StaticResource Icon.Save}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="Load Profile..."
+                                              Command="{Binding LoadProfileAsync}"
+                                              CommandParameter="{Binding $parent[UserControl]}">
+                                        <MenuItem.Icon>
+                                            <PathIcon Data="{StaticResource Icon.Folder}" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                            <PathIcon Data="{StaticResource Icon.Save}" />
+                        </Button>
                         <TextBlock VerticalAlignment="Center" Text="Threads" />
                     </StackPanel>
 

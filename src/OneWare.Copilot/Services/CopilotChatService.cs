@@ -1052,9 +1052,9 @@ public abstract class CopilotChatServiceBase(
 
     private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
     {
-        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+        var cliPath = CopilotModule.GetCliPath(paths);
 
-        if (!update && PlatformHelper.ExistsOnPath(cliPath)) return true;
+        if (!update && File.Exists(cliPath)) return true;
 
         // Resume the conversation that was active before the reinstall/update
         // instead of starting an empty session. Has to happen before the runtime is shut down,
@@ -1065,6 +1065,14 @@ public abstract class CopilotChatServiceBase(
         // "Text file busy" (Unix) or a sharing violation (Windows). Shut the runtime down and make
         // sure the OS released the files before the installer extracts the new version.
         await ShutdownCliAsync(cliPath);
+
+        // The package can still be registered as installed while the executable is gone (deleted
+        // manually or a broken extraction). Installing would then report "already installed"
+        // without restoring the CLI, so remove the stale installation first.
+        if (!File.Exists(cliPath) &&
+            packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var packageState) &&
+            packageState.InstalledVersion != null)
+            await packageService.RemoveAsync(CopilotModule.CopilotPackage.Id!);
 
         var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
 
@@ -1141,9 +1149,9 @@ public abstract class CopilotChatServiceBase(
 
             if (isAuthenticated) return true;
 
-            var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+            var cliPath = CopilotModule.GetCliPath(paths);
 
-            if (!PlatformHelper.ExistsOnPath(cliPath)) return false;
+            if (!File.Exists(cliPath)) return false;
 
             var viewModel = new DeviceCodeLoginViewModel("Login to GitHub Copilot",
                 "Authorize OneWare in your browser to finish the sign in.",
@@ -1178,7 +1186,7 @@ public abstract class CopilotChatServiceBase(
 
     public async Task<bool> InitializeAsync()
     {
-        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
+        var cliPath = CopilotModule.GetCliPath(paths);
 
 
         await _sync.WaitAsync().ConfigureAwait(false);
@@ -1196,7 +1204,7 @@ public abstract class CopilotChatServiceBase(
             else
                 ApplyByokStatus(_byokConfiguration);
 
-            if (!PlatformHelper.ExistsOnPath(cliPath))
+            if (!File.Exists(cliPath))
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
                 Blocker = new ChatServiceBlocker("Copilot CLI required",
@@ -1725,7 +1733,7 @@ public abstract class CopilotChatServiceBase(
                 Content = """
 
                           OneWare Studio file & terminal tools:
-                          - `readFile`           — reads from the live editor buffer when the file is open; use for ALL file reads
+                          - `readFile`           — reads from the live editor buffer when the file is open; use for ALL file reads. Image files (png, jpg, gif, webp) are returned as images you can see directly
                           - `editFile`           — opens a diff view in the IDE for review; use for ALL file writes/edits (creates missing files automatically)
                           - `runTerminalCommand` — executes in the IDE terminal panel; output is returned; use for all shell commands
 

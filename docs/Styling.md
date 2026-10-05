@@ -48,6 +48,7 @@ Each key exists as a `...Color` and a `...Brush`.
 | `ThemeButtonSecondaryBrush` / `ThemeButtonSecondaryHoverBrush` | Secondary button fill (opaque and slightly lighter than the background and elevated cards in dark, so it reads raised like a primary button and stays visible over images) |
 | `ThemeControlHighBrush` / `ThemeControlVeryHighBrush` | Strong neutral fills / glyphs |
 | `ThemeElevatedBrush` | Cards, popups, menus, tooltips |
+| `ChatBubbleBrush` | Chat message, tool and reasoning blocks (Brush only; `ThemeControlMidHighColor` in light, `ThemeControlMidColor` in dark) |
 | `ThemeControlHighlightMidBrush` / `...HighBrush` / `...LowBrush` | Hover / pressed overlays |
 | `ThemeBorderLowBrush` / `...MidBrush` / `...HighBrush` | Subtle / default / strong borders |
 | `ThemeForegroundBrush` / `ThemeForegroundLowBrush` | Primary / secondary text |
@@ -189,6 +190,8 @@ border or corner radius of their own, and should not add margins to keep content
 - `NumericUpDown`: `small`. Same frame and padding as `TextBox`, with a compact up/down column on the right.
 - `Slider`: rounded track with an accent-filled range and a ringed thumb. `TickPlacement` / `TickFrequency` / `Ticks`
   draw tick marks. Set `Foreground` (fill) or `Background` (track) to recolor it.
+- `ToggleSwitch`: `small` (compact 32×16 track with `Content` as a label to its right, fits a 24 px toolbar). Applied
+  automatically inside `StackPanel.toolbar`. `OnContent` / `OffContent` are not shown in this variant.
 - `ListBox`: `transparent`, `InvisibleSelection`. By default it is an inset field (control background, low border,
   same corner radius as `TextBox`). Setting `BorderThickness="0"` makes it square for lists that sit edge-to-edge in a panel.
   Items are rounded rows with a hover highlight and an accent selection.

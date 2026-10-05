@@ -9,14 +9,14 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageToolView"
              x:DataType="chatMessages:ChatMessageToolViewModel">
 
-    <Expander Margin="0 2" VerticalAlignment="Top" IsExpanded="{Binding IsToolRunning, Mode=OneWay}">
+    <Expander VerticalAlignment="Top" IsExpanded="{Binding IsToolRunning, Mode=OneWay}">
         <Expander.Header>
             <Grid ColumnDefinitions="Auto, Auto, Auto" ColumnSpacing="5" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding ToolName}" />
                     <Panel IsVisible="{Binding !IsToolRunning}">
-                        <TextBlock Text=" ✓" Foreground="Lime" IsVisible="{Binding IsSuccessful}" />
-                        <TextBlock Text=" x" Foreground="Red" IsVisible="{Binding !IsSuccessful}" />
+                        <TextBlock Text=" ✓" Foreground="{DynamicResource SuccessBrush}" IsVisible="{Binding IsSuccessful}" />
+                        <TextBlock Text=" x" Foreground="{DynamicResource ErrorBrush}" IsVisible="{Binding !IsSuccessful}" />
                     </Panel>
                 </StackPanel>
 
@@ -31,7 +31,7 @@
                 </Button>
             </Grid>
         </Expander.Header>
-        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+        <Border Margin="1 4 1 0" Background="{DynamicResource ChatBubbleBrush}" Classes="RoundBorder"
                 MaxHeight="200" Padding="5">
             <ScrollViewer x:Name="OutputScrollViewer" HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto">

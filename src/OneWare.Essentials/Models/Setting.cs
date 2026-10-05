@@ -120,6 +120,17 @@ public class CheckBoxSetting : TitledSetting
     }
 }
 
+/// <summary>
+///     Boolean setting shown as a toggle switch instead of a check box.
+///     Derives from <see cref="CheckBoxSetting" />, so code that handles boolean settings keeps working.
+/// </summary>
+public class ToggleSwitchSetting : CheckBoxSetting
+{
+    public ToggleSwitchSetting(string title, bool defaultValue) : base(title, defaultValue)
+    {
+    }
+}
+
 public class TextBoxSetting : TitledSetting
 {
     private string? _watermark;

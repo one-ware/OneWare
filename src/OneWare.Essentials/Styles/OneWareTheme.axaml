@@ -26,6 +26,7 @@
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TextBoxes.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ComboBoxes.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/Slider.axaml" />
+    <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ToggleSwitch.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ProgressBar.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/ListBox.axaml" />
     <StyleInclude Source="avares://OneWare.Essentials/Styles/Controls/TreeView.axaml" />

@@ -135,11 +135,13 @@
     <Project Path="studio/OneWare.Studio/OneWare.Studio.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/OneWare.ApplicationCommands.UnitTests/OneWare.ApplicationCommands.UnitTests.csproj" />
     <Project Path="tests/OneWare.Chat.UnitTests/OneWare.Chat.UnitTests.csproj" />
     <Project Path="tests/OneWare.Dock.HeadlessTests/OneWare.Dock.HeadlessTests.csproj" />
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
     <Project Path="tests/OneWare.PackageManager.UnitTests/OneWare.PackageManager.UnitTests.csproj" />
     <Project Path="tests/OneWare.Python.UnitTests/OneWare.Python.UnitTests.csproj" />
+    <Project Path="tests/OneWare.SearchList.UnitTests/OneWare.SearchList.UnitTests.csproj" />
     <Project Path="tests/OneWare.SourceControl.UnitTests/OneWare.SourceControl.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Cli.UnitTests/OneWare.Studio.Cli.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />

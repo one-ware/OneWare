@@ -480,6 +480,8 @@ public class App : Application
                 _ = Services.Resolve<IApplicationStateService>().TryRestartAsync();
             }));
 
+        EditorApplicationCommands.Register(applicationCommandService);
+
         var welcomeScreenService = Services.Resolve<IWelcomeScreenService>();
 
         welcomeScreenService.RegisterItemToWalkthrough("fundamentals",

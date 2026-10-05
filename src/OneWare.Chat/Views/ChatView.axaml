@@ -129,7 +129,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="chatMessages:ChatMessageUserViewModel">
                                 <Border Margin="0 2" HorizontalAlignment="Right" CornerRadius="6"
-                                        Padding="8 4 4 4" Background="{DynamicResource ThemeControlMidBrush}">
+                                        Padding="8 4 4 4" Background="{DynamicResource ChatBubbleBrush}">
                                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
                                         <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
                                                    VerticalAlignment="Center" />
@@ -191,7 +191,7 @@
 
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <controls:EstimatingVirtualizingStackPanel Spacing="5"/>
+                                <controls:EstimatingVirtualizingStackPanel Spacing="7" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
@@ -245,7 +245,7 @@
             -->
         </Panel>
 
-        <Border Grid.Row="2" Margin="10 4 10 0" Background="{DynamicResource ThemeControlMidBrush}"
+        <Border Grid.Row="2" Margin="10 4 10 0" Background="{DynamicResource ChatBubbleBrush}"
                 Classes="RoundBorder">
             <Border.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">

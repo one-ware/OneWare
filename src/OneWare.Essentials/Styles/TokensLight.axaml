@@ -45,6 +45,9 @@
     <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="EditorInputFooterBrush" Color="#FFF8FAFC" />
 
+    <!-- Chat message/tool blocks; ControlMid is white in light mode and would not stand out -->
+    <SolidColorBrush x:Key="ChatBubbleBrush" Color="{StaticResource ThemeControlMidHighColor}" />
+
     <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
     <SolidColorBrush x:Key="CaptionButtonBackground" Color="{StaticResource ThemeBorderLowColor}" />
     <SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="{StaticResource ThemeBorderLowColor}" />

@@ -23,12 +23,14 @@
                 <MenuItem.Styles>
                     <Style Selector="MenuItem MenuItem" x:DataType="enums:WaveDataType">
                         <Setter Property="Command"
-                                Value="{Binding $parent[ContextMenu].((models:WaveModel)DataContext).SetDataType, FallbackValue={x:Null}}" />
+                                Value="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).SetDataType, FallbackValue={x:Null}}" />
                         <Setter Property="CommandParameter" Value="{Binding }" />
+                        <!-- A check icon instead of ToggleType: the menu is shared by all rows and toggling
+                             IsChecked on click would replace the binding. -->
                         <Setter Property="Icon">
                             <Template>
-                                <CheckBox BorderThickness="0">
-                                    <CheckBox.IsChecked>
+                                <PathIcon Data="{StaticResource Icon.Check}">
+                                    <PathIcon.IsVisible>
                                         <MultiBinding
                                             Converter="{x:Static converters:SharedConverters.ObjectsEqualConverter}">
                                             <Binding Path="." />
@@ -36,8 +38,8 @@
                                                 Path="$parent[ContextMenu].((models:WaveModel)DataContext).DataType"
                                                 FallbackValue="{x:Null}" />
                                         </MultiBinding>
-                                    </CheckBox.IsChecked>
-                                </CheckBox>
+                                    </PathIcon.IsVisible>
+                                </PathIcon>
                             </Template>
                         </Setter>
                     </Style>
@@ -45,18 +47,30 @@
             </MenuItem>
             <MenuItem Header="Fixed Point Shift">
                 <MenuItem Header="Automatic"
-                          Command="{Binding $parent[ContextMenu].((models:WaveModel)DataContext).ToggleAutomaticFixedPointShift, FallbackValue={x:Null}}"
+                          Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ToggleAutomaticFixedPointShift, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding}"
                           ToolTip.Tip="For a signal var[15:-16], this will right shift the bits by 16 places">
                     <MenuItem.Icon>
-                        <CheckBox BorderThickness="0" IsChecked="{Binding AutomaticFixedPointShift}" />
+                        <PathIcon Data="{StaticResource Icon.Check}" IsVisible="{Binding AutomaticFixedPointShift}" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Specify"
-                          Command="{Binding $parent[ContextMenu].((models:WaveModel)DataContext).SpecifyFixedPointShiftDialogAsync, FallbackValue={x:Null}}"
-                          CommandParameter="$self" />
+                          Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).SpecifyFixedPointShiftDialogAsync, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding $self}" />
             </MenuItem>
-            <MenuItem Header="Remove Signal"
-                      Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).RemoveSignal, FallbackValue={x:Null}}"
+            <Separator />
+            <MenuItem Header="Add Separator Above..." IsVisible="{Binding !HasSeparator}"
+                      Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).EditSeparatorDialogAsync, FallbackValue={x:Null}}"
+                      CommandParameter="{Binding $self}" />
+            <MenuItem Header="Rename Separator..." IsVisible="{Binding HasSeparator}"
+                      Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).EditSeparatorDialogAsync, FallbackValue={x:Null}}"
+                      CommandParameter="{Binding $self}" />
+            <MenuItem Header="Remove Separator" IsVisible="{Binding HasSeparator}"
+                      Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).RemoveSeparators, FallbackValue={x:Null}}"
+                      CommandParameter="{Binding}" />
+            <Separator />
+            <MenuItem Header="Remove Signal" InputGesture="Delete"
+                      Command="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).RemoveSignals, FallbackValue={x:Null}}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{StaticResource Icon.Delete}" />
@@ -68,6 +82,15 @@
     <UserControl.Styles>
         <Style Selector="ListBox.Scroll ListBoxItem">
             <Setter Property="Padding" Value="3 0" />
+        </Style>
+        <!-- Separator above a signal. Must have the same height in the name and the wave column.
+             The wave column is always drawn on black, so only an accent line is used. -->
+        <Style Selector="Border.wave-separator">
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Padding" Value="4 0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="BorderThickness" Value="0 0 0 2" />
         </Style>
     </UserControl.Styles>
 
@@ -131,6 +154,30 @@
                                Height="10"
                                Margin="1 0" />
                     </Button>
+
+                    <Separator />
+
+                    <Button Command="{Binding JumpToPreviousEdge}"
+                            ToolTip.Tip="Jump to the previous edge of the selected signals (Ctrl+Left)">
+                        <PathIcon Data="{StaticResource Icon.ChevronsLeft}" />
+                    </Button>
+                    <Button Command="{Binding JumpToNextEdge}"
+                            ToolTip.Tip="Jump to the next edge of the selected signals (Ctrl+Right)">
+                        <PathIcon Data="{StaticResource Icon.ChevronsRight}" />
+                    </Button>
+
+                    <Separator />
+
+                    <Button ToolTip.Tip="Export as image">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Export as PNG..." Click="ExportImage_OnClick" />
+                                <MenuItem Header="Export as PNG without Markers..."
+                                          Click="ExportImageWithoutMarkers_OnClick" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                        <PathIcon Data="{StaticResource Icon.Camera}" />
+                    </Button>
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
@@ -148,8 +195,13 @@
 
                     <Separator />
 
-                    <TextBlock Text="Marker: " />
+                    <TextBlock Text="Marker: "
+                               ToolTip.Tip="Click to set the marker. Drag, Shift+Click or Right Click to set a second marker and measure the distance" />
                     <TextBlock Text="{Binding MarkerText}" ToolTip.Tip="{Binding MarkerTextOriginal}" />
+                    <Button Command="{Binding ClearSecondMarker}" IsVisible="{Binding HasSecondMarker}"
+                            ToolTip.Tip="Remove second marker (Esc)">
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Close}" />
+                    </Button>
                 </StackPanel>
 
             </DockPanel>
@@ -160,6 +212,7 @@
                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
                  Bounds="{Binding #SimulatorScaleRenderer.TextAreaBounds, Mode=OneWayToSource}"
                  ItemsSource="{Binding Signals}" SelectedItem="{Binding SelectedSignal}"
+                 SelectionMode="Multiple" SelectedItems="{Binding SelectedSignals}"
                  Name="TextPartScroll"
                  Classes="Scroll transparent" Padding="1 0 0 0">
             <Interaction.Behaviors>
@@ -178,9 +231,13 @@
             </ListBox.Styles>
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:WaveModel">
-                    <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}"
-                               Height="{DynamicResource LineHeight}">
-                        <Grid VerticalAlignment="Center" DockPanel.Dock="Left">
+                    <DockPanel Background="Transparent" ContextMenu="{StaticResource WaveModelContextMenu}">
+                        <Border DockPanel.Dock="Top" Classes="wave-separator" Margin="-3 0"
+                                IsVisible="{Binding HasSeparator}">
+                            <TextBlock Classes="caption" Text="{Binding SeparatorLabel}"
+                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        </Border>
+                        <Grid VerticalAlignment="Center" Height="{DynamicResource LineHeight}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition MinWidth="50" Width="*" />
                                 <ColumnDefinition Width="5" />
@@ -225,15 +282,18 @@
             </ListBox.Styles>
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:WaveModel">
-                    <controls:Wave
-                        FontFamily="{DynamicResource EditorFont}"
-                        Height="{DynamicResource LineHeight}"
-                        Max="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Max, FallbackValue={x:Null}}"
-                        ZoomMultiply="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ZoomMultiply, FallbackValue={x:Null}}"
-                        Offset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Offset, FallbackValue={x:Null}}"
-                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                        ExtendSignals="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ExtendSignals, FallbackValue={x:Null}}"
-                        LoadingOffset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).LoadingMarkerOffset, FallbackValue={x:Null}}" />
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" Classes="wave-separator" IsVisible="{Binding HasSeparator}" />
+                        <controls:Wave
+                            FontFamily="{DynamicResource EditorFont}"
+                            Height="{DynamicResource LineHeight}"
+                            Max="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Max, FallbackValue={x:Null}}"
+                            ZoomMultiply="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ZoomMultiply, FallbackValue={x:Null}}"
+                            Offset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).Offset, FallbackValue={x:Null}}"
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                            ExtendSignals="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).ExtendSignals, FallbackValue={x:Null}}"
+                            LoadingOffset="{Binding $parent[UserControl].((viewModels:WaveFormViewModel)DataContext).LoadingMarkerOffset, FallbackValue={x:Null}}" />
+                    </DockPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

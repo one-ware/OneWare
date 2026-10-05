@@ -270,6 +270,11 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 - `RegisterCommand(IApplicationCommand)`: add an application command.
 - `LoadKeyConfiguration()`, `SaveKeyConfiguration()`: key binding persistence.
+- `TextAreaApplicationCommand` (src/OneWare.Essentials/Commands/TextAreaApplicationCommand.cs):
+  wraps an AvaloniaEdit `RoutedCommand` so it runs on the focused editor (or the active document
+  when run from the command palette). The built-in editor shortcuts (undo, copy, find, delete
+  line, ...) are registered this way as `Editor: ...` commands, so users can rebind them. Pass
+  `takeOverGesture: true` to move the AvaloniaEdit default gesture to the application command.
 
 #### `ILanguageManager` (src/OneWare.Essentials/Services/ILanguageManager.cs)
 

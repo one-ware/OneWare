@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.AI;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -17,6 +18,19 @@ internal static class AiBuiltInFunctions
     private const int MaxTerminalOutputChars = 12000;
 
     private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromMinutes(30);
+
+    // Larger images are rejected by the model providers.
+    private const long MaxImageBytes = 5 * 1024 * 1024;
+
+    // Image formats accepted by vision-capable models.
+    private static readonly Dictionary<string, string> ImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".png"] = "image/png",
+        [".jpg"] = "image/jpeg",
+        [".jpeg"] = "image/jpeg",
+        [".gif"] = "image/gif",
+        [".webp"] = "image/webp"
+    };
 
     public static void Register(
         IAiFunctionProvider functionProvider,
@@ -34,7 +48,8 @@ internal static class AiBuiltInFunctions
             IsReadOnly = true,
             FriendlyName = "Read File",
             RunOnUiThread = true,
-            Description = "Read the specified file (optionally by line range). Always pass an absolute path.",
+            Description =
+                "Read the specified file (optionally by line range). Image files (png, jpg, gif, webp) are returned as images. Always pass an absolute path.",
             Handler = ([Description("absolute path of the file to read")] string path,
                     [Description("1-based start line for partial reads (omit for full file)")] int? startLine = null,
                     [Description("number of lines to read from startLine (omit for full file)")] int? lineCount =
@@ -243,6 +258,24 @@ internal static class AiBuiltInFunctions
         var resolvedPath = ResolvePath(projectExplorerService, path);
         if (string.IsNullOrWhiteSpace(resolvedPath))
             return new { result = (string?)null, error = (string?)"No active project and no path provided." };
+
+        if (ImageMimeTypes.TryGetValue(Path.GetExtension(resolvedPath), out var mimeType) && File.Exists(resolvedPath))
+        {
+            var size = new FileInfo(resolvedPath).Length;
+            if (size > MaxImageBytes)
+                return new
+                {
+                    result = (string?)null,
+                    error = (string?)$"Image is too large to read ({size / 1024 / 1024} MB, limit {MaxImageBytes / 1024 / 1024} MB)."
+                };
+
+            var data = await File.ReadAllBytesAsync(resolvedPath);
+            return new List<AIContent>
+            {
+                new TextContent($"Image file {resolvedPath} ({mimeType}, {data.Length} bytes)"),
+                new DataContent(data, mimeType)
+            };
+        }
 
         return new
         {

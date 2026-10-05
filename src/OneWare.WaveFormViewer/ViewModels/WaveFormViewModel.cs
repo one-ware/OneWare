@@ -1,9 +1,13 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
 using OneWare.Vcd.Parser.Data;
+using OneWare.WaveFormViewer.Enums;
 using OneWare.WaveFormViewer.Models;
 
 namespace OneWare.WaveFormViewer.ViewModels;
@@ -45,6 +49,8 @@ public class WaveFormViewModel : ObservableObject
         get => _selectedSignal;
         set => SetProperty(ref _selectedSignal, value);
     }
+
+    public ObservableCollection<WaveModel> SelectedSignals { get; } = [];
 
     /// <summary>
     ///     1 = 1 fs
@@ -152,9 +158,12 @@ public class WaveFormViewModel : ObservableObject
             SetProperty(ref _secondMarkerOffset, value >= 0 ? value : 0);
             OnPropertyChanged(nameof(MarkerText));
             OnPropertyChanged(nameof(MarkerTextOriginal));
-            SetSignalMarkerValues(SecondMarkerOffset);
+            OnPropertyChanged(nameof(HasSecondMarker));
+            SetSignalMarkerValues(HasSecondMarker ? SecondMarkerOffset : MarkerOffset);
         }
     }
+
+    public bool HasSecondMarker => SecondMarkerOffset != long.MaxValue;
 
     public long LoadingMarkerOffset
     {
@@ -257,5 +266,95 @@ public class WaveFormViewModel : ObservableObject
     public void RemoveSignal(WaveModel model)
     {
         Signals.Remove(model);
+    }
+
+    /// <summary>
+    ///     Returns the selected signals if <paramref name="model" /> is part of the selection, otherwise only
+    ///     <paramref name="model" />.
+    /// </summary>
+    public IReadOnlyList<WaveModel> GetTargetSignals(WaveModel? model)
+    {
+        if (model != null && !SelectedSignals.Contains(model)) return [model];
+        return SelectedSignals.ToArray();
+    }
+
+    public void RemoveSignals(WaveModel? model)
+    {
+        foreach (var target in GetTargetSignals(model)) RemoveSignal(target);
+    }
+
+    public void SetDataType(WaveDataType dataType)
+    {
+        foreach (var target in SelectedSignals.Where(x => x.AvailableDataTypes.Contains(dataType)))
+            target.DataType = dataType;
+    }
+
+    public void ToggleAutomaticFixedPointShift(WaveModel model)
+    {
+        var enable = !model.AutomaticFixedPointShift;
+        foreach (var target in GetTargetSignals(model)) target.AutomaticFixedPointShift = enable;
+    }
+
+    public async Task SpecifyFixedPointShiftDialogAsync(Control owner)
+    {
+        if (owner.DataContext is not WaveModel model) return;
+
+        var result = await ContainerLocator.Container.Resolve<IWindowService>().ShowInputAsync(
+            "Fixed point shift", "Specify fixed point shift", MessageBoxIcon.Info,
+            model.FixedPointShift.ToString(), TopLevel.GetTopLevel(owner) as Window);
+
+        if (result == null || !int.TryParse(result, out var shift)) return;
+
+        foreach (var target in GetTargetSignals(model))
+        {
+            target.AutomaticFixedPointShift = false;
+            target.FixedPointShift = shift;
+        }
+    }
+
+    public async Task EditSeparatorDialogAsync(Control owner)
+    {
+        if (owner.DataContext is not WaveModel model) return;
+
+        var result = await ContainerLocator.Container.Resolve<IWindowService>().ShowInputAsync(
+            "Separator", "Separator label (optional)", MessageBoxIcon.Info,
+            model.SeparatorLabel ?? string.Empty, TopLevel.GetTopLevel(owner) as Window);
+
+        if (result != null) model.SeparatorLabel = result.Trim();
+    }
+
+    public void RemoveSeparators(WaveModel model)
+    {
+        foreach (var target in GetTargetSignals(model)) target.SeparatorLabel = null;
+    }
+
+    public void ClearSecondMarker()
+    {
+        SecondMarkerOffset = long.MaxValue;
+    }
+
+    public void JumpToNextEdge()
+    {
+        JumpToEdge(true);
+    }
+
+    public void JumpToPreviousEdge()
+    {
+        JumpToEdge(false);
+    }
+
+    /// <summary>
+    ///     Moves the marker to the closest value change of the selected signals (all signals if none is selected).
+    /// </summary>
+    public void JumpToEdge(bool forward)
+    {
+        var signals = (SelectedSignals.Count > 0 ? SelectedSignals : Signals).Select(x => x.Signal);
+        var start = MarkerOffset != long.MaxValue ? MarkerOffset : Offset;
+
+        if (SignalEdgeHelper.FindEdge(signals, start, forward) is not { } edge) return;
+
+        MarkerOffset = edge;
+
+        if (edge < Offset || edge > Offset + ViewPortWidth) Offset = edge - ViewPortWidth / 2;
     }
 }

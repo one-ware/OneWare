@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using Avalonia.Threading;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -297,13 +298,33 @@ public class AiFunctionProvider(
         {
             var baseFunction = AIFunctionFactory.Create(
                 definition.Handler,
-                definition.Name,
-                definition.Description);
+                new AIFunctionFactoryOptions
+                {
+                    Name = definition.Name,
+                    Description = definition.Description,
+                    MarshalResult = MarshalResult
+                });
 
             tools.Add(new RegisteredOneWareAiFunction(this, baseFunction, definition));
         }
 
         return tools;
+    }
+
+    /// <summary>
+    /// Keeps <see cref="AIContent"/> results (e.g. <see cref="DataContent"/> images) intact so AI backends
+    /// can forward them to the model as binary content; everything else is JSON-serialized as by default.
+    /// </summary>
+    private static ValueTask<object?> MarshalResult(object? result, Type? type, CancellationToken cancellationToken)
+    {
+        if (result is AIContent or IEnumerable<AIContent>)
+            return new ValueTask<object?>(result);
+
+        if (type == null || type == typeof(void))
+            return new ValueTask<object?>((object?)null);
+
+        return new ValueTask<object?>(
+            JsonSerializer.SerializeToElement(result, AIJsonUtilities.DefaultOptions.GetTypeInfo(type)));
     }
 
     public void CancelActiveFunctions()
