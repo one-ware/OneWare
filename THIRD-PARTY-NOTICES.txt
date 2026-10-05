@@ -19,6 +19,7 @@ Summary of licenses present:
   - Microsoft Public License (Ms-PL)
   - SIL Open Font License 1.1 (bundled fonts)
   - GPL v2.0 WITH Linking Exception (libgit2 native binaries only — see note)
+  - GitHub Copilot CLI License (bundled Copilot runtime only — see note)
 
 ================================================================================
 SPECIAL NOTE: libgit2 (bundled via LibGit2Sharp.NativeBinaries)
@@ -40,6 +41,16 @@ into OneWare Studio regardless of OneWare's own license:
 
 The full GPL v2 text accompanies the libgit2 distribution in the
 LibGit2Sharp.NativeBinaries package (libgit2/libgit2.license.txt).
+
+================================================================================
+SPECIAL NOTE: GitHub Copilot runtime (bundled via GitHub.Copilot.SDK)
+================================================================================
+OneWare Studio Desktop redistributes an unmodified copy of the GitHub Copilot
+CLI runtime (runtimes/<rid>/native) under Section 2 of the GitHub Copilot CLI
+License. It is proprietary software of GitHub, Inc. and is not covered by the
+Apache-2.0 license of OneWare Studio. The license text ships next to the
+application in ThirdPartyLicenses/GitHub-Copilot-CLI-LICENSE.md and is
+available at https://github.com/github/copilot-cli/blob/main/LICENSE.md.
 
 ================================================================================
 SYNTAX HIGHLIGHTING GRAMMARS

@@ -12,7 +12,6 @@ namespace OneWare.Copilot;
 
 public class CopilotModule : OneWareModuleBase
 {
-    public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
@@ -51,131 +50,10 @@ public class CopilotModule : OneWareModuleBase
     /// </summary>
     public const string DefaultReasoningEffort = "medium";
 
-    public static readonly Package CopilotPackage = new()
-    {
-        Category = "Binaries",
-        Id = "copilotcli",
-        Type = "NativeTool",
-        Name = "Copilot CLI",
-        Description = "Used for Copilot Integration",
-        License = "GitHub Copilot CLI License",
-        IconUrl = "https://github.githubassets.com/images/modules/site/copilot/copilot.png",
-        AcceptLicenseBeforeDownload = true,
-        Links =
-        [
-            new PackageLink
-            {
-                Name = "GitHub",
-                Url = "https://github.com/github/copilot-cli"
-            },
-            new PackageLink()
-            {
-                Name = "Documentation",
-                Url = "https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli"
-            }
-        ],
-        Tabs =
-        [
-            new PackageTab
-            {
-                Title = "License",
-                ContentUrl = "https://raw.githubusercontent.com/github/copilot-cli/refs/heads/main/LICENSE.md"
-            },
-            new PackageTab
-            {
-                Title = "Changelog",
-                ContentUrl = "https://raw.githubusercontent.com/github/copilot-cli/refs/heads/main/changelog.md"
-            }
-        ],
-        Versions =
-        [
-            new PackageVersion()
-            {
-                Version = "1.0.83",
-                Targets =
-                [
-                    new PackageTarget()
-                    {
-                        Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot.exe",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
-                    },
-                    new PackageTarget()
-                    {
-                        Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot.exe",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
-                    },
-                    new PackageTarget()
-                    {
-                        Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
-                    },
-                    new PackageTarget()
-                    {
-                        Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
-                    },
-                    new PackageTarget()
-                    {
-                        Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
-                    },
-                    new PackageTarget()
-                    {
-                        Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
-                    },
-                ]
-            }
-        ]
-    };
+    /// <summary>
+    /// Id of the package that installed the Copilot CLI before the runtime was bundled with OneWare.
+    /// </summary>
+    private const string LegacyCopilotCliPackageId = "copilotcli";
 
     public override void RegisterServices(IServiceCollection services)
     {
@@ -190,7 +68,7 @@ public class CopilotModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
+        RemoveLegacyCopilotCliPackage(serviceProvider.Resolve<IPackageService>());
 
         var settingsService = serviceProvider.Resolve<ISettingsService>();
 
@@ -243,14 +121,6 @@ public class CopilotModule : OneWareModuleBase
                     "Use completions for Ollama and broad OpenAI compatibility. Use responses for providers " +
                     "that implement the OpenAI Responses API. Ignored for Anthropic.",
                 IsVisibleObservable = byokVisible
-            });
-
-        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
-            new FilePathSetting("Copilot CLI Path", "", null,
-                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
-                PlatformHelper.ExeFile)
-            {
-                HoverDescription = "Path for Copilot CLI"
             });
 
         settingsService.RegisterSetting("AI Chat", "Copilot CLI",
@@ -324,5 +194,31 @@ public class CopilotModule : OneWareModuleBase
             .RegisterChatService(serviceProvider.Resolve<OneWareCloudChatService>());
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
+    }
+
+    /// <summary>
+    /// The Copilot runtime ships with OneWare now, so a Copilot CLI installed through the package manager
+    /// is no longer used. Removes it once the installed packages are known.
+    /// </summary>
+    private static void RemoveLegacyCopilotCliPackage(IPackageService packageService)
+    {
+        var removing = false;
+
+        void TryRemove()
+        {
+            if (removing ||
+                !packageService.Packages.TryGetValue(LegacyCopilotCliPackageId, out var state) ||
+                state.InstalledVersion == null)
+                return;
+
+            removing = true;
+            packageService.PackagesUpdated -= OnPackagesUpdated;
+            _ = packageService.RemoveAsync(LegacyCopilotCliPackageId);
+        }
+
+        void OnPackagesUpdated(object? sender, EventArgs e) => TryRemove();
+
+        packageService.PackagesUpdated += OnPackagesUpdated;
+        TryRemove();
     }
 }

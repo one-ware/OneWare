@@ -2,6 +2,8 @@
 
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\Avalonia.Desktop.props"/>
+    <!-- Bundles the Copilot runtime (runtimes/<rid>/native) matching the SDK used by OneWare.Copilot. -->
+    <Import Project="..\..\build\props\GitHub.Copilot.SDK.props"/>
 
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
@@ -49,6 +51,11 @@
         <AvaloniaResource Include="Assets\Startup.png"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Required by the redistribution terms of the bundled Copilot runtime. -->
+        <None Include="ThirdPartyLicenses\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
+    </ItemGroup>
+
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64'">
         <Content Include="com.one_ware.OneWare.desktop" CopyToOutputDirectory="PreserveNewest"/>
         <Content Include="com.one_ware.OneWare.metainfo.xml" CopyToOutputDirectory="PreserveNewest"/>
@@ -64,6 +71,25 @@
         Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
         <Copy SourceFiles="$(PublishDir)OneWareStudio.exe" DestinationFiles="$(PublishDir)oneware.exe"
             SkipUnchangedFiles="true"/>
+    </Target>
+
+    <!--
+        Offline builds (Flatpak) cannot let GitHub.Copilot.SDK download the Copilot runtime. They pass the
+        release archive (github-copilot-<CopilotCliVersion>-<platform>.tgz) with -p:CopilotRuntimeArchive=<path>,
+        which is extracted into the SDK's cache so its own targets skip the download and bundle it as usual.
+    -->
+    <Target Name="UseProvidedCopilotRuntimeArchive" BeforeTargets="_DownloadCopilotCli"
+        Condition="'$(CopilotRuntimeArchive)' != ''">
+        <Error Condition="!Exists('$(CopilotRuntimeArchive)')"
+            Text="CopilotRuntimeArchive '$(CopilotRuntimeArchive)' does not exist."/>
+        <PropertyGroup>
+            <_ProvidedCopilotCacheDir>$(IntermediateOutputPath)copilot-cli\$(CopilotCliVersion)\$(_CopilotPlatform)</_ProvidedCopilotCacheDir>
+        </PropertyGroup>
+        <RemoveDir Directories="$(_ProvidedCopilotCacheDir)"/>
+        <MakeDir Directories="$(_ProvidedCopilotCacheDir)"/>
+        <Exec Command="tar -xzf &quot;$(CopilotRuntimeArchive)&quot; --strip-components=1 -C &quot;$(_ProvidedCopilotCacheDir)&quot;"/>
+        <WriteLinesToFile File="$(_ProvidedCopilotCacheDir)\.copilot-runtime-complete" Lines="$(CopilotCliVersion)"
+            Overwrite="true"/>
     </Target>
 
 </Project>

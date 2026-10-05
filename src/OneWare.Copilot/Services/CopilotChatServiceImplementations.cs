@@ -6,8 +6,6 @@ namespace OneWare.Copilot.Services;
 public sealed class CopilotChatService(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
-    IPackageService packageService,
-    IPackageWindowService packageWindowService,
     IWindowService windowService,
     IMainDockService mainDockService,
     IPaths paths,
@@ -15,8 +13,6 @@ public sealed class CopilotChatService(
     : CopilotChatServiceBase(
         settingsService,
         toolProvider,
-        packageService,
-        packageWindowService,
         windowService,
         mainDockService,
         paths,

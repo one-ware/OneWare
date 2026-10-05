@@ -45,9 +45,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     public OneWareCloudChatService(
         ISettingsService settingsService,
         IAiFunctionProvider toolProvider,
-        IPackageService packageService,
-        IPackageWindowService packageWindowService,
-        IWindowService windowService,
+                IWindowService windowService,
         IMainDockService mainDockService,
         IPaths paths,
         IChatAgentService agentService,
@@ -55,9 +53,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
         : base(
             settingsService,
             toolProvider,
-            packageService,
-            packageWindowService,
-            windowService,
+                    windowService,
             mainDockService,
             paths,
             agentService)

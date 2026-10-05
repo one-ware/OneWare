@@ -49,6 +49,35 @@ jobs:
           chmod +x flatpak-dotnet-generator.py
           ./flatpak-dotnet-generator.py oneware-nuget-sources.json ./source-repo/studio/OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj -d 10 -f 24.08 -r linux-x64 linux-arm64
           rm -f flatpak-dotnet-generator.py      
+      - name: Update Copilot Runtime Sources
+        # Flathub builds are offline, so the Copilot runtime bundled by GitHub.Copilot.SDK is provided as a
+        # source and passed to the build with -p:CopilotRuntimeArchive=$PWD/copilot-runtime.tgz.
+        run: |
+          SDK_VERSION=$(grep -oP 'Include="GitHub.Copilot.SDK" Version="\K[^"]+' source-repo/build/props/GitHub.Copilot.SDK.props)
+          curl -sSfL -o copilot-sdk.nupkg "https://api.nuget.org/v3-flatcontainer/github.copilot.sdk/${SDK_VERSION}/github.copilot.sdk.${SDK_VERSION}.nupkg"
+          CLI_VERSION=$(unzip -p copilot-sdk.nupkg build/GitHub.Copilot.SDK.props | grep -oP '<CopilotCliVersion>\K[^<]+')
+          curl -sSfL -o copilot-sha256sums.txt "https://github.com/github/copilot-cli/releases/download/v${CLI_VERSION}/SHA256SUMS.txt"
+          python3 - "$CLI_VERSION" <<'PY'
+          import json, sys
+          version = sys.argv[1]
+          sums = {}
+          for line in open("copilot-sha256sums.txt"):
+              parts = line.split()
+              if len(parts) == 2:
+                  sums[parts[1].lstrip("*")] = parts[0]
+          sources = []
+          for platform, arch in (("linux-x64", "x86_64"), ("linux-arm64", "aarch64")):
+              asset = f"github-copilot-{version}-{platform}.tgz"
+              sources.append({
+                  "type": "file",
+                  "url": f"https://github.com/github/copilot-cli/releases/download/v{version}/{asset}",
+                  "sha256": sums[asset],
+                  "dest-filename": "copilot-runtime.tgz",
+                  "only-arches": [arch],
+              })
+          json.dump(sources, open("copilot-runtime-sources.json", "w"), indent=2)
+          PY
+          rm -f copilot-sdk.nupkg copilot-sha256sums.txt
       - name: Delete the source repository
         run: rm -rf source-repo
       - name: Update Version
@@ -61,6 +90,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add com.one_ware.OneWare.yml
           git add oneware-nuget-sources.json
+          git add copilot-runtime-sources.json
           git commit -m "Update OneWare Version"     
       - name: Push changes and create pull request
         uses: peter-evans/create-pull-request@v8

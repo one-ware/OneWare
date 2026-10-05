@@ -79,7 +79,10 @@ This file provides repo-specific guidance for coding agents working in `OneWare`
 - AI / cloud integrations:
   - `src/OneWare.CloudIntegration` — SignalR + JWT auth backend connectivity (uses `RestSharp`, `Devlooped.CredentialManager`)
   - `src/OneWare.Chat` — chat UI panel
-  - `src/OneWare.Copilot` — GitHub Copilot integration (`GitHub.Copilot.SDK`; sets `CopilotSkipCliDownload=true`)
+  - `src/OneWare.Copilot` — GitHub Copilot integration (`GitHub.Copilot.SDK` via `build/props/GitHub.Copilot.SDK.props`;
+    sets `CopilotSkipCliDownload=true`). The matching Copilot runtime is bundled by
+    `OneWare.Studio.Desktop` (`runtimes/<rid>/native`, downloaded at build time; offline builds pass
+    `-p:CopilotRuntimeArchive=<tgz>`). Login uses the GitHub OAuth device flow (`GitHubDeviceFlowLogin`).
 - Feature modules/extensions (examples):
   - Package manager: `src/OneWare.PackageManager`
   - Source control: `src/OneWare.SourceControl`

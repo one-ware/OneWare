@@ -41,8 +41,6 @@ public sealed record ContextSizeOption(string Label, string Tier, long Tokens)
 public abstract class CopilotChatServiceBase(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
-    IPackageService packageService,
-    IPackageWindowService packageWindowService,
     IWindowService windowService,
     IMainDockService mainDockService,
     IPaths paths,
@@ -55,6 +53,7 @@ public abstract class CopilotChatServiceBase(
     private IDisposable? _subscription;
     private string? _requestedSessionId;
     private ByokConfiguration? _byokConfiguration;
+    private string? _fallbackGitHubToken;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
     private readonly List<PendingPlanRequest> _pendingPlanRequests = new();
 
@@ -154,11 +153,6 @@ public abstract class CopilotChatServiceBase(
     // output in the IDE (diff view / terminal panel), whereas the built-in `view`/`create`/`edit`/`bash`
     // tools bypass it.
     private static readonly string[] ExcludedBuiltInTools = ["view", "create", "edit", "bash"];
-
-    private static readonly Regex DeviceLoginUrlRegex = new(@"https?://\S+", RegexOptions.Compiled);
-
-    private static readonly Regex DeviceLoginCodeRegex = new(@"\bcode\s+([A-Z0-9\-]+)\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex SkillContextRegex = new(
         @"<skill-context(?:\s+name=""(?<name>[^""]*)"")?[^>]*>(?<content>.*?)</skill-context>",
@@ -730,11 +724,14 @@ public abstract class CopilotChatServiceBase(
         IsAuthenticated = status?.IsAuthenticated ?? false;
         AccountLogin = IsAuthenticated ? status?.Login : null;
         AccountAuthType = IsAuthenticated ? status?.AuthType : null;
-        CanSignOut = IsAuthenticated && IsRemovableAuth(AccountAuthType);
+        // A token from OneWare's fallback store reaches the runtime as an explicit token, not as a stored login.
+        var usesFallbackToken = IsAuthenticated && _fallbackGitHubToken != null;
+        CanSignOut = IsAuthenticated && (usesFallbackToken || IsRemovableAuth(AccountAuthType));
+        var source = usesFallbackToken ? DescribeAuthSource(RemovableAuthType) : DescribeAuthSource(AccountAuthType);
         AccountStatusText = IsAuthenticated
             ? string.IsNullOrWhiteSpace(AccountLogin)
-                ? DescribeAuthSource(AccountAuthType)
-                : $"{AccountLogin} ({DescribeAuthSource(AccountAuthType)})"
+                ? source
+                : $"{AccountLogin} ({source})"
             : null;
     }
 
@@ -853,12 +850,19 @@ public abstract class CopilotChatServiceBase(
 
     private async Task<bool> RunSignOutAsync()
     {
-        if (_client == null) return false;
+        var removedAny = false;
+
+        if (_fallbackGitHubToken != null)
+        {
+            _fallbackGitHubToken = null;
+            CopilotTokenStore.Clear();
+            removedAny = true;
+        }
+
+        if (_client == null) return removedAny;
 
         try
         {
-            var removedAny = false;
-
             // The CLI can hold several stored users; HasMoreUsers tells us another one took over.
             for (var attempt = 0; attempt < 5; attempt++)
             {
@@ -879,7 +883,7 @@ public abstract class CopilotChatServiceBase(
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().LogError(e, "Copilot sign out failed.");
-            return false;
+            return removedAny;
         }
     }
 
@@ -1050,71 +1054,6 @@ public abstract class CopilotChatServiceBase(
     public event EventHandler<ChatEvent>? EventReceived;
     public event EventHandler<StatusEvent>? StatusChanged;
 
-    private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
-    {
-        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-
-        if (!update && PlatformHelper.ExistsOnPath(cliPath)) return true;
-
-        // Resume the conversation that was active before the reinstall/update
-        // instead of starting an empty session. Has to happen before the runtime is shut down,
-        // because that clears the current session id.
-        _requestedSessionId ??= CurrentSessionId;
-
-        // A running Copilot CLI keeps its own executable open, and overwriting it fails with
-        // "Text file busy" (Unix) or a sharing violation (Windows). Shut the runtime down and make
-        // sure the OS released the files before the installer extracts the new version.
-        await ShutdownCliAsync(cliPath);
-
-        var installResult = await packageWindowService.QuickInstallPackageAsync(CopilotModule.CopilotPackage.Id!);
-
-        if (!installResult)
-        {
-            // The runtime was stopped for the install, so bring it back up on the old version.
-            await InitializeAsync();
-            return false;
-        }
-
-        SessionReset?.Invoke(this, EventArgs.Empty);
-
-        await InitializeAsync();
-        await AuthenticateAsync(owner);
-
-        return installResult;
-    }
-
-    /// <summary>
-    /// Grace period the Copilot runtime gets to exit on its own before its processes are killed.
-    /// </summary>
-    private static readonly TimeSpan CliShutdownGracePeriod = TimeSpan.FromSeconds(3);
-
-    /// <summary>
-    /// Additional time the operating system gets to release the executable after the remaining
-    /// processes were killed.
-    /// </summary>
-    private static readonly TimeSpan CliKillTimeout = TimeSpan.FromSeconds(5);
-
-    /// <summary>
-    /// Stops the Copilot runtime and waits until its executable can be overwritten, killing any
-    /// process still running from the CLI installation directory if the graceful shutdown was not
-    /// enough.
-    /// </summary>
-    private async Task ShutdownCliAsync(string? cliPath)
-    {
-        await DisposeAsync();
-
-        if (string.IsNullOrWhiteSpace(cliPath) || !File.Exists(cliPath)) return;
-
-        if (await ProcessHelper.WaitForFileReleaseAsync(cliPath, CliShutdownGracePeriod)) return;
-
-        var installDirectory = Path.GetDirectoryName(cliPath);
-        if (installDirectory == null) return;
-
-        if (!await ProcessHelper.ReleaseDirectoryAsync(installDirectory, CliKillTimeout))
-            ContainerLocator.Container.Resolve<ILogger>().LogWarning(
-                "Copilot CLI at {Path} is still in use; the update may fail.", cliPath);
-    }
-
     private async Task<bool> AuthenticateAsync(Control? owner)
     {
         try
@@ -1141,13 +1080,9 @@ public abstract class CopilotChatServiceBase(
 
             if (isAuthenticated) return true;
 
-            var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-
-            if (!PlatformHelper.ExistsOnPath(cliPath)) return false;
-
             var viewModel = new DeviceCodeLoginViewModel("Login to GitHub Copilot",
                 "Authorize OneWare in your browser to finish the sign in.",
-                (prompt, token) => RunCopilotLoginAsync(cliPath, prompt, token));
+                RunGitHubLoginAsync);
 
             var view = new CopilotDeviceLoginView
             {
@@ -1178,9 +1113,6 @@ public abstract class CopilotChatServiceBase(
 
     public async Task<bool> InitializeAsync()
     {
-        var cliPath = settingsService.GetSettingValue<string>(CopilotModule.CopilotCliSettingKey);
-
-
         await _sync.WaitAsync().ConfigureAwait(false);
 
         try
@@ -1196,42 +1128,24 @@ public abstract class CopilotChatServiceBase(
             else
                 ApplyByokStatus(_byokConfiguration);
 
-            if (!PlatformHelper.ExistsOnPath(cliPath))
-            {
-                StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
-                Blocker = new ChatServiceBlocker("Copilot CLI required",
-                    $"{Name} needs the Copilot CLI. Install it to start chatting.")
-                {
-                    ActionText = "Install Copilot CLI",
-                    ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))
-                };
-                return false;
-            }
-
-            if (_byokConfiguration == null &&
-                (packageService.IsLoaded || await packageService.RefreshAsync(false)))
-            {
-                if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
-                    state.Status is PackageStatus.UpdateAvailable)
-                {
-                    StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
-                    Blocker = new ChatServiceBlocker("Copilot CLI update available",
-                        "Update the Copilot CLI to continue chatting.")
-                    {
-                        ActionText = "Update Copilot CLI",
-                        ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))
-                    };
-                    return false;
-                }
-            }
-
             var clientOptions = new CopilotClientOptions
             {
                 WorkingDirectory = paths.ProjectsDirectory,
                 ClientInfo = BuildClientInfo(),
-                Connection = RuntimeConnection.ForStdio(cliPath, []),
+                // The runtime bundled with OneWare (runtimes/<rid>/native) always matches the SDK version.
+                Connection = RuntimeConnection.ForStdio(null, []),
                 UseLoggedInUser = _byokConfiguration == null
             };
+
+            if (_byokConfiguration == null)
+            {
+                _fallbackGitHubToken ??= CopilotTokenStore.Load();
+                if (_fallbackGitHubToken != null)
+                {
+                    clientOptions.GitHubToken = _fallbackGitHubToken;
+                    clientOptions.UseLoggedInUser = false;
+                }
+            }
 
             if (_byokConfiguration != null)
             {
@@ -2863,123 +2777,50 @@ public abstract class CopilotChatServiceBase(
             source.TrySetResult(new UserInputResponse { Answer = string.Empty, WasFreeform = true });
     }
 
-    private async Task<bool> RunCopilotLoginAsync(string cliPath, IDeviceCodeLoginPrompt prompt,
-        CancellationToken cancellationToken)
+    /// <summary>
+    /// Signs in with the GitHub OAuth device flow and hands the token to the Copilot runtime, which
+    /// validates it and stores it in the system keychain. When no keychain is available, the token is kept
+    /// in OneWare's credential store (or for this session only) and passed to the runtime on start.
+    /// </summary>
+    private async Task<bool> RunGitHubLoginAsync(IDeviceCodeLoginPrompt prompt, CancellationToken cancellationToken)
     {
-        var startInfo = new ProcessStartInfo(cliPath, "login")
+        var token = await GitHubDeviceFlowLogin.RequestTokenAsync(prompt, cancellationToken);
+        if (token == null) return false;
+
+        if (_client is not { } client)
         {
-            WorkingDirectory = paths.ProjectsDirectory,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
+            prompt.Status = "The Copilot runtime is not running. Please try again.";
+            return false;
+        }
 
-        using var process = new Process();
-        process.StartInfo = startInfo;
-        process.EnableRaisingEvents = true;
+        prompt.Status = "Signing in to Copilot...";
 
+        AccountLoginResult result;
         try
         {
-            if (!process.Start())
-            {
-                prompt.Status = "Failed to start Copilot CLI.";
-                return false;
-            }
+            // Account RPCs need a connected runtime; starting is a no-op when it already runs.
+            await client.StartAsync(cancellationToken);
+            result = await client.Rpc.Account.LoginAsync(GitHubDeviceFlowLogin.GitHubHost, token, null,
+                cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
-            prompt.Status = $"Failed to start Copilot CLI: {ex.Message}";
+            ContainerLocator.Container.Resolve<ILogger>().LogError(e, "Copilot rejected the GitHub login.");
+            prompt.Status = $"Copilot rejected the GitHub login: {e.Message}";
             return false;
         }
 
-        prompt.Status = "Starting sign in...";
-
-        var stdoutTask = ReadLoginStreamAsync(process.StandardOutput, prompt, cancellationToken);
-        var stderrTask = ReadLoginStreamAsync(process.StandardError, prompt, cancellationToken);
-
-        try
+        if (result.StoredInVault)
         {
-            await process.WaitForExitAsync(cancellationToken);
+            _fallbackGitHubToken = null;
+            CopilotTokenStore.Clear();
         }
-        catch (OperationCanceledException)
+        else
         {
-            TryKillProcess(process);
-            prompt.Status = "Login cancelled.";
-            return false;
-        }
-
-        await Task.WhenAll(stdoutTask, stderrTask);
-
-        if (process.ExitCode != 0)
-        {
-            prompt.Status = $"Copilot CLI exited with code {process.ExitCode}.";
-            return false;
+            _fallbackGitHubToken = token;
+            CopilotTokenStore.Save(token);
         }
 
         return true;
-    }
-
-    private async Task ReadLoginStreamAsync(StreamReader reader, IDeviceCodeLoginPrompt prompt,
-        CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var line = await reader.ReadLineAsync();
-            if (line == null) break;
-            ApplyLoginOutputLine(prompt, line);
-        }
-    }
-
-    /// <summary>
-    ///     Translates the login output of the Copilot CLI into dialog state. The CLI picks the flow itself:
-    ///     on a desktop it opens the browser and captures the result on a loopback callback (no code to type),
-    ///     remote/headless environments fall back to the device code flow.
-    /// </summary>
-    private void ApplyLoginOutputLine(IDeviceCodeLoginPrompt prompt, string line)
-    {
-        if (string.IsNullOrWhiteSpace(line)) return;
-
-        var urlMatch = DeviceLoginUrlRegex.Match(line);
-        if (urlMatch.Success && string.IsNullOrWhiteSpace(prompt.VerificationUrl))
-        {
-            prompt.VerificationUrl = urlMatch.Value;
-        }
-
-        var codeMatch = DeviceLoginCodeRegex.Match(line);
-        if (codeMatch.Success && string.IsNullOrWhiteSpace(prompt.UserCode))
-        {
-            prompt.UserCode = codeMatch.Groups[1].Value.ToUpperInvariant();
-        }
-
-        if (line.Contains("Opening your browser", StringComparison.OrdinalIgnoreCase))
-        {
-            prompt.Status = "Opening your browser...";
-        }
-        else if (line.Contains("Waiting for authorization", StringComparison.OrdinalIgnoreCase))
-        {
-            prompt.Status = string.IsNullOrWhiteSpace(prompt.UserCode)
-                ? "Waiting for the authorization in your browser..."
-                : "Waiting for authorization...";
-        }
-        else if (line.Contains("To authenticate", StringComparison.OrdinalIgnoreCase))
-        {
-            prompt.Status = "Enter the code in your browser.";
-        }
-        else if (line.Contains("doesn't open automatically", StringComparison.OrdinalIgnoreCase))
-        {
-            prompt.Status = "If the browser did not open, use the link below.";
-        }
-    }
-
-    private static void TryKillProcess(Process process)
-    {
-        try
-        {
-            if (!process.HasExited) process.Kill(true);
-        }
-        catch
-        {
-        }
     }
 }

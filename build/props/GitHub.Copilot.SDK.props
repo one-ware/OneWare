@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!--
+        The SDK pins a matching Copilot runtime (CopilotCliVersion) and downloads it for the project's
+        RuntimeIdentifier into runtimes/<rid>/native. Only the app project bundles it (it is the one
+        published with -r <rid>); libraries set CopilotSkipCliDownload=true before importing this file.
+    -->
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);GHCP001</NoWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="GitHub.Copilot.SDK" Version="1.0.13"/>
+    </ItemGroup>
+</Project>
