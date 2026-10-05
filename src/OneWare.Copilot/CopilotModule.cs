@@ -12,7 +12,6 @@ namespace OneWare.Copilot;
 
 public class CopilotModule : OneWareModuleBase
 {
-    public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
@@ -97,85 +96,48 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot.exe",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot.exe",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz"
                     },
                 ]
             }
         ]
     };
+
+    /// <summary>
+    /// Path of the Copilot CLI executable installed through <see cref="CopilotPackage"/>.
+    /// The path is not configurable on purpose: the SDK talks to the CLI over a versioned protocol,
+    /// so only the CLI version pinned by this package is guaranteed to be compatible.
+    /// </summary>
+    public static string GetCliPath(IPaths paths)
+    {
+        return Path.Combine(paths.NativeToolsDirectory, CopilotPackage.Id!,
+            OperatingSystem.IsWindows() ? "copilot.exe" : "copilot");
+    }
 
     public override void RegisterServices(IServiceCollection services)
     {
@@ -243,14 +205,6 @@ public class CopilotModule : OneWareModuleBase
                     "Use completions for Ollama and broad OpenAI compatibility. Use responses for providers " +
                     "that implement the OpenAI Responses API. Ignored for Anthropic.",
                 IsVisibleObservable = byokVisible
-            });
-
-        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
-            new FilePathSetting("Copilot CLI Path", "", null,
-                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
-                PlatformHelper.ExeFile)
-            {
-                HoverDescription = "Path for Copilot CLI"
             });
 
         settingsService.RegisterSetting("AI Chat", "Copilot CLI",
