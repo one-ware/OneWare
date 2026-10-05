@@ -45,11 +45,11 @@ jobs:
       # Version info for win-x64
       - name: Create VersionInfo win-x64
         shell: powershell
-        run: Set-Content -NoNewline -Path ./out/win-x64.txt -Value "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" -Encoding UTF8
+        run: Set-Content -NoNewline -Path ./out/win-x64.txt -Value "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi" -Encoding UTF8
       # Version info for win-arm64
       - name: Create VersionInfo win-arm64
         shell: powershell
-        run: Set-Content -NoNewline -Path ./out/win-arm64.txt -Value "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi" -Encoding UTF8
+        run: Set-Content -NoNewline -Path ./out/win-arm64.txt -Value "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-arm64.msi" -Encoding UTF8
       # Rename installers
       - name: Rename Installer win-x64
         run: mv ./publishInstaller/win-x64/en-us/OneWareStudio.WindowsInstaller.msi ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-win-x64.msi
@@ -91,54 +91,28 @@ jobs:
         env:
           AZURE_STORAGE_ACCOUNT: onewarecdn
           AZURE_STORAGE_KEY: ${{ secrets.ONEWARE_STORAGE_KEY }}
-          STORAGE_CONTAINER: onewarestudio
+          # Static website container served by Front Door at https://cdn.one-ware.com
+          STORAGE_CONTAINER: $web
+          CDN_PREFIX: onewarestudio
           VERSION: ${{ needs.build.outputs.version }}
         run: |
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "${VERSION}/OneWareStudio-${VERSION}-win-x64.msi" \
-            --file "OneWareStudio-${VERSION}-win-x64.msi" \
-            --content-type "application/octet-stream" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "${VERSION}/OneWareStudio-${VERSION}-win-arm64.msi" \
-            --file "OneWareStudio-${VERSION}-win-arm64.msi" \
-            --content-type "application/octet-stream" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "WinDownload-arm64.htm" \
-            --file "WinDownload-arm64.htm" \
-            --content-type "text/html; charset=utf-8" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "WinDownload-x64.htm" \
-            --file "WinDownload-x64.htm" \
-            --content-type "text/html; charset=utf-8" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "win-x64.txt" \
-            --file "win-x64.txt" \
-            --content-type "text/plain; charset=utf-8" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "win-arm64.txt" \
-            --file "win-arm64.txt" \
-            --content-type "text/plain; charset=utf-8" \
-            --overwrite
+          upload() {
+            az storage blob upload \
+              --account-name "$AZURE_STORAGE_ACCOUNT" \
+              --account-key "$AZURE_STORAGE_KEY" \
+              --container-name "$STORAGE_CONTAINER" \
+              --name "${CDN_PREFIX}/$2" \
+              --file "$1" \
+              --content-type "$3" \
+              --overwrite \
+              --only-show-errors \
+              --output none
+          }
+          # Upload installers before version info so the update pointer never references a missing file
+          for arch in x64 arm64; do
+            upload "OneWareStudio-${VERSION}-win-${arch}.msi" "${VERSION}/OneWareStudio-${VERSION}-win-${arch}.msi" "application/x-msi"
+          done
+          for arch in x64 arm64; do
+            upload "WinDownload-${arch}.htm" "WinDownload-${arch}.htm" "text/html; charset=utf-8"
+            upload "win-${arch}.txt" "win-${arch}.txt" "text/plain; charset=utf-8"
+          done

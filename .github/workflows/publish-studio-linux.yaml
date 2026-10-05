@@ -46,7 +46,7 @@ jobs:
           cwd: ./out
           outPath: ./out/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz
       - name: Create VersionInfo
-        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://github.com/one-ware/OneWare/releases/download/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz" > ./out/${{ matrix.arch }}.txt
+        run: echo "${{ steps.get-oneware-version.outputs.info }}|https://cdn.one-ware.com/onewarestudio/${{ steps.get-oneware-version.outputs.info }}/OneWareStudio-${{ steps.get-oneware-version.outputs.info }}-${{ matrix.arch }}.tgz" > ./out/${{ matrix.arch }}.txt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -84,38 +84,27 @@ jobs:
         env:
           AZURE_STORAGE_ACCOUNT: onewarecdn
           AZURE_STORAGE_KEY: ${{ secrets.ONEWARE_STORAGE_KEY }}
-          STORAGE_CONTAINER: onewarestudio
+          # Static website container served by Front Door at https://cdn.one-ware.com
+          STORAGE_CONTAINER: $web
+          CDN_PREFIX: onewarestudio
           VERSION: ${{ needs.build.outputs.version }}
         run: |
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "${VERSION}/OneWareStudio-${VERSION}-linux-arm64.tgz" \
-            --file "OneWareStudio-${VERSION}-linux-arm64.tgz" \
-            --content-type "application/gzip" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "linux-arm64.txt" \
-            --file "linux-arm64.txt" \
-            --content-type "text/plain; charset=utf-8" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "${VERSION}/OneWareStudio-${VERSION}-linux-x64.tgz" \
-            --file "OneWareStudio-${VERSION}-linux-x64.tgz" \
-            --content-type "application/gzip" \
-            --overwrite
-          az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
-            --container-name "$STORAGE_CONTAINER" \
-            --name "linux-x64.txt" \
-            --file "linux-x64.txt" \
-            --content-type "text/plain; charset=utf-8" \
-            --overwrite
+          upload() {
+            az storage blob upload \
+              --account-name "$AZURE_STORAGE_ACCOUNT" \
+              --account-key "$AZURE_STORAGE_KEY" \
+              --container-name "$STORAGE_CONTAINER" \
+              --name "${CDN_PREFIX}/$2" \
+              --file "$1" \
+              --content-type "$3" \
+              --overwrite \
+              --only-show-errors \
+              --output none
+          }
+          # Upload installers before version info so the update pointer never references a missing file
+          for arch in linux-x64 linux-arm64; do
+            upload "OneWareStudio-${VERSION}-${arch}.tgz" "${VERSION}/OneWareStudio-${VERSION}-${arch}.tgz" "application/gzip"
+          done
+          for arch in linux-x64 linux-arm64; do
+            upload "${arch}.txt" "${arch}.txt" "text/plain; charset=utf-8"
+          done
