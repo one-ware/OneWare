@@ -301,7 +301,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         {
             await installer.PrepareRemoveAsync(context);
             if (Directory.Exists(context.ExtractionPath))
-                Directory.Delete(context.ExtractionPath, true);
+                await Task.Run(() => Directory.Delete(context.ExtractionPath, true));
 
             var result = await installer.RemoveAsync(context);
             state.InstalledVersion = null;
