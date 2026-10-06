@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Threading;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
@@ -60,6 +61,23 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
         private set => SetProperty(ref field, value);
     }
 
+    public string ProgressText
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = "Downloading...";
+
+    private float _lastProgress;
+
+    private void OnPackagePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(IPackageState.Progress)) return;
+
+        // Download and extraction both count from 0 to 1, so a drop means the extraction started
+        if (Package.Progress < _lastProgress) ProgressText = "Extracting...";
+        _lastProgress = Package.Progress;
+    }
+
     public RelayCommand<FlexibleWindow> CancelCommand => new(window =>
     {
         if (IsInstalling)
@@ -79,6 +97,9 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
 
         _installCts = new CancellationTokenSource();
         IsInstalling = true;
+        ProgressText = "Downloading...";
+        _lastProgress = 0;
+        Package.PropertyChanged += OnPackagePropertyChanged;
 
         try
         {
@@ -97,6 +118,7 @@ public class PackageQuickInstallViewModel : FlexibleWindowViewModelBase
         }
         finally
         {
+            Package.PropertyChanged -= OnPackagePropertyChanged;
             IsInstalling = false;
             _installCts?.Dispose();
             _installCts = null;

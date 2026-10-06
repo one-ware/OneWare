@@ -29,6 +29,16 @@ public interface IHttpService
         TimeSpan timeout = default, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Downloads and extracts an archive to a location on disk, reporting download and extraction progress
+    /// (0 to 1) separately.
+    /// </summary>
+    public Task<bool> DownloadAndExtractArchiveAsync(string url, string location, IProgress<float>? downloadProgress,
+        IProgress<float>? extractProgress, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+    {
+        return DownloadAndExtractArchiveAsync(url, location, downloadProgress, timeout, cancellationToken);
+    }
+
+    /// <summary>
     /// Downloads an image and returns it.
     /// </summary>
     public Task<IImage?> DownloadImageAsync(string url, TimeSpan timeout = default,

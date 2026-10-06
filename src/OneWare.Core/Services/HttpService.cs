@@ -174,8 +174,15 @@ public class HttpService : IHttpService
         return false;
     }
 
-    public async Task<bool> DownloadAndExtractArchiveAsync(string url, string location,
+    public Task<bool> DownloadAndExtractArchiveAsync(string url, string location,
         IProgress<float>? progress = null, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+    {
+        return DownloadAndExtractArchiveAsync(url, location, progress, null, timeout, cancellationToken);
+    }
+
+    public async Task<bool> DownloadAndExtractArchiveAsync(string url, string location,
+        IProgress<float>? downloadProgress, IProgress<float>? extractProgress, TimeSpan timeout = default,
+        CancellationToken cancellationToken = default)
     {
         var tempPath = Path.Combine(_paths.TempDirectory, Path.GetFileName(url));
 
@@ -183,21 +190,36 @@ public class HttpService : IHttpService
         {
             Directory.CreateDirectory(location);
 
-            if (!await DownloadFileAsync(url, tempPath, progress, timeout, cancellationToken))
+            if (!await DownloadFileAsync(url, tempPath, downloadProgress, timeout, cancellationToken))
                 return false;
 
             await Task.Run(() =>
             {
                 using var stream = File.OpenRead(tempPath);
                 using var reader = ReaderFactory.OpenReader(stream);
-                reader.WriteAllToDirectory(location, new ExtractionOptions
+                var options = new ExtractionOptions
                 {
                     ExtractFullPath = true,
                     Overwrite = true,
                     SymbolicLinkHandler = (path, target) => File.CreateSymbolicLink(path, target)
-                });
+                };
+
+                // Same as reader.WriteAllToDirectory, but archives are read front to back,
+                // so the read position of the file is the extraction progress
+                var lastPercent = -1;
+                while (reader.MoveToNextEntry())
+                {
+                    reader.WriteEntryToDirectory(location, options);
+
+                    if (extractProgress == null || stream.Length == 0) continue;
+                    var percent = (int)(stream.Position * 100 / stream.Length);
+                    if (percent == lastPercent) continue;
+                    lastPercent = percent;
+                    extractProgress.Report(percent / 100f);
+                }
             }, cancellationToken);
 
+            extractProgress?.Report(1f);
             File.Delete(tempPath);
             return true;
         }

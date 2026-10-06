@@ -86,10 +86,13 @@ public class NativeToolPackageInstaller : PackageInstallerBase
                 _childProcessService.Kill(process);
         }
 
-        if (await ProcessHelper.ReleaseDirectoryAsync(context.ExtractionPath, ReleaseTimeout, cancellationToken))
+        // Checking and deleting every file takes a while for large tools, which must not block the UI
+        if (await Task.Run(() =>
+                ProcessHelper.ReleaseDirectoryAsync(context.ExtractionPath, ReleaseTimeout, cancellationToken),
+                cancellationToken))
             return;
 
-        ProcessHelper.FreeBusyFiles(context.ExtractionPath);
+        await Task.Run(() => ProcessHelper.FreeBusyFiles(context.ExtractionPath), cancellationToken);
     }
 
     public override Task<PackageInstallerResult> RemoveAsync(PackageInstallContext context,

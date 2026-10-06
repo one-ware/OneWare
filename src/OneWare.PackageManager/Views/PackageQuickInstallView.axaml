@@ -89,7 +89,8 @@
                         IsVisible="{Binding Package.Status, Converter={x:Static converters:SharedConverters.ComparisonConverter}, 
                                       ConverterParameter={x:Static enums:PackageStatus.Installing}}">
                         <StackPanel Classes="spacing-large">
-                            <TextBlock Text="Installing..." Classes="h4" />
+                            <TextBlock Text="{Binding ProgressText}"
+                                       Classes="h4" />
                             <ProgressBar Classes="large" IsIndeterminate="{Binding Package.IsIndeterminate}"
                                          Value="{Binding Package.Progress}"
                                          ShowProgressText="True"

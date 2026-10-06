@@ -32,6 +32,10 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
 
     private IDisposable? _statusSubscription;
 
+    private IDisposable? _progressSubscription;
+
+    private float _lastProgress;
+
     private bool _resolveImageStarted;
 
     private bool _resolveTabsStarted;
@@ -116,6 +120,12 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
     public ObservableCollection<TabModel> Tabs { get; } = [];
     public ObservableCollection<LinkModel> Links { get; } = [];
 
+    public string ProgressText
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = "Downloading...";
+
     public PackageVersionModel? SelectedVersionModel
     {
         get;
@@ -162,6 +172,8 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
     {
         _statusSubscription?.Dispose();
         _statusSubscription = null;
+        _progressSubscription?.Dispose();
+        _progressSubscription = null;
         _primaryButtonBrushSubscription?.Dispose();
         _primaryButtonBrushSubscription = null;
     }
@@ -169,7 +181,19 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
     private void SubscribeToStatus()
     {
         _statusSubscription?.Dispose();
-        _statusSubscription = PackageState.WhenValueChanged(x => x.Status).Subscribe(_ => UpdateStatus());
+        _statusSubscription = PackageState.WhenValueChanged(x => x.Status).Subscribe(_ =>
+        {
+            ProgressText = "Downloading...";
+            _lastProgress = 0;
+            UpdateStatus();
+        });
+        _progressSubscription?.Dispose();
+        _progressSubscription = PackageState.WhenValueChanged(x => x.Progress).Subscribe(progress =>
+        {
+            // Download and extraction both count from 0 to 1, so a drop means the extraction started
+            if (progress < _lastProgress) ProgressText = "Extracting...";
+            _lastProgress = progress;
+        });
     }
 
     private void InitPackage()

@@ -12,11 +12,11 @@ public class PackageDownloader : IPackageDownloader
     }
 
     public Task<bool> DownloadAndExtractAsync(string url, string extractionPath, bool isArchive,
-        IProgress<float> progress,
+        IProgress<float> progress, IProgress<float>? extractProgress = null,
         CancellationToken cancellationToken = default)
     {
         if (isArchive)
-            return _httpService.DownloadAndExtractArchiveAsync(url, extractionPath, progress,
+            return _httpService.DownloadAndExtractArchiveAsync(url, extractionPath, progress, extractProgress,
                 cancellationToken: cancellationToken);
 
         Directory.CreateDirectory(extractionPath);
