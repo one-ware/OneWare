@@ -585,33 +585,35 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
             _applicationStateService.AddState($"Downloading {state.Package.Id}...", AppState.Loading);
         try
         {
+            // A cancelled or failed run leaves its last value behind, which would show until the first report
+            state.Progress = 0;
             state.Status = PackageStatus.Installing;
 
-            var progress = new Progress<float>(value =>
+            // For archives the download is the first half of the installation, extraction the second
+            var downloadShare = target.IsArchive ? 0.5f : 1f;
+
+            void ReportProgress(string action, float value, float offset, float share)
             {
                 state.Progress = value;
-                if (value < 1)
-                {
-                    stateHandle.StatusMessage = $"Downloading {state.Package.Id} {(int)(value * 100)}%";
-                    state.IsIndeterminate = false;
-                }
-                else
-                {
-                    stateHandle.StatusMessage = $"Extracting {state.Package.Id}...";
-                    state.IsIndeterminate = true;
-                }
+                state.IsIndeterminate = false;
+                stateHandle.StatusMessage = $"{action} {state.Package.Id} {(int)(value * 100)}%";
 
+                // Subscribers like the profile import follow the whole installation, so the event combines both steps
                 PackageProgress?.Invoke(this,
-                    new PackageProgressEventArgs(state.Package.Id!, state.Status, state.Progress,
-                        state.IsIndeterminate));
-            });
+                    new PackageProgressEventArgs(state.Package.Id!, state.Status, offset + value * share, false));
+            }
+
+            var progress = new Progress<float>(value =>
+                ReportProgress("Downloading", value, 0, downloadShare));
+            var extractProgress = new Progress<float>(value =>
+                ReportProgress("Extracting", value, downloadShare, 1 - downloadShare));
 
             var extractionPath = installer.GetExtractionPath(state.Package, _paths);
             var url = target.Url ??
                       $"{state.Package.SourceUrl?.TrimEnd('/')}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
             var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, target.IsArchive, progress,
-                cancellationToken);
+                extractProgress, cancellationToken);
 
             if (!success)
             {

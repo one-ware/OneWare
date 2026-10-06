@@ -134,7 +134,7 @@ public class PackageServiceTests
         installer.InstallAsync(Arg.Any<PackageInstallContext>(), Arg.Any<CancellationToken>())
             .Returns(new PackageInstallerResult(installerStatus));
         _downloader.DownloadAndExtractAsync(Arg.Any<string>(), _nativeToolsDirectory, Arg.Any<bool>(),
-                Arg.Any<IProgress<float>>(), Arg.Any<CancellationToken>())
+                Arg.Any<IProgress<float>>(), Arg.Any<IProgress<float>?>(), Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
                 Directory.CreateDirectory(_nativeToolsDirectory);
