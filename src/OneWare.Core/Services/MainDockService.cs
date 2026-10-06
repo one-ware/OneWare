@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -38,6 +39,10 @@ public class MainDockService : Factory, IMainDockService
     private readonly WelcomeScreenViewModel _welcomeScreenViewModel;
 
     public readonly Dictionary<DockShowLocation, List<Type>> LayoutRegistrations = new();
+
+    // Layout extensions the current layout has already received. Only extensions missing here are added
+    // automatically, so dockables the user closed are not added back on the next start.
+    private readonly HashSet<string> _knownLayoutExtensions = new();
 
     private IDisposable? _lastSub;
 
@@ -205,6 +210,29 @@ public class MainDockService : Factory, IMainDockService
     {
         LayoutRegistrations.TryAdd(location, new List<Type>());
         LayoutRegistrations[location].Add(typeof(T));
+
+        // Modules initialized after the layout was loaded (e.g. plugins installed at runtime)
+        // need their dockable added to the open layout right away.
+        if (Layout == null) return;
+
+        void AddToLayout()
+        {
+            if (Layout == null || !_knownLayoutExtensions.Add(GetLayoutExtensionKey(typeof(T)))) return;
+            try
+            {
+                if (AddRegisteredDockable(location, typeof(T), SearchAllDockables(Layout).ToList(), true) is
+                    IWaitForContent wC)
+                    wC.InitializeContent();
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    ?.Warning($"Could not add {typeof(T).Name} to the current layout", e);
+            }
+        }
+
+        if (Dispatcher.UIThread.CheckAccess()) AddToLayout();
+        else Dispatcher.UIThread.Post(AddToLayout);
     }
 
     public async Task<IExtendedDocument?> OpenFileAsync(string fullPath)
@@ -494,14 +522,7 @@ public class MainDockService : Factory, IMainDockService
     {
         if (Layout == null) return null;
 
-        // Map location to dock ID
-        var dockId = location switch
-        {
-            DockShowLocation.Left => "LeftPaneTop",
-            DockShowLocation.Bottom => "BottomPaneOne",
-            DockShowLocation.Right => "RightPaneTop",
-            _ => null
-        };
+        var dockId = GetToolDockId(location);
 
         if (dockId == null) return null;
 
@@ -515,6 +536,17 @@ public class MainDockService : Factory, IMainDockService
         }
 
         return toolDock;
+    }
+
+    private static string? GetToolDockId(DockShowLocation location)
+    {
+        return location switch
+        {
+            DockShowLocation.Left => "LeftPaneTop",
+            DockShowLocation.Bottom => "BottomPaneOne",
+            DockShowLocation.Right => "RightPaneTop",
+            _ => null
+        };
     }
 
     private ToolDock? CreateToolDockForLocation(DockShowLocation location, string dockId)
@@ -738,6 +770,10 @@ public class MainDockService : Factory, IMainDockService
 
         layout.Id = name;
 
+        // A default layout already contains every registered extension
+        _knownLayoutExtensions.Clear();
+        if (wasLoadedFromFile) LoadKnownLayoutExtensions(name);
+
         // Drop dockables that failed to deserialize (e.g. types from an
         // uninstalled or renamed plugin). Their JSON $type cannot be resolved and
         // the serializer leaves null entries in the layout. Passing those to
@@ -762,6 +798,7 @@ public class MainDockService : Factory, IMainDockService
             Show(_welcomeScreenViewModel, DockShowLocation.Document);
             InitLayout(layout);
             Layout = layout;
+            MarkLayoutRegistrationsKnown();
             return;
         }
 
@@ -775,6 +812,60 @@ public class MainDockService : Factory, IMainDockService
         if (wasLoadedFromFile)
         {
             MergeLayoutRegistrations();
+        }
+
+        MarkLayoutRegistrationsKnown();
+    }
+
+    private static string GetLayoutExtensionKey(Type type)
+    {
+        return type.FullName ?? type.Name;
+    }
+
+    private string GetKnownLayoutExtensionsPath(string layoutId)
+    {
+        return Path.Combine(_paths.LayoutDirectory, layoutId + ".extensions.json");
+    }
+
+    private void MarkLayoutRegistrationsKnown()
+    {
+        foreach (var type in LayoutRegistrations.Values.SelectMany(x => x))
+            _knownLayoutExtensions.Add(GetLayoutExtensionKey(type));
+    }
+
+    /// <summary>
+    /// Loads the layout extensions a saved layout has already received. If the file is missing
+    /// (layouts saved by older versions), no extension is known and missing dockables are added once.
+    /// </summary>
+    private void LoadKnownLayoutExtensions(string layoutId)
+    {
+        try
+        {
+            var path = GetKnownLayoutExtensionsPath(layoutId);
+            if (!File.Exists(path)) return;
+
+            using var stream = File.OpenRead(path);
+            if (JsonSerializer.Deserialize<string[]>(stream) is { } known)
+                _knownLayoutExtensions.UnionWith(known);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Warning("Could not load known layout extensions", e);
+        }
+    }
+
+    private void SaveKnownLayoutExtensions(string layoutId)
+    {
+        try
+        {
+            File.WriteAllText(GetKnownLayoutExtensionsPath(layoutId),
+                JsonSerializer.Serialize(_knownLayoutExtensions.Order().ToArray()));
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                ?.Warning("Could not save known layout extensions", e);
         }
     }
 
@@ -859,77 +950,61 @@ public class MainDockService : Factory, IMainDockService
         // Get all existing dockables in the layout to avoid duplicates
         var existingDockables = SearchAllDockables(Layout).ToList();
 
-        // Process each location registration
         foreach (var (location, types) in LayoutRegistrations)
+        foreach (var type in types.ToList())
+            if (!_knownLayoutExtensions.Contains(GetLayoutExtensionKey(type)))
+                AddRegisteredDockable(location, type, existingDockables, false);
+    }
+
+    /// <summary>
+    /// Adds a dockable registered with <see cref="RegisterLayoutExtension{T}"/> to the current layout,
+    /// unless a dockable of that type is already part of it.
+    /// </summary>
+    /// <returns>The dockable that was added, or null if nothing was added.</returns>
+    private IDockable? AddRegisteredDockable(DockShowLocation location, Type type, List<IDockable> existingDockables,
+        bool createToolDock)
+    {
+        if (Layout == null) return null;
+
+        // Check if any existing dockable is assignable to this type
+        // This handles both concrete types and interfaces/base classes
+        if (existingDockables.Any(type.IsInstanceOfType)) return null;
+
+        switch (location)
         {
-            if (types.Count == 0) continue;
-
-            // Find the appropriate tool dock for this location
-            var toolDock = location switch
+            case DockShowLocation.Left or DockShowLocation.Bottom or DockShowLocation.Right:
             {
-                DockShowLocation.Left => SearchView<ToolDock>().FirstOrDefault(t => t.Id == "LeftPaneTop"),
-                DockShowLocation.Bottom => SearchView<ToolDock>().FirstOrDefault(t => t.Id == "BottomPaneOne"),
-                DockShowLocation.Right => SearchView<ToolDock>().FirstOrDefault(t => t.Id == "RightPaneTop"),
-                _ => null
-            };
+                var toolDock = createToolDock
+                    ? FindOrCreateToolDock(location)
+                    : SearchView<ToolDock>().FirstOrDefault(t => t.Id == GetToolDockId(location));
+                if (toolDock == null) return null;
+                if (ContainerLocator.Container.Resolve(type) is not IDockable dockable) return null;
 
-            if (toolDock != null)
-            {
-                // Check which registered types are not already in the layout
-                foreach (var type in types)
-                {
-                    // Check if any existing dockable is assignable to this type
-                    // This handles both concrete types and interfaces/base classes
-                    var existsInLayout = existingDockables.Any(d => type.IsInstanceOfType(d));
-                    
-                    if (!existsInLayout)
-                    {
-                        // Resolve and add the dockable
-                        if (ContainerLocator.Container.Resolve(type) is IDockable dockable)
-                        {
-                            toolDock.VisibleDockables?.Add(dockable);
-                            InitActiveDockable(dockable, toolDock);
-                            
-                            // Add to our tracking list to avoid duplicate adds in same session
-                            existingDockables.Add(dockable);
-                        }
-                    }
-                }
+                // AddDockable (not a raw VisibleDockables.Add) initializes the owner chain and IsEmpty (issue #258).
+                AddDockable(toolDock, dockable);
+                toolDock.ActiveDockable ??= dockable;
+                existingDockables.Add(dockable);
+                return dockable;
             }
-            else if (location == DockShowLocation.LeftPinned || location == DockShowLocation.RightPinned)
+            case DockShowLocation.LeftPinned or DockShowLocation.RightPinned:
             {
-                // Handle pinned dockables
-                if (Layout is RootDock rootDock)
-                {
-                    var pinnedList = location == DockShowLocation.LeftPinned 
-                        ? rootDock.LeftPinnedDockables 
-                        : rootDock.RightPinnedDockables;
+                if (Layout is not RootDock rootDock) return null;
+                var pinnedList = location == DockShowLocation.LeftPinned
+                    ? rootDock.LeftPinnedDockables
+                    : rootDock.RightPinnedDockables;
+                if (pinnedList == null) return null;
+                if (ContainerLocator.Container.Resolve(type) is not IDockable dockable) return null;
 
-                    if (pinnedList != null)
-                    {
-                        foreach (var type in types)
-                        {
-                            // Check if any existing dockable is assignable to this type
-                            var existsInLayout = existingDockables.Any(d => type.IsInstanceOfType(d));
-                            
-                            if (!existsInLayout)
-                            {
-                                if (ContainerLocator.Container.Resolve(type) is IDockable dockable)
-                                {
-                                    dockable.Proportion = 0.3;
-                                    dockable.PinnedBounds = null;
-                                    pinnedList.Add(dockable);
-                                    InitActiveDockable(dockable, rootDock);
-                                    
-                                    // Add to our tracking list to avoid duplicate adds in same session
-                                    existingDockables.Add(dockable);
-                                }
-                            }
-                        }
-                    }
-                }
+                dockable.Proportion = 0.3;
+                dockable.PinnedBounds = null;
+                pinnedList.Add(dockable);
+                InitDockable(dockable, rootDock);
+                existingDockables.Add(dockable);
+                return dockable;
             }
         }
+
+        return null;
     }
 
     private IEnumerable<IDockable> SearchAllDockables(IDockable? layout)
@@ -989,6 +1064,8 @@ public class MainDockService : Factory, IMainDockService
         Layout.FocusedDockable = null;
 
         _serializer.Save(stream, Layout);
+
+        SaveKnownLayoutExtensions(Layout.Id);
     }
 
     public void InitializeContent()
