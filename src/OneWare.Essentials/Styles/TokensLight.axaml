@@ -1,13 +1,13 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Surfaces: ControlLow (white, editors/lists/inputs) > Background (panels) -->
-    <Color x:Key="ThemeBackgroundColor">#FFF7F8FA</Color>
+    <!-- Surfaces: ControlLow (soft off-white, editors/lists/inputs) > Background (panels). Avoid pure white to reduce glare -->
+    <Color x:Key="ThemeBackgroundColor">#FFF0F1F5</Color>
     <Color x:Key="ThemeBorderLowColor">#FFE1E3E8</Color>
     <Color x:Key="ThemeBorderMidColor">#FFC5C9D0</Color>
     <Color x:Key="ThemeBorderHighColor">#FF6C707E</Color>
-    <Color x:Key="ThemeControlLowColor">#FFFFFFFF</Color>
-    <Color x:Key="ThemeControlMidColor">#FFFFFFFF</Color>
+    <Color x:Key="ThemeControlLowColor">#FFFAFAFD</Color>
+    <Color x:Key="ThemeControlMidColor">#FFFDFDFE</Color>
     <Color x:Key="ThemeControlMidHighColor">#FFEBECF0</Color>
     <Color x:Key="ThemeControlHighColor">#FFA8ADBD</Color>
     <Color x:Key="ThemeControlVeryHighColor">#FF6C707E</Color>
@@ -17,7 +17,7 @@
     <Color x:Key="ThemeForegroundColor">#FF1F2329</Color>
     <Color x:Key="ThemeForegroundLowColor">#FF5E6370</Color>
     <Color x:Key="ThemeEditorColor">#FF111827</Color>
-    <Color x:Key="ThemeElevatedColor">#FFFFFFFF</Color>
+    <Color x:Key="ThemeElevatedColor">#FFFDFDFE</Color>
 
     <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="{StaticResource ThemeBackgroundColor}" />
     <SolidColorBrush x:Key="ThemeBackgroundBrushOp" Color="{StaticResource ThemeBackgroundColor}" Opacity="0.85" />
@@ -42,10 +42,10 @@
     <SolidColorBrush x:Key="ThemeButtonSecondaryBrush" Color="{StaticResource ThemeControlMidColor}" />
     <SolidColorBrush x:Key="ThemeButtonSecondaryHoverBrush" Color="{StaticResource ThemeControlMidHighColor}" />
 
-    <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="EditorInputFooterBrush" Color="#FFF8FAFC" />
+    <SolidColorBrush x:Key="EditorInputSurfaceBrush" Color="#FFFAFAFD" />
+    <SolidColorBrush x:Key="EditorInputFooterBrush" Color="#FFF3F4F8" />
 
-    <!-- Chat message/tool blocks; ControlMid is white in light mode and would not stand out -->
+    <!-- Chat message/tool blocks; ControlMid is near-white in light mode and would not stand out -->
     <SolidColorBrush x:Key="ChatBubbleBrush" Color="{StaticResource ThemeControlMidHighColor}" />
 
     <SolidColorBrush x:Key="CaptionButtonForeground" Color="{StaticResource ThemeForegroundColor}" />
@@ -54,8 +54,8 @@
 
     <SolidColorBrush x:Key="IconContrastColor" Color="#FF424040" />
 
-    <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.97" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.97" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="NotificationCardBackgroundBrush" Opacity="0.97" Color="#FFFDFDFE" />
+    <SolidColorBrush x:Key="NotificationCardInformationBackgroundBrush" Opacity="0.97" Color="#FFFDFDFE" />
 
     <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="{DynamicResource ThemeAccentColor}" Opacity="0.25" />
 
