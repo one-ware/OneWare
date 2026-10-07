@@ -204,12 +204,13 @@ public class UpdaterViewModel : ObservableObject
 
         if (updatablePackages.Length > 0)
         {
-            var updateString = string.Join('\n',
-                updatablePackages.Select(x => x.State.Package.Name + " -> " + x.Target!.Version).ToArray());
+            var updateList = string.Join('\n', updatablePackages.Select(x =>
+                $"- **{x.State.Package.Name ?? x.State.Package.Id}**: " +
+                $"{x.State.InstalledVersion?.Version ?? "?"} → {x.Target!.Version}"));
 
             var resultContinue = await _windowService.ShowYesNoCancelAsync("Update Packages",
-                $"There are package updates available:\n{updateString}\nDo you want to update them now?",
-                MessageBoxIcon.Warning, topLevelWindow);
+                $"The following package updates are available:\n\n{updateList}\n\nDo you want to update them now?",
+                MessageBoxIcon.Info, topLevelWindow);
 
             if (resultContinue == MessageBoxStatus.Canceled)
             {

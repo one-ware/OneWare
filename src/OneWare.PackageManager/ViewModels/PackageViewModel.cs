@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -54,7 +55,7 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
 
         ResolveIconCommand = new AsyncRelayCommand(ResolveIconAsync);
 
-        RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
+        RemoveCommand = new AsyncRelayCommand<Control?>(ConfirmAndRemoveAsync,
             _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
                 or PackageStatus.UpdateAvailablePrerelease);
 
@@ -268,6 +269,22 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
         InstallCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
         (CancelCommand as RelayCommand)?.NotifyCanExecuteChanged();
+    }
+
+    private async Task ConfirmAndRemoveAsync(Control? control)
+    {
+        // Remove lives in a flyout, whose popup is not a Window, so fall back to the active window
+        var owner = TopLevel.GetTopLevel(control) as Window
+                    ?? (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?
+                    .Windows.FirstOrDefault(x => x.IsActive);
+
+        var result = await _windowService.ShowYesNoAsync("Remove Package",
+            $"Do you really want to remove {PackageState.Package.Name ?? PackageState.Package.Id}?",
+            MessageBoxIcon.Warning, owner);
+
+        if (result != MessageBoxStatus.Yes) return;
+
+        await _packageService.RemoveAsync(PackageState.Package.Id!);
     }
 
     private async Task ConfirmLicenseAndDownloadAsync(Control? control, IPackageState model, PackageVersion version)

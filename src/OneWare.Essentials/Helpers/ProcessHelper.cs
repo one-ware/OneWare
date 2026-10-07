@@ -27,9 +27,13 @@ public static class ProcessHelper
     {
         if (!Directory.Exists(directory)) return true;
 
-        KillProcessesRunningFrom(directory);
+        // Enumerating processes and probing every file is slow for large tools, keep it off the caller's thread.
+        var busy = await Task.Run(() =>
+        {
+            KillProcessesRunningFrom(directory);
+            return GetBusyFiles(directory);
+        }, cancellationToken).ConfigureAwait(false);
 
-        var busy = GetBusyFiles(directory);
         if (busy.Count == 0) return true;
 
         var deadline = DateTimeOffset.UtcNow + timeout;

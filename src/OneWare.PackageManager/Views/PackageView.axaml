@@ -61,7 +61,8 @@
                     <Button>
                         <Button.Flyout>
                             <MenuFlyout>
-                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}" />
+                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}"
+                                          CommandParameter="{Binding $self}" />
                             </MenuFlyout>
                         </Button.Flyout>
                         <PathIcon Data="{StaticResource Icon.KebabVertical}" Width="12" Height="12" />
