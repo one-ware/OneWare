@@ -1,3 +1,12 @@
+## 1.0.43
+
+- Added a confirmation dialog before removing a package
+- Improved formatting of the package update prompt shown when updating the IDE
+- Improved light mode colors
+- Fixed the UI lagging while downloading large packages such as the OSS CAD Suite
+- Fixed the UI freezing while removing large packages
+- Fixed package downloads failing when the package source URL ends with a slash
+
 ## 1.0.42
 
 - New: OneWare Cloud AI provider for Copilot, with Compute Credits, plan gating and an improved browser login/logout
