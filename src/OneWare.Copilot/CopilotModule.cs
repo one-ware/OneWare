@@ -162,7 +162,7 @@ public class CopilotModule : OneWareModuleBase
             {
                 HoverDescription =
                     "GitHub Copilot uses your Copilot account. BYOK connects directly to the configured provider. " +
-                    "OneWare Cloud is available as a separate chat service."
+                    "OneWare Agents is available as a separate chat service."
             });
         if (settingsService.GetSettingValue<string>(CopilotProviderSettingKey) == ProviderOneWareCloud)
             settingsService.SetSettingValue(CopilotProviderSettingKey, ProviderGitHubCopilot);

@@ -1106,7 +1106,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    // Replace (don't stack) a prompt that is repeated, e.g. on every send while the plan lacks Cloud AI.
+                    // Replace (don't stack) a prompt that is repeated, e.g. on every send while the plan lacks OneWare Agents.
                     foreach (var existing in Messages.OfType<ChatMessageWithButtonViewModel>()
                                  .Where(m => m.Event.Message == x.Message && m.Event.ButtonText == x.ButtonText)
                                  .ToList())

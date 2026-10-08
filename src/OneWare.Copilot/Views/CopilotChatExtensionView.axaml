@@ -67,7 +67,7 @@
                         <TextBox DockPanel.Dock="Top" Padding="4 5" Height="30"
                                  Watermark="Search models..." BorderThickness="0"
                                  Text="{Binding ModelSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                        <!-- OneWare Cloud AI passes requests on to the model providers (terms 3.15) -->
+                        <!-- OneWare Agents passes requests on to the model providers (terms 3.15) -->
                         <TextBlock DockPanel.Dock="Bottom" Margin="8 4 8 6" MaxWidth="260"
                                    HorizontalAlignment="Left" TextWrapping="Wrap" FontSize="10"
                                    Foreground="{DynamicResource ThemeForegroundLowBrush}"

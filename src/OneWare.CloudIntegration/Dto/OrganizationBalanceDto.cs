@@ -25,7 +25,7 @@ public class OrganizationBalanceDto
 
     public bool CanViewBalances { get; set; }
 
-    // Credit amounts are decimals with up to three places (e.g. 24999.875); Cloud AI usage is billed in fractions.
+    // Credit amounts are decimals with up to three places (e.g. 24999.875); OneWare Agents usage is billed in fractions.
     public decimal? CreditBalance { get; set; }
 
     public decimal? IncludedMonthlyCredits { get; set; }
