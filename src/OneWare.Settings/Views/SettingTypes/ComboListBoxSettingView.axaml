@@ -14,48 +14,46 @@
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
-            <TextBlock Text="{Binding Setting.Title}"
+            <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
-                       VerticalAlignment="Center" />
+                <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                 <Button.Flyout>
-                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <Flyout>
                         <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
                                                  MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border Background="{DynamicResource ThemeControlMidBrush}" BorderThickness="1">
-            <Grid RowDefinitions="20, *">
+        <Border Classes="inset">
+            <Grid RowDefinitions="Auto, *">
                 <!-- Toolbar: predefined-options picker + action buttons -->
-                <StackPanel Classes="ToolBar" Orientation="Horizontal">
+                <StackPanel Classes="toolbar" Height="NaN" Margin="2" Spacing="2">
                     <ComboBox ItemsSource="{Binding Setting.Options}"
                               SelectedItem="{Binding SelectedOption, Mode=TwoWay}"
                               IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                              MinWidth="80" MaxWidth="200"
-                              Padding="4 0" Height="20" FontSize="12" />
-                    <Button Command="{Binding AddSelected}"
+                              Classes="small" MinWidth="80" MaxWidth="200" />
+                    <Button Classes="icon small" Command="{Binding AddSelected}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                             ToolTip.Tip="Add selected option to list">
-                        <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Add}" />
                     </Button>
-                    <Button Command="{Binding RemoveSelected}"
+                    <Button Classes="icon small" Command="{Binding RemoveSelected}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                             ToolTip.Tip="Remove selected item from list">
-                        <Image Source="{DynamicResource MaterialDesign.Close}" Height="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Remove}" />
                     </Button>
-                    <Button Command="{Binding MoveUp}"
+                    <Button Classes="icon small" Command="{Binding MoveUp}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                             ToolTip.Tip="Move selected item up">
-                        <Image Source="{DynamicResource BoxIcons.RegularChevronUp}" Height="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.ChevronUp}" />
                     </Button>
-                    <Button Command="{Binding MoveDown}"
+                    <Button Classes="icon small" Command="{Binding MoveDown}"
                             IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                             ToolTip.Tip="Move selected item down">
-                        <Image Source="{DynamicResource BoxIcons.RegularChevronDown}" Height="12" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.ChevronDown}" />
                     </Button>
                 </StackPanel>
                 <!-- The list of currently added steps -->
@@ -64,10 +62,8 @@
                          SelectedIndex="{Binding SelectedListIndex, Mode=TwoWay}"
                          IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                          Height="100"
-                         BorderBrush="{DynamicResource ThemeBorderLowBrush}"
                          BorderThickness="0 1 0 0" />
             </Grid>
         </Border>
     </StackPanel>
 </UserControl>
-

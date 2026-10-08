@@ -6,10 +6,7 @@ namespace OneWare.ErrorList;
 
 /// <summary>
 ///     ObservableCollection that can suppress change notifications while a batch of mutations is applied and
-///     raises a single Reset afterwards.
-///     This is required for <see cref="Avalonia.Collections.DataGridCollectionView" />, which crashes
-///     (ArgumentOutOfRangeException in AdjustCurrencyForRemove) when an item that is filtered out of the view is
-///     removed while the current position is 0. Handling a Reset makes the view rebuild itself safely.
+///     raises a single Reset afterwards, so large updates don't make the tree process every change separately.
 /// </summary>
 internal class BatchObservableCollection<T> : ObservableCollection<T>
 {

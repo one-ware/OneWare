@@ -48,11 +48,11 @@
                       TargetType="primitives:ColorPreviewer">
             <Setter Property="Height" Value="28" />
             <Setter Property="ClipToBounds" Value="True" />
-            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
             <Setter Property="Template">
                 <ControlTemplate TargetType="primitives:ColorPreviewer">
                     <Border BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            BorderThickness="1"
+                            BorderThickness="{DynamicResource ThemeBorderThickness}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch">
@@ -71,7 +71,7 @@
 
         <ControlTheme x:Key="{x:Type ColorPicker}"
                       TargetType="ColorPicker">
-            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
             <Setter Property="HexInputAlphaPosition" Value="Trailing" />
             <Setter Property="Height" Value="24" />
             <Setter Property="Width" Value="56" />
@@ -109,7 +109,7 @@
                                     Padding="0,0,8,0"
                                     UseLayoutRounding="False">
                         <DropDownButton.Flyout>
-                            <Flyout FlyoutPresenterTheme="{DynamicResource FlyoutNoPadding}"
+                            <Flyout FlyoutPresenterClasses="flush"
                                     Placement="{DynamicResource ColorPickerFlyoutPlacement}">
                                 <Grid RowDefinitions="Auto,Auto">
                                     <Grid.Resources>
@@ -142,7 +142,7 @@
                                                  IsVisible="{TemplateBinding IsColorSpectrumVisible}">
                                             <TabItem.Header>
                                                 <Border Height="{DynamicResource ColorViewTabStripHeight}"
-                                                        Background="Transparent">
+                                                        Background="{DynamicResource ThemeControlTransparentBrush}">
                                                     <PathIcon Width="16"
                                                               Height="16"
                                                               Data="{DynamicResource ColorViewSpectrumIconGeometry}" />
@@ -208,7 +208,7 @@
                                                  IsVisible="{TemplateBinding IsColorPaletteVisible}">
                                             <TabItem.Header>
                                                 <Border Height="{DynamicResource ColorViewTabStripHeight}"
-                                                        Background="Transparent">
+                                                        Background="{DynamicResource ThemeControlTransparentBrush}">
                                                     <PathIcon Width="16"
                                                               Height="16"
                                                               Data="{DynamicResource ColorViewPaletteIconGeometry}" />
@@ -246,7 +246,7 @@
                                                  IsVisible="{TemplateBinding IsColorComponentsVisible}">
                                             <TabItem.Header>
                                                 <Border Height="{DynamicResource ColorViewTabStripHeight}"
-                                                        Background="Transparent">
+                                                        Background="{DynamicResource ThemeControlTransparentBrush}">
                                                     <PathIcon Width="16"
                                                               Height="16"
                                                               Data="{DynamicResource ColorViewComponentsIconGeometry}" />
@@ -577,7 +577,7 @@
         <Setter Property="Height" Value="24" />
         <Setter Property="Width" Value="56" />
         <Setter Property="MinWidth" Value="56" />
-        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
     </Style>
 
     <Style Selector="ColorPicker:disabled">
@@ -588,25 +588,17 @@
         <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
-        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
         <Setter Property="Padding" Value="0 0 8 0" />
     </Style>
 
     <Style Selector="ColorPicker NumericUpDown">
-        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlTransparentBrush}" />
     </Style>
 
     <Style Selector="ColorPicker NumericUpDown /template/ TextBox#PART_TextBox">
-        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlTransparentBrush}" />
         <Setter Property="BorderThickness" Value="0" />
-    </Style>
-
-    <Style Selector="FlyoutPresenter.nopadding">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="Padding" Value="0" />
     </Style>
 
 </Styles>

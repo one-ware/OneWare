@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
@@ -62,9 +63,15 @@ public class YosysService(
         else
             outputService.WriteLine(
                 $"==================\n\nCompilation failed in stage '{failedStage}' after {(int)compileTime.TotalMinutes:D2}:{compileTime.Seconds:D2}\n",
-                Brushes.Red);
+                GetThemeBrush("ErrorBrush"));
 
         return success;
+    }
+
+    private static IBrush? GetThemeBrush(string key)
+    {
+        var app = Avalonia.Application.Current;
+        return app?.FindResource(app.RequestedThemeVariant, key) as IBrush;
     }
 
     public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpgaModel)

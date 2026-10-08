@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -54,7 +55,7 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
 
         ResolveIconCommand = new AsyncRelayCommand(ResolveIconAsync);
 
-        RemoveCommand = new AsyncRelayCommand<Control?>(_ => _packageService.RemoveAsync(PackageState.Package.Id!),
+        RemoveCommand = new AsyncRelayCommand<Control?>(ConfirmAndRemoveAsync,
             _ => PackageState.Status is PackageStatus.Installed or PackageStatus.UpdateAvailable
                 or PackageStatus.UpdateAvailablePrerelease);
 
@@ -64,7 +65,8 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
 
         UpdateCommand = new AsyncRelayCommand<Control?>(_ =>
                 _packageService.UpdateAsync(PackageState.Package.Id!, SelectedVersionModel!.Version),
-            _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease);
+            _ => PackageState.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease
+                or PackageStatus.Installed);
 
         CancelCommand = new RelayCommand(() => _packageService.CancelInstall(PackageState.Package.Id!),
             () => PackageState.Status is PackageStatus.Installing);
@@ -223,6 +225,8 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
                 break;
             case PackageStatus.UpdateAvailable when sV > iV:
             case PackageStatus.UpdateAvailablePrerelease when sV > iV:
+            // No update is offered, but the user explicitly picked a newer version (e.g. a prerelease)
+            case PackageStatus.Installed when iV != null && sV > iV:
                 PrimaryButtonText = "Update";
                 primaryButtonBrushObservable = Application.Current!.GetResourceObservable("ThemeAccentBrush");
                 MainButtonCommand = UpdateCommand;
@@ -265,6 +269,22 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
         InstallCommand.NotifyCanExecuteChanged();
         UpdateCommand.NotifyCanExecuteChanged();
         (CancelCommand as RelayCommand)?.NotifyCanExecuteChanged();
+    }
+
+    private async Task ConfirmAndRemoveAsync(Control? control)
+    {
+        // Remove lives in a flyout, whose popup is not a Window, so fall back to the active window
+        var owner = TopLevel.GetTopLevel(control) as Window
+                    ?? (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?
+                    .Windows.FirstOrDefault(x => x.IsActive);
+
+        var result = await _windowService.ShowYesNoAsync("Remove Package",
+            $"Do you really want to remove {PackageState.Package.Name ?? PackageState.Package.Id}?",
+            MessageBoxIcon.Warning, owner);
+
+        if (result != MessageBoxStatus.Yes) return;
+
+        await _packageService.RemoveAsync(PackageState.Package.Id!);
     }
 
     private async Task ConfirmLicenseAndDownloadAsync(Control? control, IPackageState model, PackageVersion version)

@@ -84,8 +84,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         _packageService.WhenValueChanged(x => x.IsUpdating)
             .Subscribe(x => Dispatcher.UIThread.Post(() => IsLoading = x));
 
-        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => _packageService.Packages.Any(x =>
-            x.Value.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease));
+        UpdateAllCommand = new AsyncRelayCommand(UpdateAllAsync, () => GetBulkUpdates().Count > 0);
         
         Observable.FromEventPattern(_packageService, nameof(_packageService.PackagesUpdated)).Subscribe(_ =>
         {
@@ -394,6 +393,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private void OnPackageStatusChanged(object? sender, EventArgs e)
     {
         RefreshUpdateCount();
+        UpdateAllCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
@@ -487,14 +487,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
 
     public async Task<bool> UpdateAllAsync()
     {
-        // A prerelease installation stays on the prerelease channel, so its updates are offered
-        // here too.
-        var packages = _packageService.Packages.Values
-            .Where(x => x.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease)
-            .Select(x => (State: x, Target: x.ResolveTargetVersion()))
-            .Where(x => x.Target != null)
-            .OrderBy(x => x.State.Package.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        var packages = GetBulkUpdates();
 
         if (packages.Count == 0)
             return true;
@@ -506,7 +499,7 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         {
             var installedVersion = x.State.InstalledVersion?.Version ?? "?";
 
-            return $"- **{x.State.Package.Name}** `{installedVersion} -> {x.Target!.Version}`";
+            return $"- **{x.State.Package.Name}** `{installedVersion} -> {x.Target.Version}`";
         });
 
         var message =
@@ -550,6 +543,21 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         UpdateAllCommand.NotifyCanExecuteChanged();
         
         return true;
+    }
+
+    /// <summary>
+    ///     Packages "Update All" applies, on the channel each package is installed from: stable installations
+    ///     only move to newer stable versions, prerelease installations also to newer prereleases.
+    /// </summary>
+    private List<(IPackageState State, PackageVersion Target)> GetBulkUpdates()
+    {
+        return _packageService.Packages.Values
+            .Where(x => x.Status is PackageStatus.UpdateAvailable or PackageStatus.UpdateAvailablePrerelease)
+            .Select(x => (State: x, Target: x.ResolveUpdateVersion()))
+            .Where(x => x.Target != null)
+            .Select(x => (x.State, x.Target!))
+            .OrderBy(x => x.State.Package.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static string[] SplitCategoryPath(string? categoryPath)

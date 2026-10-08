@@ -80,8 +80,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 
         
         serviceProvider.Resolve<IPackageService>().RegisterPackage(OssCadSuiteHelper.OssCadPackage);
-        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("VsImageLib2019.SettingsFile16X",
-            ".pcf");
+        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("FileIcon.Tune", ".pcf");
 
         serviceProvider.Resolve<IWindowService>().RegisterUiExtension("CompileWindow_TopRightExtension",
             new OneWareUiExtension(x =>
@@ -345,15 +344,16 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
 
             if (YosysSettingHelper.GetConstraintFile(universalFpgaProjectRoot) == file.RelativePath)
             {
-                x.Icon?.AddOverlay("ConstraintFile", "ForkAwesome.Check");
+                x.AddTag("ConstraintFile", new ProjectExplorerTag("Constraints", ProjectExplorerTagKind.Neutral,
+                    "Constraint file used by the OSS CAD Suite toolchain"));
             }
             else
             {
-                x.Icon?.RemoveOverlay("ConstraintFile");
+                x.RemoveTag("ConstraintFile");
             }
         });
         
-        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("Material.Pulse", GtkWaveService.GtkWaveformEndings);
+        serviceProvider.Resolve<IFileIconService>().RegisterFileIcon("FileIcon.Waveform", GtkWaveService.GtkWaveformEndings);
 
         RegisterToolchainSkill(serviceProvider);
     }

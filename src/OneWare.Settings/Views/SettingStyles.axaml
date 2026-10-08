@@ -5,9 +5,7 @@
     </Design.PreviewWith>
     
     <Style Selector="TextBlock.setting-validation" x:DataType="settingTypes:TitledSettingViewModel">
-        <Setter Property="FontSize" Value="11"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
-        <Setter Property="Foreground" Value="Orange"/>
         <Setter Property="Text" Value="{Binding Setting.ValidationMessage}"/>
         <Setter Property="IsVisible" Value="{Binding $self.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </Style>

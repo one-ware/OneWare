@@ -300,8 +300,11 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         try
         {
             await installer.PrepareRemoveAsync(context);
-            if (Directory.Exists(context.ExtractionPath))
-                Directory.Delete(context.ExtractionPath, true);
+            await Task.Run(() =>
+            {
+                if (Directory.Exists(context.ExtractionPath))
+                    Directory.Delete(context.ExtractionPath, true);
+            });
 
             var result = await installer.RemoveAsync(context);
             state.InstalledVersion = null;
@@ -608,7 +611,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
 
             var extractionPath = installer.GetExtractionPath(state.Package, _paths);
             var url = target.Url ??
-                      $"{state.Package.SourceUrl}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
+                      $"{state.Package.SourceUrl?.TrimEnd('/')}/{version.Version}/{state.Package.Id}_{version.Version}_{target.Target}.zip";
 
             var success = await _downloader.DownloadAndExtractAsync(url, extractionPath, target.IsArchive, progress,
                 cancellationToken);
@@ -668,10 +671,13 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     {
         if (state.Status == PackageStatus.NeedRestart) return;
 
-        var target = state.ResolveTargetVersion();
-
-        var hasTarget = SemanticVersion.TryParse(target?.Version, out var targetVersion);
         var hasInstalled = SemanticVersion.TryParse(state.InstalledVersion?.Version, out var installedVersion);
+
+        // Installed packages only see updates on their own channel: a newer prerelease is only an update
+        // when a prerelease is installed. Packages that are not installed stay available even if every
+        // version is a prerelease.
+        var target = state.ResolveTargetVersion(state.InstalledVersion == null);
+        var hasTarget = SemanticVersion.TryParse(target?.Version, out var targetVersion);
 
         // An installed package stays removable even when its version string cannot be parsed or the
         // package disappeared from every repository, otherwise it can never be uninstalled again.

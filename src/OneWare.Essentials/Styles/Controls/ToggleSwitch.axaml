@@ -1,0 +1,144 @@
+<!--
+    ToggleSwitch styles.
+    The default SimpleTheme switch (40x20 track, header above, On/Off text) gets accent hover feedback.
+    "small" (applied automatically inside StackPanel.toolbar) switches to a compact theme: a 32x16 track with
+    Content as a label to its right and no extra vertical space, so it fits a 24 px toolbar.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Margin="20" Spacing="12" Width="260">
+            <ToggleSwitch IsChecked="True" />
+            <ToggleSwitch Classes="small" Content="Small" />
+            <ToggleSwitch Classes="small" Content="Small checked" IsChecked="True" />
+            <ToggleSwitch Classes="small" Content="Disabled" IsEnabled="False" />
+            <StackPanel Classes="toolbar">
+                <Button Content="Button" />
+                <ToggleSwitch Content="Toolbar" IsChecked="True" />
+            </StackPanel>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <!-- Part names match the SimpleTheme template so ToggleSwitch drag / knob logic works unchanged -->
+        <ControlTheme x:Key="OneWareToggleSwitchSmall" TargetType="ToggleSwitch">
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeNormal}" />
+            <Setter Property="KnobTransitions">
+                <Transitions>
+                    <DoubleTransition Easing="CubicEaseOut" Property="Canvas.Left" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid Background="{TemplateBinding Background}" ColumnDefinitions="Auto,*">
+                        <Panel x:Name="SwitchAreaGrid"
+                               Width="32" Height="16"
+                               VerticalAlignment="Center"
+                               Background="Transparent"
+                               TemplatedControl.IsTemplateFocusTarget="True">
+                            <Border x:Name="OuterBorder"
+                                    CornerRadius="8"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource ThemeBorderMidBrush}"
+                                    BorderThickness="{DynamicResource ThemeBorderThickness}" />
+                            <Border x:Name="SwitchKnobBounds"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource ThemeAccentBrush}" />
+                            <!-- The knob travels by the width of PART_SwitchKnob, so it is half the track -->
+                            <Canvas x:Name="PART_SwitchKnob"
+                                    Width="16" Height="16"
+                                    HorizontalAlignment="Left">
+                                <Grid x:Name="PART_MovingKnobs" Width="16" Height="16">
+                                    <Ellipse x:Name="SwitchKnobOn" Width="8" Height="8"
+                                             Fill="{DynamicResource HighlightForegroundBrush}" />
+                                    <Ellipse x:Name="SwitchKnobOff" Width="8" Height="8"
+                                             Fill="{DynamicResource ThemeBorderMidBrush}" />
+                                </Grid>
+                            </Canvas>
+                        </Panel>
+
+                        <ContentPresenter x:Name="PART_ContentPresenter"
+                                          Grid.Column="1"
+                                          Margin="6 0 0 0"
+                                          RecognizesAccessKey="True"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter:empty">
+                <Setter Property="Margin" Value="0" />
+            </Style>
+
+            <Style Selector="^:pointerover /template/ Border#OuterBorder">
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderHighBrush}" />
+                <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+            </Style>
+            <Style Selector="^:pointerover /template/ Ellipse#SwitchKnobOff">
+                <Setter Property="Fill" Value="{DynamicResource ThemeBorderHighBrush}" />
+            </Style>
+            <Style Selector="^:pointerover /template/ Border#SwitchKnobBounds">
+                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush2}" />
+            </Style>
+
+            <Style Selector="^:pressed /template/ Border#OuterBorder">
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderHighBrush}" />
+                <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+            </Style>
+            <Style Selector="^:pressed /template/ Border#SwitchKnobBounds">
+                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush3}" />
+            </Style>
+
+            <Style Selector="^:disabled">
+                <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+            </Style>
+            <Style Selector="^:disabled /template/ Border#OuterBorder">
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeForegroundLowBrush}" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style Selector="^:disabled /template/ Ellipse#SwitchKnobOff">
+                <Setter Property="Fill" Value="{DynamicResource ThemeForegroundLowBrush}" />
+            </Style>
+            <Style Selector="^:disabled /template/ Border#SwitchKnobBounds">
+                <Setter Property="Background" Value="{DynamicResource ThemeForegroundLowBrush}" />
+            </Style>
+
+            <Style Selector="^:checked /template/ Border#OuterBorder">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+            <Style Selector="^:checked /template/ Ellipse#SwitchKnobOff">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+            <Style Selector="^:unchecked /template/ Border#SwitchKnobBounds">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+            <Style Selector="^:unchecked /template/ Ellipse#SwitchKnobOn">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <Style Selector="ToggleSwitch:pointerover /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderHighBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+    </Style>
+
+    <Style Selector="ToggleSwitch:checked /template/ Border#OuterBorder">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="ToggleSwitch.small, StackPanel.ToolBar ToggleSwitch, StackPanel.toolbar ToggleSwitch">
+        <Setter Property="Theme" Value="{StaticResource OneWareToggleSwitchSmall}" />
+    </Style>
+
+</Styles>

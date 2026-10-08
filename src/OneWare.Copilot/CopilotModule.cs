@@ -1,4 +1,6 @@
+using System.Reactive.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using OneWare.CloudIntegration;
 using OneWare.Copilot.Services;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Helpers;
@@ -10,12 +12,27 @@ namespace OneWare.Copilot;
 
 public class CopilotModule : OneWareModuleBase
 {
-    public const string CopilotCliSettingKey = "AI_Chat_Copilot_CLI";
     public const string CopilotSelectedModelSettingKey = "AI_Chat_Copilot_SelectedModel";
     public const string CopilotSelectedReasoningEffortSettingKey = "AI_Chat_Copilot_SelectedReasoningEffort";
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
     public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
     public const string CopilotAutoTierSettingKey = "AI_Chat_Copilot_AutoTier";
+    public const string CopilotProviderSettingKey = "AI_Chat_Copilot_Provider";
+    public const string CopilotByokEndpointSettingKey = "AI_Chat_Copilot_BYOK_Endpoint";
+    public const string CopilotByokApiKeyEnvironmentVariableSettingKey =
+        "AI_Chat_Copilot_BYOK_ApiKeyEnvironmentVariable";
+    public const string CopilotByokModelSettingKey = "AI_Chat_Copilot_BYOK_Model";
+    public const string CopilotByokWireApiSettingKey = "AI_Chat_Copilot_BYOK_WireApi";
+    public const string CopilotByokSelectedModelSettingKey = "AI_Chat_Copilot_BYOK_SelectedModel";
+    public const string CopilotOneWareCloudSelectedModelSettingKey =
+        "AI_Chat_Copilot_OneWareCloud_SelectedModel";
+
+    public const string ProviderGitHubCopilot = "GitHub Copilot";
+    public const string ProviderOneWareCloud = "OneWare Cloud";
+    public const string ProviderOpenAiCompatible = "OpenAI Compatible (BYOK)";
+    public const string ProviderAnthropic = "Anthropic (BYOK)";
+    public const string WireApiCompletions = "completions";
+    public const string WireApiResponses = "responses";
 
     /// <summary>
     /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
@@ -79,104 +96,118 @@ public class CopilotModule : OneWareModuleBase
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot.exe",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot.exe",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "copilot",
-                                SettingKey = CopilotCliSettingKey
-                            }
-                        ]
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz"
                     },
                 ]
             }
         ]
     };
 
+    /// <summary>
+    /// Path of the Copilot CLI executable installed through <see cref="CopilotPackage"/>.
+    /// The path is not configurable on purpose: the SDK talks to the CLI over a versioned protocol,
+    /// so only the CLI version pinned by this package is guaranteed to be compatible.
+    /// </summary>
+    public static string GetCliPath(IPaths paths)
+    {
+        return Path.Combine(paths.NativeToolsDirectory, CopilotPackage.Id!,
+            OperatingSystem.IsWindows() ? "copilot.exe" : "copilot");
+    }
+
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddTransient<CopilotChatService>();
+        services.AddTransient<OneWareCloudChatService>();
     }
+
+    public override IReadOnlyCollection<string> Dependencies =>
+    [
+        nameof(OneWareCloudIntegrationModule),
+    ];
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
         serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
-        
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI", CopilotCliSettingKey,
-            new FilePathSetting("Copilot CLI Path", "", null,
-                serviceProvider.Resolve<IPaths>().NativeToolsDirectory, PlatformHelper.ExistsOnPath,
-                PlatformHelper.ExeFile)
+
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotProviderSettingKey,
+            new ComboBoxSetting("Model Provider", ProviderGitHubCopilot,
+                [ProviderGitHubCopilot, ProviderOpenAiCompatible, ProviderAnthropic])
             {
-                HoverDescription = "Path for Copilot CLI"
+                HoverDescription =
+                    "GitHub Copilot uses your Copilot account. BYOK connects directly to the configured provider. " +
+                    "OneWare Agents is available as a separate chat service."
+            });
+        if (settingsService.GetSettingValue<string>(CopilotProviderSettingKey) == ProviderOneWareCloud)
+            settingsService.SetSettingValue(CopilotProviderSettingKey, ProviderGitHubCopilot);
+
+        var byokVisible = settingsService.GetSettingObservable<string>(CopilotProviderSettingKey)
+            .Select(provider => provider is ProviderOpenAiCompatible or ProviderAnthropic);
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotByokEndpointSettingKey,
+            new TextBoxSetting("BYOK Endpoint", "", "http://localhost:11434/v1")
+            {
+                HoverDescription =
+                    "Provider API base URL. Leave blank for http://localhost:11434/v1 (OpenAI-compatible) " +
+                    "or https://api.anthropic.com (Anthropic).",
+                IsVisibleObservable = byokVisible
             });
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
+            CopilotByokApiKeyEnvironmentVariableSettingKey,
+            new TextBoxSetting("API Key Environment Variable", "", "OPENAI_API_KEY")
+            {
+                HoverDescription =
+                    "Optional environment variable containing the API key. The key itself is never saved in " +
+                    "OneWare settings or Copilot session files.",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotByokModelSettingKey,
+            new TextBoxSetting("Model Override", "", "qwen2.5-coder:7b")
+            {
+                HoverDescription =
+                    "Optional model ID. Leave blank to discover models from the provider's /models endpoint.",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotByokWireApiSettingKey,
+            new ComboBoxSetting("OpenAI Wire API", WireApiCompletions,
+                [WireApiCompletions, WireApiResponses])
+            {
+                HoverDescription =
+                    "Use completions for Ollama and broad OpenAI compatibility. Use responses for providers " +
+                    "that implement the OpenAI Responses API. Ignored for Anthropic.",
+                IsVisibleObservable = byokVisible
+            });
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
             CopilotApprovalModeSettingKey,
             new ComboBoxSetting("Approval Mode",
                 CopilotChatService.ApprovalModeDefault,
@@ -194,7 +225,7 @@ public class CopilotModule : OneWareModuleBase
                     "(the agent is told you are unavailable and decides what is best)."
             });
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
             CopilotContextTierSettingKey,
             new ComboBoxSetting("Context Length",
                 CopilotChatService.ContextTierDefault,
@@ -217,7 +248,7 @@ public class CopilotModule : OneWareModuleBase
         //         HoverDescription = "When enabled, new sessions are created as remote sessions (Mission Control). The remote URL is shown in the chat toolbar."
         //     });
 
-        serviceProvider.Resolve<ISettingsService>().RegisterSetting("AI Chat", "Copilot CLI",
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI",
             CopilotAutoTierSettingKey,
             new ComboBoxSetting("Auto Routing",
                 CopilotChatService.AutoTierDefault,
@@ -236,10 +267,18 @@ public class CopilotModule : OneWareModuleBase
                     "Intelligence: prefer the most capable models."
             });
 
-        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedModelSettingKey, DefaultModelId);
+        settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);
+        settingsService.Register(CopilotByokSelectedModelSettingKey, "");
+        settingsService.Register(CopilotOneWareCloudSelectedModelSettingKey, "");
 
-        serviceProvider.Resolve<ISettingsService>().Register(CopilotSelectedReasoningEffortSettingKey, "");
+        settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");
 
+        OneWareCloudImageFunction.Register(serviceProvider.Resolve<IAiFunctionProvider>(),
+            serviceProvider.Resolve<IOneWareCloudAccess>(), serviceProvider.Resolve<IProjectExplorerService>());
+
+        // The first registered service is the default selection.
+        serviceProvider.Resolve<IChatManagerService>()
+            .RegisterChatService(serviceProvider.Resolve<OneWareCloudChatService>());
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<CopilotChatService>());
     }

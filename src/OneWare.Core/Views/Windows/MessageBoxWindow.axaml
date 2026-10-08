@@ -11,18 +11,11 @@
                          SizeToContent="Height"
                          MinHeight="100"
                          PrefWidth="350"
-                         Padding="4"
+                         Padding="{DynamicResource ThemePaddingSmall}"
                          Focusable="True"
                          Foreground="{DynamicResource ThemeForegroundBrush}"
                          Name="MessageWindow" x:CompileBindings="True" x:DataType="windows:MessageBoxViewModel"
                          WindowStartupLocation="CenterOwner">
-
-    <UserControl.Styles>
-        <Style Selector="Button.MessageBoxDanger">
-            <Setter Property="Background" Value="#C14646" />
-            <Setter Property="Foreground" Value="#F6F6F6" />
-        </Style>
-    </UserControl.Styles>
 
     <DockPanel Margin="4" LastChildFill="False">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="4">
@@ -67,7 +60,7 @@
                             Classes="WindowButton"
                             Classes.PrimaryButton="{Binding Model.Style, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:MessageBoxButtonStyle.Primary}}"
                             Classes.SecondaryButton="{Binding Model.Style, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:MessageBoxButtonStyle.Secondary}}"
-                            Classes.MessageBoxDanger="{Binding Model.Style, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:MessageBoxButtonStyle.Danger}}"
+                            Classes.danger="{Binding Model.Style, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static models:MessageBoxButtonStyle.Danger}}"
                             IsDefault="{Binding IsDefault}"
                             IsCancel="{Binding IsCancel}"
                             Command="{Binding #MessageWindow.((windows:MessageBoxViewModel)DataContext).ButtonCommand, FallbackValue={x:Null}}"

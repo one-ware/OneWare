@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,82 +9,112 @@
              x:Class="OneWare.SerialMonitor.Views.SerialMonitorView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:SerialMonitorBaseViewModel">
 
-    <Grid RowDefinitions="*, 30">
-        <avaloniaEdit:TextEditor Name="Output"
-                                 DockPanel.Dock="Left"
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Connection -->
+        <Border Classes="header" Padding="6 4">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Classes="toolbar" VerticalAlignment="Top">
+                    <Button Classes="icon" Name="FindButton" ToolTip.Tip="Find (Ctrl+F)">
+                        <PathIcon Data="{StaticResource Icon.Search}" />
+                    </Button>
+                    <Separator />
+                    <ToggleButton Classes="icon" IsChecked="{Binding WordWrap}" ToolTip.Tip="Word wrap">
+                        <PathIcon Data="{StaticResource Icon.WordWrap}" />
+                    </ToggleButton>
+                    <ToggleButton Classes="icon" IsChecked="{Binding AutoScroll}"
+                                  ToolTip.Tip="Scroll to end on new data">
+                        <PathIcon Data="{StaticResource Icon.ScrollToEnd}" />
+                    </ToggleButton>
+                    <Separator />
+                    <Button Classes="icon" Command="{Binding Clear}" IsEnabled="{Binding HasOutput}"
+                            ToolTip.Tip="Clear output">
+                        <PathIcon Data="{StaticResource Icon.ClearAll}" />
+                    </Button>
+                </StackPanel>
+
+                <WrapPanel Classes="editor-bar-items" Margin="0 0 12 0">
+                    <StackPanel Classes="form-row">
+                        <TextBlock Text="Port" />
+                        <ComboBox Width="130" PlaceholderText="Select port"
+                                  ItemsSource="{Binding SerialPorts}"
+                                  SelectedItem="{Binding SelectedSerialPort}" />
+                        <Button Classes="icon" Command="{Binding RefreshSerialPorts}"
+                                ToolTip.Tip="Refresh serial ports">
+                            <PathIcon Data="{StaticResource Icon.Refresh}" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Classes="form-row">
+                        <TextBlock Text="Baud" />
+                        <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
+                                  SelectedItem="{Binding SelectedBaudRate}" />
+                    </StackPanel>
+                    <StackPanel Classes="form-row">
+                        <TextBlock Text="Format" />
+                        <ComboBox Width="80" ItemsSource="{Binding AvailableEncodings}"
+                                  SelectedItem="{Binding SelectedLineEncoding}"
+                                  ToolTip.Tip="How received data is shown and sent messages are parsed (Byte / HEX: space separated values)" />
+                    </StackPanel>
+                    <StackPanel Classes="form-row">
+                        <Button Command="{Binding ToggleConnection}"
+                                IsEnabled="{Binding SelectedSerialPort, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Link}"
+                                          IsVisible="{Binding !IsConnected}" />
+                                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.LinkOff}"
+                                          IsVisible="{Binding IsConnected}" />
+                                <TextBlock VerticalAlignment="Center" Text="Connect" IsVisible="{Binding !IsConnected}" />
+                                <TextBlock VerticalAlignment="Center" Text="Disconnect" IsVisible="{Binding IsConnected}" />
+                            </StackPanel>
+                        </Button>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource ThemeForegroundLowBrush}"
+                                 IsVisible="{Binding !IsConnected}" />
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}"
+                                 IsVisible="{Binding IsConnected}" />
+                        <TextBlock Text="{Binding ConnectionStatus}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </WrapPanel>
+            </DockPanel>
+        </Border>
+
+        <avaloniaEdit:TextEditor Grid.Row="1" Name="Output"
                                  HorizontalScrollBarVisibility="Auto"
                                  VerticalScrollBarVisibility="Visible"
                                  ShowLineNumbers="False"
-                                 VerticalAlignment="Stretch"
-                                 Margin="0"
-                                 HorizontalAlignment="Stretch"
                                  IsReadOnly="True"
+                                 WordWrap="{Binding WordWrap}"
                                  Foreground="{DynamicResource ThemeForegroundBrush}"
-                                 FontWeight="Regular"
                                  Document="{Binding OutputDocument}"
                                  FontFamily="{DynamicResource EditorFont}"
                                  FontSize="{DynamicResource EditorFontSize}"
-                                 Padding="5" />
+                                 Padding="6 4" />
 
-        <Border Grid.Row="1" Background="{DynamicResource ThemeBackgroundBrush}" BorderThickness="0,1,0,0" Padding="2">
+        <Border Grid.Row="1" Classes="empty-state" IsHitTestVisible="False" IsVisible="{Binding !HasOutput}">
+            <Panel>
+                <TextBlock Text="Select a serial port to start monitoring" IsVisible="{Binding !IsConnected}" />
+                <TextBlock Text="Waiting for data…" IsVisible="{Binding IsConnected}" />
+            </Panel>
+        </Border>
 
+        <!-- Send -->
+        <Border Grid.Row="2" Classes="footer" Padding="6 4">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Left" Classes="ToolBar">
-                    <TextBlock Text="AutoScroll" />
-                    <CheckBox IsChecked="{Binding AutoScroll}" />
-                    <Separator />
-                    <TextBlock Text="Line Ending" />
-                    <ComboBox ItemsSource="{Binding AvailableLineEndings}"
-                              SelectedItem="{Binding SelectedLineEnding}" />
-                    <Separator />
-                    <TextBlock Text="Encoding" />
-                    <ComboBox ItemsSource="{Binding AvailableEncodings}"
-                              SelectedItem="{Binding SelectedLineEncoding}" />
-                    <Separator />
+                <StackPanel DockPanel.Dock="Right" Classes="form-row" Margin="6 0 0 0">
+                    <ComboBox Width="80" ItemsSource="{Binding AvailableLineEndings}"
+                              SelectedItem="{Binding SelectedLineEnding}"
+                              ToolTip.Tip="Line ending appended to sent messages (ASCII format)" />
+                    <Button Classes="primary" Command="{Binding SendText}"
+                            CommandParameter="{Binding #CommandBox.Text}"
+                            ToolTip.Tip="Send message (Enter)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Send}" />
+                            <TextBlock VerticalAlignment="Center" Text="Send" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Right" Classes="ToolBar">
-                    <Button Command="{Binding SendText}"
-                            CommandParameter="{Binding #CommandBox.Text}">
-                        <Image Source="{DynamicResource BoxIcons.SolidSend}" />
-                    </Button>
-                    <Separator />
-                    <TextBlock Name="BaudLable" Text="Baud Rate:" />
-                    <ComboBox Width="100" ItemsSource="{Binding BaudOptions}"
-                              SelectedItem="{Binding SelectedBaudRate}" />
-                    <Separator />
-
-                    <TextBlock Text="Serial Port:" />
-                    <ComboBox IsEnabled="{Binding AllowConnecting}" Width="100"
-                              ItemsSource="{Binding SerialPorts}"
-                              SelectedItem="{Binding SelectedSerialPort}" />
-                    <Button IsEnabled="{Binding AllowConnecting}"
-                            Command="{Binding RefreshSerialPorts}"
-                            ToolTip.Tip="Refresh serial ports">
-                        <Image Source="{DynamicResource Modern.Refresh}" Width="15" />
-                    </Button>
-                    <Button Command="{Binding Disconnect}"
-                            IsEnabled="{Binding IsConnected}" ToolTip.Tip="Disconnect">
-                        <Image Source="{DynamicResource VsImageLib.Disconnect16X}" Width="15" />
-                    </Button>
-                    <Button Command="{Binding Clear}" ToolTip.Tip="Clear output">
-                        <Image Source="{DynamicResource VsImageLib.ClearWindowContent16X}" Width="15" />
-                    </Button>
-                    <Separator />
-                    <Menu DockPanel.Dock="Right">
-                        <Menu.Items>
-                            <MenuItem Width="24" Height="24">
-                                <MenuItem.Header>
-                                    <Image Source="{DynamicResource BoxIcons.RegularMenu}" Width="14" />
-                                </MenuItem.Header>
-                            </MenuItem>
-                        </Menu.Items>
-                    </Menu>
-                </StackPanel>
-
-                <TextBox DockPanel.Dock="Right" Name="CommandBox"
-                         Watermark="Enter Message..." Margin="5 0"
-                         HorizontalAlignment="Stretch" Text="{Binding CommandBoxText, Mode=TwoWay}">
+                <TextBox Name="CommandBox"
+                         Watermark="Message to send (Enter to send, Up / Down for history)"
+                         Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SendText}"
                                                                CommandParameter="{Binding #CommandBox.Text}" />

@@ -18,14 +18,14 @@
         <StackPanel Spacing="4"
                     IsVisible="{Binding UserCode, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <TextBlock Text="Enter code:" />
-            <Border Classes="RoundBorder" Padding="8" Background="{DynamicResource ThemeControlMidBrush}">
+            <Border Classes="panel">
                 <Panel>
-                    <SelectableTextBlock VerticalAlignment="Center" Text="{Binding UserCode}" FontSize="18"
-                                         FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <SelectableTextBlock VerticalAlignment="Center" Text="{Binding UserCode}" Classes="h2"
+                                         HorizontalAlignment="Center" />
                     <Button HorizontalAlignment="Right" VerticalAlignment="Center" Height="30" Width="30"
                             Command="{Binding CopyCodeCommand}"
                             CommandParameter="{Binding $self}">
-                        <Image Source="{DynamicResource BoxIcons.RegularCopy}" Height="15" />
+                        <PathIcon Data="{StaticResource Icon.Copy}" Height="15" Width="15" />
                     </Button>
                 </Panel>
             </Border>

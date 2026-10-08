@@ -1,6 +1,7 @@
 using System.Net;
 using System.Reactive.Linq;
 using System.Text.Json;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -13,34 +14,32 @@ namespace OneWare.CloudIntegration.Services;
 
 public class OneWareCloudCurrentAccountService : ObservableObject
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
     private readonly OneWareCloudAccountSetting _accountSetting;
     private readonly OneWareCloudLoginService _loginService;
 
-    public OneWareCloudCurrentAccountService(OneWareCloudAccountSetting accountSetting,
-        OneWareCloudLoginService loginService, OneWareCloudNotificationService notificationService)
+    public OneWareCloudCurrentAccountService(
+        OneWareCloudAccountSetting accountSetting,
+        OneWareCloudLoginService loginService,
+        OneWareCloudNotificationService notificationService)
     {
         _accountSetting = accountSetting;
         _loginService = loginService;
 
         accountSetting.WhenValueChanged(x => x.Value)
-            .Subscribe(x => _ = ResolveAsync());
+            .Subscribe(_ => _ = ResolveAsync());
 
-        Observable.FromEventPattern<HubConnectionState>(notificationService,
+        Observable.FromEventPattern<HubConnectionState>(
+                notificationService,
                 nameof(notificationService.ConnectionStateChanged))
-            .Subscribe(x =>
-            {
-                if (notificationService.ConnectionState == HubConnectionState.Connected)
-                {
-                    IsConnected = true;
-                    _ = UpdateBalanceAsync();
-                }
-                else
-                {
-                    IsConnected = false;
-                }
-            });
+            .Subscribe(_ => OnConnectionStateChanged(notificationService.ConnectionState));
 
-        SubscribeToHub(notificationService);
+        notificationService.SubscribeToHubMethod<OrganizationBalanceDto>("OrganizationBalance_Updated",
+            OnBalanceUpdated);
+        // Sent after the active organization changed on the server (switch, invitation, leave, removal, deletion).
+        notificationService.SubscribeToHubMethod<OrganizationBalanceDto>("ActiveOrganization_Changed",
+            SetActiveOrganization);
     }
 
     public bool IsConnected
@@ -49,12 +48,15 @@ public class OneWareCloudCurrentAccountService : ObservableObject
         set => SetProperty(ref field, value);
     }
 
+    /// <summary>Legacy whole-Credit view of <see cref="ActiveOrganization" />, kept for older plugins.</summary>
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
     public UserBalanceDto? CurrentBalance
     {
         get;
         set => SetProperty(ref field, value);
     }
 
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
     public string MonthlyIncludedCreditsValue =>
         $"{CurrentUser?.UserPlan.IncludedMonthlyCredits - CurrentBalance?.IncludedMonthlyCreditsUsed ?? 0}";
 
@@ -64,7 +66,107 @@ public class OneWareCloudCurrentAccountService : ObservableObject
         set => SetProperty(ref field, value);
     }
 
+    /// <summary>
+    ///     The user's view of their active organization and its credits, or null when signed out or when the user
+    ///     has no active organization. Members only see their own budget; organization balances are null for them.
+    /// </summary>
+    public OrganizationBalanceDto? ActiveOrganization
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    }
+
     public string? UserId => _accountSetting.Value.ToString();
+
+    /// <summary>Reloads <see cref="ActiveOrganization" />, e.g. after the active organization was changed on the web.</summary>
+    public async Task RefreshActiveOrganizationAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(UserId)) return;
+
+            var (jwt, _) = await _loginService.GetJwtTokenAsync(UserId);
+            if (jwt == null) return;
+
+            var request = new RestRequest("/api/organizations/current/balance");
+            request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
+            var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
+
+            if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Unauthorized)
+            {
+                SetActiveOrganization(null);
+                return;
+            }
+
+            if (!response.IsSuccessful || string.IsNullOrWhiteSpace(response.Content)) return;
+
+            SetActiveOrganization(JsonSerializer.Deserialize<OrganizationBalanceDto>(response.Content, JsonOptions));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private void OnConnectionStateChanged(HubConnectionState state)
+    {
+        IsConnected = state == HubConnectionState.Connected;
+        // Balance updates may have been missed while disconnected.
+        if (IsConnected && CurrentUser != null)
+            _ = RefreshActiveOrganizationAsync();
+    }
+
+    private void OnBalanceUpdated(OrganizationBalanceDto update)
+    {
+        // OrganizationBalance_Updated is sent for every organization the user belongs to; only the active one is shown.
+        var activeOrganizationId = ActiveOrganization?.OrganizationId ?? CurrentUser?.DefaultOrganizationId;
+        if (activeOrganizationId != update.OrganizationId) return;
+
+        SetActiveOrganization(update);
+    }
+
+    private void SetActiveOrganization(OrganizationBalanceDto? organization)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+            ApplyActiveOrganization(organization);
+        else
+            Dispatcher.UIThread.Post(() => ApplyActiveOrganization(organization));
+    }
+
+    private void ApplyActiveOrganization(OrganizationBalanceDto? organization)
+    {
+        ActiveOrganization = organization;
+#pragma warning disable CS0618 // Keep the legacy members in sync for older plugins.
+        if (CurrentUser != null)
+            CurrentUser.UserPlan.IncludedMonthlyCredits =
+                organization?.CanViewBalances == true ? ToLegacyCredits(organization.IncludedMonthlyCredits) : 0;
+        CurrentBalance = ToLegacyBalance(organization);
+        OnPropertyChanged(nameof(MonthlyIncludedCreditsValue));
+#pragma warning restore CS0618
+    }
+
+    // Same mapping as the cloud's legacy GET /api/credits/balance.
+    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
+    private static UserBalanceDto? ToLegacyBalance(OrganizationBalanceDto? organization)
+    {
+        if (organization == null) return null;
+
+        if (organization.CanViewBalances)
+            return new UserBalanceDto
+            {
+                Balance = ToLegacyCredits(organization.CreditBalance),
+                IncludedMonthlyCreditsUsed = ToLegacyCredits(organization.IncludedMonthlyCreditsUsed)
+            };
+
+        return new UserBalanceDto
+        {
+            Balance = ToLegacyCredits(organization.MonthlyCreditsRemaining),
+            IncludedMonthlyCreditsUsed = 0
+        };
+    }
+
+    private static int ToLegacyCredits(decimal? amount) =>
+        (int)Math.Clamp(decimal.Floor(amount ?? 0), int.MinValue, int.MaxValue);
 
     private async Task ResolveAsync()
     {
@@ -73,22 +175,19 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             _accountSetting.Image = null;
             _accountSetting.Email = null;
             CurrentUser = null;
-            CurrentBalance = null;
+            SetActiveOrganization(null);
 
             if (string.IsNullOrEmpty(UserId)) return;
 
             var (jwt, status) = await _loginService.GetJwtTokenAsync(UserId);
-
             if (jwt == null)
             {
                 if (status == HttpStatusCode.Unauthorized)
                 {
                     _loginService.Logout(UserId);
                     _accountSetting.Value = string.Empty;
-                    return;
                 }
 
-                // No connection?
                 return;
             }
 
@@ -96,19 +195,15 @@ public class OneWareCloudCurrentAccountService : ObservableObject
             request.AddHeader("Authorization", $"Bearer {jwt.RawData}");
 
             var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
-            CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(response.Content!, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            CurrentUser = JsonSerializer.Deserialize<CurrentUserDto>(
+                response.Content!,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
             _accountSetting.Email = CurrentUser?.Email ?? string.Empty;
-
-            await UpdateBalanceAsync();
-
+            await RefreshActiveOrganizationAsync();
             await ContainerLocator.Container.Resolve<OneWareCloudNotificationService>().ConnectAsync();
 
             var httpService = ContainerLocator.Container.Resolve<IHttpService>();
-
             if (CurrentUser?.AvatarUrl != null)
                 _accountSetting.Image = await httpService.DownloadImageAsync(CurrentUser.AvatarUrl);
         }
@@ -116,24 +211,5 @@ public class OneWareCloudCurrentAccountService : ObservableObject
         {
             Console.WriteLine(e);
         }
-    }
-
-    private async Task UpdateBalanceAsync()
-    {
-        var (jwt, status) = await _loginService.GetLoggedInJwtTokenAsync();
-        var request = new RestRequest("/api/credits/balance");
-        request.AddHeader("Authorization", $"Bearer {jwt?.RawData}");
-
-        var response = await _loginService.GetRestClient().ExecuteGetAsync(request);
-        CurrentBalance = JsonSerializer.Deserialize<UserBalanceDto>(response.Content!, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        })!;
-    }
-
-    private void SubscribeToHub(OneWareCloudNotificationService service)
-    {
-        service.SubscribeToHubMethod<UserBalanceDto>("Balance_Updated",
-            creditBalance => { CurrentBalance = creditBalance; });
     }
 }

@@ -189,15 +189,13 @@ public class HttpService : IHttpService
             await Task.Run(() =>
             {
                 using var stream = File.OpenRead(tempPath);
-                var reader = ReaderFactory.OpenReader(stream);
-                while (reader.MoveToNextEntry())
-                    if (!reader.Entry.IsDirectory)
-                        reader.WriteEntryToDirectory(location,
-                            new ExtractionOptions
-                            {
-                                ExtractFullPath = true, Overwrite = true, 
-                                SymbolicLinkHandler = (path, targetPath) => { File.CreateSymbolicLink(path, targetPath); }
-                            });
+                using var reader = ReaderFactory.OpenReader(stream);
+                reader.WriteAllToDirectory(location, new ExtractionOptions
+                {
+                    ExtractFullPath = true,
+                    Overwrite = true,
+                    SymbolicLinkHandler = (path, target) => File.CreateSymbolicLink(path, target)
+                });
             }, cancellationToken);
 
             File.Delete(tempPath);

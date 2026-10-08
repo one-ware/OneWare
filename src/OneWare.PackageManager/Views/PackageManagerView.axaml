@@ -1,4 +1,4 @@
-﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -22,9 +22,8 @@
             <Setter Property="Margin" Value="0 5 5 5" />
         </Style>
         <Style Selector="Button.PackageSeparatorButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />
+            <Setter Property="Height" Value="NaN" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
@@ -33,68 +32,59 @@
     <Border BorderThickness="0 1 0 0">
         <Grid RowDefinitions="Auto, *,Auto" ColumnDefinitions="240, Auto, *, Auto, *">
 
-            <Border Grid.Column="0" Height="30" Grid.ColumnSpan="5" BorderThickness="0 0 0 1">
-                <DockPanel LastChildFill="False">
-                    <StackPanel DockPanel.Dock="Left" Classes="ToolBar" Spacing="5" Margin="5"
-                                HorizontalAlignment="Left">
-                        <Button VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
-                                Command="{Binding RefreshPackagesAsync}">
-                            <Image Height="16" Width="16" Source="{DynamicResource VsImageLib.RefreshGrey16X}" />
-                        </Button>
-                        <TextBlock Text="Show" />
-                        <controls:SegmentedControl VerticalAlignment="Center"
-                                                   SelectedIndex="{Binding SelectedFilterIndex, Mode=TwoWay}">
-                            <controls:SegmentedControlItem Content="All" />
-                            <controls:SegmentedControlItem Content="Installed" />
-                            <controls:SegmentedControlItem Content="Available" />
-                        </controls:SegmentedControl>
+            <Border Grid.Column="0" Grid.ColumnSpan="5" Classes="header" />
 
-                    </StackPanel>
+            <!-- The search sits in the sidebar column so it stays aligned when the splitter moves -->
+            <controls:SearchBox Grid.Row="0" Grid.Column="0" Margin="8 6 4 6" VerticalAlignment="Center"
+                                SearchText="{Binding Filter}" SearchButtonVisible="False" Label="Search extensions..." />
 
-                    <StackPanel DockPanel.Dock="Right" Classes="ToolBar" Spacing="5" Margin="5"
-                                HorizontalAlignment="Left">
-                        <Button Classes="RoundButton" VerticalAlignment="Center" IsEnabled="{Binding !IsLoading}"
-                                Command="{Binding UpdateAllAsync}" Padding="8 0">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBlock Text="Update All" />
-                                <Image Height="14" Width="14" Source="{DynamicResource VsImageLib.Download16X}" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
+            <DockPanel Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="3" Margin="4 0" LastChildFill="False">
+                <controls:SegmentedControl DockPanel.Dock="Left" VerticalAlignment="Center"
+                                           SelectedIndex="{Binding SelectedFilterIndex, Mode=TwoWay}">
+                    <controls:SegmentedControlItem Content="All" />
+                    <controls:SegmentedControlItem Content="Installed" />
+                    <controls:SegmentedControlItem Content="Available" />
+                </controls:SegmentedControl>
+
+                <StackPanel DockPanel.Dock="Right" Classes="toolbar" VerticalAlignment="Center">
+                    <Button Classes="icon" ToolTip.Tip="Refresh" IsEnabled="{Binding !IsLoading}"
+                            Command="{Binding RefreshPackagesAsync}">
+                        <PathIcon Data="{StaticResource Icon.RefreshSmall}" />
+                    </Button>
+                    <Button Classes="secondary" IsEnabled="{Binding !IsLoading}"
+                            Command="{Binding UpdateAllCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="small" Data="{StaticResource Icon.Download}" />
+                            <TextBlock Text="Update All" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
             <Border Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" BorderThickness="0, 0, 1, 0"
                     Background="{DynamicResource ThemeControlLowBrush}">
-                <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Top" Padding="3" BorderThickness="0 0 0 1">
-                        <Border Classes="RoundToolBar">
-                            <controls:SearchBox SearchText="{Binding Filter}" SearchButtonVisible="False"
-                                                Label="Search..." />
-                        </Border>
-                    </Border>
-                    <TreeView Padding="3" BorderThickness="0" Background="Transparent"
-                              ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
-                              SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
-                        <TreeView.Styles>
-                            <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
-                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-                                <Setter Property="IsVisible" Value="{Binding IsVisible}" />
-                            </Style>
-                        </TreeView.Styles>
-                        <TreeView.DataTemplates>
-                            <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
-                                              ItemsSource="{Binding SubCategories}">
-                                <Grid ColumnDefinitions="*, Auto" Margin="2 5">
-                                    <TextBlock Margin="3 0" FontSize="13" Text="{Binding Header}"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Margin="3 0" HorizontalAlignment="Right"
-                                               TextAlignment="Center" Text="{Binding DisplayCount}"
-                                               Foreground="{DynamicResource ThemeBorderHighBrush}" />
-                                </Grid>
-                            </TreeDataTemplate>
-                        </TreeView.DataTemplates>
-                    </TreeView>
-                </DockPanel>
+                <TreeView Padding="3" BorderThickness="0"
+                          Background="{DynamicResource ThemeControlTransparentBrush}"
+                          ItemsSource="{Binding PackageCategories}" Name="TreeView" SelectionMode="Single"
+                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
+                    <TreeView.Styles>
+                        <Style Selector="TreeViewItem" x:DataType="viewModels:PackageCategoryViewModel">
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            <Setter Property="IsVisible" Value="{Binding IsVisible}" />
+                        </Style>
+                    </TreeView.Styles>
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="viewModels:PackageCategoryViewModel"
+                                          ItemsSource="{Binding SubCategories}">
+                            <Grid ColumnDefinitions="*, Auto" Margin="2 5">
+                                <TextBlock Margin="3 0" FontSize="{DynamicResource FontSizeMedium}" Text="{Binding Header}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1" Margin="3 0" HorizontalAlignment="Right"
+                                           TextAlignment="Center" Text="{Binding DisplayCount}"
+                                           Classes="muted" />
+                            </Grid>
+                        </TreeDataTemplate>
+                    </TreeView.DataTemplates>
+                </TreeView>
             </Border>
             
             <GridSplitter Grid.Row="1" Grid.Column="1" Width="6" BorderThickness="0 0 1 0"
@@ -115,18 +105,18 @@
                             </Panel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Vertical" Spacing="4"
                                         VerticalAlignment="Center" Margin="10 0 0 0">
-                                <Button Classes="RoundButton" Padding="12 3"
+                                <Button Classes="secondary"
                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                         Background="{Binding FeaturedPackage.Target.PrimaryButtonBrush}"
                                         Content="{Binding FeaturedPackage.Target.PrimaryButtonText}"
                                         Command="{Binding FeaturedPackage.PrimaryCommand}" />
-                                <Button Classes="RoundButton" Padding="12 3"
+                                <Button Classes="secondary"
                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                         Content="Details"
                                         Command="{Binding FeaturedPackage.ShowDetailsCommand}" />
                             </StackPanel>
                             <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock FontSize="15" FontWeight="Bold"
+                                <TextBlock Classes="h3"
                                            Text="{Binding FeaturedPackage.Title}" />
                                 <TextBlock TextWrapping="Wrap" VerticalAlignment="Top"
                                            Text="{Binding FeaturedPackage.Description}" />
@@ -137,7 +127,7 @@
                         </DockPanel>
                     </Border>
                     <ListBox Grid.Row="1" Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             Background="Transparent" BorderThickness="0"
+                             Background="{DynamicResource ThemeControlTransparentBrush}" BorderThickness="0"
                              SelectedItem="{Binding SelectedCategory.SelectedPackage, Mode=TwoWay, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">
                        <ListBox.ItemContainerTheme>
@@ -160,12 +150,12 @@
                         </ListBox.ItemsPanel>
                         <ListBox.DataTemplates>
                             <DataTemplate DataType="viewModels:PackageSeparatorViewModel">
-                                <Button Classes="PackageSeparatorButton"
+                                <Button Classes="PackageSeparatorButton ghost"
                                         Click="PackageSeparatorButton_OnClick">
                                     <Grid ColumnDefinitions="Auto,*"
                                           Margin="5 4 0 2">
                                         <TextBlock Text="{Binding Text}"
-                                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                   Classes="muted" />
                                         <Border Grid.Column="1"
                                                 BorderThickness="0 1 0 0"
                                                 BorderBrush="{DynamicResource ThemeBorderMidBrush}"
@@ -192,7 +182,7 @@
                                     </Grid>
                                     <Grid DockPanel.Dock="Right" RowDefinitions="25, 25" Margin="10, 5, 0, 5"
                                           ColumnDefinitions="*, Auto">
-                                        <TextBlock Grid.Column="0" Grid.Row="0" FontSize="15" FontWeight="Bold"
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Classes="h3"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                    Text="{Binding PackageState.Package.Name}" />
                                         <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
@@ -207,10 +197,10 @@
                                                    ToolTip.Tip="{Binding PackageState.InstalledVersionWarningText}" />
                                             <TextBlock
                                                 Text="{Binding PackageState.InstalledVersion.Version, FallbackValue={}}"
-                                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                                                Classes="muted" />
                                             <Button Content="{Binding PrimaryButtonText}"
                                                     Name="MainButton"
-                                                    Classes="RoundButton" Padding="8 3"
+                                                    Classes="secondary"
                                                     Background="{Binding PrimaryButtonBrush}"
                                                     Command="{Binding MainButtonCommand}">
                                                 <Interaction.Behaviors>

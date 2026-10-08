@@ -1,4 +1,4 @@
-﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -14,15 +14,6 @@
                          Icon="avares://OneWare.Core/Assets/Images/Icons/StringConv_White.png"
                          CustomIcon="{DynamicResource StringConverterIcon}"
                          WindowStartupLocation="CenterOwner" x:DataType="windows1:StringConverterWindowViewModel">
-
-    <!--
-  <Window.Styles>
-    <Style Selector="Button.Convert">
-      <Setter Property="BorderThickness" Value="1"></Setter>
-      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}"></Setter>
-    </Style>
-  </Window.Styles>
-  -->
 
     <Grid Margin="5, 0, 5, 5">
         <Grid.RowDefinitions>
@@ -43,9 +34,8 @@
                                          ShowLineNumbers="False"
                                          FontFamily="{DynamicResource EditorFont}"
                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                         Foreground="#E6E6E6"
+                                         Foreground="{DynamicResource ThemeEditorBrush}"
                                          Document="{Binding SourceText, Mode=TwoWay}"
-                                         FontWeight="Regular"
                                          Background="{DynamicResource ThemeControlLowBrush}" />
             </Border>
 
@@ -71,7 +61,7 @@
             </Button>
 
             <Border Grid.Column="1" Grid.RowSpan="2">
-                <Image Source="{DynamicResource Zondicons.ArrowThickDown}" Height="40" Width="40" />
+                <PathIcon Data="{StaticResource Icon.ArrowThickDown}" Height="40" Width="40" />
             </Border>
 
             <Button Command="{Binding Convert}" CommandParameter="HEXToString" Classes="RoundButton"
@@ -97,8 +87,7 @@
                                          ShowLineNumbers="False"
                                          FontFamily="{DynamicResource EditorFont}"
                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                         Foreground="#E6E6E6"
-                                         FontWeight="Regular"
+                                         Foreground="{DynamicResource ThemeEditorBrush}"
                                          Document="{Binding ResultText, Mode=TwoWay}"
                                          Background="{DynamicResource ThemeControlLowBrush}" />
             </Border>

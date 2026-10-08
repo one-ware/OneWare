@@ -67,8 +67,7 @@ public class FeaturedPackageViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool IsVisible => _target?.PackageState.Status is PackageStatus.Available
         or PackageStatus.Installing
-        or PackageStatus.UpdateAvailable
-        or PackageStatus.UpdateAvailablePrerelease;
+        or PackageStatus.UpdateAvailable;
 
     public void Dispose()
     {

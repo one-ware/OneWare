@@ -10,7 +10,7 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center">
 
-            <Ellipse Width="8" Height="8" Fill="Gray">
+            <Ellipse Width="8" Height="8" Fill="{DynamicResource ThemeForegroundLowBrush}">
                 <Ellipse.Styles>
                     <Style>
                         <Style.Animations>
@@ -31,7 +31,7 @@
                 </Ellipse.Styles>
             </Ellipse>
 
-            <Ellipse Width="8" Height="8" Fill="Gray">
+            <Ellipse Width="8" Height="8" Fill="{DynamicResource ThemeForegroundLowBrush}">
                 <Ellipse.Styles>
                     <Style>
                         <Style.Animations>
@@ -53,7 +53,7 @@
                 </Ellipse.Styles>
             </Ellipse>
 
-            <Ellipse Width="8" Height="8" Fill="Gray">
+            <Ellipse Width="8" Height="8" Fill="{DynamicResource ThemeForegroundLowBrush}">
                 <Ellipse.Styles>
                     <Style>
                         <Style.Animations>

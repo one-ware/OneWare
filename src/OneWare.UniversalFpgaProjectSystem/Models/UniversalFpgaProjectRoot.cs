@@ -27,11 +27,12 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
         {
             if (x is IProjectFile file && IsTestBench(file.RelativePath))
             {
-                x.Icon?.AddOverlay("TestBench", "TestBenchOverlay");
+                x.AddTag("TestBench", new ProjectExplorerTag("Testbench", ProjectExplorerTagKind.Success,
+                    "Simulation testbench"));
             }
             else
             {
-                x.Icon?.RemoveOverlay("TestBench");
+                x.RemoveTag("TestBench");
             }
         });
 
@@ -40,11 +41,12 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
             if (x is IProjectFile file && TopEntityFilePath != null &&
                 file.RelativePath.EqualPaths(TopEntityFilePath))
             {
-                x.Icon?.AddOverlay("TopEntity", "VsImageLib2019.DownloadOverlay16X");
+                x.AddTag("TopEntity", new ProjectExplorerTag("Top", ProjectExplorerTagKind.Accent,
+                    "Top entity of the design"));
             }
             else
             {
-                x.Icon?.RemoveOverlay("TopEntity");
+                x.RemoveTag("TopEntity");
             }
         });
         

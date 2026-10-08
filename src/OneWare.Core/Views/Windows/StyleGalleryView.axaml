@@ -1,0 +1,17 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:styles="clr-namespace:OneWare.Essentials.Styles;assembly=OneWare.Essentials"
+                         x:Class="OneWare.Core.Views.Windows.StyleGalleryView"
+                         PrefWidth="1100" PrefHeight="800"
+                         Title="Style Gallery"
+                         WindowStartupLocation="CenterOwner">
+    <Grid ColumnDefinitions="*,*">
+        <ThemeVariantScope Grid.Column="0" RequestedThemeVariant="Dark">
+            <styles:StyleGallery />
+        </ThemeVariantScope>
+        <ThemeVariantScope Grid.Column="1" RequestedThemeVariant="Light">
+            <styles:StyleGallery />
+        </ThemeVariantScope>
+    </Grid>
+</controls:FlexibleWindow>

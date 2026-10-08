@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
@@ -237,18 +238,58 @@ public static class PlatformHelper
         ChmodFile(path);
     }
 
+    private const UnixFileMode FullAccessMode =
+        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+        UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+        UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+
+    [UnsupportedOSPlatformGuard("windows")]
+    [UnsupportedOSPlatformGuard("browser")]
+    private static bool SupportsUnixFileMode =>
+        !OperatingSystem.IsWindows() && !OperatingSystem.IsBrowser() &&
+        RuntimeInformation.ProcessArchitecture is not Architecture.Wasm;
+
+    /// <summary>
+    ///     Equivalent to <c>chmod 777</c> without spawning a process.
+    /// </summary>
     public static void ChmodFile(string path)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-            RuntimeInformation.ProcessArchitecture is not Architecture.Wasm)
-            ExecBash($"chmod 777 '{path}'");
+        if (!SupportsUnixFileMode) return;
+        TrySetFullAccess(path);
     }
 
+    /// <summary>
+    ///     Equivalent to <c>chmod -R 777</c> without spawning a process. Symbolic links are not followed.
+    /// </summary>
     public static void ChmodFolder(string path)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-            RuntimeInformation.ProcessArchitecture is not Architecture.Wasm)
-            ExecBash($"chmod -R 777 '{path}'");
+        if (!SupportsUnixFileMode || !Directory.Exists(path)) return;
+
+        TrySetFullAccess(path);
+
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.ReparsePoint
+        };
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(path, "*", options))
+            TrySetFullAccess(entry);
+    }
+
+    [UnsupportedOSPlatform("windows")]
+    [UnsupportedOSPlatform("browser")]
+    private static void TrySetFullAccess(string path)
+    {
+        try
+        {
+            File.SetUnixFileMode(path, FullAccessMode);
+        }
+        catch (Exception)
+        {
+            // Matches previous chmod behaviour, which silently ignored failures
+        }
     }
 
     #endregion

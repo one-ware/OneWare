@@ -24,7 +24,7 @@
         </Style>
 
         <Style Selector="Button.MergeButton:pointerover">
-            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Background" Value="{DynamicResource ThemeControlTransparentBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
         </Style>
 
@@ -39,7 +39,7 @@
                                         Context="{Binding UiExtensionContext}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <DockPanel />
+                    <StackPanel Orientation="Vertical" />
                 </ItemsPanelTemplate>
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
@@ -47,7 +47,7 @@
                                         Context="{Binding UiExtensionContext}">
             <controls:UiExtensionCollection.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <DockPanel />
+                    <StackPanel Orientation="Vertical" />
                 </ItemsPanelTemplate>
             </controls:UiExtensionCollection.ItemsPanel>
         </controls:UiExtensionCollection>
@@ -59,7 +59,7 @@
                         <Setter Property="Cursor" Value="Arrow" />
                         <Setter Property="Template">
                             <ControlTemplate>
-                                <Border Background="Transparent"
+                                <Border Background="{DynamicResource ThemeControlTransparentBrush}"
                                         UseLayoutRounding="False">
                                     <Grid RowDefinitions="*">
                                         <controls:ScrollBarRenderer CodeBox="{Binding Editor}"
@@ -94,9 +94,11 @@
 
             <Popup Name="HoverBox" IsLightDismissEnabled="False">
                 <Grid>
-                    <ContentControl Name="HoverBoxContent" Padding="2" CornerRadius="3" BorderThickness="1"
-                                    BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                                    Background="{DynamicResource ThemeBackgroundBrush}">
+                    <ContentControl Name="HoverBoxContent" Padding="{DynamicResource ThemePaddingSmall}"
+                                            CornerRadius="{DynamicResource ThemeCornerRadiusSmall}"
+                                            BorderThickness="{DynamicResource ThemeBorderThickness}"
+                                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                                            Background="{DynamicResource ThemeElevatedBrush}">
                     </ContentControl>
                 </Grid>
             </Popup>

@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -14,47 +14,39 @@
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
-            <TextBlock Text="{Binding Setting.Title}"
+            <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
-                       VerticalAlignment="Center" />
+                <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                 <Button.Flyout>
-                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <Flyout>
                         <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
                                                  MaxWidth="900" MaxHeight="500" />
                     </Flyout>
                 </Button.Flyout>
             </Button>
         </StackPanel>
-        <Border Classes="RoundBorder" Background="{DynamicResource ThemeControlMidBrush}" Height="24">
-            <DockPanel>
-
-                <StackPanel DockPanel.Dock="Right" Classes="ToolBar" Spacing="2">
-
-                    <Grid Margin="0 0 2 0" IsVisible="{Binding PathSetting.CanVerify}">
-                        <Image Width="10" ToolTip.Tip="Path is invalid!" IsVisible="{Binding !PathSetting.IsValid}"
-                               Source="{DynamicResource MaterialDesign.Close.Red}" />
-                        <Image Width="10" ToolTip.Tip="Path is valid!" IsVisible="{Binding PathSetting.IsValid}"
-                               Source="{DynamicResource BoxIcons.RegularCheck.Green}" />
-                    </Grid>
-
-                    <Separator />
-
-                    <Button IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
+        <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
+                 Watermark="{Binding Watermark}"
+                 Text="{Binding Setting.Value, Mode=TwoWay}">
+            <TextBox.InnerRightContent>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                    <Panel IsVisible="{Binding PathSetting.CanVerify}" Margin="0 0 2 0">
+                        <PathIcon Classes="small error" Data="{StaticResource Icon.Close}"
+                                  ToolTip.Tip="Path is invalid!" IsVisible="{Binding !PathSetting.IsValid}" />
+                        <PathIcon Classes="small success" Data="{StaticResource Icon.Check}"
+                                  ToolTip.Tip="Path is valid!" IsVisible="{Binding PathSetting.IsValid}" />
+                    </Panel>
+                    <Button Classes="icon small" ToolTip.Tip="Browse..."
+                            IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
                             Command="{Binding SelectPathAsync}"
                             CommandParameter="{Binding $self}">
-                        <Image Height="16" Width="16" VerticalAlignment="Center"
-                               Source="{DynamicResource VsImageLib.FolderOpen16X}" />
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Folder}" />
                     </Button>
-
                 </StackPanel>
-
-                <TextBox BorderThickness="0" Background="Transparent"
-                         IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                         DockPanel.Dock="Left" Text="{Binding Setting.Value, Mode=TwoWay}" />
-            </DockPanel>
-        </Border>
+            </TextBox.InnerRightContent>
+        </TextBox>
+        <TextBlock Classes="setting-validation warning caption" />
     </StackPanel>
 </UserControl>

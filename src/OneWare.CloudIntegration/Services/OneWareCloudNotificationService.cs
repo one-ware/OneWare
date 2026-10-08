@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using Avalonia;
 using Avalonia.Media;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -59,7 +60,11 @@ public class OneWareCloudNotificationService
 
             ConnectionStateChanged?.Invoke(this, HubConnectionState.Connected);
 
-            _logger.Log("Connected to OneWare Cloud", true, Brushes.Lime);
+            var successBrush = Application.Current is { } application &&
+                               application.TryGetResource("SuccessBrush", null, out var resource)
+                ? resource as IBrush
+                : null;
+            _logger.Log("Connected to OneWare Cloud", true, successBrush);
 
             return true;
         }

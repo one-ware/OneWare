@@ -13,21 +13,21 @@
             <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Event.Message}" />
 
             <StackPanel Orientation="Horizontal" Spacing="6">
-                <Button Height="NaN"
+                <Button
                         Classes="RoundButton PrimaryButton"
                         Command="{Binding Allow}"
                         CommandParameter="{Binding $self}"
                         Padding="5 3"
                         Content="{Binding Event.AllowButtonText}" />
 
-                <Button Height="NaN"
+                <Button
                         Classes="RoundButton"
                         Command="{Binding Deny}"
                         CommandParameter="{Binding $self}"
                         Padding="5 3"
                         Content="{Binding Event.DenyButtonText}" />
 
-                <Button Height="NaN"
+                <Button
                         Classes="RoundButton"
                         IsVisible="{Binding HasAllowForSession}"
                         Command="{Binding AllowForSession}"

@@ -54,6 +54,7 @@ public class OnnxRuntimeBootstrapper
 
     private readonly ILogger _logger;
     private readonly IPaths _paths;
+    private readonly IBinaryCacheService _binaryCacheService;
     private static readonly Lock ResolverSync = new();
     private static string? _resolverNativeDirectory;
     private static IntPtr _resolverOnnxRuntimeHandle;
@@ -72,10 +73,11 @@ public class OnnxRuntimeBootstrapper
     /// </summary>
     public string? PluginExecutionProviderLibraryPath { get; private set; }
 
-    public OnnxRuntimeBootstrapper(IPaths paths, ILogger logger)
+    public OnnxRuntimeBootstrapper(IPaths paths, ILogger logger, IBinaryCacheService binaryCacheService)
     {
         _paths = paths;
         _logger = logger;
+        _binaryCacheService = binaryCacheService;
     }
     
     public static string[] GetOnnxRuntimeOptions(IPaths paths)
@@ -153,7 +155,7 @@ public class OnnxRuntimeBootstrapper
             }
 
             var selectedRuntimeRoot = Path.Combine(_paths.OnnxRuntimesDirectory, selectedRuntime);
-            var runtimeRootToLoad = CreateSessionRuntimeCopy(selectedRuntime, selectedRuntimeRoot) ?? selectedRuntimeRoot;
+            var runtimeRootToLoad = CreateRuntimeCopy(selectedRuntime, selectedRuntimeRoot) ?? selectedRuntimeRoot;
 
             if (TryLoadFromRoot(runtimeRootToLoad))
             {
@@ -202,26 +204,16 @@ public class OnnxRuntimeBootstrapper
         }
     }
 
-    private string? CreateSessionRuntimeCopy(string runtimeName, string sourceRootPath)
+    /// <summary>
+    ///     The runtime is loaded from a cached copy, so the installed package can be updated or removed
+    ///     while it is loaded (required on Windows). The copy is reused across sessions until the package changes.
+    /// </summary>
+    private string? CreateRuntimeCopy(string runtimeName, string sourceRootPath)
     {
         if (string.IsNullOrWhiteSpace(runtimeName) || !Directory.Exists(sourceRootPath))
             return null;
 
-        var sessionRootPath = Path.Combine(_paths.SessionDirectory, "OnnxRuntimes", runtimeName);
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(sessionRootPath)!);
-            if (Directory.Exists(sessionRootPath))
-                Directory.Delete(sessionRootPath, true);
-
-            PlatformHelper.CopyDirectory(sourceRootPath, sessionRootPath);
-            return sessionRootPath;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to copy ONNX runtime '{RuntimeName}' into session directory.", runtimeName);
-            return null;
-        }
+        return _binaryCacheService.GetOrCreateCopy("OnnxRuntimes", runtimeName, sourceRootPath);
     }
 
     private bool TryLoadFromRoot(string rootPath)

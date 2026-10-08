@@ -99,6 +99,9 @@ public class SettingsCollectionViewModel : ObservableObject, ISearchableSettings
                 case ComboListBoxSetting clS:
                     SettingViewModels.Add(new ComboListBoxSettingViewModel(clS));
                     break;
+                case ToggleSwitchSetting tsS:
+                    SettingViewModels.Add(new ToggleSwitchSettingViewModel(tsS));
+                    break;
                 case CheckBoxSetting cbS:
                     SettingViewModels.Add(new CheckBoxSettingViewModel(cbS));
                     break;

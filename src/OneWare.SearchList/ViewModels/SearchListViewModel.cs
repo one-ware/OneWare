@@ -11,6 +11,7 @@ using DynamicData;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
+using OneWare.SearchList.Helpers;
 using OneWare.SearchList.Models;
 using ReactiveUI;
 
@@ -97,8 +98,13 @@ public partial class SearchListViewModel : ExtendedTool
     public bool UseRegex
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(ReplaceWatermark));
+        }
     }
+
+    public string ReplaceWatermark => UseRegex ? @"Replace... ($1 or \1 for capture groups)" : "Replace...";
 
     [DataMember]
     public int SearchListFilterMode
@@ -121,6 +127,9 @@ public partial class SearchListViewModel : ExtendedTool
 
     private async Task SearchAsync(string searchText)
     {
+        // An incomplete regex while typing simply shows no results
+        if (BuildSearchRegex(searchText) is not { } regex) return;
+
         IsLoading = true;
         _lastCancellationToken = new CancellationTokenSource();
         var token = _lastCancellationToken.Token;
@@ -132,18 +141,20 @@ public partial class SearchListViewModel : ExtendedTool
                 case 0:
                     foreach (var project in _projectExplorerService.Projects)
                     {
-                        await SearchProjectFilesAsync(project, searchText, token);
+                        await SearchProjectFilesAsync(project, regex, token);
                         if (token.IsCancellationRequested) return;
                     }
                     break;
                 case 1 when _projectExplorerService.ActiveProject != null:
-                    await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, searchText, token);
+                    await SearchProjectFilesAsync(_projectExplorerService.ActiveProject, regex, token);
                     break;
                 case 2 when _mainDockService.CurrentDocument is IEditor editor:
-                    Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, searchText, CaseSensitive, UseRegex,
-                        WholeWord, token));
+                    Items.AddRange(await FindAllIndexesAsync(editor.FullPath, null, regex, token));
                     break;
             }
+        }
+        catch (OperationCanceledException)
+        {
         }
         finally
         {
@@ -151,24 +162,18 @@ public partial class SearchListViewModel : ExtendedTool
         }
     }
 
-    private async Task SearchProjectFilesAsync(IProjectFolder folder, string searchText, CancellationToken cancel)
+    private async Task SearchProjectFilesAsync(IProjectFolder folder, Regex regex, CancellationToken cancel)
     {
         if (cancel.IsCancellationRequested) return;
-
-        var comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
         foreach (var relativePath in folder.GetFiles("*", true))
         {
             if (cancel.IsCancellationRequested) return;
 
-            var displayPath = relativePath;
             var fullPath = Path.Combine(folder.FullPath, relativePath);
 
             if (!IsBinaryFile(fullPath) && !IsTooLarge(fullPath))
-            {
-                Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, searchText, CaseSensitive,
-                    UseRegex, WholeWord, cancel));
-            }
+                Items.AddRange(await FindAllIndexesAsync(fullPath, folder.Root, regex, cancel));
         }
     }
 
@@ -256,81 +261,20 @@ public partial class SearchListViewModel : ExtendedTool
     }
 
     private static async Task<IList<SearchResultModel>> FindAllIndexesAsync(string fullPath, IProjectRoot? root,
-        string search, bool caseSensitive, bool regex, bool words, CancellationToken cancellationToken)
+        Regex regex, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(search) || !File.Exists(fullPath)) return new List<SearchResultModel>();
+        if (!File.Exists(fullPath)) return new List<SearchResultModel>();
 
         var text = await File.ReadAllTextAsync(fullPath, cancellationToken);
-        var lines = text.Split('\n');
-        var lastIndex = 0;
-        var lastLineNr = 0;
-        return await Task.Run(() =>
-        {
-            var indexes = new List<SearchResultModel>();
-            if (regex)
-            {
-                var matches = Regex.Matches(text, search,
-                    caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
-                foreach (Match match in matches)
-                {
-                    if (cancellationToken.IsCancellationRequested) return indexes;
-                    var index = match.Index;
-                    if (index == -1) return indexes;
-                    var lineNr = text[lastIndex..index].Split('\n').Length + lastLineNr - 1;
-                    var line = lines[lineNr];
-
-                    var lineM = Regex.Match(line, search,
-                        caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
-                    var sI = lineM.Index;
-                    var dL = line[..sI].TrimStart();
-                    var dM = line[sI..(sI + lineM.Length)];
-                    var dR = line[(sI + lineM.Length)..].TrimEnd();
-                    indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        root, fullPath, lineNr + 1, index, search.Length));
-                    lastIndex = index;
-                    lastLineNr = lineNr;
-                }
-            }
-            else
-            {
-                for (var index = 0;; index += search.Length)
-                {
-                    if (cancellationToken.IsCancellationRequested) return indexes;
-                    index = text.IndexOf(search, index,
-                        caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                    if (index == -1) return indexes;
-                    var lineNr = text[lastIndex..index].Split('\n').Length + lastLineNr - 1;
-                    var line = lines[lineNr];
-
-                    var sI = line.IndexOf(search,
-                        caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-                    var dL = line[..sI].TrimStart();
-                    var dM = search;
-                    var dR = line[(sI + search.Length)..].TrimEnd();
-
-                    lastIndex = index;
-                    lastLineNr = lineNr;
-                    if (words) //Check word boundary
-                    {
-                        if (index > 0 && char.IsLetterOrDigit(text[index - 1])) continue; //before
-                        if (index + search.Length < text.Length &&
-                            char.IsLetterOrDigit(text[index + search.Length])) continue; //before
-                    }
-
-                    indexes.Add(new SearchResultModel(line.Trim(), dL, dM, dR, search,
-                        root, fullPath, lineNr + 1, index, search.Length));
-                }
-            }
-
-            return indexes;
-        }, cancellationToken);
+        return await Task.Run(() => SearchReplaceHelper.FindMatches(text, regex, cancellationToken)
+            .Select(m => new SearchResultModel(m.Line.Trim(), m.Left, m.Match, m.Right, regex.ToString(),
+                root, fullPath, m.LineNumber, m.StartOffset, m.Length))
+            .ToList() as IList<SearchResultModel>, cancellationToken);
     }
 
-    private string BuildSearchPattern(string searchText)
+    private Regex? BuildSearchRegex(string searchText)
     {
-        var pattern = UseRegex ? searchText : Regex.Escape(searchText);
-        if (WholeWord) pattern = $@"\b(?:{pattern})\b";
-        return pattern;
+        return SearchReplaceHelper.TryBuildRegex(searchText, CaseSensitive, UseRegex, WholeWord);
     }
 
     public void OpenSelectedResult()
@@ -347,15 +291,15 @@ public partial class SearchListViewModel : ExtendedTool
         if (string.IsNullOrWhiteSpace(result.FilePath)) return;
         if (result.EndOffset <= result.StartOffset) return;
         if (IsBinaryFile(result.FilePath) || IsTooLarge(result.FilePath)) return;
+        if (BuildSearchRegex(SearchString) is not { } regex) return;
 
         var text = await File.ReadAllTextAsync(result.FilePath);
-        if (result.StartOffset < 0 || result.EndOffset > text.Length) return;
+        var newText = SearchReplaceHelper.ReplaceAt(text, regex, result.StartOffset,
+            result.EndOffset - result.StartOffset, ReplaceString ?? string.Empty, UseRegex);
 
-        var replacement = ReplaceString ?? string.Empty;
-        var newText = text.Remove(result.StartOffset, result.EndOffset - result.StartOffset)
-            .Insert(result.StartOffset, replacement);
-
-        await File.WriteAllTextAsync(result.FilePath, newText);
+        // null means the file changed since the search, so refresh the results instead of replacing stale offsets
+        if (newText != null)
+            await File.WriteAllTextAsync(result.FilePath, newText);
         Search(SearchString);
     }
 
@@ -364,6 +308,7 @@ public partial class SearchListViewModel : ExtendedTool
     {
         if (string.IsNullOrWhiteSpace(SearchString)) return;
         if (Items.Count == 0) return;
+        if (BuildSearchRegex(SearchString) is not { } regex) return;
 
         var files = Items
             .Select(x => x.FilePath)
@@ -373,18 +318,7 @@ public partial class SearchListViewModel : ExtendedTool
 
         if (files.Count == 0) return;
 
-        var pattern = BuildSearchPattern(SearchString);
-        var options = CaseSensitive ? RegexOptions.Multiline : RegexOptions.Multiline | RegexOptions.IgnoreCase;
         var replacement = ReplaceString ?? string.Empty;
-        Regex regex;
-        try
-        {
-            regex = new Regex(pattern, options);
-        }
-        catch
-        {
-            return;
-        }
 
         foreach (var file in files)
         {
@@ -392,8 +326,8 @@ public partial class SearchListViewModel : ExtendedTool
             if (IsBinaryFile(file) || IsTooLarge(file)) continue;
 
             var text = await File.ReadAllTextAsync(file);
-            var replaced = regex.Replace(text, replacement);
-            if (!ReferenceEquals(text, replaced) && text != replaced)
+            var replaced = SearchReplaceHelper.ReplaceAll(text, regex, replacement, UseRegex);
+            if (text != replaced)
                 await File.WriteAllTextAsync(file, replaced);
         }
 

@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:settingTypes="clr-namespace:OneWare.Settings.ViewModels.SettingTypes"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Settings.Views.SettingTypes.ToggleSwitchSettingView"
+             x:DataType="settingTypes:ToggleSwitchSettingViewModel">
+    <Border Padding="0 3">
+        <StackPanel Orientation="Vertical" Spacing="2">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <StackPanel.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Restore Default" Command="{Binding RestoreDefaultCommand}" />
+                    </ContextMenu>
+                </StackPanel.ContextMenu>
+                <ToggleSwitch Classes="small" IsChecked="{Binding Setting.Value}" VerticalAlignment="Center"
+                              IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}" />
+                <StackPanel Spacing="3" Orientation="Horizontal">
+                    <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
+                               ToolTip.Tip="{Binding Setting.HoverDescription}" />
+                    <Button Classes="icon" VerticalAlignment="Center"
+                            IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
+                        <Button.Flyout>
+                            <Flyout>
+                                <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
+                                                         MaxWidth="900" MaxHeight="500" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Classes="setting-validation warning caption" />
+        </StackPanel>
+    </Border>
+</UserControl>

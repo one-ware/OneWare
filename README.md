@@ -134,7 +134,8 @@ formatting; Ruff/formatter integration is not included.
    
 ## Contributing
 
-> Documentation Coming soon!
+Contributions are welcome! Read the [Contribution Guide](CONTRIBUTING.md) to get started, and the
+[Developer Documentation](docs/README.md) for the architecture, debugging tips and plugin development.
 
 ## License
 

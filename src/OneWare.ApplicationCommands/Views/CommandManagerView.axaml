@@ -23,7 +23,7 @@
         <Style Selector="controls|AdvancedWindow.PlatformLinux Border#WindowBorder">
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
-            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusSmall}" />
         </Style>
     </controls:FlexibleWindow.Styles>
     <Interaction.Behaviors>
@@ -54,10 +54,14 @@
                                            Foreground="{DynamicResource ThemeForegroundLowBrush}"
                                            VerticalAlignment="Center" Margin="0 0 5 0" />
                                 <TextBox DockPanel.Dock="Left" Name="SearchBox" AcceptsReturn="False"
-                                         Background="Transparent" BorderThickness="0"
+                                         Classes="bare"
                                          Text="{Binding SearchText}"
                                          Padding="7 0"
                                          Watermark="Find..." VerticalContentAlignment="Center">
+                                    <TextBox.InnerLeftContent>
+                                        <PathIcon Classes="small muted" Margin="0 0 6 0"
+                                                  Data="{StaticResource Icon.Search}" />
+                                    </TextBox.InnerLeftContent>
                                     <Interaction.Behaviors>
                                         <FocusOnAttachedToVisualTreeBehavior />
                                         <behaviors:ListBoxNavigationBehavior AssociatedListBox="{Binding #ItemList}" />

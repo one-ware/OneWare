@@ -4,7 +4,7 @@
              xmlns:models="clr-namespace:OneWare.Core.Models" x:DataType="models:ObjectValueModel">
     <Grid>
         <TreeView SelectionMode="Toggle" ItemsSource="{Binding Children}" BorderThickness="0"
-                  Background="{DynamicResource ThemeControlBackgroundBrush}">
+                  Background="{DynamicResource ThemeControlLowBrush}">
             <TreeView.Styles>
                 <Style Selector="TreeViewItem">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -33,7 +33,7 @@
                             <TextBlock Text="{Binding DisplayName}" />
                             <TextBlock Margin="2 0 2 0" Text="="
                                        IsVisible="{Binding Value, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                            <TextBlock Margin="0 0 0 0" Text="{Binding Value}" Foreground="CornflowerBlue" />
+                            <TextBlock Margin="0 0 0 0" Text="{Binding Value}" Classes="accent" />
                             <TextBlock Margin="5 0 0 0" Opacity="0.7" Text="{Binding TypeName}" />
                         </StackPanel>
                     </Grid>

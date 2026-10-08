@@ -2,6 +2,7 @@
     <Import Project="..\..\build\props\Base.props"/>
     <Import Project="..\..\build\props\OneWare.Module.props"/>
     <Import Project="..\..\build\props\Avalonia.Themes.Simple.props"/>
+    <Import Project="..\..\build\props\Avalonia.Fonts.Inter.props"/>
     <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
     <Import Project="..\..\build\props\RestSharp.props"/>
     <Import Project="..\..\build\props\SharpCompress.props"/>
@@ -13,6 +14,10 @@
     
     <ItemGroup>
         <AvaloniaResource Include="Assets\**\*.*"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="OneWare.Studio.Desktop.UnitTests"/>
     </ItemGroup>
 
     <ItemGroup>

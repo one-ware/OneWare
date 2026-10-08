@@ -29,7 +29,7 @@
             <Image Source="{DynamicResource VsImageLib.Connect16XWhite}" Width="16" Height="16"
                    IsVisible="{Binding ConnectionState, Converter={x:Static converters:SharedConverters.ComparisonConverter}, ConverterParameter={x:Static client:HubConnectionState.Connected}}" />
 
-            <controls:Spinner Foreground="White" Height="13"
+            <controls:Spinner Foreground="{DynamicResource ThemeForegroundBrush}" Height="13"
                               CustomIcon="{DynamicResource VsCode.SyncWhite}"
                               IsIntermediate="True"
                               IsVisible="{Binding IsConnecting}" />

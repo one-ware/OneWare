@@ -9,12 +9,12 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageReasoningView"
              x:DataType="chatMessages:ChatMessageReasoningViewModel">
 
-    <Expander Margin="0 2" VerticalAlignment="Top" IsExpanded="{Binding IsStreaming, Mode=OneWay}">
+    <Expander VerticalAlignment="Top" IsExpanded="{Binding IsStreaming, Mode=OneWay}">
         <Expander.Header>
             <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5" VerticalAlignment="Center">
                 <TextBlock Grid.Column="0" IsVisible="{Binding !IsStreaming}">
                     <Run Text="Reasoning "/>
-                    <Run Text="✓" Foreground="LimeGreen" />
+                    <Run Text="✓" Foreground="{DynamicResource SuccessBrush}" />
                 </TextBlock>
                 <TextBlock Grid.Column="0"
                            Text="Reasoning…" IsVisible="{Binding IsStreaming}" />
@@ -22,7 +22,7 @@
                                   IsVisible="{Binding IsStreaming}" />
             </Grid>
         </Expander.Header>
-        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+        <Border Margin="1 4 1 0" Background="{DynamicResource ChatBubbleBrush}" Classes="RoundBorder"
                 MaxHeight="200" Padding="5">
             <controls:MarkdownViewer SelectionEnabled="True" AutoScrollToBottom="True" Markdown="{Binding Content}" />
         </Border>

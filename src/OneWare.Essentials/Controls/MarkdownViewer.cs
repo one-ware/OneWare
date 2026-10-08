@@ -1,10 +1,15 @@
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using System.Linq;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using AvaloniaEdit.Editing;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Essentials.Controls;
 
@@ -24,6 +29,12 @@ public class MarkdownViewer : TemplatedControl
     
     public static readonly StyledProperty<bool> AutoScrollToBottomProperty =
         AvaloniaProperty.Register<MarkdownViewer, bool>(nameof(AutoScrollToBottom));
+
+    public static readonly StyledProperty<string?> LinkBasePathProperty =
+        AvaloniaProperty.Register<MarkdownViewer, string?>(nameof(LinkBasePath));
+
+    public static readonly DirectProperty<MarkdownViewer, ICommand> LinkCommandProperty =
+        AvaloniaProperty.RegisterDirect<MarkdownViewer, ICommand>(nameof(LinkCommand), x => x.LinkCommand);
 
     private Control? _markdownScrollViewer;
     private ScrollViewer? _scrollViewer;
@@ -58,8 +69,26 @@ public class MarkdownViewer : TemplatedControl
         set => SetValue(VirtualizationCacheLengthProperty, value);
     }
 
+    /// <summary>
+    ///     Folder (or a file inside it) that relative file links are resolved against before the active project and the
+    ///     projects folder.
+    /// </summary>
+    public string? LinkBasePath
+    {
+        get => GetValue(LinkBasePathProperty);
+        set => SetValue(LinkBasePathProperty, value);
+    }
+
+    /// <summary>
+    ///     Executed with the target of a clicked link. Files open in the IDE (a <c>:line</c> or <c>#L</c> suffix jumps
+    ///     to the line), folders in the file manager and anything else in the browser.
+    /// </summary>
+    public ICommand LinkCommand { get; }
+
     public MarkdownViewer()
     {
+        LinkCommand = new AsyncRelayCommand<string?>(OpenLinkAsync);
+
         // We suppress this RequestBringIntoView which comes from AvaloniaEdit
         this.AddHandler(RequestBringIntoViewEvent, (sender, args) =>
         {
@@ -81,6 +110,41 @@ public class MarkdownViewer : TemplatedControl
         base.OnPropertyChanged(change);
         if (change.Property == MarkdownProperty || change.Property == AutoScrollToBottomProperty)
             RequestScrollToBottom();
+    }
+
+    private async Task OpenLinkAsync(string? link)
+    {
+        if (string.IsNullOrWhiteSpace(link) || link.TrimStart().StartsWith('#')) return;
+
+        if (LocalLinkResolver.IsExternalLink(link))
+        {
+            PlatformHelper.OpenHyperLink(link.Trim());
+            return;
+        }
+
+        var services = ContainerLocator.Container;
+        string?[] baseDirectories =
+        [
+            File.Exists(LinkBasePath) ? Path.GetDirectoryName(LinkBasePath) : LinkBasePath,
+            services?.Resolve<IProjectExplorerService>().ActiveProject?.RootFolderPath,
+            services?.Resolve<IPaths>().ProjectsDirectory
+        ];
+
+        if (!LocalLinkResolver.TryResolve(link, baseDirectories, out var path, out var line))
+        {
+            services?.Resolve<ILogger>().Warning($"Could not find {link}");
+            return;
+        }
+
+        if (Directory.Exists(path) || services == null)
+        {
+            PlatformHelper.OpenExplorerPath(path);
+            return;
+        }
+
+        var document = await services.Resolve<IMainDockService>().OpenFileAsync(path);
+        if (line is > 0 && document is IEditor editor)
+            editor.JumpToLine(Math.Min(line.Value, editor.CurrentDocument.LineCount));
     }
 
     private void RequestScrollToBottom()

@@ -7,12 +7,11 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageErrorView"
              x:DataType="chatMessages:ChatMessageErrorViewModel">
 
-    <Border Margin="0 2"
-            Padding="8"
+    <Border Padding="8"
             CornerRadius="6"
             BorderThickness="1"
             BorderBrush="OrangeRed"
-            Background="{DynamicResource ThemeControlMidBrush}">
+            Background="{DynamicResource ChatBubbleBrush}">
         <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
     </Border>
 

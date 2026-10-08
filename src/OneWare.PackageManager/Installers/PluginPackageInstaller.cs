@@ -30,7 +30,7 @@ public class PluginPackageInstaller : PackageInstallerBase
     {
         if (version.CompatibilityUrl != null || package.SourceUrl != null)
         {
-            var depsUrl = version.CompatibilityUrl ?? $"{package.SourceUrl}/{version.Version}/compatibility.txt";
+            var depsUrl = version.CompatibilityUrl ?? $"{package.SourceUrl!.TrimEnd('/')}/{version.Version}/compatibility.txt";
             var deps = await _httpService.DownloadTextAsync(depsUrl);
             
             // If download fails (network error), skip compatibility check and assume compatible

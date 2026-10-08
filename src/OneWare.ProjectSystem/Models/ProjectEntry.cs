@@ -11,6 +11,7 @@ namespace OneWare.ProjectSystem.Models;
 
 public abstract class ProjectEntry : ObservableObject, IProjectEntry
 {
+    private readonly Dictionary<string, ProjectExplorerTag> _tags = new();
     private string _name;
 
     protected ProjectEntry(string name, IProjectFolder? topFolder)
@@ -42,6 +43,24 @@ public abstract class ProjectEntry : ObservableObject, IProjectEntry
         get;
         set => SetProperty(ref field, value);
     } = 1f;
+
+    public IReadOnlyList<ProjectExplorerTag> Tags
+    {
+        get;
+        private set => SetProperty(ref field, value);
+    } = [];
+
+    public void AddTag(string key, ProjectExplorerTag tag)
+    {
+        if (_tags.TryGetValue(key, out var existing) && existing == tag) return;
+        _tags[key] = tag;
+        Tags = _tags.Values.ToArray();
+    }
+
+    public void RemoveTag(string key)
+    {
+        if (_tags.Remove(key)) Tags = _tags.Values.ToArray();
+    }
 
     public IconModel? Icon
     {

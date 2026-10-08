@@ -11,7 +11,7 @@
              ClipToBounds="False">
     <UserControl.Styles>
         <Style Selector="MenuItem MenuItem">
-            <Setter Property="FontFamily" Value="{DynamicResource Noto Sans}" />
+            <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
         </Style>
     </UserControl.Styles>
     <Panel>

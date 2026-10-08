@@ -67,6 +67,7 @@ public class MarkdownEditViewModel : EditViewModel
             {
                 OnPropertyChanged(nameof(IsSplitterVisible));
                 OnPropertyChanged(nameof(EditorColumnWidth));
+                OnPropertyChanged(nameof(ViewModeIndex));
             }
         }
     }
@@ -82,12 +83,28 @@ public class MarkdownEditViewModel : EditViewModel
             {
                 OnPropertyChanged(nameof(IsSplitterVisible));
                 OnPropertyChanged(nameof(PreviewColumnWidth));
+                OnPropertyChanged(nameof(ViewModeIndex));
                 if (value) UpdateMarkdown();
             }
         }
     }
 
     public bool IsSplitterVisible => ShowEditor && ShowPreview;
+
+    /// <summary>0 = editor only, 1 = split, 2 = preview only.</summary>
+    public int ViewModeIndex
+    {
+        get => ShowEditor && ShowPreview ? 1 : ShowPreview ? 2 : 0;
+        set
+        {
+            if (value < 0) return;
+            // Enable the new pane before hiding the other so at least one stays visible throughout
+            if (value != 0) ShowPreview = true;
+            if (value != 2) ShowEditor = true;
+            if (value == 0) ShowPreview = false;
+            if (value == 2) ShowEditor = false;
+        }
+    }
 
     /// <summary>Star width when the editor is visible, collapsed otherwise.</summary>
     public GridLength EditorColumnWidth =>

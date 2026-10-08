@@ -47,15 +47,25 @@ public class SourceControlModule : OneWareModuleBase
             {
                 HoverDescription = "Interval in seconds"
             });
-        settingsService.RegisterSetting("Team Explorer", "Polling", "SourceControl_PollChangesEnable",
+        settingsService.RegisterSetting("Team Explorer", "Changes", "SourceControl_WatchChanges",
+            new CheckBoxSetting("Detect changes automatically", true)
+            {
+                HoverDescription = "Refresh when files or the repository change on disk and when the window gets focus"
+            });
+        settingsService.RegisterSetting("Team Explorer", "Changes", "SourceControl_PollChangesEnable",
             new CheckBoxSetting("Poll for changes", true)
             {
-                HoverDescription = "Refresh local file changes automatically"
+                HoverDescription = "Refresh periodically when file system changes can not be detected (e.g. on network drives)"
             });
-        settingsService.RegisterSetting("Team Explorer", "Polling", "SourceControl_PollChangesDelay",
+        settingsService.RegisterSetting("Team Explorer", "Changes", "SourceControl_PollChangesDelay",
             new SliderSetting("Poll changes interval", 5, 1, 60, 1)
             {
                 HoverDescription = "Interval in seconds"
+            });
+        settingsService.RegisterSetting("Team Explorer", "Graph", "SourceControl_GraphShowAllBranches",
+            new CheckBoxSetting("Show all branches", false)
+            {
+                HoverDescription = "Show every local and remote branch in the graph instead of only the current branch and its upstream"
             });
 
         var dockService = serviceProvider.Resolve<IMainDockService>();

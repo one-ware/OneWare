@@ -8,7 +8,7 @@
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageSkillView"
              x:DataType="chatMessages:ChatMessageSkillViewModel">
 
-    <Expander Margin="0 2" VerticalAlignment="Top"
+    <Expander VerticalAlignment="Top"
               ToolTip.Tip="The AI loaded this skill into its context">
         <Expander.Header>
             <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
@@ -18,7 +18,7 @@
                            Text="{Binding SkillName, StringFormat='Using skill {0}'}" />
             </StackPanel>
         </Expander.Header>
-        <Border Margin="1 4 1 0" Background="{DynamicResource ThemeControlMidBrush}" Classes="RoundBorder"
+        <Border Margin="1 4 1 0" Background="{DynamicResource ChatBubbleBrush}" Classes="RoundBorder"
                 MaxHeight="300" Padding="5">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />

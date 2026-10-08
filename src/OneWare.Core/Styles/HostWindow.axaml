@@ -12,7 +12,7 @@
                     <StackPanel VerticalAlignment="Stretch"
                                 Orientation="Horizontal"
                                 Spacing="2"
-                                TextElement.FontSize="10">
+                                TextElement.FontSize="{DynamicResource FontSizeSmall}">
                         <Button x:Name="PART_FullScreenButton"
                                 IsVisible="False"
                                 Theme="{StaticResource SimpleCaptionButton}">
@@ -49,8 +49,8 @@
                             </Viewbox>
                         </Button>
                         <Button x:Name="PART_CloseButton"
-                                Background="#ffe81123"
-                                BorderBrush="#fff1707a"
+                                Background="{DynamicResource ErrorBrush}"
+                                BorderBrush="{DynamicResource ErrorBrush}"
                                 Theme="{StaticResource SimpleCaptionButton}"
                                 AutomationProperties.Name="Close">
                             <Viewbox Width="11"
@@ -91,16 +91,18 @@
         <Setter Property="TransparencyLevelHint" Value="Transparent" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
         <Setter Property="CornerRadius" Value="{x:Static helpers:PlatformHelper.WindowsCornerRadius}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
                     <Border Name="PART_TransparencyFallback" IsHitTestVisible="False" />
                     <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}" BorderThickness="1"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            BorderThickness="{DynamicResource ThemeBorderThickness}"
                             IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}" />
-                    <Panel Background="Transparent" Margin="{TemplateBinding WindowDecorationMargin}" />
+                    <Panel Background="{DynamicResource ThemeControlTransparentBrush}"
+                           Margin="{TemplateBinding WindowDecorationMargin}" />
                     <VisualLayerManager>
                         <VisualLayerManager.ChromeOverlayLayer>
                             <HostWindowTitleBar Name="PART_TitleBar" />

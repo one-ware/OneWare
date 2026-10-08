@@ -361,6 +361,28 @@ public sealed class GitOperationsTests : IDisposable
         Assert.Null(_repository.Index["file.txt"]);
     }
 
+    [Fact]
+    public void CommitChangesAndPatchCompareAgainstFirstParent()
+    {
+        var root = CommitFile("keep.txt", "one\n");
+        Assert.Equal([new GitOperations.CommitChange("keep.txt", "keep.txt", ChangeKind.Added)],
+            GitOperations.GetCommitChanges(_repository, root.Sha));
+
+        Write("keep.txt", "two\n");
+        Write("src/new.txt", "new\n");
+        Commands.Stage(_repository, "*");
+        var next = _repository.Commit("second", _signature, _signature);
+
+        var changes = GitOperations.GetCommitChanges(_repository, next.Sha).OrderBy(x => x.Path).ToArray();
+        Assert.Equal(["keep.txt", "src/new.txt"], changes.Select(x => x.Path));
+        Assert.Equal([ChangeKind.Modified, ChangeKind.Added], changes.Select(x => x.Status));
+
+        using var patch = GitOperations.GetCommitPatch(_repository, next.Sha, "keep.txt", null, 3);
+        Assert.Contains("-one", patch.Content);
+        Assert.Contains("+two", patch.Content);
+        Assert.DoesNotContain("new.txt", patch.Content);
+    }
+
     private Commit CommitFile(string path, string content)
     {
         Write(path, content);

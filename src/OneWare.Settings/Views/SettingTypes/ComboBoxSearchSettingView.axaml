@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -14,14 +14,13 @@
             </ContextMenu>
         </StackPanel.ContextMenu>
         <StackPanel Spacing="3" Orientation="Horizontal">
-            <TextBlock Text="{Binding Setting.Title}"
+            <TextBlock Text="{Binding Setting.Title}" VerticalAlignment="Center"
                        ToolTip.Tip="{Binding Setting.HoverDescription}" />
-            <Button Padding="0" VerticalAlignment="Center"
+            <Button Classes="icon" VerticalAlignment="Center"
                     IsVisible="{Binding Setting.MarkdownDocumentation, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <Image Source="{DynamicResource BoxIcons.RegularHelpCircle}" Height="14" Width="14"
-                       VerticalAlignment="Center" />
+                <PathIcon Classes="muted" Data="{StaticResource Icon.Help}" />
                 <Button.Flyout>
-                    <Flyout FlyoutPresenterTheme="{StaticResource FlyoutNoPadding}">
+                    <Flyout>
                         <controls:MarkdownViewer Markdown="{Binding Setting.MarkdownDocumentation}"
                                                  MaxWidth="900" MaxHeight="500" />
                     </Flyout>

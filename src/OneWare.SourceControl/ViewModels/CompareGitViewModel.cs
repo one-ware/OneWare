@@ -48,6 +48,11 @@ public class CompareGitViewModel : Document, IWaitForContent
 
     public bool IsStaged { get; set; }
 
+    /// <summary>When set, shows the change this commit made to the file instead of local changes.</summary>
+    public string? CommitSha { get; set; }
+
+    public string? OldPath { get; set; }
+
     public string? RepositoryPath { get; set; }
 
     public int ContextLines { get; set; } = 10000;
@@ -71,7 +76,7 @@ public class CompareGitViewModel : Document, IWaitForContent
     public void InitializeContent()
     {
         if (_closed) return;
-        if (_indexWatcher == null && RepositoryPath != null)
+        if (_indexWatcher == null && RepositoryPath != null && CommitSha == null)
         {
             try
             {
@@ -112,7 +117,9 @@ public class CompareGitViewModel : Document, IWaitForContent
             do
             {
                 _reloadRequested = false;
-                using var patch = await Task.Run(() => _sourceControlViewModel.GetPatch(FullPath, ContextLines, IsStaged, RepositoryPath));
+                using var patch = await Task.Run(() => CommitSha != null
+                    ? _sourceControlViewModel.GetCommitPatch(FullPath, OldPath, CommitSha, ContextLines, RepositoryPath)
+                    : _sourceControlViewModel.GetPatch(FullPath, ContextLines, IsStaged, RepositoryPath));
                 if (_closed) return;
                 if (patch != null) await ParsePatchFileAsync(patch);
                 else Chunks = null;

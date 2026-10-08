@@ -22,7 +22,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
-                            <Button Height="NaN" Padding="8 4"
+                            <Button Padding="8 4"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Left"
                                     Classes="RoundButton"
@@ -47,7 +47,7 @@
                             <KeyBinding Gesture="Enter" Command="{Binding SubmitFreeform}" />
                         </TextBox.KeyBindings>
                     </TextBox>
-                    <Button Grid.Column="1" Height="NaN" Padding="5 3"
+                    <Button Grid.Column="1" Padding="5 3"
                             Classes="RoundButton PrimaryButton"
                             Content="Send"
                             Command="{Binding SubmitFreeform}" />

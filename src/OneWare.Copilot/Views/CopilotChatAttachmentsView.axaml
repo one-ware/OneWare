@@ -6,7 +6,7 @@
              xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="40"
              x:Class="OneWare.Copilot.Views.CopilotChatAttachmentsView"
-             x:DataType="services:CopilotChatService">
+             x:DataType="services:CopilotChatServiceBase">
     <UserControl.Resources>
         <DataTemplate x:Key="AttachmentChipTemplate" x:DataType="viewModels:CopilotAttachmentViewModel">
             <Border Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="3"

@@ -8,7 +8,7 @@
              x:DataType="viewModels:VerilogRtlTreeViewModel"
              mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="500">
     <Grid RowDefinitions="Auto,*">
-        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="4">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="{DynamicResource ThemePaddingSmall}">
             <StackPanel Orientation="Horizontal" Spacing="4">
                 <Button Content="Forward" Command="{Binding LoadForwardCommand}" />
                 <Button Content="Reverse" Command="{Binding LoadReverseCommand}" />
@@ -21,10 +21,8 @@
                 <TreeDataTemplate DataType="models:VerilogRtlTreeNode" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="{Binding DisplayName}" />
-                        <TextBlock Text="recursive" IsVisible="{Binding IsRecursive}"
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                        <TextBlock Text="truncated" IsVisible="{Binding IsTruncated}"
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <TextBlock Classes="muted" Text="recursive" IsVisible="{Binding IsRecursive}" />
+                        <TextBlock Classes="muted" Text="truncated" IsVisible="{Binding IsTruncated}" />
                     </StackPanel>
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>

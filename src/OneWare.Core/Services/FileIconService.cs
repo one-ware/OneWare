@@ -17,22 +17,44 @@ public class FileIconService : IFileIconService
     {
         _logger = logger;
 
-        RegisterFileIcon("VsImageLib.File16X", ".*");
+        RegisterFileIcon("FileIcon.File", ".*");
+
+        // HDL and FPGA formats keep OneWare's own icons
         RegisterFileIcon("GhdpFileIcon", ".ghdp");
         RegisterFileIcon("VhdpFileIcon", ".vhdp");
         RegisterFileIcon("VhdlFileIcon", ".vhd", ".vhdl");
         RegisterFileIcon("VerilogFileIcon", ".v", ".vh");
         RegisterFileIcon("QsysFileIcon", ".qsys");
         RegisterFileIcon("SystemVerilogFileIcon", ".sv", ".svh");
-        RegisterFileIcon("SimpleIcons.Arduino", ".ino");
-        RegisterFileIcon("Ionicons.LogoJavascript", ".js");
-        RegisterFileIcon("FontAwesome.PythonBrands", ".py");
-        RegisterFileIcon("VsImageLib.Cs16X", ".cs");
-        RegisterFileIcon("VsImageLib.C16X", ".c");
-        RegisterFileIcon("VsImageLib.HeaderFile16X", ".h", ".hpp");
-        RegisterFileIcon("VsImageLib.Cpp16X", ".cpp");
-        RegisterFileIcon("VSImageLib.MarkdownFile_16x", ".md");
-        RegisterFileIcon("VSImageLib2019.JSONScript_16x", ".json");
+        RegisterFileIcon("FileIcon.Tune", ".pcf", ".xdc", ".sdc", ".lpf", ".ucf", ".qsf", ".ccf");
+        RegisterFileIcon("FileIcon.Hex", ".hex", ".bin", ".bit", ".mem", ".mif");
+
+        RegisterFileIcon("FileIcon.Arduino", ".ino");
+        RegisterFileIcon("FileIcon.JavaScript", ".js", ".mjs", ".cjs", ".jsx");
+        RegisterFileIcon("FileIcon.Python", ".py");
+        RegisterFileIcon("FileIcon.CSharp", ".cs");
+        RegisterFileIcon("FileIcon.C", ".c");
+        RegisterFileIcon("FileIcon.H", ".h");
+        RegisterFileIcon("FileIcon.Cpp", ".cpp", ".cc", ".cxx");
+        RegisterFileIcon("FileIcon.Hpp", ".hpp", ".hh", ".hxx");
+        RegisterFileIcon("FileIcon.Tcl", ".tcl");
+        RegisterFileIcon("FileIcon.Console", ".sh", ".bash", ".bat", ".cmd", ".ps1");
+        RegisterFileIcon("FileIcon.Markdown", ".md");
+        RegisterFileIcon("FileIcon.Json", ".json");
+        RegisterFileIcon("FileIcon.Xml", ".xml");
+        RegisterFileIcon("FileIcon.Yaml", ".yaml", ".yml");
+        RegisterFileIcon("FileIcon.Settings", ".ini", ".cfg", ".conf");
+        RegisterFileIcon("FileIcon.Document", ".txt");
+        RegisterFileIcon("FileIcon.Log", ".log");
+        RegisterFileIcon("FileIcon.Table", ".csv", ".tsv");
+        RegisterFileIcon("FileIcon.Image", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp");
+        RegisterFileIcon("FileIcon.Svg", ".svg");
+        RegisterFileIcon("FileIcon.Pdf", ".pdf");
+        RegisterFileIcon("FileIcon.Zip", ".zip", ".tar", ".gz", ".7z");
+        RegisterFileIcon("FileIcon.Audio", ".mp3", ".wav", ".flac", ".ogg");
+        RegisterFileIcon("FileIcon.Video", ".mp4", ".avi", ".mov", ".mkv", ".webm");
+        RegisterFileIcon("FileIcon.Onnx", ".onnx");
+        RegisterFileIcon("FileIcon.Git", ".gitignore", ".gitattributes", ".gitmodules");
     }
 
     public void RegisterFileIcon(IObservable<IImage> icon, params string[] extensions)

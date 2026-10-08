@@ -1,4 +1,4 @@
-﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -29,7 +29,7 @@
 
         <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0 0 0 10">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding ApplicationCommand.Name}" FontWeight="Bold" />
+                <TextBlock Text="{Binding ApplicationCommand.Name}" Classes="bold" />
             </StackPanel>
 
             <Panel>
@@ -40,8 +40,8 @@
                         <FocusOnAttachedToVisualTreeBehavior />
                     </Interaction.Behaviors>
                 </controls:HotkeyTextBox>
-                <Button HorizontalAlignment="Right" Padding="4" Margin="3" Command="{Binding Clear}">
-                    <Image Source="{DynamicResource MaterialDesign.Close}" Height="10" />
+                <Button HorizontalAlignment="Right" Classes="icon small" Margin="3" Command="{Binding Clear}">
+                    <PathIcon Data="{StaticResource Icon.Close}" Height="10" Width="10" />
                 </Button>
             </Panel>
         </StackPanel>

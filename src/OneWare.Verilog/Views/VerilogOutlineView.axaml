@@ -8,7 +8,7 @@
              x:DataType="viewModels:VerilogOutlineViewModel"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500">
     <Grid RowDefinitions="Auto,*">
-        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="4">
+        <Border Background="{DynamicResource ThemeBackgroundBrush}" Padding="{DynamicResource ThemePaddingSmall}">
             <Button HorizontalAlignment="Right" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh outline">
                 <TextBlock Text="Refresh" />
             </Button>
@@ -18,7 +18,7 @@
             <TreeView.ItemTemplate>
                 <TreeDataTemplate DataType="models:VerilogSymbolNode" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="{Binding Kind}" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                        <TextBlock Classes="muted" Text="{Binding Kind}" />
                         <TextBlock Text="{Binding Name}" />
                     </StackPanel>
                 </TreeDataTemplate>

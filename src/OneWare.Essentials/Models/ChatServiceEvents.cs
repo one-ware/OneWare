@@ -102,6 +102,9 @@ public sealed class ChatSubAgentStartedEvent(string id, string displayName)
     /// <summary>What the sub-agent was created for, when the agent definition provides it.</summary>
     public string? Description { get; init; }
 
+    /// <summary>The instructions (prompt) the spawning agent handed to the sub-agent, when known.</summary>
+    public string? Instructions { get; init; }
+
     /// <summary>Model the sub-agent runs with, when known.</summary>
     public string? Model { get; init; }
 

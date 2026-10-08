@@ -15,11 +15,6 @@
                          x:DataType="viewModels:UniversalFpgaProjectSettingsEditorViewModel"
                          Name="UniversalFpgaProjectSettingsViewView">
     <controls:FlexibleWindow.Styles>
-        <Style Selector="ListBox">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-        </Style>
-
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -31,12 +26,12 @@
             <Border BorderThickness="0, 0, 1, 0" Grid.RowSpan="2"
                     Background="{DynamicResource ThemeControlLowBrush}">
                 <StackPanel>
-                    <ListBox Padding="3"
+                    <ListBox Classes="transparent" Padding="3"
                              ItemsSource="{Binding SettingCategories}"
                              SelectedItem="{Binding SelectedCategory}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock FontSize="13" Text="{Binding}" />
+                                <TextBlock FontSize="{DynamicResource FontSizeMedium}" Text="{Binding}" />
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
