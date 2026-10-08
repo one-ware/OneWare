@@ -273,6 +273,9 @@ public class CopilotModule : OneWareModuleBase
 
         settingsService.Register(CopilotSelectedReasoningEffortSettingKey, "");
 
+        OneWareCloudImageFunction.Register(serviceProvider.Resolve<IAiFunctionProvider>(),
+            serviceProvider.Resolve<IOneWareCloudAccess>(), serviceProvider.Resolve<IProjectExplorerService>());
+
         // The first registered service is the default selection.
         serviceProvider.Resolve<IChatManagerService>()
             .RegisterChatService(serviceProvider.Resolve<OneWareCloudChatService>());

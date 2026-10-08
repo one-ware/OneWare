@@ -33,6 +33,18 @@ public class ChatMessageSubAgentViewModel : ObservableObject, IChatMessage, IEst
     }
 
     [DataMember]
+    public string? Instructions
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(HasInstructions));
+        }
+    }
+
+    public bool HasInstructions => !string.IsNullOrWhiteSpace(Instructions);
+
+    [DataMember]
     public string? Model
     {
         get;
@@ -128,6 +140,8 @@ public class ChatMessageSubAgentViewModel : ObservableObject, IChatMessage, IEst
         if (!IsExpanded) return header;
 
         var height = header;
+        if (HasInstructions) height += 36;
+
         foreach (var item in Items)
             height += item is IEstimatedHeightItem estimated ? estimated.EstimateHeight(width - 20) : 36;
 

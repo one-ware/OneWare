@@ -2129,6 +2129,8 @@ public abstract class CopilotChatServiceBase(
             }
             case ToolExecutionStartEvent x:
             {
+                RememberSubAgentInstructions(x.Data);
+
                 var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
 
                 EventReceived?.Invoke(this,
@@ -2229,9 +2231,14 @@ public abstract class CopilotChatServiceBase(
 
         var displayName = FirstNonEmpty(evt.Data.AgentDisplayName, evt.Data.AgentName, evt.Data.AgentType, "Agent")!;
 
+        string? instructions;
+        lock (_subAgentInstructions)
+            _subAgentInstructions.Remove(id, out instructions);
+
         EventReceived?.Invoke(this, new ChatSubAgentStartedEvent(id, displayName)
         {
             Description = evt.Data.AgentDescription,
+            Instructions = instructions,
             Model = DescribeModel(evt.Data.Model),
             IsBackground = isBackground,
             ParentSubAgentId = parentId,
@@ -2312,6 +2319,28 @@ public abstract class CopilotChatServiceBase(
             foreach (var id in _subAgents.Where(x => !x.Value.IsBackground).Select(x => x.Key).ToArray())
                 _subAgents.Remove(id);
         }
+
+        lock (_subAgentInstructions)
+            _subAgentInstructions.Clear();
+    }
+
+    /// <summary>
+    /// Prompts of tool calls that may spawn a sub-agent, by tool call id. <c>subagent.started</c> does
+    /// not carry the prompt, so it is taken from the arguments of the spawning tool call.
+    /// </summary>
+    private readonly Dictionary<string, string> _subAgentInstructions = new(StringComparer.Ordinal);
+
+    private void RememberSubAgentInstructions(ToolExecutionStartData data)
+    {
+        if (string.IsNullOrWhiteSpace(data.ToolCallId)) return;
+        if (data.Arguments is not { ValueKind: JsonValueKind.Object } arguments) return;
+        if (!arguments.TryGetProperty("prompt", out var prompt) || prompt.ValueKind != JsonValueKind.String) return;
+
+        var text = prompt.GetString();
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        lock (_subAgentInstructions)
+            _subAgentInstructions[data.ToolCallId] = text;
     }
 
     /// <summary>

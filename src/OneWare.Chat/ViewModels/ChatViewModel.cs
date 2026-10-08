@@ -1387,6 +1387,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         var subAgent = new ChatMessageSubAgentViewModel(started.Id, started.DisplayName)
         {
             Description = started.Description,
+            Instructions = started.Instructions,
             Model = started.Model,
             IsBackground = started.IsBackground,
             StatusText = started.IsBackground ? "Running in background…" : "Working…"
@@ -1781,6 +1782,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     Id = subAgent.Id,
                     Message = subAgent.DisplayName,
                     Content = subAgent.Description,
+                    Instructions = subAgent.Instructions,
                     Model = subAgent.Model,
                     ToolOutput = subAgent.StatusText,
                     IsSuccessful = subAgent.IsSuccessful,
@@ -1848,6 +1850,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     state.Message)
                 {
                     Description = state.Content,
+                    Instructions = state.Instructions,
                     // Sessions written before the dedicated field kept the model in ToolName.
                     Model = state.Model ?? state.ToolName,
                     IsRunning = false,
@@ -2271,6 +2274,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         public string? ToolName { get; set; }
         public string? ToolOutput { get; set; }
         public string? SkillName { get; set; }
+
+        /// <summary>Instructions a sub-agent was started with.</summary>
+        public string? Instructions { get; set; }
 
         /// <summary>Model that produced the message, or that a sub-agent ran with.</summary>
         public string? Model { get; set; }

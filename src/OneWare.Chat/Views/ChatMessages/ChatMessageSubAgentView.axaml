@@ -11,11 +11,8 @@
     <Expander VerticalAlignment="Top" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
               ToolTip.Tip="{Binding Description}">
         <Expander.Header>
-            <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="5" VerticalAlignment="Center">
-                <Image Source="{DynamicResource BoxIcons.RegularBrain}"
-                       Width="12" Height="12" VerticalAlignment="Center" />
-
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="5" VerticalAlignment="Center">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" VerticalAlignment="Center" />
                     <TextBlock Text=" (background)" VerticalAlignment="Center"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}"
@@ -30,24 +27,39 @@
                     </Panel>
                 </StackPanel>
 
-                <TextBlock Grid.Column="2" Text="{Binding StatusText}" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Text="{Binding StatusText}" VerticalAlignment="Center"
                            FontSize="11" TextTrimming="CharacterEllipsis"
                            Foreground="{DynamicResource ThemeForegroundLowBrush}" />
 
-                <controls:Spinner Grid.Column="3" Width="12" Height="12" VerticalAlignment="Center"
+                <controls:Spinner Grid.Column="2" Width="12" Height="12" VerticalAlignment="Center"
                                   IsVisible="{Binding IsRunning}" />
             </Grid>
         </Expander.Header>
 
         <Border Margin="1 4 1 0" Padding="6 2 0 2" BorderThickness="2 0 0 0"
                 BorderBrush="{DynamicResource ThemeAccentBrush}">
-            <ItemsControl ItemsSource="{Binding Items}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="5" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
+            <StackPanel Spacing="5">
+                <Expander VerticalAlignment="Top" IsVisible="{Binding HasInstructions}"
+                          ToolTip.Tip="The instructions this agent was given">
+                    <Expander.Header>
+                        <TextBlock Text="Instructions" VerticalAlignment="Center" />
+                    </Expander.Header>
+                    <Border Margin="1 4 1 0" Background="{DynamicResource ChatBubbleBrush}" Classes="RoundBorder"
+                            MaxHeight="300" Padding="5">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Instructions}" />
+                        </ScrollViewer>
+                    </Border>
+                </Expander>
+
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="5" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
         </Border>
     </Expander>
 
