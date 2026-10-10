@@ -9,6 +9,8 @@ namespace OneWare.Terminal;
 /// OSC 633 sequences at prompt boundaries:
 ///   ESC]633;C BEL          — a command has been read and is about to execute
 ///   ESC]633;D;&lt;exit&gt; BEL   — the command finished with the given exit code
+///   ESC]633;P;Cwd=&lt;dir&gt; BEL — the working directory at the prompt (sent before D); "\" and ";"
+///                            and control characters are escaped as "\\" and "\xHH"
 /// Because the hooks are installed via startup files (never typed into the terminal),
 /// nothing is echoed and nothing can leak into the user-facing terminal.
 /// </summary>
@@ -127,8 +129,19 @@ public static class ShellIntegration
         if [ -r /etc/bash.bashrc ]; then . /etc/bash.bashrc; fi
         if [ -r "$HOME/.bashrc" ]; then . "$HOME/.bashrc"; fi
 
+        # Prints the OSC 633 working directory property; backslashes, ";" and control characters are escaped.
+        __oneware_report_cwd() {
+            local __ow_v=${PWD//\\/\\\\}
+            __ow_v=${__ow_v//;/\\x3b}
+            __ow_v=${__ow_v//$'\n'/\\x0a}
+            __ow_v=${__ow_v//$'\a'/\\x07}
+            __ow_v=${__ow_v//$'\e'/\\x1b}
+            printf '\033]633;P;Cwd=%s\007' "$__ow_v"
+        }
+
         __oneware_prompt_cmd() {
             local __ow_exit=$?
+            __oneware_report_cwd
             printf '\033]633;D;%s\007' "$__ow_exit"
             return $__ow_exit
         }
@@ -163,8 +176,20 @@ public static class ShellIntegration
             printf '\033]633;C\007'
         }
 
+        # Prints the OSC 633 working directory property; backslashes, ";" and control characters are escaped.
+        __oneware_report_cwd() {
+            local __ow_v=${PWD//\\/\\\\}
+            __ow_v=${__ow_v//;/\\x3b}
+            __ow_v=${__ow_v//$'\n'/\\x0a}
+            __ow_v=${__ow_v//$'\a'/\\x07}
+            __ow_v=${__ow_v//$'\e'/\\x1b}
+            printf '\033]633;P;Cwd=%s\007' "$__ow_v"
+        }
+
         __oneware_precmd() {
-            printf '\033]633;D;%s\007' "$?"
+            local __ow_exit=$?
+            __oneware_report_cwd
+            printf '\033]633;D;%s\007' "$__ow_exit"
         }
 
         autoload -Uz add-zsh-hook
@@ -207,7 +232,13 @@ public static class ShellIntegration
             # happen after this script ran. Re-installing on every prompt keeps the
             # command-started marker working regardless of module load order.
             __OneWareEnsureReadLineHook
-            $__ow_out = "$([char]0x1b)]633;D;$__ow_exit$([char]0x07)"
+            $__ow_out = ""
+            $__ow_location = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation.ProviderPath
+            if ($__ow_location) {
+                $__ow_cwd = $__ow_location.Replace('\', '\\').Replace(';', '\x3b')
+                $__ow_out += "$([char]0x1b)]633;P;Cwd=$__ow_cwd$([char]0x07)"
+            }
+            $__ow_out += "$([char]0x1b)]633;D;$__ow_exit$([char]0x07)"
             $__ow_out += if ($Global:__OneWareOriginalPrompt) { $Global:__OneWareOriginalPrompt.Invoke() } else { "PS $PWD> " }
             return $__ow_out
         }

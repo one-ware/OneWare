@@ -86,6 +86,20 @@ public class ShellIntegrationParserTests
     }
 
     [Fact]
+    public void Feed_DecodesTheWorkingDirectoryProperty()
+    {
+        var parser = new ShellIntegrationParser();
+        var events = new List<ShellIntegrationEvent>();
+
+        var text = FeedText(parser, "\u001b]633;P;Cwd=/tmp/a\\\\b\\x3bc d\\x0aé\u0007$ ", events);
+
+        Assert.Equal("$ ", text);
+        var integrationEvent = Assert.Single(events);
+        Assert.Equal("/tmp/a\\b;c d\né", integrationEvent.WorkingDirectory);
+        Assert.Null(new ShellIntegrationEvent('D', "0").WorkingDirectory);
+    }
+
+    [Fact]
     public void Feed_PassesCsiAndPlainEscapesThrough()
     {
         var parser = new ShellIntegrationParser();
@@ -178,6 +192,45 @@ public class PseudoTerminalConnectionTests
         var exitCode = await completed.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
         Assert.Equal(42, exitCode);
+    }
+
+    [Fact]
+    public async Task ShellIntegration_ReportsTheWorkingDirectoryOnUnix()
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        var directory = Directory.CreateTempSubdirectory("oneware cwd;é").FullName;
+        try
+        {
+            var bash = "/bin/bash";
+            var config = ShellIntegration.GetSpawnConfig(bash);
+
+            var provider = new UnixPseudoTerminalProvider();
+            using var terminal = provider.Create(80, 24, Path.GetTempPath(), bash, config.Environment,
+                config.Arguments);
+            Assert.NotNull(terminal);
+
+            using var connection = new PseudoTerminalConnection(terminal);
+            var started = false;
+            var completed = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            connection.IntegrationEvent += (_, args) =>
+            {
+                if (args.IsCommandStarted)
+                    started = true;
+                else if (args.IsCommandCompleted && started)
+                    completed.TrySetResult(args.ExitCode);
+            };
+            connection.Connect();
+
+            connection.SendData(Encoding.UTF8.GetBytes($"cd -- '{directory}'\r"));
+
+            Assert.Equal(0, await completed.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.Equal(directory, connection.CurrentWorkingDirectory);
+        }
+        finally
+        {
+            Directory.Delete(directory);
+        }
     }
 
     [Fact]

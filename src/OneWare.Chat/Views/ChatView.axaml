@@ -101,27 +101,16 @@
                 <!-- Loading indicator + queued messages are pinned below the conversation and kept
                      outside the scrolling region so the virtualizing message list above can virtualize
                      against the viewport (it must be the direct content of the ScrollViewer). -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="10 0 10 4" Spacing="5">
-                    <!-- Loading Indicator -->
-                    <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5"
-                          IsVisible="{Binding IsBusy}">
-                        <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" />
+                <StackPanel DockPanel.Dock="Bottom" Margin="10 6 0 0" Spacing="5">
+                    <!-- Activity indicator: agent working, or a send waiting for the service to connect -->
+                    <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="6"
+                          IsVisible="{Binding IsActivityVisible}">
+                        <controls:LogoLoader VerticalAlignment="Center" />
 
-                        <TextBlock Grid.Column="1"
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
-                                   FontStyle="Italic"
-                                   Text="{Binding WorkingStatusText}" />
-                    </Grid>
-
-                    <!-- Waiting for the chat service to finish connecting -->
-                    <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="5"
-                          IsVisible="{Binding IsWaitingForConnection}">
-                        <controls:Spinner Width="12" Height="12" VerticalAlignment="Center" />
-
-                        <TextBlock Grid.Column="1"
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="11"
-                                   FontStyle="Italic"
-                                   Text="{Binding StatusText}" />
+                        <controls:ShimmerTextBlock Grid.Column="1"
+                                                   Foreground="{DynamicResource ThemeForegroundBrush}"
+                                                   FontSize="11" FontStyle="Italic"
+                                                   Text="{Binding WorkingStatusText}" />
                     </Grid>
 
                     <!-- Queued messages (dimmed, pinned below the conversation) -->

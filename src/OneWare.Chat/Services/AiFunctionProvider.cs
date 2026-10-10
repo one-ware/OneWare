@@ -379,14 +379,15 @@ public class AiFunctionProvider(
             }));
     }
 
-    private static readonly ConcurrentDictionary<Type, PropertyInfo?> ToolCallIdProperties = new();
+    private static readonly ConcurrentDictionary<(Type Type, string Name), PropertyInfo?> BackendContextProperties =
+        new();
 
     /// <summary>
-    /// Reads the tool call id the AI backend assigned to this invocation. Backends pass their
-    /// invocation context in <see cref="AIFunctionArguments.Context"/>; the shape of that context is
-    /// backend specific, so it is only probed for a <c>ToolCallId</c>.
+    /// Reads a string the AI backend attached to this invocation, such as its <c>ToolCallId</c> or
+    /// <c>SessionId</c>. Backends pass their invocation context in <see cref="AIFunctionArguments.Context"/>;
+    /// the shape of that context is backend specific, so it is only probed for a property of that name.
     /// </summary>
-    private static string? TryGetBackendToolCallId(AIFunctionArguments arguments)
+    internal static string? TryGetBackendContextValue(AIFunctionArguments arguments, string propertyName)
     {
         if (arguments.Context == null) return null;
 
@@ -394,13 +395,13 @@ public class AiFunctionProvider(
         {
             if (value == null) continue;
 
-            var property = ToolCallIdProperties.GetOrAdd(value.GetType(),
-                type => type.GetProperty("ToolCallId", BindingFlags.Public | BindingFlags.Instance));
+            var property = BackendContextProperties.GetOrAdd((value.GetType(), propertyName),
+                key => key.Type.GetProperty(key.Name, BindingFlags.Public | BindingFlags.Instance));
 
             if (property?.PropertyType != typeof(string)) continue;
 
-            if (property.GetValue(value) is string toolCallId && !string.IsNullOrWhiteSpace(toolCallId))
-                return toolCallId;
+            if (property.GetValue(value) is string text && !string.IsNullOrWhiteSpace(text))
+                return text;
         }
 
         return null;
@@ -446,12 +447,15 @@ public class AiFunctionProvider(
             provider._activeFunctions[id] = functionCancellationSource;
 
             var context = new AiFunctionInvocationContext(id,
-                output => provider.RaiseFunctionProgress(id, output));
+                output => provider.RaiseFunctionProgress(id, output))
+            {
+                SessionId = TryGetBackendContextValue(arguments, "SessionId")
+            };
             Exception? exception = null;
             try
             {
                 await provider.NotifyFunctionStartedAsync(id, friendlyName!, definition.Name,
-                    TryGetBackendToolCallId(arguments), detail);
+                    TryGetBackendContextValue(arguments, "ToolCallId"), detail);
 
                 if (definition.RunOnUiThread)
                 {

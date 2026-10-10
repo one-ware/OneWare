@@ -41,6 +41,11 @@ public class UnixPseudoTerminalProvider : IPseudoTerminalProvider
 
         }
 
+        // bash and zsh keep an inherited PWD that names the start directory, so the shell reports the path as
+        // given instead of resolving symlinks (it would otherwise show a different spelling than after a cd).
+        if (Path.IsPathRooted(initialDirectory)) envMap["PWD"] = initialDirectory;
+        envMap.Remove("OLDPWD");
+
         var envVars = new List<string>(envMap.Count + 2);
         foreach (var pair in envMap)
             envVars.Add($"{pair.Key}={pair.Value}");

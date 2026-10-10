@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
@@ -50,7 +51,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     // updates are rate limited.
     private const long ProgressReportIntervalMs = 250;
 
-    // Hard cap on captured output so a runaway command cannot exhaust memory.
+    // Hard cap on captured output so a runaway command cannot exhaust memory. The beginning and the
+    // end are kept; the middle is replaced by a marker.
     private const int MaxCapturedOutputChars = 1_000_000;
 
     // Applied when the caller passes no timeout. A command whose completion marker never
@@ -58,12 +60,13 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     // forever; automation must always terminate.
     private static readonly TimeSpan DefaultCommandTimeout = TimeSpan.FromHours(1);
 
-    // Automation terminals are pooled per id so that concurrent commands (e.g. an AI agent
-    // running several shell commands at once) each get their own terminal tab instead of
-    // interleaving on a single shell. Idle terminals in a pool are reused for sequential
-    // commands so shell state (working directory, environment, ...) is preserved.
+    // Automation terminals are pooled per id (e.g. one pool per AI chat session) so that concurrent
+    // commands each get their own terminal tab instead of interleaving on a single shell. Idle
+    // terminals in a pool are reused for sequential commands so shell state (working directory,
+    // environment, ...) is preserved. The pool also remembers the directory its last command
+    // ended in, so every shell of the pool continues from there.
     private readonly object _automationLock = new();
-    private readonly Dictionary<string, List<TerminalTabModel>> _automationPools = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, AutomationPool> _automationPools = new(StringComparer.Ordinal);
     private readonly HashSet<TerminalViewModel> _busyAutomationTerminals = new();
     private readonly IMainDockService _mainDockService;
     private readonly IPaths _paths;
@@ -133,10 +136,8 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
     
     public TerminalTabModel NewTerminal(string name, string? workingDirectory = null, bool select = true)
     {
-        var homeFolder = _projectExplorerService.ActiveProject?.FullPath;
+        var homeFolder = workingDirectory ?? _projectExplorerService.ActiveProject?.FullPath ?? _paths.ProjectsDirectory;
 
-        homeFolder ??= workingDirectory ?? _paths.ProjectsDirectory;
-        
         var title = GetUniqueTitle(name);
 
         var tab = new TerminalTabModel(title, new TerminalViewModel(homeFolder), this);
@@ -173,7 +174,7 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             return new TerminalExecutionResult("[terminal could not be started]", -1, true);
         }
 
-        var output = new StringBuilder();
+        var output = new HeadTailOutputBuffer(MaxCapturedOutputChars);
         var stateLock = new object();
         var resultTcs =
             new TaskCompletionSource<TerminalExecutionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -208,8 +209,6 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         void AppendOutput(string text)
         {
             output.Append(text);
-            if (output.Length > MaxCapturedOutputChars)
-                output.Remove(0, output.Length - MaxCapturedOutputChars);
         }
 
         void CompleteWithResult(bool exitCodeIsKnown)
@@ -475,7 +474,19 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             if (closeWhenDone) terminal.Close();
         }
 
-        return result;
+        long outputLength, outputLineCount;
+        lock (stateLock)
+        {
+            outputLength = output.TotalLength;
+            outputLineCount = output.LineCount;
+        }
+
+        return result with
+        {
+            WorkingDirectory = connection.CurrentWorkingDirectory,
+            OutputLength = outputLength,
+            OutputLineCount = outputLineCount
+        };
     }
 
     /// <summary>
@@ -578,18 +589,36 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         return await resultTask.WaitAsync(linkedCts.Token);
     }
 
-    public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,
+    public Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,
         string? workingDirectory = null, bool showInUi = false, TimeSpan? timeout = null,
         IProgress<string>? outputProgress = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteInTerminalAsync(command, id, id, workingDirectory, showInUi, timeout, outputProgress,
+            cancellationToken);
+    }
+
+    public async Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id, string title,
+        string? workingDirectory, bool showInUi, TimeSpan? timeout, IProgress<string>? outputProgress,
+        CancellationToken cancellationToken)
     {
         if (showInUi)
             _mainDockService.Show<ITerminalManagerService>();
 
-        var tab = AcquireAutomationTab(id, workingDirectory, showInUi);
+        var (tab, pool, changeDirectory) = AcquireAutomationTab(id, title, workingDirectory, showInUi);
         try
         {
-            return await ExecuteInTerminalAsync(tab.Terminal, command, timeout, closeWhenDone: false, outputProgress,
-                cancellationToken);
+            if (changeDirectory != null)
+                command = PrefixWorkingDirectory(command, changeDirectory,
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+            var result = await ExecuteInTerminalAsync(tab.Terminal, command, timeout, closeWhenDone: false,
+                outputProgress, cancellationToken);
+
+            if (result.WorkingDirectory != null)
+                lock (_automationLock)
+                    pool.WorkingDirectory = result.WorkingDirectory;
+
+            return result;
         }
         finally
         {
@@ -605,31 +634,60 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         return ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, null, cancellationToken);
     }
 
-    private TerminalTabModel AcquireAutomationTab(string id, string? workingDirectory, bool select)
+    /// <summary>
+    /// Runs <paramref name="command" /> in <paramref name="workingDirectory" /> on the same command line, so a
+    /// multi-line command or the encoded PowerShell block keeps working: PowerShell on Windows, bash/zsh elsewhere.
+    /// The shell stays in that directory afterwards.
+    /// </summary>
+    internal static string PrefixWorkingDirectory(string command, string workingDirectory, bool isWindows)
+    {
+        return isWindows
+            ? $"Set-Location -LiteralPath '{workingDirectory.Replace("'", "''")}' -ErrorAction Stop; {command}"
+            : $"cd -- '{workingDirectory.Replace("'", "'\\''")}' && {command}";
+    }
+
+    /// <summary>
+    /// Decides whether a reused shell has to change directory before the command: it must end up in the
+    /// requested directory, or else in the directory the pool's last command ended in (another shell of the
+    /// pool may have moved on). Returns null when the shell is already there.
+    /// </summary>
+    internal static string? GetDirectoryChange(string? requestedDirectory, string? poolDirectory,
+        string? shellDirectory)
+    {
+        var target = requestedDirectory ?? poolDirectory;
+        if (target == null) return null;
+        if (shellDirectory != null && shellDirectory.EqualPaths(target)) return null;
+        // A shell that does not report its directory is only moved on request.
+        return shellDirectory == null && requestedDirectory == null ? null : target;
+    }
+
+    private (TerminalTabModel Tab, AutomationPool Pool, string? ChangeDirectory) AcquireAutomationTab(string id,
+        string title, string? workingDirectory, bool select)
     {
         lock (_automationLock)
         {
             if (!_automationPools.TryGetValue(id, out var pool))
             {
-                pool = new List<TerminalTabModel>();
+                pool = new AutomationPool();
                 _automationPools[id] = pool;
             }
 
             // Reuse an idle terminal from the pool so sequential commands keep their shell state.
-            var idle = pool.FirstOrDefault(t => !_busyAutomationTerminals.Contains(t.Terminal));
+            var idle = pool.Tabs.FirstOrDefault(t => !_busyAutomationTerminals.Contains(t.Terminal));
             if (idle != null)
             {
                 _busyAutomationTerminals.Add(idle.Terminal);
                 if (select) SelectedTerminalTab = idle;
-                return idle;
+                var shellDirectory = (idle.Terminal.Connection as PseudoTerminalConnection)?.CurrentWorkingDirectory;
+                return (idle, pool, GetDirectoryChange(workingDirectory, pool.WorkingDirectory, shellDirectory));
             }
 
             // Every pooled terminal is currently busy (or none exist yet): open another tab so
             // concurrent commands run side by side instead of colliding on one shell.
-            var tab = NewTerminal(id, workingDirectory, select);
-            pool.Add(tab);
+            var tab = NewTerminal(title, workingDirectory ?? pool.WorkingDirectory, select);
+            pool.Tabs.Add(tab);
             _busyAutomationTerminals.Add(tab.Terminal);
-            return tab;
+            return (tab, pool, null);
         }
     }
 
@@ -648,8 +706,15 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
             _busyAutomationTerminals.Remove(tab.Terminal);
 
             foreach (var pool in _automationPools.Values)
-                pool.Remove(tab);
+                pool.Tabs.Remove(tab);
         }
+    }
+
+    private sealed class AutomationPool
+    {
+        public List<TerminalTabModel> Tabs { get; } = new();
+
+        public string? WorkingDirectory { get; set; }
     }
 
     private string GetUniqueTitle(string baseName)

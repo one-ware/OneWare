@@ -82,6 +82,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private const string DefaultWorkingStatus = "Working…";
 
+    // What the agent is doing during the current turn, shown next to the busy spinner.
+    private readonly ChatActivityStatus _activity = new();
+
     private sealed record PendingLocalMessage(
         string Content,
         ChatSendMode Mode,
@@ -165,6 +168,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 SteerCommand.NotifyCanExecuteChanged();
                 QueueCommand.NotifyCanExecuteChanged();
                 AbortCommand.NotifyCanExecuteChanged();
+                OnBusyChanged(value);
+                OnPropertyChanged(nameof(IsActivityVisible));
             }
         }
     }
@@ -205,9 +210,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 SendCommand.NotifyCanExecuteChanged();
                 SteerCommand.NotifyCanExecuteChanged();
                 QueueCommand.NotifyCanExecuteChanged();
+                OnPropertyChanged(nameof(IsActivityVisible));
+                UpdateWorkingStatus();
             }
         }
     }
+
+    /// <summary>Whether the activity indicator below the conversation is shown.</summary>
+    public bool IsActivityVisible => IsBusy || IsWaitingForConnection;
 
     /// <summary>
     /// True while the selected service is still initializing/starting up. Sending is allowed in
@@ -228,7 +238,10 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public string StatusText
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            if (SetProperty(ref field, value) && IsWaitingForConnection) UpdateWorkingStatus();
+        }
     } = "Starting...";
 
     public ObservableCollection<IChatMessage> Messages { get; set; } = new();
@@ -240,13 +253,14 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
     public ObservableCollection<IChatMessage> QueuedMessages { get; } = new();
 
     /// <summary>
-    /// Text shown next to the working spinner. Switches to "Steering…" while a steered message
-    /// is being applied to the current turn.
+    /// Text of the activity indicator: the connection status while a send waits for the service, else
+    /// what the agent is doing (thinking, writing, running a tool, waiting for approval, steering, ...)
+    /// and how long the turn has been running.
     /// </summary>
     public string WorkingStatusText
     {
         get;
-        set => SetProperty(ref field, value);
+        private set => SetProperty(ref field, value);
     } = DefaultWorkingStatus;
 
     /// <summary>Whether the current planning turn already offered how to continue.</summary>
@@ -511,7 +525,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         QueuedMessages.Clear();
         _pendingLocalMessages.Clear();
         _cancelledQueuedMessages.Clear();
-        WorkingStatusText = DefaultWorkingStatus;
+        ResetActivity();
         _assistantMessagesById.Clear();
         _turnAssistantMessages.Clear();
         _assistantReasoningById.Clear();
@@ -582,7 +596,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             case ChatSendMode.Steer:
                 AddMessage(userMessage);
                 _pendingLocalMessages.Enqueue(new PendingLocalMessage(prompt, mode, null));
-                WorkingStatusText = "Steering…";
+                _activity.IsSteering = true;
+                UpdateWorkingStatus();
                 break;
 
             default:
@@ -622,7 +637,11 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
             AddErrorMessage(ex.Message);
             if (mode == ChatSendMode.Send) IsBusy = false;
-            if (mode == ChatSendMode.Steer) WorkingStatusText = DefaultWorkingStatus;
+            if (mode == ChatSendMode.Steer)
+            {
+                _activity.IsSteering = false;
+                UpdateWorkingStatus();
+            }
         }
     }
 
@@ -888,8 +907,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             OfferPlanOptionsIfMissing();
 
             IsBusy = false;
-            // Safety: never let the steering indicator stick past the end of a turn.
-            WorkingStatusText = DefaultWorkingStatus;
+            // Safety: never let a status (e.g. steering) stick past the end of a turn.
+            ResetActivity();
 
             // The turn is complete — persist it immediately instead of waiting for the
             // throttled auto save.
@@ -982,6 +1001,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     message.IsStreaming = true;
                     message.Content += x.Content;
                     SetSubAgentStatus(x.AgentId, "Responding…");
+                    SetPhase(x.AgentId, ChatActivityPhase.Writing);
                     NotifyContentAdded();
                 });
                 break;
@@ -996,6 +1016,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     message.Content = x.Content;
                     message.IsStreaming = false;
                     if (!string.IsNullOrWhiteSpace(x.Model)) message.Model = x.Model;
+                    SetPhase(x.AgentId, ChatActivityPhase.Working);
                     NotifyContentAdded();
                 });
                 break;
@@ -1008,6 +1029,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     message.IsStreaming = true;
                     message.Content += x.Content;
                     SetSubAgentStatus(x.AgentId, "Thinking…");
+                    SetPhase(x.AgentId, ChatActivityPhase.Thinking);
                     NotifyContentAdded();
                 });
                 break;
@@ -1019,6 +1041,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     var message = GetOrCreateAssistantReasoningMessage(x.ReasoningId, x.AgentId);
                     message.Content = x.Content;
                     message.IsStreaming = false;
+                    SetPhase(x.AgentId, ChatActivityPhase.Working);
                     NotifyContentAdded();
                 });
                 break;
@@ -1044,8 +1067,18 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             case ChatToolExecutionStartEvent x:
             {
                 // Tool calls of the main agent are rendered from the function provider events,
-                // which also carry the live output and a stop button.
-                if (x.AgentId == null) break;
+                // which also carry the live output and a stop button. Tools of the backend itself
+                // are only reflected in the status.
+                if (x.AgentId == null)
+                {
+                    if (!x.IsClientTool && !string.IsNullOrWhiteSpace(x.ToolCallId))
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            _activity.ToolStarted(x.ToolCallId, x.Tool);
+                            UpdateWorkingStatus();
+                        });
+                    break;
+                }
 
                 Dispatcher.UIThread.Post(() =>
                 {
@@ -1056,7 +1089,12 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             }
             case ChatToolExecutionCompleteEvent x:
             {
-                Dispatcher.UIThread.Post(() => CompleteSubAgentTool(x));
+                Dispatcher.UIThread.Post(() =>
+                {
+                    CompleteSubAgentTool(x);
+                    _activity.ToolCompleted(x.ToolCallId);
+                    UpdateWorkingStatus();
+                });
                 break;
             }
             case ChatSkillLoadedEvent x:
@@ -1085,7 +1123,8 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                                 break;
                             case ChatSendMode.Steer:
                                 // Steering has been applied to the current turn.
-                                WorkingStatusText = DefaultWorkingStatus;
+                                _activity.IsSteering = false;
+                                UpdateWorkingStatus();
                                 break;
                             // Normal send: already visible, nothing to do.
                         }
@@ -1122,8 +1161,15 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                 Dispatcher.UIThread.Post(() =>
                 {
                     var msg = new ChatMessagePermissionRequestViewModel(x);
-                    msg.CloseAction = () => Messages.Remove(msg);
+                    msg.CloseAction = () =>
+                    {
+                        Messages.Remove(msg);
+                        _activity.PromptClosed(msg);
+                        UpdateWorkingStatus();
+                    };
                     AddMessage(msg);
+                    _activity.PromptOpened(msg, "Waiting for approval…");
+                    UpdateWorkingStatus();
                     NotifyContentAdded();
                 });
                 break;
@@ -1142,7 +1188,16 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AddMessage(new ChatMessageUserInputRequestViewModel(x));
+                    var msg = new ChatMessageUserInputRequestViewModel(x);
+                    AddMessage(msg);
+                    _activity.PromptOpened(msg, "Waiting for your answer…");
+                    msg.PropertyChanged += (_, args) =>
+                    {
+                        if (args.PropertyName != nameof(ChatMessageUserInputRequestViewModel.IsAnswered)) return;
+                        _activity.PromptClosed(msg);
+                        UpdateWorkingStatus();
+                    };
+                    UpdateWorkingStatus();
                     NotifyContentAdded();
                 });
                 break;
@@ -1222,7 +1277,7 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             _turnAssistantMessages.Clear();
             _assistantReasoningById.Clear();
             IsBusy = false;
-            WorkingStatusText = DefaultWorkingStatus;
+            ResetActivity();
 
             if (SelectedChatService is { } service)
             {
@@ -1339,6 +1394,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
             () => _aiFunctionProvider.CancelFunction(newMessage.Id),
             () => newMessage.IsToolRunning);
 
+        _activity.ToolStarted(function.Id, function.FunctionName);
+        UpdateWorkingStatus();
+
         var subAgent = DequeueSubAgentToolClaim(function.ToolCallId);
         if (subAgent != null)
         {
@@ -1355,6 +1413,9 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
 
     private void OnFunctionCompleted(object? sender, AiFunctionCompletedEvent function)
     {
+        _activity.ToolCompleted(function.Id);
+        UpdateWorkingStatus();
+
         var toolFinished = FindToolMessage(function.Id);
         if (toolFinished == null) return;
 
@@ -1396,10 +1457,20 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
         // A nested sub-agent belongs into the block of the agent that spawned it.
         AddMessage(subAgent, started.ParentSubAgentId);
         _subAgents[started.Id] = subAgent;
+
+        // A background sub-agent outlives the turn, so the turn does not wait for it.
+        if (!started.IsBackground)
+        {
+            _activity.SubAgentStarted(started.Id, started.DisplayName);
+            UpdateWorkingStatus();
+        }
     }
 
     private void CompleteSubAgent(ChatSubAgentCompletedEvent completed)
     {
+        _activity.SubAgentCompleted(completed.Id);
+        UpdateWorkingStatus();
+
         if (!_subAgents.Remove(completed.Id, out var subAgent)) return;
 
         FinishRunningItems(subAgent);
@@ -1425,6 +1496,34 @@ public partial class ChatViewModel : ExtendedTool, IChatManagerService
                     break;
             }
         }
+    }
+
+    /// <summary>Only the main agent's phase is shown; sub-agents report their phase in their own block.</summary>
+    private void SetPhase(string? agentId, ChatActivityPhase phase)
+    {
+        if (agentId != null || _activity.Phase == phase) return;
+
+        _activity.Phase = phase;
+        UpdateWorkingStatus();
+    }
+
+    private void OnBusyChanged(bool busy)
+    {
+        _activity.Reset();
+        UpdateWorkingStatus();
+    }
+
+    private void ResetActivity()
+    {
+        _activity.Reset();
+        UpdateWorkingStatus();
+    }
+
+    private void UpdateWorkingStatus()
+    {
+        WorkingStatusText = IsWaitingForConnection && !IsBusy
+            ? StatusText
+            : _activity.GetText();
     }
 
     private void SetSubAgentStatus(string? agentId, string status)

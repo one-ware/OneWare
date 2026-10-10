@@ -105,6 +105,10 @@
                     </StackPanel>
                     <Slider Value="40" />
                     <ProgressBar Value="60" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <controls:LogoLoader VerticalAlignment="Center" />
+                        <controls:ShimmerTextBlock Text="Thinking…" VerticalAlignment="Center" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
 

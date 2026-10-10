@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:converters="using:Avalonia.Controls.Converters">
+        xmlns:converters="using:Avalonia.Controls.Converters"
+        xmlns:controls="using:OneWare.Essentials.Controls">
 
     <Design.PreviewWith>
         <StackPanel Margin="20" Spacing="12" Width="300">
@@ -9,6 +10,10 @@
             <ProgressBar Classes="large" Value="0.65" Maximum="1" ShowProgressText="True" />
             <ProgressBar IsIndeterminate="True" />
             <ProgressBar Value="30" Orientation="Vertical" Height="80" HorizontalAlignment="Left" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <controls:LogoLoader VerticalAlignment="Center" />
+                <controls:ShimmerTextBlock Text="Thinking…" VerticalAlignment="Center" />
+            </StackPanel>
         </StackPanel>
     </Design.PreviewWith>
 
@@ -166,6 +171,11 @@
     </Style>
     <Style Selector=":is(Button).primary ProgressBar.fill, :is(Button).danger ProgressBar.fill">
         <Setter Property="Foreground" Value="{DynamicResource HighlightForegroundMidBrush}" />
+    </Style>
+
+    <!-- LogoLoader: calm busy indicator, the app icon glyph with a slow glow in the text color. -->
+    <Style Selector="controls|LogoLoader">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
     </Style>
 
 </Styles>

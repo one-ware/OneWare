@@ -270,6 +270,12 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
   `timeout` is the only hard upper bound. `TerminalExecutionResult.TimedOut` is `true` when
   the command was aborted (timeout or cancellation); in that case the terminal is interrupted
   with Ctrl+C and, if that fails, its process tree is killed.
+  Calls with the same `id` share a persistent shell (concurrent calls get extra tabs), so the
+  working directory and environment carry over. A `workingDirectory` moves the shell there and
+  the move persists; without one the command runs where the previous one ended.
+  `TerminalExecutionResult.WorkingDirectory` reports the shell's directory afterwards (null
+  without shell integration). The overload with a `title` parameter sets the tab title
+  separately from the pool `id`, e.g. one pool per chat session titled "AI Chat".
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 
