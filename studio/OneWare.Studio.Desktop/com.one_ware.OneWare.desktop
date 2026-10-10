@@ -1,9 +1,9 @@
 [Desktop Entry]
 Name=OneWare Studio
 Comment=IDE for Electronics Development
-TryExec=oneware
+TryExec=oneware-studio
 GenericName=Development Environment
-Exec=oneware %u
+Exec=oneware-studio %u
 Icon=com.one_ware.OneWare
 Type=Application
 Terminal=false
