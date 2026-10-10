@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
+             x:Class="OneWare.Chat.Views.ChatBlockerView"
+             x:DataType="viewModels:ChatSessionViewModel">
+    <!-- Why the chat's service can't be used (login, subscription, ...) and how to fix it -->
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" MaxWidth="340">
+        <TextBlock Text="{Binding Blocker.Title, FallbackValue={x:Null}}" FontWeight="Bold"
+                   FontSize="15" TextAlignment="Center" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
+                   TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8"
+                    Margin="0 6 0 0">
+            <Button Classes="RoundButton PrimaryButton" Padding="10 5"
+                    Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding $self}"
+                    Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
+                    IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+            <Button Classes="RoundButton" Padding="10 5"
+                    Command="{Binding InitializeCurrentCommand}"
+                    IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
+                    ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="10"
+                           Width="10"
+                           VerticalAlignment="Center" />
+                    <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <TextBlock Text="Checking..." HorizontalAlignment="Center" FontSize="11"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                   IsVisible="{Binding InitializeCurrentCommand.IsRunning}" />
+    </StackPanel>
+</UserControl>

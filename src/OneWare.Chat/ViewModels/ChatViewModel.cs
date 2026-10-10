@@ -126,7 +126,9 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
         get;
         private set
         {
-            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(ComposerSession));
+            if (!SetProperty(ref field, value)) return;
+            OnPropertyChanged(nameof(ComposerSession));
+            OnPropertyChanged(nameof(SelectedChatService));
         }
     }
 

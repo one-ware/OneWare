@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
+             xmlns:views="clr-namespace:OneWare.Chat.Views"
              xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:behaviors="clr-namespace:OneWare.Chat.Behaviors"
@@ -11,7 +12,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
-    <Grid RowDefinitions="*, Auto, Auto, Auto" RowSpacing="4">
+    <Grid RowDefinitions="*, Auto, Auto" RowSpacing="4">
         <Panel>
             <!-- Overview: all chats, working ones first, then newest first -->
             <DockPanel IsVisible="{Binding IsOverviewVisible}">
@@ -57,7 +58,7 @@
             </DockPanel>
 
             <!-- The shown chat -->
-            <Grid RowDefinitions="Auto, *" RowSpacing="4"
+            <Grid RowDefinitions="Auto, *, Auto" RowSpacing="4"
                   IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}"
                   DataContext="{Binding CurrentSession}">
                 <Border Background="{DynamicResource ThemeBackgroundBrush}"
@@ -189,36 +190,7 @@
                     </DockPanel>
 
                     <!-- Replaces the chat while the selected service cannot be used (login, subscription, ...) -->
-                    <Grid IsVisible="{Binding IsBlocked}" Margin="20">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" MaxWidth="340">
-                            <TextBlock Text="{Binding Blocker.Title, FallbackValue={x:Null}}" FontWeight="Bold"
-                                       FontSize="15" TextAlignment="Center" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
-                                       TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8"
-                                        Margin="0 6 0 0">
-                                <Button Classes="RoundButton PrimaryButton" Padding="10 5"
-                                        Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
-                                        CommandParameter="{Binding $self}"
-                                        Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
-                                        IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
-                                <Button Classes="RoundButton" Padding="10 5"
-                                        Command="{Binding InitializeCurrentCommand}"
-                                        IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
-                                        ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">
-                                    <StackPanel Orientation="Horizontal" Spacing="5">
-                                        <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="10"
-                                               Width="10"
-                                               VerticalAlignment="Center" />
-                                        <TextBlock Text="Refresh" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                            <TextBlock Text="Checking..." HorizontalAlignment="Center" FontSize="11"
-                                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                                       IsVisible="{Binding InitializeCurrentCommand.IsRunning}" />
-                        </StackPanel>
-                    </Grid>
+                    <views:ChatBlockerView IsVisible="{Binding IsBlocked}" Margin="20" />
 
                     <!--
                     <Border VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -237,57 +209,68 @@
                     -->
                 </Panel>
 
+                <Border Grid.Row="2" Margin="10 0" Background="{DynamicResource ChatBubbleBrush}"
+                        Classes="RoundBorder"
+                        DataContext="{Binding #ChatViewView.DataContext}" x:DataType="viewModels:ChatViewModel">
+                    <Border.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="!!AiFileEditService.ActiveEdits.Count" />
+                            <Binding Path="!CurrentSession.IsBlocked" FallbackValue="False" />
+                        </MultiBinding>
+                    </Border.IsVisible>
+                    <StackPanel Orientation="Vertical" Spacing="5">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                                <Button Command="{Binding AiFileEditService.UndoAllAsync}"
+                                        ToolTip.Tip="Discard all file changes">
+                                    <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
+                                </Button>
+                                <Button Command="{Binding AiFileEditService.AcceptAllAsync}"
+                                        ToolTip.Tip="Accept all file changes">
+                                    <TextBlock Text="Accept All" Foreground="{DynamicResource HighlightBrush}" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
+                            <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
+                                            CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
+                                            HorizontalAlignment="Stretch" Background="Transparent">
+                                            <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
+                                                <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1" Text="{Binding AddedLines}" Foreground="Lime" />
+                                                <TextBlock Grid.Column="2" Text="{Binding RemovedLines}"
+                                                           Foreground="OrangeRed" />
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Panel>
 
-        <Border Grid.Row="1" Margin="10 4 10 0" Background="{DynamicResource ChatBubbleBrush}"
-                Classes="RoundBorder"
-                DataContext="{Binding #ChatViewView.DataContext}" x:DataType="viewModels:ChatViewModel">
+        <!-- On the overview, a service that can't be used yet (login, subscription, ...) replaces the input box -->
+        <Border Grid.Row="1" Margin="10 0" Classes="card" DataContext="{Binding ComposerSession}"
+                x:DataType="viewModels:ChatSessionViewModel">
             <Border.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
-                    <Binding Path="!!AiFileEditService.ActiveEdits.Count" />
-                    <Binding Path="!IsOverviewVisible" />
-                    <Binding Path="!CurrentSession.IsBlocked" FallbackValue="False" />
+                    <Binding Path="IsBlocked" />
+                    <Binding Path="#ChatViewView.((viewModels:ChatViewModel)DataContext).IsOverviewVisible"
+                             FallbackValue="False" />
                 </MultiBinding>
             </Border.IsVisible>
-            <StackPanel Orientation="Vertical" Spacing="5">
-                <Grid ColumnDefinitions="Auto, *, Auto">
-                    <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
-                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                        <Button Command="{Binding AiFileEditService.UndoAllAsync}"
-                                ToolTip.Tip="Discard all file changes">
-                            <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
-                        </Button>
-                        <Button Command="{Binding AiFileEditService.AcceptAllAsync}"
-                                ToolTip.Tip="Accept all file changes">
-                            <TextBlock Text="Accept All" Foreground="{DynamicResource HighlightBrush}" />
-                        </Button>
-                    </StackPanel>
-                </Grid>
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
-                    <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button
-                                    Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowEditCommand, FallbackValue={x:Null}}"
-                                    CommandParameter="{Binding }" HorizontalContentAlignment="Stretch"
-                                    HorizontalAlignment="Stretch" Background="Transparent">
-                                    <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
-                                        <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1" Text="{Binding AddedLines}" Foreground="Lime" />
-                                        <TextBlock Grid.Column="2" Text="{Binding RemovedLines}"
-                                                   Foreground="OrangeRed" />
-                                    </Grid>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </StackPanel>
+            <views:ChatBlockerView Margin="10" />
         </Border>
 
-        <Border Grid.Row="2" DataContext="{Binding ComposerSession}"
+        <Border Grid.Row="1" DataContext="{Binding ComposerSession}"
                 Margin="10 0" Background="{DynamicResource EditorInputSurfaceBrush}"
                 Classes="RoundBorder" BorderThickness="1"
                 IsVisible="{Binding !IsBlocked}"
@@ -365,7 +348,7 @@
         </Border>
 
         <!-- Footer row: chat service selection (left) + service-specific extension (right) -->
-        <Border Grid.Row="3" DataContext="{Binding ComposerSession}"
+        <Border Grid.Row="2" DataContext="{Binding ComposerSession}"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}" Margin="10 0 10 4">
             <DockPanel LastChildFill="False" VerticalAlignment="Center">
                 <Button Name="MenuButton" DockPanel.Dock="Left" VerticalAlignment="Center">
