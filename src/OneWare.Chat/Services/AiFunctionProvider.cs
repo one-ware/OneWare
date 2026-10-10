@@ -272,6 +272,17 @@ public class AiFunctionProvider(
         }
     }
 
+    public string? GetFriendlyName(string functionName)
+    {
+        EnsureBuiltInsRegistered();
+        lock (_registrationLock)
+        {
+            var function = _registeredFunctions
+                .FirstOrDefault(f => string.Equals(f.Name, functionName, StringComparison.Ordinal));
+            return string.IsNullOrWhiteSpace(function?.FriendlyName) ? function?.Name : function.FriendlyName;
+        }
+    }
+
     public Func<AIFunctionArguments, string?>? GetConfirmationCheck(string functionName)
     {
         EnsureBuiltInsRegistered();

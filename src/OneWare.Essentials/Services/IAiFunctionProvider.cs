@@ -96,4 +96,10 @@ public interface IAiFunctionProvider
     /// or <see langword="null"/> if the function has no check or is not registered.
     /// </summary>
     Func<AIFunctionArguments, string?>? GetConfirmationCheck(string functionName);
+
+    /// <summary>
+    /// Returns the display name of the named function (e.g. "Execute In Terminal"), or <see langword="null"/> if it
+    /// is not registered.
+    /// </summary>
+    string? GetFriendlyName(string functionName) => null;
 }

@@ -69,7 +69,10 @@ public abstract class CopilotChatServiceBase(
     private CopilotSessionModelStore? _sessionModelStore;
     private bool _suppressModelSettingsWrite;
 
-    private readonly HashSet<string> _sessionApprovedTools = new();
+    // "Allow in this chat" approvals per Copilot session id, so a chat keeps its approvals while another chat
+    // is shown, and a chat opened on this instance later doesn't inherit them. Shared by all chats of one
+    // connection (see ConnectionOwner), so a chat reopened on another instance keeps them too.
+    private readonly Dictionary<string, HashSet<string>> _sessionApprovals = new(StringComparer.Ordinal);
     protected static readonly HttpClient ByokHttpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(15)
@@ -2343,8 +2346,6 @@ public abstract class CopilotChatServiceBase(
     {
         ReleasePendingInputRequests();
         ReleasePendingPlanRequests();
-        lock (_sessionApprovedTools)
-            _sessionApprovedTools.Clear();
         _requestedSessionId = null;
         await InitializeSessionAsync();
     }
@@ -3195,15 +3196,13 @@ public abstract class CopilotChatServiceBase(
         if (IsApprovalBypassed)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
-        // The user approved this tool for the rest of the session.
-        lock (_sessionApprovedTools)
-        {
-            if (_sessionApprovedTools.Contains(input.ToolName))
-                return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
-        }
-
         var check = toolProvider.GetConfirmationCheck(input.ToolName);
         if (check == null)
+            return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
+
+        // The user allowed this tool (or these terminal commands) in this chat.
+        if (GetToolApprovalScope(input.ToolName, input.ToolArgs) is { } scope &&
+            IsApprovedInChat(input.SessionId, scope.Keys))
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
         // ToolArgs can arrive as a JSON object or as a JSON-encoded string containing an object
@@ -3239,14 +3238,12 @@ public abstract class CopilotChatServiceBase(
         if (request is PermissionRequestCustomTool)
             return Task.FromResult(PermissionDecision.ApproveOnce());
 
-        var approvalKey = GetSessionApprovalKey(request);
+        var sessionId = invocation.SessionId;
+        var scope = GetApprovalScope(request);
 
-        // Already approved for this session — don't prompt again.
-        lock (_sessionApprovedTools)
-        {
-            if (_sessionApprovedTools.Contains(approvalKey))
-                return Task.FromResult(PermissionDecision.ApproveOnce());
-        }
+        // Already allowed in this chat — don't prompt again.
+        if (scope != null && IsApprovedInChat(sessionId, scope.Keys))
+            return Task.FromResult(PermissionDecision.ApproveOnce());
 
         var message = BuildPermissionMessage(request);
 
@@ -3257,30 +3254,60 @@ public abstract class CopilotChatServiceBase(
             new RelayCommand<Control?>(_ => responseSource.TrySetResult(PermissionDecision.ApproveOnce()));
         var denyCommand =
             new RelayCommand<Control?>(_ => responseSource.TrySetResult(PermissionDecision.Reject("Denied by User")));
-        var allowForSessionCmd = new RelayCommand<Control?>(_ =>
-        {
-            lock (_sessionApprovedTools)
-                _sessionApprovedTools.Add(approvalKey);
-            responseSource.TrySetResult(new PermissionDecisionApproveForSession());
-        });
+        // Approvals are tracked here (not by the CLI) so they can be narrower than the whole tool.
+        var allowForSessionCmd = scope == null
+            ? null
+            : new RelayCommand<Control?>(_ =>
+            {
+                ApproveInChat(sessionId, scope.Keys);
+                responseSource.TrySetResult(PermissionDecision.ApproveOnce());
+            });
 
         EventReceived?.Invoke(this, new ChatPermissionRequestEvent(
-            message, "Allow", "Deny", allowCommand, denyCommand, "Allow for session", allowForSessionCmd));
+            message, "Allow", "Deny", allowCommand, denyCommand, scope?.Label, allowForSessionCmd));
 
         return responseSource.Task;
     }
 
-    private static string GetSessionApprovalKey(PermissionRequest request) => request switch
+    private ToolApprovalScope? GetToolApprovalScope(string toolName, JsonElement? arguments) =>
+        CopilotToolApproval.ForTool(toolName, toolProvider.GetFriendlyName(toolName), arguments);
+
+    private ToolApprovalScope? GetApprovalScope(PermissionRequest request) => request switch
     {
-        PermissionRequestHook hook => hook.ToolName,
-        PermissionRequestShell => "shell",
-        PermissionRequestWrite => "write",
-        PermissionRequestRead => "read",
-        PermissionRequestUrl => "url",
-        PermissionRequestMcp mcp => $"mcp:{mcp.ServerName}/{mcp.ToolName}",
-        PermissionRequestMemory => "memory",
-        _ => request.Kind ?? "unknown"
+        PermissionRequestHook hook => GetToolApprovalScope(hook.ToolName, hook.ToolArgs),
+        PermissionRequestShell => new ToolApprovalScope(["shell"], "Allow shell commands in this chat"),
+        PermissionRequestWrite => new ToolApprovalScope(["write"], "Allow file edits in this chat"),
+        PermissionRequestRead => new ToolApprovalScope(["read"], "Allow file reads in this chat"),
+        PermissionRequestUrl => new ToolApprovalScope(["url"], "Allow opening URLs in this chat"),
+        PermissionRequestMcp mcp => new ToolApprovalScope([$"mcp:{mcp.ServerName}/{mcp.ToolName}"],
+            $"Allow {mcp.ToolName} in this chat"),
+        PermissionRequestMemory => new ToolApprovalScope(["memory"], "Allow memory updates in this chat"),
+        _ => new ToolApprovalScope([request.Kind ?? "unknown"], "Allow in this chat")
     };
+
+    private bool IsApprovedInChat(string? sessionId, IReadOnlyList<string> keys)
+    {
+        sessionId ??= CurrentSessionId;
+        if (sessionId == null) return false;
+
+        var approvals = ConnectionOwner._sessionApprovals;
+        lock (approvals)
+            return approvals.TryGetValue(sessionId, out var approved) && keys.All(approved.Contains);
+    }
+
+    private void ApproveInChat(string? sessionId, IReadOnlyList<string> keys)
+    {
+        sessionId ??= CurrentSessionId;
+        if (sessionId == null) return;
+
+        var approvals = ConnectionOwner._sessionApprovals;
+        lock (approvals)
+        {
+            if (!approvals.TryGetValue(sessionId, out var approved))
+                approvals[sessionId] = approved = new HashSet<string>(StringComparer.Ordinal);
+            approved.UnionWith(keys);
+        }
+    }
 
     private static string BuildPermissionMessage(PermissionRequest request) => request switch
     {

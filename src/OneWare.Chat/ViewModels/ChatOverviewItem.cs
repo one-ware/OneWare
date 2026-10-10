@@ -30,6 +30,22 @@ public class ChatOverviewItem(string key) : ObservableObject
         set => SetProperty(ref field, value);
     } = string.Empty;
 
+    /// <summary>Files this chat changed that are not accepted or rolled back yet.</summary>
+    public int ChangedFiles
+    {
+        get;
+        set
+        {
+            if (!SetProperty(ref field, value)) return;
+            OnPropertyChanged(nameof(ChangedFilesLabel));
+            OnPropertyChanged(nameof(HasChangedFiles));
+        }
+    }
+
+    public bool HasChangedFiles => ChangedFiles > 0;
+
+    public string ChangedFilesLabel => ChangedFiles == 1 ? "1 changed file" : $"{ChangedFiles} changed files";
+
     public DateTimeOffset UpdatedAt
     {
         get;

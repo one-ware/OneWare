@@ -48,8 +48,11 @@
                                     </Panel>
                                     <TextBlock Grid.Column="1" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Column="2" Classes="caption" Text="{Binding UpdatedAtLabel}" />
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="caption"
-                                               Text="{Binding ServiceName}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Classes="caption"
+                                               Text="{Binding ServiceName}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Classes="caption accent"
+                                               Text="{Binding ChangedFilesLabel}" IsVisible="{Binding HasChangedFiles}"
+                                               ToolTip.Tip="Open the chat to review, accept or roll back its changes" />
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -214,7 +217,7 @@
                         DataContext="{Binding #ChatViewView.DataContext}" x:DataType="viewModels:ChatViewModel">
                     <Border.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="!!AiFileEditService.ActiveEdits.Count" />
+                            <Binding Path="!!CurrentEdits.Count" />
                             <Binding Path="!CurrentSession.IsBlocked" FallbackValue="False" />
                         </MultiBinding>
                     </Border.IsVisible>
@@ -223,18 +226,18 @@
                             <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
                                        Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                                <Button Command="{Binding AiFileEditService.UndoAllAsync}"
-                                        ToolTip.Tip="Discard all file changes">
+                                <Button Command="{Binding UndoCurrentEditsCommand}"
+                                        ToolTip.Tip="Discard this chat's file changes">
                                     <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
                                 </Button>
-                                <Button Command="{Binding AiFileEditService.AcceptAllAsync}"
-                                        ToolTip.Tip="Accept all file changes">
+                                <Button Command="{Binding AcceptCurrentEditsCommand}"
+                                        ToolTip.Tip="Accept this chat's file changes">
                                     <TextBlock Text="Accept All" Foreground="{DynamicResource HighlightBrush}" />
                                 </Button>
                             </StackPanel>
                         </Grid>
                         <ScrollViewer HorizontalScrollBarVisibility="Disabled" MaxHeight="100">
-                            <ItemsControl ItemsSource="{Binding AiFileEditService.ActiveEdits}">
+                            <ItemsControl ItemsSource="{Binding CurrentEdits}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Button

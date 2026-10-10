@@ -14,7 +14,7 @@
             <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
 
             <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasModel}"
-                        ToolTip.Tip="Model that answered">
+                        ToolTip.Tip="Model that answered" Margin="0 2 0 0">
                 <TextBlock Text="{Binding Model}" FontSize="11" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis"
                            Foreground="{DynamicResource ThemeForegroundLowBrush}" />

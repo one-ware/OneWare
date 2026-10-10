@@ -78,7 +78,13 @@ internal static class AiBuiltInFunctions
                     [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
                     [Description("number of lines to replace from startLine; 0 inserts before startLine")] int?
                         lineCount = null) =>
-                EditFileAsync(projectExplorerService, aiFileEditService, path, content, startLine, lineCount),
+                EditFileAsync(projectExplorerService, aiFileEditService, path, content, startLine, lineCount, null),
+            // The chat that edits owns the change, so each chat lists and rolls back only its own edits.
+            InvocationHandler = async (context, args, _) =>
+                await EditFileAsync(projectExplorerService, aiFileEditService,
+                    TryGetStringArgument(args, "path") ?? string.Empty,
+                    TryGetStringArgument(args, "content") ?? string.Empty,
+                    TryGetIntArgument(args, "startLine"), TryGetIntArgument(args, "lineCount"), context.SessionId),
             DetailExtractor = args => GetRelativePath(projectExplorerService, TryGetStringArgument(args, "path")),
             ConfirmationCheck = args =>
             {
@@ -299,7 +305,8 @@ internal static class AiBuiltInFunctions
         string path,
         string content,
         int? startLine,
-        int? lineCount)
+        int? lineCount,
+        string? chatSessionId)
     {
         var resolvedPath = ResolvePath(projectExplorerService, path);
         if (string.IsNullOrWhiteSpace(resolvedPath))
@@ -307,7 +314,7 @@ internal static class AiBuiltInFunctions
 
         return new
         {
-            result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount),
+            result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount, chatSessionId),
             error = (string?)null
         };
     }
@@ -593,6 +600,21 @@ internal static class AiBuiltInFunctions
         return normalizedPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar,
                    StringComparison.OrdinalIgnoreCase)
                || string.Equals(normalizedPath, normalizedRoot, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int? TryGetIntArgument(Microsoft.Extensions.AI.AIFunctionArguments arguments, string name)
+    {
+        if (!arguments.TryGetValue(name, out var value) || value == null) return null;
+
+        return value switch
+        {
+            int i => i,
+            long l => (int)l,
+            JsonElement { ValueKind: JsonValueKind.Number } json when json.TryGetInt32(out var n) => n,
+            JsonElement { ValueKind: JsonValueKind.String } json when int.TryParse(json.GetString(), out var n) => n,
+            string text when int.TryParse(text, out var n) => n,
+            _ => null
+        };
     }
 
     private static string? TryGetStringArgument(Microsoft.Extensions.AI.AIFunctionArguments arguments, string name)

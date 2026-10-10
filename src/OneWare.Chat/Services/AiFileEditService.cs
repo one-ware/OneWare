@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using OneWare.Chat.ViewModels;
+using Avalonia.Controls.Notifications;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -14,8 +15,18 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
 {
     public const string AutoOpenFileEditsKey = "Chat_AutoOpenFileEdits";
 
+    /// <summary>
+    /// Unreviewed AI edits of all chats. A file edited by several chats has one entry per chat; see
+    /// <see cref="AiEditViewModel.OwnerId" />.
+    /// </summary>
     public ObservableCollection<AiEditViewModel> ActiveEdits { get; } = new();
+
+    // Latest content the AI wrote per file (shared by all chats, the file exists once on disk).
     private readonly Dictionary<string, string> _currentEdits = new();
+
+    /// <summary>The unreviewed edits of one chat; null lists edits made without a chat.</summary>
+    public IEnumerable<AiEditViewModel> GetEdits(string? ownerId) =>
+        ActiveEdits.Where(x => string.Equals(x.OwnerId, ownerId, StringComparison.Ordinal));
     
     public async Task<string?> ReadFileAsync(string filePath, int? startLine = null, int? lineCount = null)
     {
@@ -56,23 +67,34 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
         return await ReadFromFileAsync(filePath, startLine.Value, lineCount);
     }
     
-    public async Task<bool> EditFileAsync(string filePath, string newContent, int? startLine = null, int? lineCount = null)
+    public Task<bool> EditFileAsync(string filePath, string newContent, int? startLine = null, int? lineCount = null)
+        => EditFileAsync(filePath, newContent, startLine, lineCount, null);
+
+    /// <param name="ownerId">The chat (session id) making the edit; it lists and rolls back its own edits.</param>
+    public async Task<bool> EditFileAsync(string filePath, string newContent, int? startLine, int? lineCount,
+        string? ownerId)
     {
-        var openTab = ActiveEdits.FirstOrDefault(x => x.FullPath == filePath);
+        var openTab = ActiveEdits.FirstOrDefault(x =>
+            x.FullPath == filePath && string.Equals(x.OwnerId, ownerId, StringComparison.Ordinal));
         
         if (openTab == null)
         {
-            var openEditTab = mainDockService.OpenFiles.FirstOrDefault(x => x.Value.FullPath == filePath).Value as IEditor;
-            
-            var original = openEditTab?.CurrentDocument.Text ?? (File.Exists(filePath) ? await File.ReadAllTextAsync(filePath) : string.Empty);
-            openTab = new AiEditViewModel(filePath, original);
+            // Another chat may have edited the file already; this chat's change starts from that state.
+            if (!_currentEdits.TryGetValue(filePath, out var original))
+            {
+                var openEditTab = mainDockService.OpenFiles.FirstOrDefault(x => x.Value.FullPath == filePath).Value as IEditor;
+                original = openEditTab?.CurrentDocument.Text ??
+                           (File.Exists(filePath) ? await File.ReadAllTextAsync(filePath) : string.Empty);
+            }
+
+            openTab = new AiEditViewModel(filePath, original) { OwnerId = ownerId };
             
             ActiveEdits.Add(openTab);
             _currentEdits[filePath] = original;
         }
         else if (!_currentEdits.ContainsKey(filePath))
         {
-            _currentEdits[filePath] = openTab.Original;
+            _currentEdits[filePath] = openTab.LastWritten ?? openTab.Original;
         }
 
         if (settingsService.GetSettingValue<bool>(AutoOpenFileEditsKey))
@@ -86,6 +108,7 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
             {
                 await File.WriteAllTextAsync(filePath, newContent);
                 _currentEdits[filePath] = newContent;
+                openTab.LastWritten = newContent;
                 await openTab.RefreshChanges(newContent);
             }
             else
@@ -100,6 +123,7 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
                 var updatedContent = ApplyLineEdit(currentContent, startLine.Value, lineCount.Value, newContent);
                 await File.WriteAllTextAsync(filePath, updatedContent);
                 _currentEdits[filePath] = updatedContent;
+                openTab.LastWritten = updatedContent;
                 await openTab.RefreshChanges(updatedContent, startLine.Value);
             }
         }
@@ -114,18 +138,42 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
 
     public async Task UndoAsync(AiEditViewModel edit)
     {
+        // Rolling back restores the file as it was before this chat's first edit. If another chat edited the
+        // file afterwards, that would silently drop the other chat's changes, so the rollback is refused.
+        var changedSince = edit.LastWritten != null &&
+                           _currentEdits.TryGetValue(edit.FullPath, out var current) &&
+                           !string.Equals(current, edit.LastWritten, StringComparison.Ordinal);
+        if (changedSince)
+        {
+            ContainerLocator.Container.Resolve<IWindowService>().ShowNotification("Rollback not possible",
+                $"{edit.FileName} was changed by another chat afterwards. Roll back or accept that chat's changes first.",
+                NotificationType.Warning);
+            return;
+        }
 
         try
         {
             await File.WriteAllTextAsync(edit.FullPath, edit.Original);
             mainDockService.CloseDockable(edit);
             ActiveEdits.Remove(edit);
-            _currentEdits.Remove(edit.FullPath);
+            ForgetCurrentContent(edit.FullPath, edit.Original);
         }
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
         }
+    }
+
+    /// <summary>Drops the working content of a file once no chat has unreviewed edits of it anymore.</summary>
+    private void ForgetCurrentContent(string filePath, string? content = null)
+    {
+        if (ActiveEdits.Any(x => x.FullPath == filePath))
+        {
+            if (content != null) _currentEdits[filePath] = content;
+            return;
+        }
+
+        _currentEdits.Remove(filePath);
     }
     
     public Task AcceptAsync(AiEditViewModel edit)
@@ -134,7 +182,7 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
         {
             mainDockService.CloseDockable(edit);
             ActiveEdits.Remove(edit);
-            _currentEdits.Remove(edit.FullPath);
+            ForgetCurrentContent(edit.FullPath);
         }
         catch (Exception e)
         {
@@ -146,7 +194,8 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
 
     public async Task UndoAllAsync()
     {
-        foreach (var edit in ActiveEdits.ToArray())
+        // Newest first, so edits of one file by several chats unwind in order.
+        foreach (var edit in ActiveEdits.Reverse().ToArray())
         {
             await UndoAsync(edit);
         }
@@ -158,6 +207,20 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
         {
             await AcceptAsync(edit);
         }
+    }
+
+    /// <summary>Rolls back the edits of one chat.</summary>
+    public async Task UndoAllAsync(string? ownerId)
+    {
+        foreach (var edit in GetEdits(ownerId).Reverse().ToArray())
+            await UndoAsync(edit);
+    }
+
+    /// <summary>Accepts the edits of one chat.</summary>
+    public async Task AcceptAllAsync(string? ownerId)
+    {
+        foreach (var edit in GetEdits(ownerId).ToArray())
+            await AcceptAsync(edit);
     }
 
     private static string ReadFromText(string content, int startLine, int? lineCount)

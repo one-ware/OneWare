@@ -71,6 +71,13 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
         _historyRootPath = Path.Combine(chatDirectory, "History");
 
         AiFileEditService = aiFileEditService;
+        aiFileEditService.ActiveEdits.CollectionChanged += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            RefreshCurrentEdits();
+            RefreshOverview();
+        });
+        UndoCurrentEditsCommand = new AsyncRelayCommand(UndoCurrentEditsAsync);
+        AcceptCurrentEditsCommand = new AsyncRelayCommand(AcceptCurrentEditsAsync);
 
         NewChatCommand = new RelayCommand(() => OpenNewChat());
         ShowOverviewCommand = new RelayCommand(ShowOverview);
@@ -110,6 +117,7 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
 
             OnPropertyChanged(nameof(IsOverviewVisible));
             OnPropertyChanged(nameof(ComposerSession));
+            RefreshCurrentEdits();
             OnPropertyChanged(nameof(SelectedChatService));
             RefreshOverview();
             RequestSave();
@@ -183,6 +191,44 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
     public AiFileEditService AiFileEditService { get; }
 
     public RelayCommand<AiEditViewModel> ShowEditCommand => new(ShowEdit);
+
+    /// <summary>Unreviewed file edits of the shown chat (and edits made without a chat).</summary>
+    public ObservableCollection<AiEditViewModel> CurrentEdits { get; } = new();
+
+    /// <summary>Rolls back the file edits of the shown chat.</summary>
+    public AsyncRelayCommand UndoCurrentEditsCommand { get; }
+
+    /// <summary>Accepts the file edits of the shown chat.</summary>
+    public AsyncRelayCommand AcceptCurrentEditsCommand { get; }
+
+    private string? CurrentEditsOwner =>
+        CurrentSession == null ? null : CurrentSession.CurrentSessionId ?? CurrentSession.RememberedSessionId;
+
+    private bool IsCurrentEdit(AiEditViewModel edit) =>
+        edit.OwnerId == null ||
+        CurrentSession != null && string.Equals(edit.OwnerId, CurrentEditsOwner, StringComparison.Ordinal);
+
+    private void RefreshCurrentEdits()
+    {
+        var edits = AiFileEditService.ActiveEdits.Where(IsCurrentEdit).ToList();
+        if (edits.SequenceEqual(CurrentEdits)) return;
+
+        CurrentEdits.Clear();
+        foreach (var edit in edits) CurrentEdits.Add(edit);
+    }
+
+    private async Task UndoCurrentEditsAsync()
+    {
+        // Newest first, so a file edited several times unwinds in order.
+        foreach (var edit in CurrentEdits.Reverse().ToArray())
+            await AiFileEditService.UndoAsync(edit);
+    }
+
+    private async Task AcceptCurrentEditsAsync()
+    {
+        foreach (var edit in CurrentEdits.ToArray())
+            await AiFileEditService.AcceptAsync(edit);
+    }
 
     /// <summary>Starts a new chat with the service of the shown (or last) chat.</summary>
     public RelayCommand NewChatCommand { get; }
@@ -486,6 +532,8 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
             item.HistoryItem = row.History;
             item.Title = row.Title;
             item.ServiceName = row.ServiceName;
+            var owner = row.Session?.CurrentSessionId ?? row.Session?.RememberedSessionId ?? row.History?.SessionId;
+            item.ChangedFiles = owner == null ? 0 : AiFileEditService.GetEdits(owner).Count();
             item.UpdatedAt = row.UpdatedAt;
         }
 
@@ -521,7 +569,10 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
             session.RememberedSessionId = session.CurrentSessionId;
 
         if (ReferenceEquals(session, CurrentSession))
+        {
             _lastChat = (session.RegisteredService.Name, session.RememberedSessionId);
+            RefreshCurrentEdits();
+        }
 
         RefreshOverview();
         RequestSave();
