@@ -102,7 +102,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
         return new ByokConfiguration(
             Name,
             "openai",
-            $"{CloudBaseUrl}/api/copilot/v1",
+            $"{CloudBaseUrl}/api/cloud-ai/v1",
             string.Empty,
             string.Empty,
             CopilotModule.WireApiResponses);
@@ -479,7 +479,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
         (string? Message, string? Code) problem = default;
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, $"{CloudBaseUrl}/api/copilot/v1/models");
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{CloudBaseUrl}/api/cloud-ai/v1/models");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer", await _cloudAccess.GetAccessTokenAsync());
             using var response = await ByokHttpClient.SendAsync(request);
