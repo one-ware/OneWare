@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -47,7 +48,7 @@ public abstract class CopilotChatServiceBase(
     IMainDockService mainDockService,
     IPaths paths,
     IChatAgentService agentService)
-    : ObservableObject, IChatServiceWithSessions
+    : ObservableObject, IChatServiceWithParallelSessions
 {
     private CopilotClient? _client;
     private readonly SemaphoreSlim _sync = new(1, 1);
@@ -57,6 +58,16 @@ public abstract class CopilotChatServiceBase(
     private ByokConfiguration? _byokConfiguration;
     private readonly List<TaskCompletionSource<UserInputResponse>> _pendingInputRequests = new();
     private readonly List<PendingPlanRequest> _pendingPlanRequests = new();
+    private CopilotChatServiceBase? _connectionOwner;
+    private readonly List<CopilotChatServiceBase> _siblings = new();
+
+    // Serializes session creation/resume on the shared client, so two chats can't track the same session.
+    private readonly SemaphoreSlim _sessionGate = new(1, 1);
+
+    // Serializes session creation/resume of this instance.
+    private readonly SemaphoreSlim _initGate = new(1, 1);
+    private CopilotSessionModelStore? _sessionModelStore;
+    private bool _suppressModelSettingsWrite;
 
     private readonly HashSet<string> _sessionApprovedTools = new();
     protected static readonly HttpClient ByokHttpClient = new()
@@ -170,6 +181,164 @@ public abstract class CopilotChatServiceBase(
 
     public virtual bool IsOneWareCloud => false;
 
+    protected bool IsConnectionOwner => _connectionOwner == null;
+
+    protected CopilotChatServiceBase ConnectionOwner => _connectionOwner ?? this;
+
+    private CopilotClient? Client => ConnectionOwner._client;
+
+    public IChatService CreateSession()
+    {
+        var owner = ConnectionOwner;
+        var sibling = owner.CreateSibling();
+        sibling._connectionOwner = owner;
+        owner.RegisterSibling(sibling);
+        sibling.AttachToConnectionOwner();
+        return sibling;
+    }
+
+    protected abstract CopilotChatServiceBase CreateSibling();
+
+    private void RegisterSibling(CopilotChatServiceBase sibling)
+    {
+        lock (_siblings)
+            _siblings.Add(sibling);
+    }
+
+    private void UnregisterSibling(CopilotChatServiceBase sibling)
+    {
+        lock (_siblings)
+            _siblings.Remove(sibling);
+    }
+
+    private CopilotChatServiceBase[] GetSiblingsSnapshot()
+    {
+        lock (_siblings)
+            return _siblings.ToArray();
+    }
+
+    private void AttachToConnectionOwner()
+    {
+        var owner = _connectionOwner;
+        if (owner == null) return;
+
+        owner.PropertyChanged += OnConnectionOwnerPropertyChanged;
+        owner.Models.CollectionChanged += OnConnectionOwnerModelsChanged;
+        owner.StatusChanged += OnConnectionOwnerStatusChanged;
+        MirrorConnectionStateFrom(owner);
+    }
+
+    private void DetachFromConnectionOwner()
+    {
+        var owner = _connectionOwner;
+        if (owner == null) return;
+
+        owner.PropertyChanged -= OnConnectionOwnerPropertyChanged;
+        owner.Models.CollectionChanged -= OnConnectionOwnerModelsChanged;
+        owner.StatusChanged -= OnConnectionOwnerStatusChanged;
+        owner.UnregisterSibling(this);
+    }
+
+    private void OnConnectionOwnerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not CopilotChatServiceBase owner) return;
+
+        switch (e.PropertyName)
+        {
+            case nameof(Blocker):
+            case nameof(UsesGitHubAuthentication):
+            case nameof(IsAuthenticated):
+            case nameof(AccountLogin):
+            case nameof(AccountAuthType):
+            case nameof(AccountStatusText):
+            case nameof(CanSignOut):
+                MirrorConnectionStateFrom(owner);
+                break;
+        }
+    }
+
+    private void OnConnectionOwnerModelsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_connectionOwner is { } owner) MirrorConnectionStateFrom(owner);
+    }
+
+    private void OnConnectionOwnerStatusChanged(object? sender, StatusEvent e)
+    {
+        if (!e.IsConnected || _session == null)
+            StatusChanged?.Invoke(this, e);
+    }
+
+    private void MirrorConnectionStateFrom(CopilotChatServiceBase owner)
+    {
+        _byokConfiguration = owner._byokConfiguration;
+        Blocker = owner.Blocker;
+        UsesGitHubAuthentication = owner.UsesGitHubAuthentication;
+        IsAuthenticated = owner.IsAuthenticated;
+        AccountLogin = owner.AccountLogin;
+        AccountAuthType = owner.AccountAuthType;
+        AccountStatusText = owner.AccountStatusText;
+        CanSignOut = owner.CanSignOut;
+
+        Models.Clear();
+        Models.AddRange(owner.Models.ToArray());
+        RefreshFilteredModels();
+
+        if (SelectedModel == null)
+            ApplyModelSelection(ResolveDefaultSelectedModel(), null, null, null, writeSettings: false,
+                applyToSession: false);
+    }
+
+    /// <summary>
+    /// Disposes the session <paramref name="sessionId"/> on the owner or a sibling that still holds it, e.g. a chat
+    /// that was left but whose instance was kept for reuse.
+    /// </summary>
+    private async Task ReleaseSessionHeldByOthersAsync(string sessionId)
+    {
+        var owner = ConnectionOwner;
+        foreach (var other in owner.GetSiblingsSnapshot().Prepend(owner))
+        {
+            if (ReferenceEquals(other, this) ||
+                !string.Equals(other._session?.SessionId, sessionId, StringComparison.Ordinal)) continue;
+
+            try
+            {
+                other._requestedSessionId = null;
+                await other.DisposeSessionAsync();
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogWarning(ex, "Failed to release Copilot session {SessionId}.", sessionId);
+            }
+        }
+    }
+
+    private async Task DisposeSiblingSessionsForConnectionStopAsync()
+    {
+        foreach (var sibling in GetSiblingsSnapshot())
+        {
+            sibling._requestedSessionId ??= sibling.CurrentSessionId;
+            try
+            {
+                await sibling.DisposeSessionAsync();
+            }
+            catch (Exception ex)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogWarning(ex, "Failed to dispose a Copilot sibling session.");
+            }
+        }
+    }
+
+    private void RaiseSiblingSessionReset()
+    {
+        foreach (var sibling in GetSiblingsSnapshot())
+        {
+            sibling.MirrorConnectionStateFrom(this);
+            sibling.SessionReset?.Invoke(sibling, EventArgs.Empty);
+        }
+    }
+
     public string? ModelSearchText
     {
         get;
@@ -210,6 +379,112 @@ public abstract class CopilotChatServiceBase(
         return Models.FirstOrDefault(x => NormalizeModelId(x.Id) == normalized);
     }
 
+    private ModelInfo? ResolveDefaultSelectedModel()
+    {
+        var selectedModelSetting = settingsService.GetSettingValue<string>(GetSelectedModelSettingKey());
+        return ResolveModel(selectedModelSetting) ??
+               ResolveModel(CopilotModule.DefaultModelId) ??
+               Models.FirstOrDefault();
+    }
+
+    private CopilotSessionModelStore? SessionModelStore
+    {
+        get
+        {
+            var owner = ConnectionOwner;
+            if (!ReferenceEquals(owner, this)) return owner.SessionModelStore;
+            if (_sessionModelStore != null) return _sessionModelStore;
+
+            var directory = _byokConfiguration == null
+                ? Path.Combine(paths.AppDataDirectory, "Copilot")
+                : GetByokDataDirectory(_byokConfiguration);
+            Directory.CreateDirectory(directory);
+            _sessionModelStore = CopilotSessionModelStore.ForFile(Path.Combine(directory, "session-models.json"));
+            return _sessionModelStore;
+        }
+    }
+
+    private void StoreCurrentSessionModelState()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentSessionId) || SelectedModel == null) return;
+
+        SessionModelStore?.Set(CurrentSessionId, new CopilotSessionModelState(
+            SelectedModel.Id,
+            ShowReasoningEffort ? SelectedReasoningEffort : null,
+            SelectedContextSize?.Tier,
+            ShowAutoTier ? SelectedAutoTier : null,
+            DateTimeOffset.UtcNow));
+    }
+
+    private void ApplyModelSelection(
+        ModelInfo? model,
+        string? reasoningEffort,
+        string? contextTier,
+        string? autoTier,
+        bool writeSettings,
+        bool applyToSession)
+    {
+        if (model == null) return;
+
+        var suppressSettings = _suppressModelSettingsWrite;
+        var suppressReasoning = _suppressReasoningEffortApply;
+        var suppressContext = _suppressContextSizeApply;
+        var suppressAuto = _suppressAutoTierApply;
+        _suppressModelSettingsWrite = !writeSettings;
+        _suppressReasoningEffortApply = !applyToSession;
+        _suppressContextSizeApply = !applyToSession;
+        _suppressAutoTierApply = !applyToSession;
+        try
+        {
+            SelectedModel = model;
+            _suppressReasoningEffortApply = !applyToSession;
+            _suppressContextSizeApply = !applyToSession;
+            _suppressAutoTierApply = !applyToSession;
+
+            if (!string.IsNullOrWhiteSpace(reasoningEffort) && ReasoningEfforts.Contains(reasoningEffort))
+                SelectedReasoningEffort = reasoningEffort;
+
+            if (!string.IsNullOrWhiteSpace(contextTier))
+                SelectedContextSize = ContextSizes.FirstOrDefault(x => x.Tier == contextTier)
+                                      ?? SelectedContextSize;
+
+            if (!string.IsNullOrWhiteSpace(autoTier) && AutoTiers.Contains(autoTier))
+                SelectedAutoTier = autoTier;
+        }
+        finally
+        {
+            _suppressModelSettingsWrite = suppressSettings;
+            _suppressReasoningEffortApply = suppressReasoning;
+            _suppressContextSizeApply = suppressContext;
+            _suppressAutoTierApply = suppressAuto;
+        }
+
+        if (applyToSession) ApplyModelToSession();
+    }
+
+    private async Task<CopilotSessionModelState?> TryGetSdkModelStateAsync()
+    {
+        var session = _session;
+        if (session == null) return null;
+
+        try
+        {
+            var current = await session.Rpc.Model.GetCurrentAsync().ConfigureAwait(false);
+            return new CopilotSessionModelState(
+                current.ModelId,
+                current.ReasoningEffort,
+                current.ContextTier?.Value == ContextTier.LongContext.Value ? ContextTierLong : ContextTierDefault,
+                DescribeAutoTier(current.PendingAutoTier ?? current.AutoTier),
+                DateTimeOffset.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                .LogDebug(ex, "Could not read the current Copilot session model.");
+            return null;
+        }
+    }
+
     /// <summary>
     /// Turns a model id from the runtime into the name the user knows from the model picker, and
     /// keeps the raw id when the model is not in the list (e.g. models only sub-agents may use).
@@ -238,11 +513,13 @@ public abstract class CopilotChatServiceBase(
             var oldValue = field;
             if (SetProperty(ref field, value) && value != null)
             {
-                settingsService.SetSettingValue(GetSelectedModelSettingKey(), value.Id);
+                if (!_suppressModelSettingsWrite)
+                    settingsService.SetSettingValue(GetSelectedModelSettingKey(), value.Id);
                 RefreshReasoningEfforts(value);
                 RefreshContextSizes(value);
                 RefreshAutoTier(value);
-                if (oldValue != null && oldValue.Id != value.Id)
+                StoreCurrentSessionModelState();
+                if (oldValue != null && oldValue.Id != value.Id && !_suppressModelSettingsWrite)
                 {
                     // Switch the model in place for the next message, preserving conversation history.
                     ApplyModelToSession();
@@ -309,7 +586,9 @@ public abstract class CopilotChatServiceBase(
         {
             if (SetProperty(ref field, value) && value != null && !_suppressContextSizeApply)
             {
-                settingsService.SetSettingValue(CopilotModule.CopilotContextTierSettingKey, value.Tier);
+                if (!_suppressModelSettingsWrite)
+                    settingsService.SetSettingValue(CopilotModule.CopilotContextTierSettingKey, value.Tier);
+                StoreCurrentSessionModelState();
                 ApplyContextTierToSession();
             }
         }
@@ -423,7 +702,9 @@ public abstract class CopilotChatServiceBase(
         {
             if (!SetProperty(ref field, value) || _suppressAutoTierApply) return;
 
-            settingsService.SetSettingValue(CopilotModule.CopilotAutoTierSettingKey, value);
+            if (!_suppressModelSettingsWrite)
+                settingsService.SetSettingValue(CopilotModule.CopilotAutoTierSettingKey, value);
+            StoreCurrentSessionModelState();
             ApplyAutoTierToSession();
         }
     } = AutoTierDefault;
@@ -514,7 +795,9 @@ public abstract class CopilotChatServiceBase(
         {
             if (SetProperty(ref field, value) && value != null && !_suppressReasoningEffortApply)
             {
-                settingsService.SetSettingValue(CopilotModule.CopilotSelectedReasoningEffortSettingKey, value);
+                if (!_suppressModelSettingsWrite)
+                    settingsService.SetSettingValue(CopilotModule.CopilotSelectedReasoningEffortSettingKey, value);
+                StoreCurrentSessionModelState();
                 ApplyModelToSession();
             }
         }
@@ -769,6 +1052,13 @@ public abstract class CopilotChatServiceBase(
 
     private async Task SignInAsync(Control? owner)
     {
+        if (!IsConnectionOwner)
+        {
+            await ConnectionOwner.SignInAsync(owner);
+            MirrorConnectionStateFrom(ConnectionOwner);
+            return;
+        }
+
         if (IsAuthenticated) return;
 
         await SignInCoreAsync(owner);
@@ -785,10 +1075,19 @@ public abstract class CopilotChatServiceBase(
     /// </summary>
     protected async Task RestartAsync(Action? whileStopped = null)
     {
+        if (!IsConnectionOwner)
+        {
+            await ConnectionOwner.RestartAsync(whileStopped).ConfigureAwait(false);
+            MirrorConnectionStateFrom(ConnectionOwner);
+            return;
+        }
+
         await _sync.WaitAsync().ConfigureAwait(false);
         try
         {
             _requestedSessionId ??= CurrentSessionId;
+            foreach (var sibling in GetSiblingsSnapshot())
+                sibling._requestedSessionId ??= sibling.CurrentSessionId;
             await DisposeAsync();
 
             // Runs before SessionReset so the chat view forgets cleared sessions
@@ -801,6 +1100,7 @@ public abstract class CopilotChatServiceBase(
         }
 
         SessionReset?.Invoke(this, EventArgs.Empty);
+        RaiseSiblingSessionReset();
         await InitializeAsync();
     }
 
@@ -809,6 +1109,11 @@ public abstract class CopilotChatServiceBase(
     {
         _requestedSessionId = null;
         HistoryCleared?.Invoke(this, EventArgs.Empty);
+        foreach (var sibling in GetSiblingsSnapshot())
+        {
+            sibling._requestedSessionId = null;
+            sibling.HistoryCleared?.Invoke(sibling, EventArgs.Empty);
+        }
     }
 
     protected void RaiseEvent(ChatEvent chatEvent) => EventReceived?.Invoke(this, chatEvent);
@@ -817,6 +1122,13 @@ public abstract class CopilotChatServiceBase(
 
     private async Task SignOutAsync(Control? owner)
     {
+        if (!IsConnectionOwner)
+        {
+            await ConnectionOwner.SignOutAsync(owner);
+            MirrorConnectionStateFrom(ConnectionOwner);
+            return;
+        }
+
         var ownerWindow = owner != null ? TopLevel.GetTopLevel(owner) as Window : null;
 
         var confirmation = await windowService.ShowYesNoAsync("Sign out",
@@ -891,6 +1203,11 @@ public abstract class CopilotChatServiceBase(
     private bool _activeFileDismissed;
     private IEditor? _trackedEditor;
 
+    // The active file is only sent when text is selected in it, unless the user switched the chip.
+    // The choice holds until another file is focused, the selection appears or disappears, or a message is sent.
+    private bool? _activeFileIncludedOverride;
+    private bool _activeFileHadSelection;
+
     /// <summary>Files the user explicitly attached for the next message.</summary>
     public ObservableCollection<CopilotAttachmentViewModel> Attachments { get; } = new();
 
@@ -936,10 +1253,29 @@ public abstract class CopilotChatServiceBase(
                 _trackedEditor.Editor.TextArea.SelectionChanged += OnEditorSelectionChanged;
 
             // Moving focus to a different file revives a previously dismissed active-file chip.
-            if (focusChanged) _activeFileDismissed = false;
+            if (focusChanged)
+            {
+                _activeFileDismissed = false;
+                _activeFileIncludedOverride = null;
+            }
         }
 
-        ActiveFileAttachment = _activeFileDismissed ? null : BuildActiveFileAttachment(currentDocument);
+        var attachment = _activeFileDismissed ? null : BuildActiveFileAttachment(currentDocument);
+        var hasSelection = attachment?.Detail != null;
+        if (hasSelection != _activeFileHadSelection)
+        {
+            _activeFileHadSelection = hasSelection;
+            _activeFileIncludedOverride = null;
+        }
+
+        if (attachment != null)
+        {
+            attachment.IsIncluded = _activeFileIncludedOverride ?? hasSelection;
+            attachment.OnToggled(a => _activeFileIncludedOverride = a.IsIncluded);
+        }
+
+        ActiveFileAttachment?.Dispose();
+        ActiveFileAttachment = attachment;
     }
 
     private CopilotAttachmentViewModel? BuildActiveFileAttachment(IExtendedDocument? document)
@@ -1020,7 +1356,7 @@ public abstract class CopilotChatServiceBase(
         RefreshActiveFileAttachment(focusChanged: false);
 
         var result = new List<Attachment>();
-        if (ActiveFileAttachment != null) result.Add(ActiveFileAttachment.ToSdkAttachment());
+        if (ActiveFileAttachment is { IsIncluded: true }) result.Add(ActiveFileAttachment.ToSdkAttachment());
         result.AddRange(Attachments.Select(a => a.ToSdkAttachment()));
 
         return result.Count > 0 ? result : null;
@@ -1032,6 +1368,7 @@ public abstract class CopilotChatServiceBase(
             attachment.Dispose();
         Attachments.Clear();
         _activeFileDismissed = false;
+        _activeFileIncludedOverride = null;
         RefreshActiveFileAttachment(focusChanged: false);
     }
 
@@ -1186,13 +1523,26 @@ public abstract class CopilotChatServiceBase(
 
     public async Task<bool> InitializeAsync()
     {
+        if (!IsConnectionOwner)
+            return await InitializeSiblingAsync().ConfigureAwait(false);
+
         var cliPath = CopilotModule.GetCliPath(paths);
 
 
         await _sync.WaitAsync().ConfigureAwait(false);
+        var notifySiblings = false;
 
         try
         {
+            // Another tab already runs a session on this connection: a tab that starts using the owner
+            // instance must not restart the shared runtime under it.
+            if (_client != null && Blocker == null && GetSiblingsSnapshot().Length > 0)
+            {
+                StatusChanged?.Invoke(this, new StatusEvent(true, "Copilot started"));
+                return true;
+            }
+
+            notifySiblings = _client != null || GetSiblingsSnapshot().Any(x => x.CurrentSessionId != null);
             await DisposeAsync();
 
             if (!await PrepareInitializationAsync())
@@ -1298,11 +1648,8 @@ public abstract class CopilotChatServiceBase(
             Models.AddRange(models.ToArray());
             RefreshFilteredModels();
 
-            var selectedModelSetting =
-                settingsService.GetSettingValue<string>(GetSelectedModelSettingKey());
-            SelectedModel = ResolveModel(selectedModelSetting) ??
-                            ResolveModel(CopilotModule.DefaultModelId) ??
-                            Models.FirstOrDefault();
+            ApplyModelSelection(ResolveDefaultSelectedModel(), null, null, null, writeSettings: false,
+                applyToSession: false);
 
             return true;
         }
@@ -1319,6 +1666,47 @@ public abstract class CopilotChatServiceBase(
         finally
         {
             _sync.Release();
+            if (notifySiblings) RaiseSiblingSessionReset();
+        }
+    }
+
+    private async Task<bool> InitializeSiblingAsync()
+    {
+        var owner = ConnectionOwner;
+
+        await owner._sync.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (owner._client != null)
+            {
+                MirrorConnectionStateFrom(owner);
+                ApplyModelSelection(ResolveDefaultSelectedModel(), null, null, null, writeSettings: false,
+                    applyToSession: false);
+                if (owner.Blocker != null) return false;
+
+                // The owner reported its connection before this session existed.
+                StatusChanged?.Invoke(this, new StatusEvent(true, "Copilot started"));
+                return true;
+            }
+        }
+        finally
+        {
+            owner._sync.Release();
+        }
+
+        var initialized = await owner.InitializeAsync().ConfigureAwait(false);
+
+        await owner._sync.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            MirrorConnectionStateFrom(owner);
+            ApplyModelSelection(ResolveDefaultSelectedModel(), null, null, null, writeSettings: false,
+                applyToSession: false);
+            return initialized;
+        }
+        finally
+        {
+            owner._sync.Release();
         }
     }
 
@@ -1551,9 +1939,45 @@ public abstract class CopilotChatServiceBase(
         }
     };
 
+    /// <summary>Creates a new session, or resumes <see cref="_requestedSessionId"/> when one is requested.</summary>
     private async Task InitializeSessionAsync()
     {
-        if (_client == null) return;
+        await _initGate.WaitAsync();
+        try
+        {
+            var sessionId = _requestedSessionId;
+            _requestedSessionId = null;
+            await InitializeSessionCoreAsync(sessionId);
+        }
+        finally
+        {
+            _initGate.Release();
+        }
+    }
+
+    /// <summary>Resumes <paramref name="sessionId"/> unless this instance already holds it.</summary>
+    private async Task ResumeSessionIfNeededAsync(string sessionId)
+    {
+        await _initGate.WaitAsync();
+        try
+        {
+            if (string.Equals(_requestedSessionId, sessionId, StringComparison.Ordinal)) _requestedSessionId = null;
+
+            // Activation and session resets can both ask for the same chat; resuming it twice fails.
+            if (_session != null && string.Equals(_session.SessionId, sessionId, StringComparison.Ordinal)) return;
+
+            await InitializeSessionCoreAsync(sessionId);
+        }
+        finally
+        {
+            _initGate.Release();
+        }
+    }
+
+    private async Task InitializeSessionCoreAsync(string? sessionId)
+    {
+        var client = Client;
+        if (client == null) return;
 
         await DisposeSessionAsync();
 
@@ -1566,8 +1990,13 @@ public abstract class CopilotChatServiceBase(
 
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connecting to {SelectedModel.Name}..."));
 
-        var sessionId = _requestedSessionId;
-        _requestedSessionId = null;
+        var storedModelState = string.IsNullOrWhiteSpace(sessionId)
+            ? null
+            : SessionModelStore?.Get(sessionId);
+        if (storedModelState != null)
+            ApplyModelSelection(ResolveModel(storedModelState.ModelId), storedModelState.ReasoningEffort,
+                storedModelState.ContextTier, storedModelState.AutoTier, writeSettings: false,
+                applyToSession: false);
 
         // Plugins can register tools at any time, so the cache is rebuilt per session.
         _clientToolNames = null;
@@ -1605,34 +2034,54 @@ public abstract class CopilotChatServiceBase(
                 }
             };
 
-            _session = await _client.CreateSessionAsync(sessionConfig);
+            _session = await client.CreateSessionAsync(sessionConfig);
         }
         else
         {
-            _session = await _client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
+            var gate = ConnectionOwner._sessionGate;
+            await gate.WaitAsync();
+            try
             {
-                Streaming = true,
-                Provider = BuildProviderConfig(),
-                ContextTier = ResolveContextTier(),
-                IncludeSubAgentStreamingEvents = true,
-                SystemMessage = BuildSystemMessageConfig(),
-                Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
-                AvailableTools = BuildAvailableTools(),
-                ExcludedTools = ExcludedBuiltInTools.ToList(),
-                CustomAgents = BuildCustomAgents(),
-                SkillDirectories = BuildSkillDirectories(),
-                EnableSkills = true,
-                OnPermissionRequest = OnPermissionRequestAsync,
-                OnUserInputRequest = OnUserInputRequestAsync,
-                OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
-                Hooks = new SessionHooks
+                // A session can only be tracked once per client: an unloaded chat may still hold it.
+                await ReleaseSessionHeldByOthersAsync(sessionId);
+
+                _session = await client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
                 {
-                    OnPreToolUse = OnPreToolUseAsync
-                }
-            });
+                    Streaming = true,
+                    Provider = BuildProviderConfig(),
+                    ContextTier = ResolveContextTier(),
+                    IncludeSubAgentStreamingEvents = true,
+                    SystemMessage = BuildSystemMessageConfig(),
+                    Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
+                    AvailableTools = BuildAvailableTools(),
+                    ExcludedTools = ExcludedBuiltInTools.ToList(),
+                    CustomAgents = BuildCustomAgents(),
+                    SkillDirectories = BuildSkillDirectories(),
+                    EnableSkills = true,
+                    OnPermissionRequest = OnPermissionRequestAsync,
+                    OnUserInputRequest = OnUserInputRequestAsync,
+                    OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
+                    Hooks = new SessionHooks
+                    {
+                        OnPreToolUse = OnPreToolUseAsync
+                    }
+                });
+            }
+            finally
+            {
+                gate.Release();
+            }
         }
 
         CurrentSessionId = _session?.SessionId ?? sessionId;
+        var sdkModelState = string.IsNullOrWhiteSpace(sessionId) || storedModelState != null
+            ? null
+            : await TryGetSdkModelStateAsync();
+        if (storedModelState == null && sdkModelState != null)
+            ApplyModelSelection(ResolveModel(sdkModelState.ModelId), sdkModelState.ReasoningEffort,
+                sdkModelState.ContextTier, sdkModelState.AutoTier, writeSettings: false,
+                applyToSession: false);
+        StoreCurrentSessionModelState();
 
         StatusChanged?.Invoke(this, new StatusEvent(true, $"Connected"));
 
@@ -1867,7 +2316,10 @@ public abstract class CopilotChatServiceBase(
     {
         ReleasePendingInputRequests();
         ReleasePendingPlanRequests();
-        toolProvider.CancelActiveFunctions();
+        if (CurrentSessionId is { Length: > 0 } sessionId)
+            toolProvider.CancelActiveFunctions(sessionId);
+        else
+            toolProvider.CancelActiveFunctions();
         DropForegroundSubAgents();
         if (_session == null) return;
         await _session.AbortAsync();
@@ -1905,11 +2357,11 @@ public abstract class CopilotChatServiceBase(
 
         // Not connected / no model yet (e.g. right after a CLI install): keep the
         // requested id and resume lazily once the session is actually created.
-        if (_client == null || SelectedModel == null) return false;
+        if (Client == null || SelectedModel == null) return false;
 
         try
         {
-            await InitializeSessionAsync();
+            await ResumeSessionIfNeededAsync(sessionId);
             return string.Equals(CurrentSessionId, sessionId, StringComparison.Ordinal);
         }
         catch (Exception ex) when (IsSessionNotFound(ex))
@@ -1950,6 +2402,8 @@ public abstract class CopilotChatServiceBase(
 
     public async ValueTask DisposeAsync()
     {
+        var isSibling = !IsConnectionOwner;
+
         ReleasePendingInputRequests();
         ReleasePendingPlanRequests();
 
@@ -1969,6 +2423,15 @@ public abstract class CopilotChatServiceBase(
         {
             ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex, "Failed to dispose Copilot session.");
         }
+
+        if (isSibling)
+        {
+            DetachFromConnectionOwner();
+            _connectionOwner = null;
+            return;
+        }
+
+        await DisposeSiblingSessionsForConnectionStopAsync();
 
         var client = _client;
         _client = null;

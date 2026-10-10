@@ -55,7 +55,7 @@ public static class StartupTimer
             text = builder.ToString();
         }
 
-        if (logger != null) logger.Log(text);
+        if (logger != null) logger.LogDebug(text);
         else Console.WriteLine(text);
     }
 }

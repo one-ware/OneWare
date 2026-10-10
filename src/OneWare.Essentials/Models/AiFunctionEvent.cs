@@ -3,6 +3,12 @@ namespace OneWare.Essentials.Models;
 public class AiFunctionEvent
 {
     public required string Id { get; init; }
+
+    /// <summary>
+    /// Chat session the function runs for, when the AI backend provides it. Lets the chat route the event to the
+    /// right session while several sessions run in parallel.
+    /// </summary>
+    public string? SessionId { get; init; }
 }
 
 public class AiFunctionStartedEvent : AiFunctionEvent
