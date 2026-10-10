@@ -26,7 +26,7 @@ public class AiFunctionProvider(
     private readonly List<OneWareAiAgent> _registeredAgents = [];
     private readonly List<OneWareAiSkill> _registeredSkills = [];
     private readonly List<string> _registeredSkillDirectories = [];
-    private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeFunctions = new();
+    private readonly ConcurrentDictionary<string, ActiveFunction> _activeFunctions = new();
     private bool _builtInsRegistered;
 
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
@@ -333,13 +333,22 @@ public class AiFunctionProvider(
             CancelFunction(id);
     }
 
+    public void CancelActiveFunctions(string sessionId)
+    {
+        foreach (var (id, function) in _activeFunctions)
+        {
+            if (string.Equals(function.SessionId, sessionId, StringComparison.Ordinal))
+                CancelFunction(id);
+        }
+    }
+
     public void CancelFunction(string id)
     {
-        if (!_activeFunctions.TryGetValue(id, out var cancellationSource)) return;
+        if (!_activeFunctions.TryGetValue(id, out var function)) return;
 
         try
         {
-            cancellationSource.Cancel();
+            function.Cancellation.Cancel();
         }
         catch (ObjectDisposedException)
         {
@@ -365,13 +374,16 @@ public class AiFunctionProvider(
             aiFileEditService);
     }
 
-    private async Task NotifyFunctionStartedAsync(string id, string functionName, string toolName,
-        string? toolCallId, string? detail = null)
+    private sealed record ActiveFunction(CancellationTokenSource Cancellation, string? SessionId);
+
+    private async Task NotifyFunctionStartedAsync(string id, string? sessionId, string functionName,
+        string toolName, string? toolCallId, string? detail = null)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
             FunctionStarted?.Invoke(this, new AiFunctionStartedEvent
             {
                 Id = id,
+                SessionId = sessionId,
                 FunctionName = functionName,
                 ToolName = toolName,
                 ToolCallId = toolCallId,
@@ -407,23 +419,25 @@ public class AiFunctionProvider(
         return null;
     }
 
-    private async Task NotifyFunctionCompletedAsync(string id, Exception? exception = null)
+    private async Task NotifyFunctionCompletedAsync(string id, string? sessionId, Exception? exception = null)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
             FunctionCompleted?.Invoke(this, new AiFunctionCompletedEvent
             {
                 Id = id,
+                SessionId = sessionId,
                 Result = exception == null,
                 ToolOutput = exception is OperationCanceledException ? "Cancelled." : exception?.ToString()
             }));
     }
 
-    private void RaiseFunctionProgress(string id, string output)
+    private void RaiseFunctionProgress(string id, string? sessionId, string output)
     {
         Dispatcher.UIThread.Post(() =>
             FunctionProgress?.Invoke(this, new AiFunctionProgressEvent
             {
                 Id = id,
+                SessionId = sessionId,
                 Output = output
             }));
     }
@@ -444,17 +458,18 @@ public class AiFunctionProvider(
             var id = Guid.NewGuid().ToString();
             using var functionCancellationSource =
                 CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            provider._activeFunctions[id] = functionCancellationSource;
+            var sessionId = TryGetBackendContextValue(arguments, "SessionId");
+            provider._activeFunctions[id] = new ActiveFunction(functionCancellationSource, sessionId);
 
             var context = new AiFunctionInvocationContext(id,
-                output => provider.RaiseFunctionProgress(id, output))
+                output => provider.RaiseFunctionProgress(id, sessionId, output))
             {
-                SessionId = TryGetBackendContextValue(arguments, "SessionId")
+                SessionId = sessionId
             };
             Exception? exception = null;
             try
             {
-                await provider.NotifyFunctionStartedAsync(id, friendlyName!, definition.Name,
+                await provider.NotifyFunctionStartedAsync(id, sessionId, friendlyName!, definition.Name,
                     TryGetBackendContextValue(arguments, "ToolCallId"), detail);
 
                 if (definition.RunOnUiThread)
@@ -480,7 +495,7 @@ public class AiFunctionProvider(
             finally
             {
                 provider._activeFunctions.TryRemove(id, out _);
-                await provider.NotifyFunctionCompletedAsync(id, exception);
+                await provider.NotifyFunctionCompletedAsync(id, sessionId, exception);
             }
         }
 

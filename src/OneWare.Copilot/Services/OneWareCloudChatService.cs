@@ -36,11 +36,19 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
 
     private readonly IOneWareCloudAccess _cloudAccess;
     private readonly IWindowService _windowService;
+    private readonly ISettingsService _settingsService;
+    private readonly IAiFunctionProvider _toolProvider;
+    private readonly IPackageService _packageService;
+    private readonly IPackageWindowService _packageWindowService;
+    private readonly IMainDockService _mainDockService;
+    private readonly IPaths _paths;
+    private readonly IChatAgentService _agentService;
     private readonly SemaphoreSlim _cloudAccountSync = new(1, 1);
     private IDisposable? _cloudAccountSubscription;
     private bool _wasInitialized;
     private string? _initializedCloudUserId;
-    private volatile string? _currentTurnIdempotencyKey;
+    private readonly Dictionary<string, string> _currentTurnIdempotencyKeys = new(StringComparer.Ordinal);
+    private readonly object _idempotencyKeysLock = new();
 
     public OneWareCloudChatService(
         ISettingsService settingsService,
@@ -64,12 +72,30 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     {
         _cloudAccess = cloudAccess;
         _windowService = windowService;
+        _settingsService = settingsService;
+        _toolProvider = toolProvider;
+        _packageService = packageService;
+        _packageWindowService = packageWindowService;
+        _mainDockService = mainDockService;
+        _paths = paths;
+        _agentService = agentService;
         UsesGitHubAuthentication = false;
     }
 
     public override string Name => "OneWare Agents";
 
     public override bool IsOneWareCloud => true;
+
+    protected override CopilotChatServiceBase CreateSibling() => new OneWareCloudChatService(
+        _settingsService,
+        _toolProvider,
+        _packageService,
+        _packageWindowService,
+        _windowService,
+        _mainDockService,
+        _paths,
+        _agentService,
+        _cloudAccess);
 
     private string CloudBaseUrl => _cloudAccess.BaseUrl.TrimEnd('/');
 
@@ -80,6 +106,8 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
 
     protected override async Task<bool> PrepareInitializationAsync()
     {
+        if (!IsConnectionOwner) return true;
+
         _wasInitialized = true;
         EnsureCloudAccountSubscription();
         _initializedCloudUserId = _cloudAccess.UserId;
@@ -296,7 +324,8 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     protected override void ConfigureMessageOptions(MessageOptions options)
     {
         var idempotencyKey = Guid.NewGuid().ToString("N");
-        _currentTurnIdempotencyKey = idempotencyKey;
+        ((OneWareCloudChatService)ConnectionOwner).SetCurrentTurnIdempotencyKey(
+            CurrentSessionId, idempotencyKey);
         options.RequestHeaders = new Dictionary<string, string>
         {
             [IdempotencyHeader] = idempotencyKey
@@ -304,9 +333,23 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     }
 
     // Requests outside a user turn (e.g. background work after a restart) still need a valid key.
-    private string GetCurrentTurnIdempotencyKey()
+    private string GetCurrentTurnIdempotencyKey(string? sessionId)
     {
-        return _currentTurnIdempotencyKey ??= Guid.NewGuid().ToString("N");
+        lock (_idempotencyKeysLock)
+        {
+            if (sessionId != null && _currentTurnIdempotencyKeys.TryGetValue(sessionId, out var key))
+                return key;
+        }
+
+        return Guid.NewGuid().ToString("N");
+    }
+
+    private void SetCurrentTurnIdempotencyKey(string? sessionId, string key)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return;
+
+        lock (_idempotencyKeysLock)
+            _currentTurnIdempotencyKeys[sessionId] = key;
     }
 
     /// <summary>

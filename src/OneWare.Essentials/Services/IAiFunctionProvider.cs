@@ -24,6 +24,12 @@ public interface IAiFunctionProvider
     {
     }
 
+    /// <summary>
+    /// Cancels the AI functions that are currently running for the given chat session. Providers that don't track
+    /// sessions cancel all running functions.
+    /// </summary>
+    void CancelActiveFunctions(string sessionId) => CancelActiveFunctions();
+
     /// <summary>Cancels the single running AI function with the given invocation id.</summary>
     void CancelFunction(string id)
     {

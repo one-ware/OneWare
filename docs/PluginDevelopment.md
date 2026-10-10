@@ -366,12 +366,18 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `AbortAsync()`: cancel current request.
 - `NewChatAsync()`: reset conversation state.
 - Events: `SessionReset`, `EventReceived`, `StatusChanged` for UI updates.
+- `IChatServiceWithSessions`: resumable sessions (`CurrentSessionId`, `LoadSessionAsync`) for the chat history.
+- `IChatServiceWithParallelSessions`: `CreateSession()` returns another instance of the service with its own
+  session, model selection and events. The chat panel uses it whenever another chat of the service is still loaded
+  (e.g. working in the background), so several conversations can run at the same time; it disposes the instance
+  when the chat is unloaded. Services without it run one chat at a time.
 
 #### `IChatManagerService` (src/OneWare.Essentials/Services/IChatManagerService.cs)
 
 - `RegisterChatService(IChatService)`: add a chat provider.
-- `SelectedChatService`: currently selected provider.
-- `SaveState()`: persist selection.
+- `SelectedChatService`: provider of the shown chat. Setting it opens a new chat with that provider (a working
+  chat keeps running in the background).
+- `SaveState()`: persist the loaded chats and which chat was shown last.
 
 #### `IChatAgentService` (src/OneWare.Essentials/Services/IChatAgentService.cs)
 
@@ -607,6 +613,10 @@ Key points:
   shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
   for a delegated task, shown in the header of its block.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
+- OneWare functions (tools from `IAiFunctionProvider`) report `AiFunctionEvent.SessionId` so the chat shows them in
+  the right conversation. Put an object with a public string `SessionId` property (like the Copilot SDK's `ToolInvocation`) in
+  `AIFunctionArguments.Context` when invoking them, and call
+  `IAiFunctionProvider.CancelActiveFunctions(sessionId)` from `AbortAsync` to stop only your own session's tools.
 
 Skeleton example:
 

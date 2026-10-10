@@ -11,235 +11,243 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="OneWare.Chat.Views.ChatView" Name="ChatViewView"
              Background="{DynamicResource ThemeControlLowBrush}" x:DataType="viewModels:ChatViewModel">
-    <Grid RowDefinitions="Auto, *, Auto, Auto, Auto" RowSpacing="4">
-        <Border Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="0 0 0 1" Padding="4">
-            <DockPanel LastChildFill="False">
-                <StackPanel Spacing="8" Orientation="Horizontal" Margin="4">
-                    <TextBlock Text="OneWare Chat" FontWeight="Bold" />
-                    <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"
-                               Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                </StackPanel>
+    <Grid RowDefinitions="*, Auto, Auto, Auto" RowSpacing="4">
+        <Panel>
+            <!-- Overview: all chats, working ones first, then newest first -->
+            <DockPanel IsVisible="{Binding IsOverviewVisible}">
+                <Border DockPanel.Dock="Top" Classes="header" Padding="4">
+                    <DockPanel>
+                        <TextBlock Classes="semibold" Margin="4" Text="Chats" VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
 
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
-                            IsVisible="{Binding SelectedChatService, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Button Command="{Binding InitializeCurrentCommand}">
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="!IsInitialized" />
-                                <Binding Path="!IsBlocked" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="8" Width="8"
-                                   VerticalAlignment="Center" />
-                            <TextBlock Text="Refresh" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding NewChatCommand}">
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="IsInitialized" />
-                                <Binding Path="!IsBlocked" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Image Source="{DynamicResource BoxIcons.RegularPlus}" Height="8" Width="8"
-                                   VerticalAlignment="Center" />
-                            <TextBlock Text="New Chat" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Name="HistoryButton">
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="!!SessionHistory.Count" />
-                                <Binding Path="!IsBlocked" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-                        <Button.Flyout>
-                            <Flyout FlyoutPresenterClasses="list"
-                                    Placement="BottomEdgeAlignedRight">
-                                <ListBox ItemsSource="{Binding SessionHistory}"
-                                         SelectedItem="{Binding SelectedSessionHistory}" BorderThickness="0"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         Width="300" MaxHeight="500">
-                                    <Interaction.Behaviors>
-                                        <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
-                                            <HideFlyoutAction Flyout="{Binding #HistoryButton.Flyout}" />
-                                        </behaviors1:PointerPressedHandledEventTrigger>
-                                    </Interaction.Behaviors>
-                                    <ListBox.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel />
-                                        </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Grid.Column="1" Text="{Binding UpdatedAtLabel}"
-                                                           Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                                                           FontSize="11" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Flyout>
-                        </Button.Flyout>
-                        <Image Source="{DynamicResource Bootstrap.Clock}" Width="12" Height="12" />
-                    </Button>
+                <Panel>
+                    <Border Classes="empty-state" IsVisible="{Binding !Overview.Count}">
+                        <TextBlock Classes="muted" Text="No chats yet" />
+                    </Border>
 
-                    <ContentControl VerticalAlignment="Center"
-                                    Content="{Binding SelectedChatService.HeaderUiExtension, FallbackValue={x:Null}}" />
-                </StackPanel>
+                    <ListBox Classes="transparent" ItemsSource="{Binding Overview}"
+                             SelectedItem="{Binding SelectedOverviewItem}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="4">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:ChatOverviewItem">
+                                <Grid ColumnDefinitions="16, *, Auto" RowDefinitions="Auto, Auto" ColumnSpacing="6">
+                                    <Panel Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <controls:LogoLoader IsVisible="{Binding Session.IsBusy, FallbackValue=False}"
+                                                             ToolTip.Tip="Working" />
+                                        <Ellipse Width="6" Height="6" Fill="{DynamicResource ThemeAccentBrush}"
+                                                 ToolTip.Tip="Finished or waiting for you">
+                                            <Ellipse.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="Session.HasAttention" FallbackValue="False" />
+                                                    <Binding Path="!Session.IsBusy" FallbackValue="False" />
+                                                </MultiBinding>
+                                            </Ellipse.IsVisible>
+                                        </Ellipse>
+                                    </Panel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="2" Classes="caption" Text="{Binding UpdatedAtLabel}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="caption"
+                                               Text="{Binding ServiceName}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Panel>
             </DockPanel>
-        </Border>
 
-        <Panel Grid.Row="1">
-            <DockPanel IsVisible="{Binding !IsBlocked}">
-                <!-- Loading indicator + queued messages are pinned below the conversation and kept
-                     outside the scrolling region so the virtualizing message list above can virtualize
-                     against the viewport (it must be the direct content of the ScrollViewer). -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="10 6 0 0" Spacing="5">
-                    <!-- Activity indicator: agent working, or a send waiting for the service to connect -->
-                    <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="6"
-                          IsVisible="{Binding IsActivityVisible}">
-                        <controls:LogoLoader VerticalAlignment="Center" />
+            <!-- The shown chat -->
+            <Grid RowDefinitions="Auto, *" RowSpacing="4"
+                  IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  DataContext="{Binding CurrentSession}">
+                <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                        BorderThickness="0 0 0 1" Padding="4">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Left" Classes="icon" VerticalAlignment="Center" ToolTip.Tip="All chats"
+                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ShowOverviewCommand, FallbackValue={x:Null}}">
+                            <PathIcon Classes="small" Data="{StaticResource Icon.ArrowLeft}" />
+                        </Button>
 
-                        <controls:ShimmerTextBlock Grid.Column="1"
-                                                   Foreground="{DynamicResource ThemeForegroundBrush}"
-                                                   FontSize="11" FontStyle="Italic"
-                                                   Text="{Binding WorkingStatusText}" />
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button
+                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).NewChatCommand, FallbackValue={x:Null}}"
+                                IsVisible="{Binding !IsBlocked}">
+                                <PathIcon Classes="small" Data="{StaticResource Icon.Add}" />
+                            </Button>
+
+                            <ContentControl VerticalAlignment="Center"
+                                            Content="{Binding Service.HeaderUiExtension, FallbackValue={x:Null}}" />
+                        </StackPanel>
+
+                        <TextBlock Margin="4 0" VerticalAlignment="Center" Classes="semibold" Text="{Binding Title}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                </Border>
+
+                <Panel Grid.Row="1">
+                    <DockPanel IsVisible="{Binding !IsBlocked}">
+                        <!-- Loading indicator + queued messages are pinned below the conversation and kept
+                             outside the scrolling region so the virtualizing message list above can virtualize
+                             against the viewport (it must be the direct content of the ScrollViewer). -->
+                        <StackPanel DockPanel.Dock="Bottom" Margin="10 6 0 0" Spacing="5">
+                            <!-- Activity indicator: agent working, or a send waiting for the service to connect -->
+                            <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="6"
+                                  IsVisible="{Binding IsActivityVisible}">
+                                <controls:LogoLoader VerticalAlignment="Center" />
+
+                                <controls:ShimmerTextBlock Grid.Column="1"
+                                                           Foreground="{DynamicResource ThemeForegroundBrush}"
+                                                           FontSize="11" FontStyle="Italic"
+                                                           Text="{Binding WorkingStatusText}" />
+                            </Grid>
+
+                            <!-- Connection problem: the service's status as the reason, with a retry -->
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 0 10 0"
+                                        IsVisible="{Binding HasConnectionProblem}">
+                                <PathIcon Classes="small warning" VerticalAlignment="Center"
+                                          Data="{StaticResource Icon.Warning}" />
+                                <TextBlock Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           Text="{Binding StatusText}" />
+                                <Button Classes="link" VerticalAlignment="Center" Content="Retry"
+                                        Command="{Binding InitializeCurrentCommand}" />
+                            </StackPanel>
+
+                            <!-- Queued messages (dimmed, pinned below the conversation) -->
+                            <ItemsControl Opacity="0.5" ItemsSource="{Binding QueuedMessages}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="chatMessages:ChatMessageUserViewModel">
+                                        <Border Margin="0 2" HorizontalAlignment="Right" CornerRadius="6"
+                                                Padding="8 4 4 4" Background="{DynamicResource ChatBubbleBrush}">
+                                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
+                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
+                                                           VerticalAlignment="Center" />
+                                                <Button Grid.Column="1"
+                                                        Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).CurrentSession.RemoveQueuedMessageCommand, FallbackValue={x:Null}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="Remove queued message">
+                                                    <Image Source="{DynamicResource MaterialDesign.Close}" Width="12"
+                                                           Height="12" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="5" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <ScrollViewer Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <Interaction.Behaviors>
+                                <AutoScrollDuringDragBehavior ScrollDelta="4" />
+                            </Interaction.Behaviors>
+
+                            <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}" Margin="10 0">
+                                <ItemsControl.ContextFlyout>
+                                    <MenuFlyout Opening="OnMessagesContextFlyoutOpening">
+                                        <MenuItem Header="Copy" InputGesture="Ctrl+C" Click="OnCopySelectionClick">
+                                            <MenuItem.Icon>
+                                                <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </MenuFlyout>
+                                </ItemsControl.ContextFlyout>
+                                <ItemsControl.Styles>
+                                    <Style Selector="Expander /template/ ToggleButton">
+                                        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                                        <Setter Property="CornerRadius" Value="3" />
+                                    </Style>
+                                    <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border">
+                                        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+                                    </Style>
+                                    <Style
+                                        Selector="Expander /template/ ToggleButton:pointerover /template/ Border Border">
+                                        <Setter Property="Background" Value="Transparent" />
+                                    </Style>
+                                    <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
+                                        <Setter Property="CornerRadius" Value="3" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                    <Style
+                                        Selector="Expander /template/ ToggleButton#PART_toggle /template/ Grid > Border">
+                                        <Setter Property="Margin" Value="0 2" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </ItemsControl.Styles>
+
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <controls:EstimatingVirtualizingStackPanel Spacing="7" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+
+                    <!-- Replaces the chat while the selected service cannot be used (login, subscription, ...) -->
+                    <Grid IsVisible="{Binding IsBlocked}" Margin="20">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" MaxWidth="340">
+                            <TextBlock Text="{Binding Blocker.Title, FallbackValue={x:Null}}" FontWeight="Bold"
+                                       FontSize="15" TextAlignment="Center" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8"
+                                        Margin="0 6 0 0">
+                                <Button Classes="RoundButton PrimaryButton" Padding="10 5"
+                                        Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
+                                        CommandParameter="{Binding $self}"
+                                        Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
+                                        IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+                                <Button Classes="RoundButton" Padding="10 5"
+                                        Command="{Binding InitializeCurrentCommand}"
+                                        IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
+                                        ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="10"
+                                               Width="10"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Checking..." HorizontalAlignment="Center" FontSize="11"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                       IsVisible="{Binding InitializeCurrentCommand.IsRunning}" />
+                        </StackPanel>
                     </Grid>
 
-                    <!-- Queued messages (dimmed, pinned below the conversation) -->
-                    <ItemsControl Opacity="0.5" ItemsSource="{Binding QueuedMessages}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="chatMessages:ChatMessageUserViewModel">
-                                <Border Margin="0 2" HorizontalAlignment="Right" CornerRadius="6"
-                                        Padding="8 4 4 4" Background="{DynamicResource ChatBubbleBrush}">
-                                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6">
-                                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
-                                                   VerticalAlignment="Center" />
-                                        <Button Grid.Column="1"
-                                                Command="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).RemoveQueuedMessageCommand}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip.Tip="Remove queued message">
-                                            <Image Source="{DynamicResource MaterialDesign.Close}" Width="12"
-                                                   Height="12" />
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Spacing="5" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </StackPanel>
-
-                <ScrollViewer Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto">
-                    <Interaction.Behaviors>
-                        <AutoScrollDuringDragBehavior ScrollDelta="4" />
-                    </Interaction.Behaviors>
-                    
-                    <ItemsControl Name="ItemsControl" ItemsSource="{Binding Messages}" Margin="10 0">
-                        <ItemsControl.ContextFlyout>
-                            <MenuFlyout Opening="OnMessagesContextFlyoutOpening">
-                                <MenuItem Header="Copy" InputGesture="Ctrl+C" Click="OnCopySelectionClick">
-                                    <MenuItem.Icon>
-                                        <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </MenuFlyout>
-                        </ItemsControl.ContextFlyout>
-                        <ItemsControl.Styles>
-                            <Style Selector="Expander /template/ ToggleButton">
-                                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
-                                <Setter Property="CornerRadius" Value="3" />
-                            </Style>
-                            <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border">
-                                <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
-                            </Style>
-                            <Style Selector="Expander /template/ ToggleButton:pointerover /template/ Border Border">
-                                <Setter Property="Background" Value="Transparent" />
-                            </Style>
-                            <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Border">
-                                <Setter Property="CornerRadius" Value="3" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                            <Style Selector="Expander /template/ ToggleButton#PART_toggle /template/ Grid > Border">
-                                <Setter Property="Margin" Value="0 2" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </ItemsControl.Styles>
-
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <controls:EstimatingVirtualizingStackPanel Spacing="7" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </ScrollViewer>
-            </DockPanel>
-
-            <!-- Replaces the chat while the selected service cannot be used (login, subscription, ...) -->
-            <Grid IsVisible="{Binding IsBlocked}" Margin="20">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" MaxWidth="340">
-                    <TextBlock Text="{Binding Blocker.Title, FallbackValue={x:Null}}" FontWeight="Bold"
-                               FontSize="15" TextAlignment="Center" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Blocker.Message, FallbackValue={x:Null}}" TextAlignment="Center"
-                               TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0 6 0 0">
-                        <Button Classes="RoundButton PrimaryButton" Padding="10 5"
-                                Command="{Binding Blocker.ActionCommand, FallbackValue={x:Null}}"
-                                CommandParameter="{Binding $self}"
-                                Content="{Binding Blocker.ActionText, FallbackValue={x:Null}}"
-                                IsVisible="{Binding Blocker.ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
-                        <Button Classes="RoundButton" Padding="10 5"
-                                Command="{Binding InitializeCurrentCommand}"
-                                IsVisible="{Binding Blocker.CanRefresh, FallbackValue=False}"
-                                ToolTip.Tip="Check again, e.g. after logging in or upgrading your plan">
+                    <!--
+                    <Border VerticalAlignment="Center" HorizontalAlignment="Center"
+                            IsVisible="{Binding NeedsAuthentication}">
+                        <Button Command="{Binding AuthenticateCommand}" 
+                                Background="{DynamicResource ThemeBackgroundBrush}"
+                                Padding="5" Classes="RoundButton" Height="30">
                             <StackPanel Orientation="Horizontal" Spacing="5">
-                                <Image Source="{DynamicResource VsImageLib.RefreshGrey16X}" Height="10" Width="10"
-                                       VerticalAlignment="Center" />
-                                <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                                <TextBlock>
+                                    <Run Text="Login to " />
+                                    <Run Text="{Binding Service.Name, FallbackValue={x:Null}}" />
+                                </TextBlock>
                             </StackPanel>
                         </Button>
-                    </StackPanel>
-                    <TextBlock Text="Checking..." HorizontalAlignment="Center" FontSize="11"
-                               Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                               IsVisible="{Binding InitializeCurrentCommand.IsRunning}" />
-                </StackPanel>
-            </Grid>
+                    </Border>
+                    -->
+                </Panel>
 
-            <!--
-            <Border VerticalAlignment="Center" HorizontalAlignment="Center"
-                    IsVisible="{Binding NeedsAuthentication}">
-                <Button Command="{Binding AuthenticateCommand}" 
-                        Background="{DynamicResource ThemeBackgroundBrush}"
-                        Padding="5" Classes="RoundButton" Height="30">
-                    <StackPanel Orientation="Horizontal" Spacing="5">
-                        <TextBlock>
-                            <Run Text="Login to " />
-                            <Run Text="{Binding SelectedChatService.Name, FallbackValue={x:Null}}" />
-                        </TextBlock>
-                    </StackPanel>
-                </Button>
-            </Border>
-            -->
+            </Grid>
         </Panel>
 
-        <Border Grid.Row="2" Margin="10 4 10 0" Background="{DynamicResource ChatBubbleBrush}"
-                Classes="RoundBorder">
+        <Border Grid.Row="1" Margin="10 4 10 0" Background="{DynamicResource ChatBubbleBrush}"
+                Classes="RoundBorder"
+                DataContext="{Binding #ChatViewView.DataContext}" x:DataType="viewModels:ChatViewModel">
             <Border.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                     <Binding Path="!!AiFileEditService.ActiveEdits.Count" />
-                    <Binding Path="!IsBlocked" />
+                    <Binding Path="!IsOverviewVisible" />
+                    <Binding Path="!CurrentSession.IsBlocked" FallbackValue="False" />
                 </MultiBinding>
             </Border.IsVisible>
             <StackPanel Orientation="Vertical" Spacing="5">
@@ -247,10 +255,12 @@
                     <TextBlock Margin="4 0" VerticalAlignment="Center" Text="Changed Files"
                                Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                        <Button Command="{Binding AiFileEditService.UndoAllAsync}" ToolTip.Tip="Discard all file changes">
+                        <Button Command="{Binding AiFileEditService.UndoAllAsync}"
+                                ToolTip.Tip="Discard all file changes">
                             <TextBlock Text="Rollback" Foreground="{DynamicResource HighlightBrush}" />
                         </Button>
-                        <Button Command="{Binding AiFileEditService.AcceptAllAsync}" ToolTip.Tip="Accept all file changes">
+                        <Button Command="{Binding AiFileEditService.AcceptAllAsync}"
+                                ToolTip.Tip="Accept all file changes">
                             <TextBlock Text="Accept All" Foreground="{DynamicResource HighlightBrush}" />
                         </Button>
                     </StackPanel>
@@ -266,7 +276,8 @@
                                     <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="5">
                                         <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
                                         <TextBlock Grid.Column="1" Text="{Binding AddedLines}" Foreground="Lime" />
-                                        <TextBlock Grid.Column="2" Text="{Binding RemovedLines}" Foreground="OrangeRed" />
+                                        <TextBlock Grid.Column="2" Text="{Binding RemovedLines}"
+                                                   Foreground="OrangeRed" />
                                     </Grid>
                                 </Button>
                             </DataTemplate>
@@ -276,7 +287,8 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="3" Margin="10 0" Background="{DynamicResource EditorInputSurfaceBrush}"
+        <Border Grid.Row="2" DataContext="{Binding ComposerSession}"
+                Margin="10 0" Background="{DynamicResource EditorInputSurfaceBrush}"
                 Classes="RoundBorder" BorderThickness="1"
                 IsVisible="{Binding !IsBlocked}"
                 Classes.busy="{Binding IsBusy}">
@@ -296,7 +308,7 @@
             </Border.Styles>
             <Grid RowDefinitions="Auto, Auto, Auto, Auto">
                 <ContentControl Grid.Row="0"
-                                Content="{Binding SelectedChatService.TopUiExtension, FallbackValue={x:Null}}" />
+                                Content="{Binding Service.TopUiExtension, FallbackValue={x:Null}}" />
 
                 <TextBox Grid.Row="1" Name="CommandBox" Watermark="Type your task here..."
                          AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" MaxHeight="240"
@@ -320,7 +332,8 @@
                                     ToolTip.Tip="Message delivery">
                                 <Button.Flyout>
                                     <MenuFlyout>
-                                        <MenuItem ToolTip.Tip="Stop and Send" Header="Send" InputGesture="Alt+Enter"
+                                        <MenuItem ToolTip.Tip="Stop and Send" Header="Send"
+                                                  InputGesture="Alt+Enter"
                                                   Command="{Binding SendCommand}">
                                             <MenuItem.Icon>
                                                 <Image Source="{DynamicResource FluentIcons.send_regular}" />
@@ -332,16 +345,18 @@
                                                 <Image Source="{DynamicResource BoxIcons.RegularPlus}" />
                                             </MenuItem.Icon>
                                         </MenuItem>
-                                        <MenuItem ToolTip.Tip="Steer" Header="Steer with Message" InputGesture="Enter"
+                                        <MenuItem ToolTip.Tip="Steer" Header="Steer with Message"
+                                                  InputGesture="Enter"
                                                   Command="{Binding SteerCommand}" />
                                     </MenuFlyout>
                                 </Button.Flyout>
-                                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8" Height="8" />
+                                <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
+                                       Height="8" />
                             </Button>
                         </StackPanel>
 
                         <ContentControl DockPanel.Dock="Left"
-                                        Content="{Binding SelectedChatService.BottomUiExtension, FallbackValue={x:Null}}" />
+                                        Content="{Binding Service.BottomUiExtension, FallbackValue={x:Null}}" />
 
                     </DockPanel>
                 </Border>
@@ -350,16 +365,18 @@
         </Border>
 
         <!-- Footer row: chat service selection (left) + service-specific extension (right) -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="3" DataContext="{Binding ComposerSession}"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}" Margin="10 0 10 4">
             <DockPanel LastChildFill="False" VerticalAlignment="Center">
                 <Button Name="MenuButton" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <Button.Flyout>
                         <Flyout FlyoutPresenterClasses="flush"
                                 Placement="Top">
-                            <ListBox ItemsSource="{Binding ChatServices}"
-                                     SelectedItem="{Binding SelectedChatService}" BorderThickness="0"
-                                     MinWidth="200">
+                            <ListBox
+                                ItemsSource="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).ChatServices}"
+                                SelectedItem="{Binding #ChatViewView.((viewModels:ChatViewModel)DataContext).SelectedChatService}"
+                                BorderThickness="0"
+                                MinWidth="200">
                                 <Interaction.Behaviors>
                                     <behaviors1:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
                                         <HideFlyoutAction Flyout="{Binding #MenuButton.Flyout}" />
@@ -381,7 +398,7 @@
                         </Flyout>
                     </Button.Flyout>
                     <StackPanel Orientation="Horizontal" Spacing="5">
-                        <TextBlock Text="{Binding SelectedChatService.Name, FallbackValue=Select Service}"
+                        <TextBlock Text="{Binding Service.Name, FallbackValue=Select Service}"
                                    FontSize="11" VerticalAlignment="Center"
                                    Foreground="{DynamicResource ThemeForegroundLowBrush}" />
                         <Image Source="{DynamicResource MaterialDesign.KeyboardArrowDown}" Width="8"
@@ -435,7 +452,7 @@
 
                 <ContentControl DockPanel.Dock="Right" VerticalAlignment="Center"
                                 IsVisible="{Binding !IsBlocked}"
-                                Content="{Binding SelectedChatService.FooterUiExtension, FallbackValue={x:Null}}" />
+                                Content="{Binding Service.FooterUiExtension, FallbackValue={x:Null}}" />
             </DockPanel>
         </Border>
 
