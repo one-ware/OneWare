@@ -17,6 +17,10 @@ icon: ./studio/OneWare.Studio/Assets/com.one_ware.OneWare.svg
 
 apps:
   oneware:
+    command: ./OneWareCLI
+    environment:
+      PATH: "$SNAP/usr/bin:$SNAP/bin:$PATH"
+  oneware-studio:
     command: ./OneWareStudio
     common-id: com.one_ware.OneWare
     desktop: ./com.one_ware.OneWare.desktop
@@ -73,12 +77,17 @@ parts:
       dotnet publish -r "$DOTNET_RID" -c Release -o "$SNAPCRAFT_PART_INSTALL"
 
       chmod +x "$SNAPCRAFT_PART_INSTALL/OneWareStudio"
+      chmod +x "$SNAPCRAFT_PART_INSTALL/OneWareCLI"
       chmod +x "$SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper"
+      chmod +x "$SNAPCRAFT_PART_INSTALL/oneware"
+      chmod +x "$SNAPCRAFT_PART_INSTALL/oneware-studio"
 
       file "$SNAPCRAFT_PART_INSTALL/OneWareStudio"
       file "$SNAPCRAFT_PART_INSTALL/AsmichiChildProcessHelper"
 
       sed -i 's|^Icon=.*$|Icon=${SNAP}/meta/gui/com.one_ware.OneWare.svg|' "$SNAPCRAFT_PART_INSTALL/com.one_ware.OneWare.desktop"
+      sed -i 's|^TryExec=oneware-studio$|TryExec=oneware.oneware-studio|' "$SNAPCRAFT_PART_INSTALL/com.one_ware.OneWare.desktop"
+      sed -i 's|^Exec=oneware-studio|Exec=oneware.oneware-studio|' "$SNAPCRAFT_PART_INSTALL/com.one_ware.OneWare.desktop"
     stage-packages:
       - libgtk-3-0
       - libx11-6
