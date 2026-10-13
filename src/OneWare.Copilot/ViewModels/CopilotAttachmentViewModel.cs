@@ -37,6 +37,31 @@ public sealed class CopilotAttachmentViewModel : ObservableObject, IDisposable
 
     public IRelayCommand RemoveCommand { get; }
 
+    /// <summary>
+    /// Whether the active-file chip is sent with the next message. Other attachments are always included.
+    /// </summary>
+    public bool IsIncluded
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = true;
+
+    /// <summary>Switches <see cref="IsIncluded"/>; only offered for the active-file chip.</summary>
+    public IRelayCommand ToggleIncludedCommand => field ??= new RelayCommand(() =>
+    {
+        IsIncluded = !IsIncluded;
+        _onToggled?.Invoke(this);
+    });
+
+    private Action<CopilotAttachmentViewModel>? _onToggled;
+
+    /// <summary>Called after the user switched <see cref="IsIncluded"/>.</summary>
+    public CopilotAttachmentViewModel OnToggled(Action<CopilotAttachmentViewModel> onToggled)
+    {
+        _onToggled = onToggled;
+        return this;
+    }
+
     public CopilotAttachmentViewModel(
         string filePath,
         string displayName,

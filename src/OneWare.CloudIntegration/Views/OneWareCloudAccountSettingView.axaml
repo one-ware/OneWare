@@ -12,8 +12,7 @@
             <Panel>
                 <Image Source="{Binding Setting.Image}" />
                 <PathIcon IsVisible="{Binding Setting.Image, Converter={x:Static ObjectConverters.IsNull}}"
-                       Data="{StaticResource Icon.Account}"
-                       Margin="6" />
+                       Data="{StaticResource Icon.Account}" Width="30" Height="30" />
             </Panel>
 
         </Border>

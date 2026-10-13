@@ -1,3 +1,16 @@
+## 1.0.44
+
+- Added multiple parallel AI chats, each with its own model, plus a chat overview page to switch between them
+- "Allow in this chat" approvals now only apply to the current chat, and for terminal commands only to the approved command
+- The chat overview now shows how many files the AI changed in each chat
+- Added a live activity status in the chat showing which tools the AI is currently running
+- AI terminal commands now run in the correct working directory and long outputs are trimmed to the relevant start and end
+- The active file attachment in the chat can now be toggled and is only included by default when text is selected
+- Connection problems in the chat are now shown inline with a retry link
+- Improved sub agent messages in the chat
+- Fixed the conversation not staying scrolled to the end while tool output grows
+- Fixed icon sizes in the account settings
+
 ## 1.0.43
 
 - Added a confirmation dialog before removing a package

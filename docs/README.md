@@ -91,6 +91,23 @@ list of available services.
 - External binaries such as language servers and toolchains are installed through the package manager
   (`IPackageService`) and started through `IChildProcessService` / `IToolService`.
 
+### Language protocol dependencies
+
+The LSP client uses the [OneWare OmniSharp fork](https://github.com/hendrikmennen/csharp-language-server-protocol).
+Starting with package version 1.0.2, its JSON-RPC dispatcher and contracts are owned by the fork; it no longer
+depends on MediatR. Keep the client and protocol versions aligned in
+`build/props/OmniSharp.Extensions.Language.props`.
+
+Plugins using the language protocol packages must be rebuilt against 1.0.2 or later: the request, handler
+and pipeline contract identities changed. Custom handlers should import
+`OmniSharp.Extensions.JsonRpc.Dispatching` instead of `MediatR`. This is a binary compatibility break in the
+protocol dependency, even though OneWare's own service signatures are unchanged.
+
+When validating an unpublished fork version, pack it in the fork checkout and restore OneWare with
+`dotnet restore OneWare.slnx --source <local-package-directory> --source https://api.nuget.org/v3/index.json`.
+Publish that version of the fork packages before merging the corresponding OneWare dependency update so
+ordinary restores and CI can resolve it.
+
 ## Running and debugging
 
 ```bash

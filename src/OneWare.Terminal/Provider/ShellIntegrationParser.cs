@@ -12,7 +12,8 @@ namespace OneWare.Terminal.Provider;
 public sealed class ShellIntegrationParser
 {
     private const string OscIntegrationPrefix = "633;";
-    private const int MaxPayloadLength = 256;
+    // Long enough for the working directory property (OSC 633;P;Cwd=...).
+    private const int MaxPayloadLength = 4096;
 
     private enum State
     {
@@ -24,7 +25,7 @@ public sealed class ShellIntegrationParser
     }
 
     private readonly List<byte> _held = new();
-    private readonly StringBuilder _payload = new();
+    private readonly List<byte> _payload = new();
     private State _state = State.Text;
     private int _prefixMatched;
 
@@ -114,8 +115,8 @@ public sealed class ShellIntegrationParser
                 else
                 {
                     _held.Add(b);
-                    _payload.Append((char)b);
-                    if (_payload.Length > MaxPayloadLength)
+                    _payload.Add(b);
+                    if (_payload.Count > MaxPayloadLength)
                     {
                         // Runaway sequence without terminator: give up and pass it through.
                         ReleaseHeld(text);
@@ -133,8 +134,8 @@ public sealed class ShellIntegrationParser
                 else
                 {
                     _held.Add(b);
-                    _payload.Append((char)0x1B);
-                    _payload.Append((char)b);
+                    _payload.Add(0x1B);
+                    _payload.Add(b);
                     _state = State.OscPayload;
                 }
 
@@ -145,7 +146,7 @@ public sealed class ShellIntegrationParser
     private void EmitEvent(List<byte> text, List<Segment> segments)
     {
         FlushText(text, segments);
-        segments.Add(new Segment(null, ShellIntegrationEvent.Parse(_payload.ToString())));
+        segments.Add(new Segment(null, ShellIntegrationEvent.Parse(Encoding.UTF8.GetString(_payload.ToArray()))));
         _held.Clear();
         _payload.Clear();
         _state = State.Text;
@@ -167,8 +168,8 @@ public sealed class ShellIntegrationParser
 }
 
 /// <summary>
-/// A single OSC 633 shell-integration event, e.g. command started ("C")
-/// or command finished with exit code ("D;0").
+/// A single OSC 633 shell-integration event, e.g. command started ("C"), command finished with
+/// exit code ("D;0") or a property such as the working directory ("P;Cwd=/home/user").
 /// </summary>
 public readonly record struct ShellIntegrationEvent(char Command, string? Argument)
 {
@@ -180,5 +181,49 @@ public readonly record struct ShellIntegrationEvent(char Command, string? Argume
         return separator < 0
             ? new ShellIntegrationEvent(payload[0], null)
             : new ShellIntegrationEvent(payload[0], payload[(separator + 1)..]);
+    }
+
+    /// <summary>
+    /// The working directory reported by a "P;Cwd=..." event, or null for any other event.
+    /// </summary>
+    public string? WorkingDirectory =>
+        Command == 'P' && Argument is { } argument && argument.StartsWith("Cwd=", StringComparison.Ordinal)
+            ? UnescapeValue(argument[4..])
+            : null;
+
+    /// <summary>
+    /// Reverses the escaping the shell scripts apply to property values: "\\" is a backslash and
+    /// "\xHH" a character the sequence cannot carry literally (";", control characters).
+    /// </summary>
+    public static string UnescapeValue(string value)
+    {
+        if (!value.Contains('\\')) return value;
+
+        var result = new StringBuilder(value.Length);
+        for (var i = 0; i < value.Length; i++)
+        {
+            if (value[i] == '\\' && i + 1 < value.Length)
+            {
+                if (value[i + 1] == '\\')
+                {
+                    result.Append('\\');
+                    i++;
+                    continue;
+                }
+
+                if (value[i + 1] == 'x' && i + 3 < value.Length &&
+                    byte.TryParse(value.AsSpan(i + 2, 2), System.Globalization.NumberStyles.HexNumber, null,
+                        out var code))
+                {
+                    result.Append((char)code);
+                    i += 3;
+                    continue;
+                }
+            }
+
+            result.Append(value[i]);
+        }
+
+        return result.ToString();
     }
 }

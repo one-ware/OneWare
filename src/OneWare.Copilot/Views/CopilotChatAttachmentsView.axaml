@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:OneWare.Copilot.Services"
              xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
+             xmlns:views="clr-namespace:OneWare.Copilot.Views"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="40"
              x:Class="OneWare.Copilot.Views.CopilotChatAttachmentsView"
              x:DataType="services:CopilotChatServiceBase">
@@ -46,8 +47,35 @@
         </Button>
 
         <ContentControl Content="{Binding ActiveFileAttachment}"
-                        ContentTemplate="{StaticResource AttachmentChipTemplate}"
-                        IsVisible="{Binding ActiveFileAttachment, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        IsVisible="{Binding ActiveFileAttachment, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <ContentControl.ContentTemplate>
+                <!-- Active file: click to include or exclude it; only included by default when text is selected -->
+                <DataTemplate x:DataType="viewModels:CopilotAttachmentViewModel">
+                    <Button Classes="ToolBar" Padding="4 1" Margin="0 0 4 0" VerticalAlignment="Center"
+                            Command="{Binding ToggleIncludedCommand}"
+                            Opacity="{Binding IsIncluded, Converter={x:Static views:CopilotAttachmentConverters.IncludedOpacity}}">
+                        <ToolTip.Tip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding FilePath}" />
+                                <TextBlock Classes="muted" Text="Sent with the next message. Click to exclude."
+                                           IsVisible="{Binding IsIncluded}" />
+                                <TextBlock Classes="muted" Text="Not sent. Click to include."
+                                           IsVisible="{Binding !IsIncluded}" />
+                            </StackPanel>
+                        </ToolTip.Tip>
+                        <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                            <Image Source="{DynamicResource VsImageLib.File16X}" Width="12" Height="12"
+                                   VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding DisplayName}" FontSize="11" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Detail}" FontSize="11" FontStyle="Italic"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                       IsVisible="{Binding Detail, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
 
         <ItemsControl ItemsSource="{Binding Attachments}"
                       ItemTemplate="{StaticResource AttachmentChipTemplate}">

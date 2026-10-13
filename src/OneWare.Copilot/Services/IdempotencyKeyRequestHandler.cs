@@ -8,14 +8,14 @@ namespace OneWare.Copilot.Services;
 /// <c>RequestHeaders</c> are only applied to the main agent, so requests issued by subagents
 /// would otherwise go out without one. Missing keys fall back to the key of the current user turn.
 /// </summary>
-internal sealed class IdempotencyKeyRequestHandler(string headerName, Func<string> currentKeyProvider)
+internal sealed class IdempotencyKeyRequestHandler(string headerName, Func<string?, string> currentKeyProvider)
     : CopilotRequestHandler
 {
     protected override Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request,
         CopilotRequestContext ctx)
     {
         if (!request.Headers.Contains(headerName))
-            request.Headers.TryAddWithoutValidation(headerName, currentKeyProvider());
+            request.Headers.TryAddWithoutValidation(headerName, currentKeyProvider(ctx.SessionId));
 
         return base.SendRequestAsync(request, ctx);
     }
@@ -27,7 +27,7 @@ internal sealed class IdempotencyKeyRequestHandler(string headerName, Func<strin
 
         var headers = new Dictionary<string, IReadOnlyList<string>>(ctx.Headers, StringComparer.OrdinalIgnoreCase)
         {
-            [headerName] = [currentKeyProvider()]
+            [headerName] = [currentKeyProvider(ctx.SessionId)]
         };
         return base.OpenWebSocketAsync(new CopilotRequestContext(ctx) { Headers = headers });
     }
