@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Debugger.Helpers;
 using OneWare.Debugger.Models;
-using OneWare.Debugger.Settings;
 using OneWare.Debugger.ViewModels;
 using OneWare.Debugger.ViewModels.Inspector;
 using OneWare.Debugger.ViewModels.Main;
@@ -75,10 +74,12 @@ public class DebuggerModule : OneWareModuleBase
                 HoverDescription = "Path to the GDB executable for debugging via gdbserver."
             });
 
-        settingsService.RegisterCustom("Tools", "Debugger", RemoteProtocolLogSetting,
-            new ToggleSwitchSetting("Log GDB Remote Protocol", false,
-                "Logs every packet exchanged with the debug stub in the debugger console. " +
-                "Takes effect immediately, also while a session is running."));
+        settingsService.RegisterSetting("Tools", "Debugger", RemoteProtocolLogSetting,
+            new ToggleSwitchSetting("Log GDB Remote Protocol", false)
+            {
+                HoverDescription = "Logs every packet exchanged with the debug stub in the debugger console. " +
+                                   "Takes effect immediately, also while a session is running."
+            });
 
         settingsService.GetSettingObservable<bool>(RemoteProtocolLogSetting)
             .Subscribe(enabled => _ = serviceProvider.Resolve<IDebuggerService>()
