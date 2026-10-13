@@ -4,12 +4,9 @@ using OneWare.Debugger.Models;
 namespace OneWare.Debugger.Helpers;
 
 // Writes the target's raw word values in the notation chosen by the user.
-// Signed always means two's complement here: the SVNR demonstrably calculates that way
-// (alu_n.vhd reads the operands as to_integer(signed(...)) and writes the result as
-// to_signed(var_c, 16), both numeric_std and thus two's complement per IEEE 1076.3; the
-// range -32768..32767 is its asymmetric signature). A choice between ones' and
-// two's complement deliberately does not exist -> it could only produce values the
-// machine never had.
+// Signed always means two's complement here. A choice between ones' and two's
+// complement deliberately does not exist -> on a two's complement machine it could
+// only produce values the machine never had.
 // Besides, only the decimal display has a sign. Hex, octal and binary show the raw
 // bit pattern, and that holds the same bits whether they are read as -1 or as 65535.
 // Whatever cannot be read as a number - "target running", "unreadable", a structure -

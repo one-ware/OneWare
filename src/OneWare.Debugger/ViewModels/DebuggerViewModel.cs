@@ -200,7 +200,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
     // The program file of the active project, searched anew on every start: after a rebuild
     // it would otherwise be there but only be found after restarting the studio.
-    // A target such as the SVNR holds its program itself and brings none along - then it stays
+    // A target that holds its program itself brings none along - then it stays
     // null, and GDB attaches without symbols.
     private string? FindProjectExecutable()
     {

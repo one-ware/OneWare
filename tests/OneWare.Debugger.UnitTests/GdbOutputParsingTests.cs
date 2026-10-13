@@ -74,7 +74,7 @@ public class GdbOutputParsingTests
     [Fact]
     public void Event_ReadsStopWithoutSourceLocation()
     {
-        // The SVNR case: no symbol file, so neither file nor line. Only the program counter
+        // A target without a symbol file: neither file nor line. Only the program counter
         // describes the halt, and it must arrive.
         var gdbEvent = new GdbEvent(
             "*stopped,reason=\"end-stepping-range\",frame={addr=\"0x00000108\"}");

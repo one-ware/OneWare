@@ -9,7 +9,7 @@ using OneWare.Essentials.Services;
 namespace OneWare.Debugger;
 
 // The core's GDB backend. Covers local debugging and, through
-// RemoteEndpoint, attached targets such as the SVNR as well.
+// RemoteEndpoint, attached targets as well.
 public class GdbSessionLauncher(ILogger logger, ISettingsService settingsService, IPaths paths) : IDebugSessionLauncher
 {
     public const string BackendId = "gdb_server";
