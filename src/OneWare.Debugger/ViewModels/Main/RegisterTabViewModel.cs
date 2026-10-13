@@ -5,36 +5,36 @@ using OneWare.Essentials.Debugger.Entities;
 
 namespace OneWare.Debugger.ViewModels.Main;
 
-// Reiter "Registers": die Registerinhalte des letzten Halts.
-// Bekommt seinen Zustand von DebuggerViewModel gereicht und kennt weder Sitzung noch Dienst
-// -> zum Pruefen genuegen eine Liste von DebugRegisterValue und ein Schalter, kein laufender Debugger.
+// "Registers" tab: the register contents of the last halt.
+// Is handed its state by DebuggerViewModel and knows neither session nor service
+// -> a list of DebugRegisterValue and a switch suffice for testing, no running debugger.
 public class RegisterTabViewModel
 {
     public RegisterTabViewModel(ValueFormatViewModel valueFormat)
     {
         ValueFormat = valueFormat;
 
-        // Ein anderes Zahlensystem beschriftet nur neu, was schon gelesen ist.
+        // A different number base only relabels what has already been read.
         valueFormat.Changed += (_, _) => RenderAll();
     }
 
-    // Zahlensystem und Vorzeichen der Anzeige. Dasselbe Objekt bedienen auch Memory und
-    // Variables -> die Leiste ueber der Tabelle schaltet alle drei zugleich um.
+    // Number base and sign of the display. The same object also serves Memory and
+    // Variables -> the bar above the table switches all three at once.
     public ValueFormatViewModel ValueFormat { get; }
 
-    // Registerinhalte, wie sie beim letzten Halt gelesen wurden.
+    // Register contents as read at the last halt.
     public ObservableCollection<RegisterRow> Rows { get; } = [];
 
-    // Aktualisiert die Registeranzeige an Ort und Stelle. Damit die Scrollbar sich nicht bei
-    // jedem F10 bzw. Continue hoch springt
+    // Updates the register display in place, so that the scrollbar does not jump to the
+    // top on every F10 or Continue.
     public void Apply(IReadOnlyList<DebugRegisterValue> registers, bool isRunning)
     {
-        // Waehrend das Ziel laeuft, ist die Liste leer (DebugSessionState.Registers) -> die
-        // Zeilen des letzten Halts bleiben stehen, statt bei jedem Continue zu verschwinden.
-        // Frueher stand hier eine Pruefung auf die Anzahl. Die traf denselben Fall, aber auch
-        // einen zweiten: ein Backend, das ueberhaupt keine Register lesen kann, meldet an einem
-        // echten Halt ebenfalls nichts - und dann blieben die Zeilen des vorigen Halts als
-        // Behauptung stehen. Ueber IsRunning sind beide Faelle getrennt.
+        // While the target runs, the list is empty (DebugSessionState.Registers) -> the
+        // rows of the last halt stay, instead of disappearing on every Continue.
+        // This used to be a check on the count. It caught the same case, but also
+        // a second one: a backend that cannot read registers at all likewise reports nothing
+        // at a real halt - and then the rows of the previous halt would remain as a
+        // claim. IsRunning keeps the two cases apart.
         if (isRunning) return;
 
         for (var i = 0; i < registers.Count; i++)
@@ -60,9 +60,9 @@ public class RegisterTabViewModel
         Rows.Clear();
     }
 
-    // Haelt Rohwert und Anzeige beisammen. Die Wortbreite steht im Hexwert selbst, den GDB auf
-    // die Registerbreite auffuellt -> ein 32-Bit-Register wird nicht wie ein 16-Bit-Wort
-    // vorzeichenbehaftet gelesen.
+    // Keeps raw value and display together. The word width is in the hex value itself, which GDB
+    // pads to the register width -> a 32-bit register is not read as signed like a
+    // 16-bit word.
     private void Show(RegisterRow row, string raw)
     {
         row.Raw = raw;

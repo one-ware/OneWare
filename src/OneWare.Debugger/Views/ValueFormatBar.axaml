@@ -7,10 +7,10 @@
              x:Class="OneWare.Debugger.Views.ValueFormatBar"
              x:DataType="viewModels:ValueFormatViewModel">
 
-    <!-- Bewusst ohne GroupName: Avalonia gruppiert Radioknoepfe ohne Namen nach ihrem
-         Elternelement. Die Leiste steht ueber drei Tabellen, und ein gemeinsamer Name wuerde
-         die drei Vorkommen gegenseitig abwaehlen lassen. Denselben Zustand zeigen sie ohnehin,
-         weil alle drei an dasselbe Ansichtsmodell gebunden sind. -->
+    <!-- Deliberately without GroupName: Avalonia groups radio buttons without a name by their
+         parent element. The bar sits above three tables, and a shared name would make
+         the three instances deselect each other. They show the same state anyway,
+         because all three are bound to the same view model. -->
     <Border Background="{DynamicResource ThemeBackgroundBrush}"
             BorderThickness="0,0,0,1"
             BorderBrush="{DynamicResource ThemeBorderLowBrush}">

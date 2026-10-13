@@ -1,7 +1,7 @@
 namespace OneWare.Debugger.Models;
 
-// Zahlensystem, in dem Memory, Registers und Variables ihre Werte anzeigen.
-// Nur Dec kennt ueberhaupt ein Vorzeichen -> siehe ValueFormatViewModel.IsSignedEnabled.
+// Number base in which Memory, Registers and Variables display their values.
+// Only Dec has a sign at all.
 public enum NumberBase
 {
     Hex,

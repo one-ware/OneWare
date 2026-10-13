@@ -9,7 +9,7 @@
              x:DataType="main:ConsoleTabViewModel">
 
     <UserControl.Styles>
-        <!-- Abgesetzte Kommandos heben sich von der Antwort des Backends ab. -->
+        <!-- Issued commands stand out from the backend's answer. -->
         <Style Selector="SelectableTextBlock.consoleLine">
             <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
             <Setter Property="FontSize" Value="12" />
@@ -39,11 +39,11 @@
             </DockPanel>
         </Border>
 
-        <!-- Jede Zeile ist ein eigener SelectableTextBlock, damit Kommandos farblich
-             abgesetzt bleiben. Ueber Zeilengrenzen hinweg laesst sich damit aber nichts
-             markieren - deshalb der Knopf, der den ganzen Verlauf in die Zwischenablage
-             legt. Ueber das Kontextmenue erreichbar, weil das die Geste ist, die man
-             zuerst probiert. -->
+        <!-- Every line is its own SelectableTextBlock, so that commands stay set apart
+             by colour. Nothing can be selected across line boundaries that way, though -
+             hence the button that puts the whole history on the clipboard.
+             Reachable through the context menu, because that is the gesture one
+             tries first. -->
         <Border Background="{DynamicResource ThemeBackgroundBrush}"
                 BorderThickness="1"
                 BorderBrush="{DynamicResource ThemeBorderLowBrush}">
@@ -69,8 +69,8 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <!-- Schwebt ueber der Ausgabe statt in einer eigenen Leiste: die Konsole
-                     ist ohnehin knapp hoch, und der Knopf soll keine Zeile kosten. -->
+                <!-- Floats above the output instead of in its own bar: the console
+                     is short anyway, and the button should not cost a line. -->
                 <Button Name="CopyConsoleButton"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         Margin="0,4,14,0" Width="24" Height="24"

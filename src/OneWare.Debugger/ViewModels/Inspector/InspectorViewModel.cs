@@ -2,8 +2,8 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels.Inspector;
 
-// Rechtes Panel: fasst Variables und Breakpoints in einem einzigen Dockable mit zwei Reitern
-// zusammen. Selbe Ebene wie AI Chat oder Docker Container Manager
+// Right panel: combines Variables and Breakpoints in a single dockable with two tabs.
+// Same level as AI Chat or Docker Container Manager
 public class InspectorViewModel : ExtendedTool
 {
     public const string IconKey = "Variable";

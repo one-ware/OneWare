@@ -15,7 +15,7 @@ namespace OneWare.Debugger;
 
 public class DebuggerModule : OneWareModuleBase
 {
-    // Adresse des Stubs, an den sich GDB haengt. Leer heisst lokal debuggen.
+    // Address of the stub GDB attaches to. Empty means debugging locally.
     public const string GdbPathSetting = "Debugger_GdbPath"; 
     public const string RemoteEndpointSetting = "Debugger_RemoteEndpoint";
     public const string RemoteProtocolLogSetting = "Debugger_LogRemoteProtocol";
@@ -39,8 +39,8 @@ public class DebuggerModule : OneWareModuleBase
         services.AddSingleton<BreakpointsViewModel>();
         services.AddSingleton<InspectorViewModel>();
 
-        // Einer fuer alle drei Wertetabellen -> Memory, Registers und Variables zeigen nie
-        // verschiedene Zahlensysteme, und die Leiste ueber ihnen schaltet alle zugleich um.
+        // One for all three value tables -> Memory, Registers and Variables never show
+        // different number bases, and the bar above them switches all of them at once.
         services.AddSingleton<ValueFormatViewModel>();
     }
 
@@ -50,16 +50,16 @@ public class DebuggerModule : OneWareModuleBase
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         var paths = serviceProvider.Resolve<IPaths>();
 
-        // Vor allem anderen: die Ansichtsmodelle lesen diese Werte im Konstruktor, und der
-        // faellt spaetestens beim Registrieren der Panels weiter unten.
-        // Register statt RegisterSetting -> gespeichert und damit ueber Neustarts hinweg
-        // stabil, aber ohne Eintrag auf der Einstellungsseite: bedient wird die Anzeige in der
-        // Leiste ueber der jeweiligen Tabelle.
+        // Before anything else: the view models read these values in their constructor, which
+        // runs at the latest when the panels are registered further down.
+        // Register instead of RegisterSetting -> stored and therefore stable across restarts,
+        // but without an entry on the settings page: the display is operated from the bar
+        // above each table.
         settingsService.Register(ValueFormatViewModel.BaseSetting, nameof(NumberBase.Hex));
 
-        // Der GDB-Adapter ist das Backend des Kerns. Er deckt lokale Programme und, ueber
-        // RemoteEndpoint, auch angehaengte Ziele ab; ein Plugin braucht nur dann einen eigenen
-        // Adapter, wenn GDB sein Ziel gar nicht bedienen kann.
+        // The GDB launcher is the core's backend. It covers local programs and, through
+        // RemoteEndpoint, attached targets as well; a plugin only needs its own launcher
+        // if GDB cannot serve its target at all.
         serviceProvider.Resolve<IDebuggerService>().RegisterSessionLauncher<GdbSessionLauncher>();
 
         settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,

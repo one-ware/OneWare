@@ -5,11 +5,11 @@ namespace OneWare.Debugger.Helpers;
 
 public class GdbHelper
 {
-    // Haelt den Debugger-Prozess an, damit GDB waehrend eines laufenden Ziels wieder Kommandos
-    // annimmt. Unter Windows gibt es dafuer nichts Brauchbares: Ein Ctrl+C aus einer Anwendung
-    // ohne eigene Konsole kommt am fremden Prozess nicht an, und das frueher mitgelieferte
-    // SIGINT.exe wurde nie mit ausgeliefert und liess Stop mitten im Aufraeumen scheitern.
-    // -> Dort haelt nur das angehaengte Ziel an, ueber -exec-interrupt auf der Verbindung.
+    // Halts the debugger process so that GDB accepts commands again while a target is
+    // running. Under Windows there is nothing usable for that: a Ctrl+C from an application
+    // without its own console does not reach the other process, and the SIGINT.exe formerly
+    // referenced was never shipped and made Stop fail in the middle of cleanup.
+    // -> There only the attached target halts, through -exec-interrupt on the connection.
     public static int SendCtrlC(int pid)
     {
         return PlatformHelper.Platform switch

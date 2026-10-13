@@ -1044,12 +1044,12 @@
     <DrawingImage x:Key="MaterialDesign.DeleteForever">
         <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.DeleteForever}" />
     </DrawingImage>
-    <!-- Gruen wie VsCodeLight.Debug-Start, damit Starten und Fortsetzen dieselbe Farbe tragen. -->
+    <!-- Green like VsCodeLight.Debug-Start, so that start and continue carry the same colour. -->
     <DrawingImage x:Key="MaterialDesign.PlayArrow">
         <GeometryDrawing Brush="#388A34"
                          Geometry="F1M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" />
     </DrawingImage>
-    <!-- Material Symbols Outlined "resume". Blau wie VsCodeLight.Debug-Pause, dieselbe Farbe fuer die Sitzungssteuerung. -->
+    <!-- Material Symbols Outlined "resume". Blue like VsCodeLight.Debug-Pause, the same colour for session control. -->
     <DrawingImage x:Key="MaterialSymbols.Resume">
         <GeometryDrawing Brush="#007ACC"
                          Geometry="M240-240v-480h80v480h-80Zm160 0 400-240-400-240v480Zm80-141v-198l165 99-165 99Zm0-99Z" />

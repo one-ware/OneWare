@@ -8,7 +8,7 @@
              x:Class="OneWare.Debugger.Views.Main.MainPanelView"
              x:DataType="main:MainPanelViewModel">
 
-    <!-- Die Reihenfolge hier ist die, die MainPanelViewModel.ConsoleTabIndex meint. -->
+    <!-- The order here is the one MainPanelViewModel.ConsoleTabIndex refers to. -->
     <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
 
         <TabItem Header="Registers">

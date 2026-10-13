@@ -7,10 +7,10 @@ using OneWare.Essentials.Debugger.Interfaces;
 
 namespace OneWare.Debugger.ViewModels.Inspector;
 
-// Reiter "Variables" im Debugger-Panel: Variablen des aktuellen Stack-Frames,
-// benannt nach der gleichnamigen Eclipse-Ansicht.
-// Zieht sich nichts selbst, sondern zeigt an, was die Session beim letzten Halt mitgeliefert
-// hat. Damit koennen Variablen und Register nie aus verschiedenen Halts stammen.
+// "Variables" tab in the debugger panel: variables of the current stack frame,
+// named after the Eclipse view of the same name.
+// Fetches nothing itself, but shows what the session supplied with the last
+// halt. Variables and registers can therefore never come from different halts.
 public class VariablesViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
@@ -22,27 +22,27 @@ public class VariablesViewModel : ObservableObject
 
         _debuggerService.StateChanged += (_, _) => Apply(_debuggerService.State);
 
-        // Ein anderes Zahlensystem beschriftet nur neu, was schon gelesen ist.
+        // A different number base only relabels what has already been read.
         valueFormat.Changed += (_, _) => RenderAll();
     }
 
-    // Zahlensystem und Vorzeichen der Anzeige. Dasselbe Objekt bedienen auch Memory und
-    // Registers -> die Leiste ueber der Tabelle schaltet alle drei zugleich um.
+    // Number base and sign of the display. The same object also serves Memory and
+    // Registers -> the bar above the table switches all three at once.
     public ValueFormatViewModel ValueFormat { get; }
 
     public ObservableCollection<VariableRow> Variables { get; } = [];
 
-    // Aktualisiert die Zeilen an Ort und Stelle, solange Name und Reihenfolge gleich bleiben.
-    // Die Sammlung bei jedem Einzelschritt neu aufzubauen wuerde Auswahl und Bildlaufposition
-    // verlieren.
+    // Updates the rows in place as long as name and order stay the same.
+    // Rebuilding the collection on every single step would lose selection and scroll
+    // position.
     private void Apply(DebugSessionState sessionState)
     {
-        // Waehrend das Ziel laeuft, meldet der Vertrag keine Locals ("Empty while the target
-        // runs"). Das zu uebernehmen hiesse, die Tabelle bei jedem Continue zu leeren und beim
-        // naechsten Halt neu zu fuellen -> stattdessen bleibt der letzte Halt stehen, bis ein
-        // neuer etwas anderes liefert.
-        // Bewusst an IsRunning und nicht an der Anzahl: ein Halt ohne Locals - Frame ohne
-        // Variablen, Programm ohne Symbole - ist eine echte Aussage und muss raeumen.
+        // While the target runs, the contract reports no locals ("Empty while the target
+        // runs"). Adopting that would mean emptying the table on every Continue and refilling it
+        // on the next halt -> instead the last halt stays until a
+        // new one delivers something else.
+        // Deliberately tied to IsRunning and not to the count: a halt without locals - frame without
+        // variables, program without symbols - is a real statement and must clear the table.
         if (sessionState.IsRunning) return;
 
         var variables = sessionState.Locals;
@@ -74,11 +74,11 @@ public class VariablesViewModel : ObservableObject
         while (Variables.Count > variables.Count) Variables.RemoveAt(Variables.Count - 1);
     }
 
-    // Haelt Rohwert und Anzeige beisammen. Anders als bei Memory und Registers kommt der Wert
-    // hier nicht roh an: GDB hat ihn schon anhand des DWARF-Typs gerendert, in aller Regel als
-    // vorzeichenbehaftete Dezimalzahl. Aus der laesst sich das Bitmuster verlustfrei
-    // zurueckrechnen -> kein zusaetzliches Kommando ans Backend noetig. Was keine Zahl ist,
-    // etwa eine Struktur oder ein Zeiger mit Symbolnamen, bleibt stehen.
+    // Keeps raw value and display together. Unlike Memory and Registers, the value does not
+    // arrive raw here: GDB has already rendered it by the DWARF type, as a rule as a
+    // signed decimal number. The bit pattern can be calculated back from it without
+    // loss -> no additional command to the backend needed. Whatever is not a number,
+    // such as a structure or a pointer with a symbol name, stays as it is.
     private void Show(VariableRow row, string raw)
     {
         row.Raw = raw;
@@ -91,9 +91,9 @@ public class VariablesViewModel : ObservableObject
             row.Value = ValueFormatter.FormatDecimalValue(row.Raw, BitsFor(row.Raw), ValueFormat.SelectedBase);
     }
 
-    // Wortbreite fuer die Umrechnung. Sie folgt der Adresseinheit des Ziels aus dem Profil -> im Kern
-    // steht keine Breite einer bestimmten Maschine. Passt der Wert nicht hinein, wird verdoppelt:
-    // ein 32-Bit-Wert auf einer byteadressierten Maschine wuerde sonst abgeschnitten.
+    // Word width for the conversion. It follows the target's address unit from the profile -> the core
+    // holds no width of a particular machine. If the value does not fit, it is doubled:
+    // a 32-bit value on a byte-addressed machine would otherwise be cut off.
     private int BitsFor(string raw)
     {
         var bits = Math.Max(8, _debuggerService.TargetProfile.AddressableUnitBytes * 8);
@@ -105,17 +105,17 @@ public class VariablesViewModel : ObservableObject
         return bits;
     }
 
-    // Grosszuegig gegenueber beiden Deutungen: -1 und 65535 sollen beide als 16-Bit-Wort
-    // gelten, weil GDB je nach DWARF-Typ das eine oder das andere liefert.
+    // Generous towards both readings: -1 and 65535 should both count as a 16-bit
+    // word, because GDB delivers one or the other depending on the DWARF type.
     private static bool FitsIn(long value, int bits)
     {
         return value >= -(1L << (bits - 1)) && value <= (1L << bits) - 1;
     }
 
 
-    // Der Typ, den das Backend gemeldet hat. Frueher stand hier fest "int16" - der Typ genau
-    // eines Ziels, jeder Variablen jedes Ziels untergeschoben. Meldet das Backend keinen, bleibt
-    // die Spalte leer: ein erfundener Typ ist schlechter als ein sichtbar unbekannter.
+    // The type the backend reported. This used to be fixed to "int16" - the type of exactly
+    // one target, imposed on every variable of every target. If the backend reports none,
+    // the column stays empty: an invented type is worse than a visibly unknown one.
     private static string ResolveDataType(DebugVariable variable) => variable.TypeName ?? string.Empty;
     
     

@@ -1,7 +1,7 @@
 namespace OneWare.Debugger.Models;
 
-// Eine Zeile in einer der beiden Konsolen. IsCommand unterscheidet abgesetzte
-// Kommandos von der Antwort des Backends, damit die Ansicht beide farblich trennen kann.
-// Text: Der anzuzeigende Text ohne Zeilenumbruch.
-// IsCommand: True, wenn die Zeile ein vom Studio abgesetztes Kommando ist.
+// One line in one of the two consoles. IsCommand distinguishes issued
+// commands from the backend's answer, so that the view can colour the two differently.
+// Text: the text to display, without a line break.
+// IsCommand: true if the line is a command issued by the studio.
 public sealed record ConsoleLine(string Text, bool IsCommand = false);

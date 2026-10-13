@@ -17,8 +17,8 @@ public partial class ConsoleTabView : UserControl
         DataContextChanged += OnDataContextChanged;
     }
 
-    // Haelt die Konsole am unteren Rand, damit neue Ausgaben sichtbar bleiben, ohne dass der
-    // Benutzer scrollen muss.
+    // Keeps the console at the bottom edge, so that new output stays visible without the
+    // user having to scroll.
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         Unsubscribe();
@@ -33,17 +33,17 @@ public partial class ConsoleTabView : UserControl
     {
         if (e.Action != NotifyCollectionChangedAction.Add) return;
 
-        // Nach dem Hinzufuegen muss erst neu ausgemessen werden, sonst springt der Viewer an
-        // eine Position, die es noch nicht gibt.
+        // After adding, a new measure pass is needed first, otherwise the viewer jumps to
+        // a position that does not exist yet.
         Dispatcher.UIThread.Post(DebuggerConsoleScroll.ScrollToEnd, DispatcherPriority.Background);
     }
 
-    // Legt den gesamten Verlauf als Text in die Zwischenablage. Zeilenweises Markieren geht
-    // in der Ansicht nicht ueber Zeilengrenzen hinweg, und genau der ganze Verlauf ist das,
-    // was man beim Melden eines Fehlers braucht.
+    // Puts the whole history on the clipboard as text. Selecting line by line does not work
+    // across line boundaries in the view, and the whole history is exactly what
+    // is needed when reporting an error.
     //
-    // Im Code-Behind und nicht im ViewModel, weil die Zwischenablage am TopLevel haengt und
-    // das ViewModel dafuer ein Control kennen muesste. Dieselbe Aufteilung wie in ChatView.
+    // In the code-behind and not in the view model, because the clipboard belongs to the TopLevel and
+    // the view model would have to know a control for it. The same split as in ChatView.
     private async void OnCopyConsoleClick(object? sender, RoutedEventArgs e)
     {
         try
@@ -58,9 +58,9 @@ public partial class ConsoleTabView : UserControl
         }
         catch (Exception)
         {
-            // Eine fehlgeschlagene Zwischenablage ist kein Grund, die Anwendung zu beenden -
-            // und weil async void hier nichts hat, wohin es die Ausnahme reichen koennte,
-            // endet sie sonst im Prozessabbruch.
+            // A failed clipboard is no reason to terminate the application -
+            // and because async void has nowhere here to pass the exception to,
+            // it otherwise ends in a process abort.
         }
     }
 

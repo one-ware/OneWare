@@ -7,15 +7,15 @@ using OneWare.Essentials.Debugger.Interfaces;
 
 namespace OneWare.Debugger.ViewModels.Main;
 
-// Reiter "Memory": die vom Benutzer beobachteten Speicheradressen.
-// Den Dienst braucht dieser Reiter nicht fuer Ereignisse, sondern nur zum Lesen - wann
-// gelesen wird, sagt DebuggerViewModel.
+// "Memory" tab: the memory addresses watched by the user.
+// This tab needs the service not for events but only for reading - when to
+// read is decided by DebuggerViewModel.
 public partial class MemoryTabViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
 
-    // Adresse, die der Eingabezeile entnommen und beim Hinzufuegen zur Beobachtungsliste
-    // gemacht wird.
+    // Address taken from the input line and turned into a watch list entry
+    // on adding.
     [ObservableProperty] private string _addressText = string.Empty;
 
     public MemoryTabViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat)
@@ -25,39 +25,39 @@ public partial class MemoryTabViewModel : ObservableObject
 
         SelectedRows.CollectionChanged += (_, _) => RemoveWatchCommand.NotifyCanExecuteChanged();
 
-        // Das einzige Abo dieses Reiters, und es geht nicht ums Lesen: das Wasserzeichen gehoert
-        // zum Ziel und steht erst mit der Sitzung fest. Wann gelesen wird, sagt weiterhin
+        // The only subscription of this tab, and it is not about reading: the watermark belongs
+        // to the target and is only known with the session. When to read is still decided by
         // DebuggerViewModel.
         _debuggerService.StateChanged += (_, _) => OnPropertyChanged(nameof(AddressWatermark));
 
-        // Ein anderes Zahlensystem beschriftet nur neu, was schon gelesen ist.
+        // A different number base only relabels what has already been read.
         valueFormat.Changed += (_, _) => RenderAll();
     }
 
-    // Zahlensystem und Vorzeichen der Anzeige. Dasselbe Objekt bedienen auch Registers und
-    // Variables -> die Leiste ueber der Tabelle schaltet alle drei zugleich um.
+    // Number base and sign of the display. The same object also serves Registers and
+    // Variables -> the bar above the table switches all three at once.
     public ValueFormatViewModel ValueFormat { get; }
 
-    // Beispieladresse im leeren Eingabefeld. Kommt vom Ziel -> im Kern steht keine Adresse einer
-    // bestimmten Maschine mehr.
+    // Example address in the empty input field. Comes from the target -> the core no longer holds
+    // an address of a particular machine.
     public string AddressWatermark => _debuggerService.TargetProfile.AddressWatermark;
 
-    // Bleiben ueber Sessions hinweg stehen, damit man dieselben Adressen nach einem Neustart
-    // nicht wieder eintippen muss.
+    // Kept across sessions, so that the same addresses need not be typed in again
+    // after a restart.
     public ObservableCollection<MemoryRow> Watches { get; } = [];
 
     public ObservableCollection<MemoryRow> SelectedRows { get; } = [];
 
-    // Liest die ganze Beobachtungsliste neu. Nacheinander: das Backend beantwortet ohnehin nur
-    // ein Kommando zur Zeit, und in der Reihenfolge der Liste zu lesen haelt die Anzeige
-    // nachvollziehbar.
+    // Rereads the whole watch list. One after the other: the backend answers only
+    // one command at a time anyway, and reading in list order keeps the display
+    // comprehensible.
     public void Refresh()
     {
         _ = RefreshAllAsync();
     }
 
-    // Nach dem Ende einer Sitzung stehen die Adressen weiter da, ihre Werte sind aber nichts
-    // mehr wert.
+    // After a session ends the addresses remain, but their values are no longer worth
+    // anything.
     public void ClearValues()
     {
         foreach (var row in Watches)
@@ -67,9 +67,9 @@ public partial class MemoryTabViewModel : ObservableObject
         }
     }
 
-    // Nimmt die eingetippte Adresse in die Beobachtungsliste auf und liest sie sofort, sofern
-    // das Ziel gerade haelt. Ohne das sofortige Lesen stuende die neue Zeile bis zum naechsten
-    // Halt leer da, und man wuesste nicht, ob die Adresse ueberhaupt lesbar ist.
+    // Adds the typed address to the watch list and reads it immediately, provided
+    // the target is halted. Without the immediate read the new row would stay empty until the
+    // next halt, and one would not know whether the address is readable at all.
     [RelayCommand]
     private async Task AddWatchAsync()
     {
@@ -96,8 +96,8 @@ public partial class MemoryTabViewModel : ObservableObject
         return SelectedRows.Count > 0;
     }
 
-    // Leert die ganze Beobachtungsliste statt nur der Auswahl. Auf einer leeren Liste ein
-    // no-op, deshalb ohne eigenes CanExecute.
+    // Empties the whole watch list instead of only the selection. A no-op on an empty
+    // list, hence without its own CanExecute.
     [RelayCommand]
     private void ClearWatches()
     {
@@ -131,8 +131,8 @@ public partial class MemoryTabViewModel : ObservableObject
         Show(row, value == null ? "unreadable" : GroupIntoUnits(value, unitBytes, profile.IsLittleEndian));
     }
 
-    // Haelt Rohwert und Anzeige beisammen. Ein Hinweis wie "unreadable" geht unveraendert durch
-    // den Formatierer und steht danach genauso da wie zuvor.
+    // Keeps raw value and display together. A note such as "unreadable" passes through the
+    // formatter unchanged and afterwards reads exactly as before.
     private void Show(MemoryRow row, string raw)
     {
         row.Raw = raw;
@@ -145,20 +145,20 @@ public partial class MemoryTabViewModel : ObservableObject
             row.Value = ValueFormatter.FormatHexUnits(row.Raw, ValueFormat.SelectedBase);
     }
 
-    // Rechnet die eingetippte
-    // Adresse von Zieleinheiten in Bytes um, indem das Backend sie rechnen
-    // laesst -> im Kern steht kein Adressparser, und ein Symbol oder ein &-Ausdruck bleibt gueltig.
-    // Der Cast ist noetig, weil sich ein Zeiger nicht multiplizieren laesst: "(x)*2" lehnt GDB mit
-    // "Argument to arithmetic operation not a number" ab, "((long)(x))*2" nicht.
+    // Converts the typed
+    // address from target units to bytes by letting the backend do the
+    // arithmetic -> the core holds no address parser, and a symbol or an & expression stays valid.
+    // The cast is needed because a pointer cannot be multiplied: GDB rejects "(x)*2" with
+    // "Argument to arithmetic operation not a number", but not "((long)(x))*2".
     private static string ToBackendAddress(string address, int unitBytes)
     {
         return unitBytes <= 1 ? address : $"((long)({address}))*{unitBytes}";
     }
 
-    // Fasst die einzelnen Bytes zu Einheiten des Ziels zusammen. Bei Little Endian kommt das
-    // niederwertige Byte zuerst -> zum Anzeigen umdrehen, damit die Zahl so dasteht, wie man sie
-    // schreibt. Welche Reihenfolge gilt, sagt das Ziel ueber das Profil; frueher stand hier
-    // Little Endian fest, und ein Big-Endian-Ziel haette jedes Wort byteverdreht angezeigt.
+    // Combines the individual bytes into units of the target. With little endian the
+    // low-order byte comes first -> reverse for display, so that the number reads the way it is
+    // written. Which order applies is stated by the target through the profile; this used to be
+    // fixed to little endian, and a big-endian target would have shown every word byte-swapped.
     private static string GroupIntoUnits(string spacedBytes, int unitBytes, bool littleEndian)
     {
         if (unitBytes <= 1) return spacedBytes;

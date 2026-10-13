@@ -32,12 +32,12 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger;
 
-// GDB hinter IDebugSession. Spricht MI ueber die Standardstroeme eines
-// GDB-Prozesses und uebersetzt zwischen dessen Records und dem
-// DebugSessionState, den die Oberflaeche anzeigt.
-// Nach jedem Halt werden Frame und Register in einem Rutsch gelesen und als ein
-// DebugSessionState veroeffentlicht. Die Panels ziehen sich also nichts selbst,
-// und es kann keinen Zustand geben, in dem Register und Frame aus verschiedenen Halts stammen.
+// GDB behind IDebugSession. Speaks MI over the standard streams of a
+// GDB process and translates between its records and the
+// DebugSessionState the UI displays.
+// After every halt, frame and registers are read in one go and published as one
+// DebugSessionState. The panels therefore fetch nothing themselves,
+// and there can be no state in which registers and frame come from different halts.
 public class GdbSession(
     string gdbExecutable,
     string? executablePath,
@@ -48,7 +48,7 @@ public class GdbSession(
     ILogger logger)
     : IDebugSession
 {
-    // GDB antwortet auf jedes Kommando; laenger als das zu warten heisst, dass etwas haengt.
+    // GDB answers every command; waiting longer than this means something hangs.
     private const int CommandTimeout = 10000;
 
     private readonly string? _elfFile = string.IsNullOrWhiteSpace(executablePath) ? null : Path.GetFileName(executablePath);
@@ -63,8 +63,8 @@ public class GdbSession(
     private bool _clientReady;
     private Process? _process;
 
-    // Registernamen aendern sich waehrend einer Session nicht, also einmal lesen und behalten.
-    // Bei jedem Halt nur noch die Werte zu holen spart pro Schritt ein Kommando.
+    // Register names do not change during a session, so read them once and keep them.
+    // Fetching only the values on every halt saves one command per step.
     private IReadOnlyList<string>? _registerNames;
 
     private volatile TaskCompletionSource<GdbCommandResult>? _pendingCommand;
@@ -72,12 +72,12 @@ public class GdbSession(
     private StreamWriter? _writer;
     private StreamReader? _reader;
 
-    // Ohne Programmdatei startet GDB ohne Argument. Register, Einzelschritte und die Console
-    // gehen dann trotzdem - nur Quellzeilen und Variablen nicht, weil die Symbole fehlen.
+    // Without a program file GDB starts without an argument. Registers, single steps and the console
+    // still work then - only source lines and variables do not, because the symbols are missing.
 
-    // Das Verzeichnis der Programmdatei hat Vorrang, sonst das des Projekts. Existiert keines
-    // von beiden, bleibt das aktuelle - ein nicht vorhandenes Arbeitsverzeichnis laesst den
-    // Prozessstart scheitern, und daran soll ein fehlendes ELF nicht schuld sein.
+    // The directory of the program file takes precedence, otherwise that of the project. If neither
+    // exists, the current one stays - a missing working directory makes the process start
+    // fail, and a missing ELF should not be to blame for that.
     private static string FirstExistingDirectory(params string?[] candidates)
     {
         foreach (var candidate in candidates)
@@ -147,17 +147,17 @@ public class GdbSession(
 
     public Task RunAsync()
     {
-        // Ein angehaengtes Ziel haelt sein Programm bereits und steht an seinem Einsprungpunkt;
-        // GDB hat das beim Verbinden erfahren und die Oberflaeche zeigt es an. Hier zusaetzlich
-        // loszulaufen nimmt dem Benutzer genau den Zustand, den er nach dem Start sehen will -
-        // Register, Speicher, aktuelle Zeile -, und ohne gesetzten Breakpoint rennt das Programm
-        // sofort bis zum Ende durch. Gestartet wird deshalb erst auf Continue.
-        // -exec-run waere hier ohnehin falsch: es verlangt einen Neustart, den die Hardware
-        // nicht anbietet.
+        // An attached target already holds its program and stands at its entry point;
+        // GDB learned that on connecting and the UI shows it. Running off here as well
+        // takes away exactly the state the user wants to see after the start -
+        // registers, memory, current line -, and without a breakpoint set the program runs
+        // straight through to the end. It is therefore only started on Continue.
+        // -exec-run would be wrong here anyway: it demands a restart the hardware
+        // does not offer.
         if (remoteEndpoint != null) return Task.CompletedTask;
 
-        // Ohne Programm und ohne Ziel gibt es nichts zu starten. -exec-run wuerde hier nur einen
-        // Fehler in die Console schreiben und den Eindruck erwecken, der Start sei fehlgeschlagen.
+        // Without a program and without a target there is nothing to start. -exec-run would only write
+        // an error to the console here and give the impression that the start had failed.
         if (_elfFile == null) return Task.CompletedTask;
 
         return RunCommandAsync("-exec-run");
@@ -176,10 +176,10 @@ public class GdbSession(
             return;
         }
 
-        // Ohne mi-async nimmt GDB waehrend des Laufs keine Kommandos an; das Anhalten geht dann
-        // nur ueber ein Signal an den Prozess. Hier landet seit dem angehaengten Ziel nur noch
-        // das lokale Debuggen unter Windows - ein Ctrl+C aus einer Anwendung ohne eigene
-        // Konsole kommt nicht immer an, daher die drei Versuche.
+        // Without mi-async GDB accepts no commands while running; halting then only works
+        // through a signal to the process. Since the attached target, only local debugging
+        // under Windows ends up here - a Ctrl+C from an application without its own
+        // console does not always arrive, hence the three attempts.
         for (var attempt = 0; attempt < 3; attempt++)
         {
             if (_process is not { } process || !_targetRunning) return;
@@ -204,9 +204,9 @@ public class GdbSession(
         return !_targetRunning;
     }
 
-    // Ohne Symboldatei gibt es keine Quellzeilen. -exec-step scheitert dort mit
-    // "Cannot find bounds of current function", weil es eine Zeile sucht, die es nicht gibt -
-    // geschritten wird dann ueber einzelne Instruktionen.
+    // Without a symbol file there are no source lines. -exec-step fails there with
+    // "Cannot find bounds of current function", because it looks for a line that does not exist -
+    // stepping then goes by single instructions.
     private bool StepsOverInstructions => _elfFile == null;
 
     public Task StepIntoAsync()
@@ -234,8 +234,8 @@ public class GdbSession(
     {
         var result = await RunCommandAsync("clear", Format(breakpoint));
 
-        // "No breakpoint at ..." heisst, dass das Ziel erreicht ist - der Breakpoint ist weg.
-        // Das als Fehler zu melden wuerde beim Aufraeumen nur Rauschen erzeugen.
+        // "No breakpoint at ..." means the goal is reached - the breakpoint is gone.
+        // Reporting that as an error would only produce noise during cleanup.
         return result.Status == CommandStatus.Done ||
                (result.Status == CommandStatus.Error &&
                 result.ErrorMessage?.StartsWith("No breakpoint at", StringComparison.OrdinalIgnoreCase) == true);
@@ -245,8 +245,8 @@ public class GdbSession(
     {
         if (string.IsNullOrWhiteSpace(address) || byteCount <= 0) return null;
 
-        // -data-read-memory-bytes statt des veralteten -data-read-memory: es liefert die Bytes
-        // roh und nicht in Woerter einsortiert, die man erst wieder auseinandernehmen muesste.
+        // -data-read-memory-bytes instead of the deprecated -data-read-memory: it delivers the bytes
+        // raw and not sorted into words that would first have to be taken apart again.
         var result = await RunCommandAsync("-data-read-memory-bytes", address, byteCount.ToString());
         if (result.Status != CommandStatus.Done) return null;
 
@@ -276,8 +276,8 @@ public class GdbSession(
         return fullnames;                                                          
     }           
 
-    // Macht aus der Hex-Kette von GDB Bytepaare mit Leerzeichen. Ohne die Trennung ist bei
-    // mehr als ein paar Bytes nicht mehr zu erkennen, wo eines aufhoert.
+    // Turns GDB's hex string into byte pairs separated by spaces. Without the separation it is
+    // no longer recognisable where one ends once there are more than a few bytes.
     private static string FormatBytes(string contents)
     {
         var bytes = new List<string>(contents.Length / 2);
@@ -292,9 +292,9 @@ public class GdbSession(
         await RunCommandAsync(command);
     }
 
-    // Jeder Schritt ist fuer sich abgesichert. Reisst einer ab, muessen die uebrigen trotzdem
-    // laufen -> sonst bleibt GDB als Waise stehen, haelt die Verbindung zum Ziel weiter fest,
-    // und die Anzeige meldet trotzdem "keine Sitzung".
+    // Every step is guarded on its own. If one breaks off, the rest must still
+    // run -> otherwise GDB is left behind as an orphan, keeps holding the connection to the target,
+    // and the display reports "no session" anyway.
     public void Stop()
     {
         try
@@ -323,8 +323,8 @@ public class GdbSession(
 
         try
         {
-            // Bleibt GDB nach -gdb-exit stehen - etwa weil es ohne mi-async gerade das Ziel
-            // laufen laesst und keine Kommandos liest -, ist das hier der letzte Weg.
+            // If GDB stays up after -gdb-exit - for instance because, without mi-async, it is letting the
+            // target run and reads no commands -, this is the last resort.
             if (_process is { HasExited: false }) _process.Kill();
         }
         catch (Exception e)
@@ -337,9 +337,9 @@ public class GdbSession(
         }
     }
 
-    // Haelt ein laufendes Ziel an, damit GDB -gdb-exit ueberhaupt entgegennimmt. Beim
-    // angehaengten Ziel geht das ueber die Verbindung, sonst nur ueber ein Signal - und das
-    // gibt es unter Windows nicht. Schlaegt es fehl, uebernimmt Kill.
+    // Halts a running target so that GDB accepts -gdb-exit at all. With an
+    // attached target this goes over the connection, otherwise only through a signal - and that
+    // does not exist under Windows. If it fails, Kill takes over.
     private void TryInterrupt()
     {
         if (!_targetRunning) return;
@@ -353,7 +353,7 @@ public class GdbSession(
         if (_process != null) GdbHelper.SendCtrlC(_process.Id);
     }
 
-    // Baut die Verbindung zum Stub auf. Ohne Endpunkt debuggt GDB lokal und es ist nichts zu tun.
+    // Establishes the connection to the stub. Without an endpoint GDB debugs locally and there is nothing to do.
     private async Task ApplyInitCommandsAsync()
     {
         foreach (var command in _initCommands)
@@ -375,7 +375,7 @@ public class GdbSession(
 
         var result = await RunCommandAsync("-target-select", "extended-remote", remoteEndpoint);
 
-        // Sowohl ^done als auch ^connected sind laut MI gueltige Antworten auf -target-select.
+        // Both ^done and ^connected are valid answers to -target-select according to MI.
         if (result.Status is CommandStatus.Done or CommandStatus.Connected) return true;
 
         logger.Error(
@@ -385,7 +385,7 @@ public class GdbSession(
 
     private async Task<bool> WaitUntilReadyAsync()
     {
-        // GDB meldet seine Bereitschaft nicht; die erste ausgegebene Zeile ist das Signal.
+        // GDB does not announce that it is ready; the first line it prints is the signal.
         for (var waited = 0; waited < 5000; waited += 100)
         {
             if (_clientReady) return true;
@@ -428,8 +428,8 @@ public class GdbSession(
         }
     }
 
-    // Aufrufzeile fuer GDB. Dateinamen stehen in Anfuehrungszeichen, weil sie sonst an jedem
-    // Leerzeichen in mehrere Argumente zerfallen.
+    // Command line for GDB. File names are quoted because otherwise they fall apart into
+    // several arguments at every space.
     private string BuildArguments()
     {
         var arguments = new List<string> { "--interpreter=mi" };
@@ -459,12 +459,12 @@ public class GdbSession(
     {
         if (string.IsNullOrWhiteSpace(rawLine)) return;
 
-        // Aufgabe 1: anzeigen (aufbereitet statt roh) -> 
-        // laut Vertrag traegt OutputReceived lesbaren Text, keine MI-Protokollsyntax. Wer MI sehen will,
-        // sieht es an den Records, die der Formatter stehen laesst.
+        // Task 1: display (prepared instead of raw) ->
+        // by contract OutputReceived carries readable text, not MI protocol syntax. Whoever wants to see MI
+        // sees it in the records the formatter leaves in place.
         Echo(rawLine);
 
-        // Aufgabe 2: Protokoll auswerten (roh)
+        // Task 2: evaluate the protocol (raw)
         Dispatch(rawLine.TrimStart());
     }
 
@@ -479,17 +479,17 @@ public class GdbSession(
 
         switch (line[0])
         {
-            case '^': // für ergebnis einer konkreten GDB-Anfrage
+            case '^': // result of a specific GDB request
                 var result = new GdbCommandResult(line);
                 _targetRunning = result.Status == CommandStatus.Running;
                 CompletePending(result);
                 break;
 
-            case '*': // * für async events von gdb 
+            case '*': // async events from GDB
                 _targetRunning = line.StartsWith("*running", StringComparison.Ordinal);
 
-                // Nicht abwarten: dieser Aufruf laeuft auf dem Lesethread, der frei bleiben muss, damit die
-                // Antworten der Kommandos aus HandleEvent ueberhaupt ankommen. -> deswegen async 
+                // Do not await: this call runs on the reader thread, which must stay free so that the
+                // answers to the commands from HandleEvent arrive at all. -> hence async
                 _ = HandleEventAsync(new GdbEvent(line));
                 break;
         }
@@ -506,9 +506,9 @@ public class GdbSession(
                     break;
 
                 case "stopped":
-                    // Register und Locals in einem Rutsch, bevor irgendetwas veroeffentlicht wird:
-                    // sonst zeigt das eine Panel schon den neuen Halt, waehrend das andere noch
-                    // Werte vom vorigen stehen hat.
+                    // Registers and locals in one go, before anything is published:
+                    // otherwise one panel already shows the new halt while the other still
+                    // holds values from the previous one.
                     Publish(new DebugSessionState
                     {
                         IsRunning = false,
@@ -530,11 +530,11 @@ public class GdbSession(
         var names = _registerNames ?? await ReadRegisterNamesAsync();
         if (names.Count == 0) return [];
 
-        // Erst merken, wenn wirklich etwas kam - ein fehlgeschlagener erster Versuch darf nicht
-        // dazu fuehren, dass fuer den Rest der Session nie wieder Register gelesen werden.
+        // Only remember once something really came - a failed first attempt must not
+        // lead to registers never being read again for the rest of the session.
         _registerNames = names;
         
-        var result = await RunCommandAsync("-data-list-register-values", "x"); // x = hexadezimal
+        var result = await RunCommandAsync("-data-list-register-values", "x"); // x = hexadecimal
         if (result.Status != CommandStatus.Done) return [];
 
         var values = result.GetObject("register-values");
@@ -547,8 +547,8 @@ public class GdbSession(
             if (!int.TryParse(entry.GetValue("number"), out var number)) continue;
             if (number < 0 || number >= names.Count) continue;
 
-            // GDB liefert fuer Luecken in der Registernummerierung leere Namen; die haben in der
-            // Anzeige nichts zu suchen.
+            // GDB delivers empty names for gaps in the register numbering; they have no
+            // place in the display.
             var name = names[number];
             if (string.IsNullOrEmpty(name)) continue;
 
@@ -558,8 +558,8 @@ public class GdbSession(
         return registers;
     }
 
-    // Liest die lokalen Variablen des aktuellen Frames. Ohne Symbole meldet GDB hier nichts -
-    // dann bleibt das Panel leer, und die Register sind alles, was es zu sehen gibt.
+    // Reads the local variables of the current frame. Without symbols GDB reports nothing here -
+    // then the panel stays empty, and the registers are all there is to see.
     private async Task<IReadOnlyList<DebugVariable>> ReadLocalsAsync()
     {
         var result = await RunCommandAsync("-stack-list-locals", "2");
@@ -684,8 +684,8 @@ public class GdbSession(
         _pendingCommand?.TrySetResult(result);
     }
     
-    // Übergibt Dateipfade + Zeilennummer an in Unix-Schreibweise an GDB
-    // -> C:/MeineProjekte/Test/file.c:lineNr
+    // Passes file path + line number to GDB in Unix notation
+    // -> C:/MyProjects/Test/file.c:lineNr
     private static string Format(BreakPoint breakpoint)
     {
         return $"\"{breakpoint.File.Replace('\\', '/')}:{breakpoint.Line}\"";

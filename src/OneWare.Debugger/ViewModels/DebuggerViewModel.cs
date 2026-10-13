@@ -11,13 +11,13 @@ using OneWare.Essentials.ViewModels;
 
 namespace OneWare.Debugger.ViewModels;
 
-// Unteres Panel: die Steuerleiste der Debug-Session und darunter der Reiterbereich.
-// Hier laeuft alles zusammen - dies ist der einzige Ort, der IDebuggerService abonniert und
-// sich an die Sitzung haengt. Die Reiter bekommen ihren Zustand von hier gereicht und muessen
-// selbst nichts abonnieren.
-// Gebunden wird ausschliesslich an IDebuggerService, nie an eine Session. Damit muss beim
-// Starten und Beenden nichts umgehaengt werden, und das Panel funktioniert auch dann, wenn es
-// erst waehrend einer laufenden Session geoeffnet wird.
+// Bottom panel: the control bar of the debug session and the tab area below it.
+// Everything comes together here - this is the only place that subscribes to IDebuggerService
+// and attaches to the session. The tabs are handed their state from here and need not
+// subscribe to anything themselves.
+// Binding goes exclusively to IDebuggerService, never to a session. That way nothing has to be
+// rewired on start and stop, and the panel also works when it is
+// only opened while a session is running.
 public partial class DebuggerViewModel : ExtendedTool
 {
     public const string IconKey = "Material.BugReport";
@@ -30,8 +30,8 @@ public partial class DebuggerViewModel : ExtendedTool
 
     [ObservableProperty] private bool _isRunning;
 
-    // Ein Vorbereiter arbeitet gerade. Es gibt dann noch keine Sitzung, aber starten darf man
-    // trotzdem nicht mehr - IsSessionActive allein wuerde den Knopf offen lassen.
+    // A preparer is working. There is no session yet, but starting is no longer
+    // allowed all the same - IsSessionActive alone would leave the button enabled.
     [ObservableProperty] private bool _isPreparing;
 
     [ObservableProperty] private bool _isSessionActive;
@@ -50,7 +50,7 @@ public partial class DebuggerViewModel : ExtendedTool
         _projectExplorerService = projectExplorerService;
         _mainDockService = mainDockService;
 
-        // Vor dem Abo gesetzt -> schon der erste Zustandswechsel greift auf die Reiter zu.
+        // Set before subscribing -> even the first state change accesses the tabs.
         MainPanel = mainPanel;
 
         Id = "Debugger";
@@ -59,19 +59,19 @@ public partial class DebuggerViewModel : ExtendedTool
         _debuggerService.StateChanged += OnDebuggerStateChanged;
     }
 
-    // Der Reiterbereich unter der Leiste.
+    // The tab area below the bar.
     public MainPanelViewModel MainPanel { get; }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
-        // Beim Start interessiert der Verkehr mit dem Backend - also den passenden Reiter in den
-        // Vordergrund holen und das Panel selbst sichtbar machen.
+        // On start, the traffic with the backend is what matters - so bring the matching tab to the
+        // front and make the panel itself visible.
         MainPanel.ShowConsole();
         _mainDockService.Show(this, DockShowLocation.Bottom);
 
-        // Welches Ziel gilt, steht im Projekt -> der passende Vorbereiter meldet sich selbst,
-        // statt in einer Auswahlliste der Leiste zu stehen.
+        // Which target applies is stated in the project -> the matching preparer reports itself,
+        // instead of being listed in a selection in the bar.
         if (_debuggerService.TargetPreparers.FirstOrDefault(CanPrepareSafely) is { } preparer)
         {
             await StartWithPreparerAsync(preparer);
@@ -82,11 +82,11 @@ public partial class DebuggerViewModel : ExtendedTool
 
         var request = BuildLaunchRequest();
 
-        // Kein Vorbereiter hat sich gemeldet -> das benennen, bevor der Notweg laeuft. Ohne diese
-        // Zeile sieht ein nicht erkanntes Projekt genauso aus wie der gewollte Start, und der
-        // Unterschied zeigt sich erst Sekunden spaeter als Verbindungsfehler an einem Port, den
-        // niemand hochgefahren hat. Die Zahl trennt die beiden Faelle: 0 heisst, es ist gar kein
-        // Plugin geladen, sonst war keines fuer dieses Projekt zustaendig.
+        // No preparer reported -> name that before the fallback runs. Without this
+        // line an unrecognised project looks just like the intended start, and the
+        // difference only shows seconds later as a connection error on a port that
+        // nobody brought up. The number separates the two cases: 0 means no plugin is
+        // loaded at all, otherwise none was responsible for this project.
         MainPanel.Console.Append(
             $"No target preparer is responsible for the active project " +
             $"({_debuggerService.TargetPreparers.Count} registered). Using the endpoint from " +
@@ -99,20 +99,20 @@ public partial class DebuggerViewModel : ExtendedTool
             return;
         }
 
-        // Erst jetzt, nicht vor dem Start: sonst stuende der Hinweis noch vor der Versionszeile von
-        // GDB und laese sich wie ein Abbruch, obwohl gerade nichts fehlgeschlagen ist.
+        // Only now, not before the start: otherwise the note would stand before GDB's version line
+        // and read like an abort, although nothing has failed.
         if (request.ExecutablePath == null && request.RemoteEndpoint == null)
             MainPanel.Console.Append("No executable in the active project and no remote endpoint under " +
                                      "Tools > Debugger - running without a target. Registers, memory and " +
                                      "stepping need one.");
     }
 
-    // Startet ueber einen Vorbereiter: der bringt sein Ziel hoch und liefert die
-    // Startanforderung, gestartet wird damit im Service.
-    // Das Vorbereiten dauert - assemblieren, eine serielle Schnittstelle suchen, ein Programm
-    // uebertragen. Solange gibt es keine Sitzung, weshalb der Startknopf ueber
-    // IsPreparing gesperrt wird und nicht ueber IsSessionActive.
-    // Was dabei geschieht, meldet der Vorbereiter selbst; hier steht nur, dass etwas laeuft.
+    // Starts through a preparer: it brings up its target and supplies the
+    // launch request, which the service then starts with.
+    // Preparing takes time - assembling, looking for a serial port, transferring a
+    // program. Until then there is no session, which is why the start button is locked through
+    // IsPreparing and not through IsSessionActive.
+    // What happens meanwhile is reported by the preparer itself; here it only says that something runs.
     private async Task StartWithPreparerAsync(IDebugTargetPreparer preparer)
     {
         IsPreparing = true;
@@ -168,12 +168,12 @@ public partial class DebuggerViewModel : ExtendedTool
         return _debuggerService.StepOutAsync();
     }
 
-    // Stellt zusammen, was gedebuggt werden soll: die Programmdatei aus dem aktiven Projekt und,
-    // sofern eingerichtet, die Adresse des Stubs.
-    // Fehlt beides, wird trotzdem gestartet. GDB laeuft dann ohne Ziel, und genau das ist der
-    // Fall, in dem man es braucht: die Debugger Console beantwortet Kommandos, man kann die
-    // Installation pruefen und sich von Hand an ein Ziel haengen. Den Start hier abzulehnen
-    // hiesse, dem Nutzer den Weg zu verbauen, auf dem er das Problem ueberhaupt findet.
+    // Puts together what is to be debugged: the program file from the active project and,
+    // if configured, the address of the stub.
+    // If both are missing, it starts anyway. GDB then runs without a target, and that is exactly the
+    // case in which it is needed: the debugger console answers commands, the installation can be
+    // checked and one can attach to a target by hand. Refusing the start here
+    // would block the very path on which the user finds the problem.
     private DebugLaunchRequest BuildLaunchRequest()
     {
         var endpoint = _settingsService.GetSettingValue<string>(DebuggerModule.RemoteEndpointSetting);
@@ -183,8 +183,8 @@ public partial class DebuggerViewModel : ExtendedTool
             _projectExplorerService.ActiveProject?.FullPath);
     }
 
-    // IDebugTargetPreparer.CanPrepare kommt aus einem Plugin. Wirft es, faellt nur dieser eine
-    // Vorbereiter aus, statt den Start zu verhindern.
+    // IDebugTargetPreparer.CanPrepare comes from a plugin. If it throws, only this one
+    // preparer drops out, instead of preventing the start.
     private bool CanPrepareSafely(IDebugTargetPreparer preparer)
     {
         try
@@ -198,10 +198,10 @@ public partial class DebuggerViewModel : ExtendedTool
         }
     }
 
-    // Die Programmdatei des aktiven Projekts, bei jedem Start neu gesucht: nach einem Neubau
-    // liegt sie sonst da, wuerde aber erst nach einem Neustart des Studios gefunden.
-    // Ein Ziel wie der SVNR haelt sein Programm selbst und bringt gar keine mit - dann bleibt es
-    // bei null, und GDB haengt sich ohne Symbole an.
+    // The program file of the active project, searched anew on every start: after a rebuild
+    // it would otherwise be there but only be found after restarting the studio.
+    // A target such as the SVNR holds its program itself and brings none along - then it stays
+    // null, and GDB attaches without symbols.
     private string? FindProjectExecutable()
     {
         if (_projectExplorerService.ActiveProject is not { } project) return null;
@@ -241,8 +241,8 @@ public partial class DebuggerViewModel : ExtendedTool
         return null;
     }
 
-    // Der eine Ort, an dem ein Halt ankommt. Von hier bekommen die Reiter ihren Zustand, und
-    // zwar in einem Zug -> Register und Speicher koennen nie aus verschiedenen Halts stammen.
+    // The one place where a halt arrives. The tabs get their state from here, and
+    // in one go -> registers and memory can never come from different halts.
     private void OnDebuggerStateChanged(object? sender, EventArgs e)
     {
         var wasActive = IsSessionActive;
@@ -295,7 +295,7 @@ public partial class DebuggerViewModel : ExtendedTool
         if (frame.File is { } file && frame.Line > 0)
             return $"Stopped at {Path.GetFileName(file)}:{frame.Line}";
 
-        // Ohne Symbole ist der Programmzaehler das Einzige, was den Halt beschreibt.
+        // Without symbols the program counter is the only thing that describes the halt.
         return frame.Address is { } address ? $"Stopped at {address}" : "Stopped";
     }
 
@@ -372,8 +372,8 @@ public partial class DebuggerViewModel : ExtendedTool
 
     partial void OnIsSessionActiveChanged(bool value)
     {
-        // Die Kommandozeile der Konsole sperrt sich ueber denselben Zustand, haengt aber nicht
-        // selbst am Dienst.
+        // The console's command line locks through the same state, but is not attached to the
+        // service itself.
         MainPanel.Console.IsSessionActive = value;
 
         NotifyCommandStates();

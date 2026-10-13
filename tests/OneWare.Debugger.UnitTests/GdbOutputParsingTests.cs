@@ -3,10 +3,10 @@ using Xunit;
 namespace OneWare.Debugger.UnitTests;
 
 /// <summary>
-///     Deckt das Uebersetzen von GDB/MI-Records ab. Braucht keine GDB-Binary und kein Zielsystem,
-///     laeuft also ueberall - was der Grund ist, warum ausgerechnet diese Schicht getestet wird:
-///     sie ist die einzige, an der ein Fehler still zu falschen Anzeigewerten fuehrt statt zu
-///     einer sichtbaren Fehlermeldung.
+///     Covers translating GDB/MI records. Needs no GDB binary and no target system,
+///     so it runs everywhere - which is the reason why this layer in particular is tested:
+///     it is the only one where a bug silently leads to wrong display values instead of
+///     a visible error message.
 /// </summary>
 public class GdbOutputParsingTests
 {
@@ -41,8 +41,8 @@ public class GdbOutputParsingTests
     [Fact]
     public void CommandResult_ReadsConnected()
     {
-        // Die Antwort auf -target-select. Wird sie nicht als Erfolg erkannt, bricht jede
-        // Remote-Sitzung direkt nach dem Verbinden ab.
+        // The answer to -target-select. If it is not recognised as success, every
+        // remote session aborts right after connecting.
         Assert.Equal(CommandStatus.Connected, new GdbCommandResult("^connected").Status);
     }
 
@@ -74,8 +74,8 @@ public class GdbOutputParsingTests
     [Fact]
     public void Event_ReadsStopWithoutSourceLocation()
     {
-        // Der SVNR-Fall: kein Symbolfile, also weder file noch line. Nur der Programmzaehler
-        // beschreibt den Halt, und der muss ankommen.
+        // The SVNR case: no symbol file, so neither file nor line. Only the program counter
+        // describes the halt, and it must arrive.
         var gdbEvent = new GdbEvent(
             "*stopped,reason=\"end-stepping-range\",frame={addr=\"0x00000108\"}");
 
@@ -99,16 +99,16 @@ public class GdbOutputParsingTests
         Assert.Equal("int", locals.GetObject(0).GetValue("type"));
         Assert.Equal("3", locals.GetObject(0).GetValue("value"));
 
-        // Typnamen mit Leerzeichen und eckigen Klammern duerfen den Tupel-Parser nicht aus dem
-        // Tritt bringen.
+        // Type names with spaces and square brackets must not throw the tuple parser
+        // off.
         Assert.Equal("char [8]", locals.GetObject(1).GetValue("type"));
     }
 
     [Fact]
     public void CommandResult_ReadsEmptyLocals()
     {
-        // Ohne Symbole meldet GDB eine leere Liste statt eines Fehlers. Das Panel muss dann leer
-        // bleiben und darf nicht die Werte des vorigen Halts stehen lassen.
+        // Without symbols GDB reports an empty list instead of an error. The panel must then stay
+        // empty and must not keep the values of the previous halt.
         var result = new GdbCommandResult("^done,locals=[]");
 
         Assert.Equal(CommandStatus.Done, result.Status);
@@ -132,8 +132,8 @@ public class GdbOutputParsingTests
     [Fact]
     public void CommandResult_ReportsUnreadableMemoryAsError()
     {
-        // Eine nicht abgebildete Adresse ist der Normalfall beim Suchen, kein Ausnahmefall. Sie
-        // muss als Fehler ankommen, damit die Zeile "unreadable" zeigt statt alte Bytes.
+        // An unmapped address is the normal case when searching, not an exception. It
+        // must arrive as an error so that the row shows "unreadable" instead of old bytes.
         var result = new GdbCommandResult("^error,msg=\"Cannot access memory at address 0x0\"");
 
         Assert.Equal(CommandStatus.Error, result.Status);
@@ -151,8 +151,8 @@ public class GdbOutputParsingTests
         Assert.Equal("zero", names.GetValue(0));
         Assert.Equal("sp", names.GetValue(2));
 
-        // GDB laesst Luecken in der Nummerierung als leere Namen stehen. Die Anzeige filtert sie,
-        // aber die Position der folgenden Register haengt daran, dass sie erhalten bleiben.
+        // GDB leaves gaps in the numbering as empty names. The display filters them,
+        // but the position of the following registers depends on them being preserved.
         Assert.Equal(string.Empty, names.GetValue(3));
         Assert.Equal("pc", names.GetValue(4));
     }
@@ -169,8 +169,8 @@ public class GdbOutputParsingTests
         Assert.Equal("0", values.GetObject(0).GetValue("number"));
         Assert.Equal("0x0", values.GetObject(0).GetValue("value"));
 
-        // Die Nummer ist der Index in die Namensliste - sie ist nicht lueckenlos und darf deshalb
-        // nicht durch die Position im Array ersetzt werden.
+        // The number is the index into the name list - it is not gapless and therefore must
+        // not be replaced by the position in the array.
         Assert.Equal("2", values.GetObject(1).GetValue("number"));
         Assert.Equal("0x2001ffc0", values.GetObject(1).GetValue("value"));
     }

@@ -2,29 +2,29 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.Debugger.Models;
 
-// Eine Zeile im Memory-Reiter: eine vom Benutzer eingetragene Adresse und die zuletzt
-// dort gelesenen Bytes.
-// Die Tabelle zeigt nur an; Zeilen entstehen und verschwinden ueber die Knoepfe der Leiste.
+// One row in the Memory tab: an address entered by the user and the bytes last
+// read there.
+// The table only displays; rows appear and disappear through the buttons of the bar.
 public partial class MemoryRow : ObservableObject
 {
-    // Adresse oder Ausdruck in der Schreibweise, die das Backend versteht - eine Zahl, oder ein
-    // Symbol wie &buffer. Gezaehlt wird in adressierbaren Einheiten des Ziels, nicht in Bytes;
-    // die Umrechnung macht der Reiter anhand des Profils.
+    // Address or expression in the notation the backend understands - a number, or a
+    // symbol such as &buffer. Counted in addressable units of the target, not in bytes;
+    // the tab does the conversion based on the profile.
     [ObservableProperty] private string _address = string.Empty;
 
-    // Anzahl der zu lesenden adressierbaren Einheiten - Bytes auf einer byteadressierten
-    // Maschine, sonst deren Wortbreite. Eine neue Zeile liest zunaechst eine Einheit.
+    // Number of addressable units to read - bytes on a byte-addressed
+    // machine, otherwise its word width. A new row initially reads one unit.
     [ObservableProperty] private int _length = 1;
 
-    // Wie viele Bytes die Zeile umfasst - Length mal der Breite einer Einheit. Nur zur Anzeige;
-    // gelesen wird weiterhin ueber Length.
+    // How many bytes the row covers - Length times the width of one unit. For display only;
+    // reading still goes through Length.
     [ObservableProperty] private int _bytes = 1;
 
-    // Die gelesenen Bytes, oder ein Hinweis, warum nichts gelesen werden konnte.
+    // The bytes read, or a note on why nothing could be read.
     [ObservableProperty] private string _value = string.Empty;
 
-    // Dasselbe wie Value, aber in der Form, in der es vom Backend kam: Einheiten in Hex.
-    // Bleibt stehen, damit ein Wechsel des Zahlensystems die Zeile nur neu beschriftet, statt
-    // dafuer das Ziel noch einmal lesen zu muessen -> das ginge waehrend eines Laufs gar nicht.
+    // The same as Value, but in the form in which it came from the backend: units in hex.
+    // Kept so that a change of number base only relabels the row, instead of
+    // having to read the target again for it -> which would not work at all during a run.
     public string Raw { get; set; } = string.Empty;
 }

@@ -7,18 +7,18 @@ using OneWare.Essentials.Debugger.Interfaces;
 
 namespace OneWare.Debugger.ViewModels.Main;
 
-// Reiter "Debugger Console": der Verkehr mit dem Backend und die Zeile, ueber die sich
-// Kommandos direkt absetzen lassen.
-// Herein kommen die Zeilen von DebuggerViewModel, das als Einziges an der Sitzung haengt;
-// hinaus gehen die Kommandos direkt an den Dienst.
+// "Debugger Console" tab: the traffic with the backend and the line through which
+// commands can be issued directly.
+// The lines come in from DebuggerViewModel, the only one attached to the session;
+// the commands go out directly to the service.
 public partial class ConsoleTabViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
 
     [ObservableProperty] private string _commandText = string.Empty;
 
-    // Gespiegelt statt abgefragt -> das Kommandofeld muss sich sperren koennen, ohne selbst am
-    // Zustand des Debuggers zu haengen.
+    // Mirrored instead of queried -> the command field must be able to lock without itself
+    // depending on the debugger's state.
     [ObservableProperty] private bool _isSessionActive;
 
     public ConsoleTabViewModel(IDebuggerService debuggerService)
@@ -26,11 +26,11 @@ public partial class ConsoleTabViewModel : ObservableObject
         _debuggerService = debuggerService;
     }
 
-    // Verkehr mit dem Debugger-Backend, inklusive abgesetzter Kommandos.
+    // Traffic with the debugger backend, including issued commands.
     public ObservableCollection<ConsoleLine> Lines { get; } = [];
 
-    // Die Session meldet sich aus ihrem Lesethread; die Sammlung haengt aber an der Ansicht
-    // und darf nur vom UI-Thread angefasst werden.
+    // The session reports from its reader thread; the collection, however, is bound to the view
+    // and may only be touched from the UI thread.
     public void Append(string line, bool isCommand = false)
     {
         Dispatcher.UIThread.Post(() => Lines.Add(new ConsoleLine(line, isCommand)));

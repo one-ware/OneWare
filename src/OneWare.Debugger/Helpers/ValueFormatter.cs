@@ -3,26 +3,26 @@ using OneWare.Debugger.Models;
 
 namespace OneWare.Debugger.Helpers;
 
-// Schreibt die rohen Wortwerte des Ziels in der vom Benutzer gewaehlten Schreibweise.
-// Vorzeichenbehaftet heisst hier immer Zweierkomplement: der SVNR rechnet nachweislich so
-// (alu_n.vhd liest die Operanden als to_integer(signed(...)) und schreibt das Ergebnis als
-// to_signed(var_c, 16), beides numeric_std und damit per IEEE 1076.3 Zweierkomplement; der
-// Bereich -32768..32767 ist dessen asymmetrische Signatur). Eine Wahl zwischen Einer- und
-// Zweierkomplement gibt es deshalb bewusst nicht -> sie koennte nur Werte erzeugen, die die
-// Maschine nie hatte.
-// Ein Vorzeichen hat ausserdem nur die Dezimalanzeige. Hex, Oktal und Binaer zeigen das rohe
-// Bitmuster, und darin stehen dieselben Bits, ob man sie als -1 oder als 65535 liest.
-// Was sich nicht als Zahl lesen laesst - "target running", "unreadable", eine Struktur -,
-// geht unveraendert durch.
+// Writes the target's raw word values in the notation chosen by the user.
+// Signed always means two's complement here: the SVNR demonstrably calculates that way
+// (alu_n.vhd reads the operands as to_integer(signed(...)) and writes the result as
+// to_signed(var_c, 16), both numeric_std and thus two's complement per IEEE 1076.3; the
+// range -32768..32767 is its asymmetric signature). A choice between ones' and
+// two's complement deliberately does not exist -> it could only produce values the
+// machine never had.
+// Besides, only the decimal display has a sign. Hex, octal and binary show the raw
+// bit pattern, and that holds the same bits whether they are read as -1 or as 65535.
+// Whatever cannot be read as a number - "target running", "unreadable", a structure -
+// passes through unchanged.
 public static class ValueFormatter
 {
     private const int MaxBits = 64;
 
-    // Ein einzelner Hexwert des Backends, etwa ein Register als "0x00000000".
+    // A single hex value from the backend, such as a register as "0x00000000".
     public static string FormatHexValue(string raw, NumberBase numberBase)
     {
-        // Hex ist die Form, in der die Werte ohnehin ankommen -> unveraendert lassen, damit die
-        // Anzeige im Normalfall genau so aussieht wie zuvor, samt "0x" und Auffuellung.
+        // Hex is the form in which the values arrive anyway -> leave unchanged, so that the
+        // display normally looks exactly as before, including "0x" and padding.
         if (numberBase == NumberBase.Hex) return raw;
 
         return TryParseHex(raw, out var value, out var bits)
@@ -30,9 +30,9 @@ public static class ValueFormatter
             : raw;
     }
 
-    // Mehrere Einheiten hintereinander, durch Leerzeichen getrennt, wie der Memory-Reiter sie
-    // aus den gelesenen Bytes zusammensetzt. Scheitert eine, bleibt die ganze Zeile stehen ->
-    // eine halb umgerechnete Zeile waere schlechter lesbar als die rohe.
+    // Several units in a row, separated by spaces, as the Memory tab assembles them
+    // from the bytes read. If one fails, the whole line stays as it is ->
+    // a half-converted line would be harder to read than the raw one.
     public static string FormatHexUnits(string raw, NumberBase numberBase)
     {
         if (numberBase == NumberBase.Hex) return raw;
@@ -52,8 +52,8 @@ public static class ValueFormatter
         return string.Join(' ', formatted);
     }
 
-    // Was GDB aus dem DWARF-Typ gemacht hat, in aller Regel eine vorzeichenbehaftete
-    // Dezimalzahl. Die Breite steht dort nicht mit drin und kommt deshalb vom Ziel.
+    // What GDB made of the DWARF type, as a rule a signed
+    // decimal number. The width is not included there and therefore comes from the target.
     public static string FormatDecimalValue(string raw, int bits, NumberBase numberBase)
     {
         if (bits is < 1 or > MaxBits) return raw;
@@ -64,10 +64,10 @@ public static class ValueFormatter
         return Format(Mask(unchecked((ulong)parsed), bits), bits, numberBase);
     }
 
-    // Die Breite steht in der Zahl selbst: GDB fuellt auf die Registerbreite auf, und der
-    // Memory-Reiter gruppiert vorher auf die Wortbreite des Ziels. Damit bleibt ein
-    // 32-Bit-Register auch dann richtig vorzeichenbehaftet, wenn das Ziel 16-Bit-Worte
-    // adressiert - eine feste Wortbreite waere hier falsch.
+    // The width is in the number itself: GDB pads to the register width, and the
+    // Memory tab groups to the target's word width beforehand. That keeps a
+    // 32-bit register correctly signed even when the target addresses 16-bit
+    // words - a fixed word width would be wrong here.
     private static bool TryParseHex(string raw, out ulong value, out int bits)
     {
         value = 0;
@@ -119,11 +119,11 @@ public static class ValueFormatter
         return string.Join(' ', groups);
     }
 
-    // Zweierkomplement: ist das oberste Bit gesetzt, liegt der Wert unter null, und sein Betrag
-    // ist der Abstand zur naechsten Zweierpotenz.
-    // Von Hand und nicht ueber einen Cast nach short/int/long, weil die Breite hier nicht immer
-    // 8, 16, 32 oder 64 ist: sie kommt aus der Stellenzahl des Hexwerts, und GDB liefert auch
-    // Werte wie "0xfff" -> zwoelf Bit.
+    // Two's complement: if the top bit is set, the value is below zero, and its magnitude
+    // is the distance to the next power of two.
+    // By hand and not through a cast to short/int/long, because the width here is not always
+    // 8, 16, 32 or 64: it comes from the number of digits of the hex value, and GDB also delivers
+    // values such as "0xfff" -> twelve bits.
     private static string SignedDecimal(ulong value, int bits)
     {
         if ((value & (1UL << (bits - 1))) == 0) return value.ToString(CultureInfo.InvariantCulture);

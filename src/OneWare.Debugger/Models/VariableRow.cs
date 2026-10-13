@@ -2,8 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.Debugger.Models;
 
-// Eine Zeile im Variables-Panel: Name, aktueller Wert und Typ einer Variablen
-// im gerade ausgewaehlten Stack-Frame.
+// One row in the Variables panel: name, current value and type of a variable
+// in the currently selected stack frame.
 public partial class VariableRow : ObservableObject
 {
     [ObservableProperty] private string _name = string.Empty;
@@ -12,6 +12,6 @@ public partial class VariableRow : ObservableObject
 
     [ObservableProperty] private string _value = string.Empty;
 
-    // Der Wert, wie GDB ihn aus dem DWARF-Typ gerendert hat. Siehe MemoryRow.Raw.
+    // The value as GDB rendered it from the DWARF type. See MemoryRow.Raw.
     public string Raw { get; set; } = string.Empty;
 }

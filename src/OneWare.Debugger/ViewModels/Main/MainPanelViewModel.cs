@@ -2,8 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OneWare.Debugger.ViewModels.Main;
 
-// Der Reiterbereich des unteren Panels. Haelt die drei Reiter und weiss als Einziger, in
-// welcher Reihenfolge sie stehen -> ausserhalb muss niemand mit einem Index hantieren.
+// The tab area of the bottom panel. Holds the three tabs and is the only one that knows
+// their order -> outside nobody has to handle an index.
 public partial class MainPanelViewModel : ObservableObject
 {
     private const int ConsoleTabIndex = 2;
@@ -24,7 +24,7 @@ public partial class MainPanelViewModel : ObservableObject
 
     public ConsoleTabViewModel Console { get; }
 
-    // Beim Start interessiert der Verkehr mit dem Backend -> Konsole leeren und nach vorn.
+    // On start, the traffic with the backend is what matters -> clear the console and bring it to the front.
     public void ShowConsole()
     {
         Console.Clear();

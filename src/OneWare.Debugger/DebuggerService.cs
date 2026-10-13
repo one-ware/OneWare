@@ -9,15 +9,15 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger;
 
-// Haelt die registrierten Backends und besitzt die eine Session, die gleichzeitig laufen kann.
-// Alles, was hier nach aussen geht, ist auf den UI-Thread gebracht. Die Session meldet sich
-// aus ihrem Lesethread; das an genau einer Stelle einzusammeln ist einfacher, als es jedem
-// Panel einzeln aufzutragen.
+// Holds the registered backends and owns the one session that can run at a time.
+// Everything that leaves this class is marshalled to the UI thread. The session reports
+// from its reader thread; collecting that in exactly one place is simpler than asking
+// every panel to do it.
 public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger logger) : IDebuggerService
 {
     private readonly List<IDebugSessionLauncher> _sessionLaunchers = [];
     private readonly HashSet<BreakPoint> _armed = [];
-    private readonly HashSet<BreakPoint> _refused = []; // Breakpoints die der Stub ablehnt
+    private readonly HashSet<BreakPoint> _refused = []; // breakpoints the stub refuses
     private readonly BreakpointStore _breakpointStore = BreakpointStore.Instance;
     private readonly List<IDebugTargetPreparer> _targetPreparers = [];
 
@@ -37,8 +37,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     public bool IsActive => _session != null;
 
-    // Kommt mit der Startanforderung und gilt fuer die Dauer der Sitzung. Ohne Sitzung steht hier
-    // das byteadressierte Standardprofil -> der Memory-Reiter rechnet dann wie bisher mit 1.
+    // Arrives with the launch request and holds for the duration of the session. Without a session
+    // this is the byte-addressed default profile -> the Memory tab then calculates with 1 as before.
     public DebugTargetProfile TargetProfile { get; private set; } = DebugTargetProfile.Default;
 
     public event EventHandler? StateChanged;
@@ -78,9 +78,9 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     public async Task<bool> StartAsync(IDebugTargetPreparer preparer)
     {
-        // Erst die laufende Sitzung abraeumen, dann vorbereiten: der Vorbereiter greift auf
-        // dieselben Betriebsmittel zu wie die vorige Sitzung - eine serielle Schnittstelle etwa
-        // laesst sich nicht zweimal oeffnen.
+        // Tear down the running session first, then prepare: the preparer uses the same
+        // resources as the previous session - a serial port, for instance, cannot be
+        // opened twice.
         await StopAsync();
 
         DebugLaunchRequest? launchRequest;
@@ -98,8 +98,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             launchRequest = null;
         }
 
-        // Auch der stille Fehlschlag muss aufraeumen: der Vorbereiter kann die halbe Kette bereits
-        // hochgefahren haben, bevor er aufgab.
+        // The silent failure has to clean up as well: the preparer may already have brought up
+        // half the chain before it gave up.
         _activePreparer = preparer;
 
         if (launchRequest == null)
@@ -110,9 +110,9 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         if (await StartCoreAsync(launchRequest)) return true;
 
-        // Ein Fehlschlag unterhalb ist ueber StopAsync gelaufen und hat den Vorbereiter damit
-        // schon abgeraeumt; dann ist das hier ein Leerlauf. Die Faelle, die vor dem Start
-        // aussteigen - kein Adapter, CanLaunch verneint - deckt erst dieser Aufruf ab.
+        // A failure further down went through StopAsync and has thereby already released the
+        // preparer; then this is a no-op. The cases that bail out before the start -
+        // no launcher, CanLaunch declined - are only covered by this call.
         await CleanupPreparerAsync();
         return false;
     }
@@ -153,16 +153,16 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
         if (!await session.StartAsync())
         {
-            // Ohne dieses Aufraeumen bliebe ein halb hochgefahrener GDB-Prozess zurueck und die
-            // Oberflaeche haette weiter eine Session, die nichts beantwortet.
+            // Without this cleanup a half-started GDB process would be left behind and the
+            // UI would still have a session that answers nothing.
             await StopAsync();
             return false;
         }
 
         _sourceFiles = await session.GetSourceFilesAsync();
 
-        // Erst die Breakpoints scharf machen, dann laufen lassen - andersherum rennt das Programm
-        // an genau den Stellen vorbei, an denen der Nutzer halten wollte.
+        // Arm the breakpoints first, then let it run - the other way round the program runs
+        // past exactly the places where the user wanted to stop.
         await ResyncBreakpointsAsync();
 
         _breakpointStore.Breakpoints.CollectionChanged += OnBreakpointsChanged;
@@ -182,11 +182,11 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             session.StateChanged -= OnSessionStateChanged;
             session.Exited -= OnSessionExited;
 
-            // Frueh leeren: ein zweiter, gleichzeitiger Aufruf steigt damit sofort wieder aus.
+            // Clear early: a second, concurrent call then bails out again immediately.
             _session = null;
 
-            // Stop wartet auf das Ende des Backends. Auf dem UI-Thread waere das ein sichtbares
-            // Einfrieren, deshalb ausgelagert.
+            // Stop waits for the backend to end. On the UI thread that would be a visible
+            // freeze, hence moved off it.
             await Task.Run(session.Stop);
 
             State = DebugSessionState.Empty;
@@ -197,20 +197,20 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             _breakpointStore.IsTargetRunning = false;
             _breakpointStore.CurrentBreakPoint = null;
 
-            // Ohne Ziel sagt niemand mehr etwas ueber die Breakpoints aus -> ein hohler Punkt
-            // waere ab hier eine Behauptung ohne Grundlage.
+            // Without a target nobody says anything about the breakpoints any more -> a hollow dot
+            // would from here on be a claim without basis.
             _breakpointStore.ResetVerification();
 
             RaiseStateChanged();
         }
 
-        // Nach dem Backend, nicht davor: solange sich GDB von seinem Ziel loest, muss der Stub
-        // noch stehen.
+        // After the backend, not before: while GDB detaches from its target, the stub must
+        // still be up.
         await CleanupPreparerAsync();
     }
 
-    // Gibt frei, was der Vorbereiter der laufenden Sitzung belegt hat. Mehrfach aufrufbar -
-    // der zweite Aufruf findet nichts mehr vor.
+    // Releases what the preparer of the running session has claimed. Can be called more than once -
+    // the second call finds nothing left.
     private async Task CleanupPreparerAsync()
     {
         if (_activePreparer is not { } preparer) return;
@@ -223,8 +223,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         }
         catch (Exception e)
         {
-            // Ein Vorbereiter, der beim Aufraeumen wirft, darf das Ende der Sitzung nicht
-            // aufhalten - die Sitzung ist an dieser Stelle bereits abgebaut.
+            // A preparer that throws during cleanup must not hold up the end of the session -
+            // the session is already torn down at this point.
             logger.Error($"Target preparer '{preparer.DisplayName}' failed to clean up: {e.Message}", e);
         }
     }
@@ -263,8 +263,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     {
         var session = _session;
 
-        // Waehrend das Ziel laeuft, nimmt das Backend keine Leseanfrage an. Sie trotzdem zu
-        // schicken haette nur eine Fehlermeldung je Adresse in der Console zur Folge.
+        // While the target runs, the backend accepts no read request. Sending it anyway
+        // would only produce one error message per address in the console.
         if (session == null || State.IsRunning) return Task.FromResult<string?>(null);
 
         return session.ReadMemoryAsync(address, byteCount);
@@ -276,8 +276,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         return _session.SendRawCommandAsync(command);
     }
 
-    // Haelt die Breakpoints des Editors und die des laufenden Ziels zusammen, damit ein
-    // waehrend der Sitzung gesetzter roter Punkt sofort greift.
+    // Keeps the editor's breakpoints and those of the running target in sync, so that a
+    // red dot set during the session takes effect immediately.
     private void OnBreakpointsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (_session == null) return;
@@ -304,7 +304,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         }
         catch (Exception e)
         {
-            // Der Aufruf laeuft ohne Erwartenden -> eine Ausnahme ginge sonst still verloren.
+            // The call runs without an awaiter -> an exception would otherwise be lost silently.
             logger.Error($"Could not synchronise the breakpoints with the target: {e.Message}", e);
         }
     }
@@ -325,7 +325,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
             if (!BelongsToLoadedProgram(breakpoint.File))
             {
-                //Wird abgelehnt, weil er zu einen Fremdprogramm gehört
+                // Refused because it belongs to a different program
                 _refused.Add(breakpoint);
                 PublishVerification(breakpoint, false);
                 if (wasVerified) rejected++;
@@ -376,21 +376,20 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     private static string NormalizePath(string path) => path.Replace('\\', '/');
 
-    // Auf den UI-Thread gebracht: das Ergebnis kommt vom Lesethread der Sitzung, und daran
-    // haengt das Neuzeichnen der Randspalte in jedem offenen Editor.
+    // Marshalled to the UI thread: the result comes from the session's reader thread, and the
+    // redraw of the margin in every open editor depends on it.
     private void PublishVerification(BreakPoint breakpoint, bool verified)
     {
         Dispatcher.UIThread.Post(() => _breakpointStore.SetVerified(breakpoint, verified));
     }
 
-    // Der hohle Punkt in der Randspalte sagt nur etwas, wenn man die Schreibweise kennt.
-    // Deshalb zusaetzlich eine Kurzmeldung.
-    // Warnung, nicht Fehler: die Sitzung laeuft weiter und der Haltepunkt bleibt stehen -
-    // es ist eine Einschraenkung, kein Abbruch. Ueber die Einstufung kommt zugleich die
-    // Farbe aus dem Benachrichtigungsthema der Host-Anwendung, statt hier festgelegt zu
-    // werden.
-    // Der Grund steht bewusst im Konjunktiv: das Protokoll meldet das Scheitern, nicht
-    // dessen Ursache.
+    // The hollow dot in the margin only means something if you know the notation.
+    // Hence a short notification in addition.
+    // Warning, not error: the session keeps running and the breakpoint stays in place -
+    // it is a limitation, not an abort. The classification also brings the colour from
+    // the host application's notification theme, instead of it being fixed here.
+    // The reason is deliberately phrased as a possibility: the protocol reports the failure,
+    // not its cause.
     private void NotifyWaiting(int waiting)
     {
         var more = waiting == 1 ? "One breakpoint is" : $"{waiting} breakpoints are";
@@ -416,8 +415,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     {
         Dispatcher.UIThread.Post(() =>
         {
-            // Eine Meldung der alten Session nach einem Stop darf die Oberflaeche nicht mehr
-            // umschalten.
+            // A message from the old session after a stop must no longer switch the UI over.
             if (!ReferenceEquals(sender, _session)) return;
 
             State = state;
@@ -429,8 +427,8 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         });
     }
 
-    // Die Zeile, auf der das Ziel steht - auch wenn dort gar kein Breakpoint gesetzt ist, denn
-    // nach einem Einzelschritt will der Nutzer trotzdem sehen, wo er ist.
+    // The line the target stands on - even if no breakpoint is set there, because after a
+    // single step the user still wants to see where they are.
     private BreakPoint? FindCurrentBreakpoint(DebugSessionState state)
     {
         if (state.IsRunning) return null;

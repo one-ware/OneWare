@@ -9,14 +9,14 @@ using Xunit;
 namespace OneWare.Debugger.UnitTests;
 
 /// <summary>
-///     Deckt das Entfernen von Breakpoints aus dem Breakpoints-Reiter ab. Zwei Dinge sind hier
-///     nicht verhandelbar: es darf nur die Auswahl geloescht werden, und der Store muss jeden
-///     Eintrag einzeln als Remove melden - die laufende Session haengt an diesen Events, um die
-///     Breakpoints auch am Ziel abzuraeumen.
+///     Covers removing breakpoints from the Breakpoints tab. Two things are
+///     non-negotiable here: only the selection may be deleted, and the store must report every
+///     entry individually as a Remove - the running session listens to these events to
+///     clear the breakpoints on the target as well.
 ///     <br /><br />
-///     <see cref="BreakpointStore" /> ist ein statisches Singleton, deshalb raeumt die Klasse vor
-///     und nach jedem Test auf. xUnit fuehrt Tests innerhalb einer Klasse sequenziell aus, die
-///     uebrigen Testklassen der Assembly fassen den Store nicht an.
+///     <see cref="BreakpointStore" /> is a static singleton, so the class cleans up before
+///     and after every test. xUnit runs tests within one class sequentially, and the
+///     other test classes of the assembly do not touch the store.
 /// </summary>
 public class BreakpointsViewModelTests : IDisposable
 {
@@ -47,7 +47,7 @@ public class BreakpointsViewModelTests : IDisposable
         var second = Add(@"C:\proj\src\top.vhd", 20);
         var third = Add(@"C:\proj\src\uart.vhd", 5);
 
-        // Nicht benachbarte Auswahl, wie bei Ctrl-Klick auf Zeile 1 und 3.
+        // Non-adjacent selection, as with Ctrl-click on rows 1 and 3.
         vm.SelectedBreakpoints.Add(first);
         vm.SelectedBreakpoints.Add(third);
 
@@ -61,13 +61,13 @@ public class BreakpointsViewModelTests : IDisposable
     {
         var vm = new BreakpointsViewModel();
 
-        // Absichtlich in der falschen Reihenfolge eingetragen: die Sicht sortiert, nicht der Store.
+        // Deliberately entered in the wrong order: the view sorts, not the store.
         var uart = Add(@"C:\proj\src\uart.vhd", 5);
         var topTen = Add(@"C:\proj\src\top.vhd", 10);
         var topNine = Add(@"C:\proj\src\top.vhd", 9);
 
-        // Zeile 9 vor Zeile 10: Line ist ein int und wird numerisch sortiert. Als Text waere
-        // "10" vor "9" gelandet.
+        // Line 9 before line 10: Line is an int and is sorted numerically. As text
+        // "10" would have ended up before "9".
         Assert.Equal([topNine, topTen, uart], vm.Breakpoints.Cast<BreakPoint>());
     }
 
@@ -92,8 +92,8 @@ public class BreakpointsViewModelTests : IDisposable
 
         vm.RemoveBreakpointCommand.Execute(null);
 
-        // Ohne diese Einzelmeldungen wuesste die Session nicht, welche Breakpoints sie in GDB
-        // loeschen soll - ein Clear() auf dem Store wuerde nur ein Reset ohne OldItems feuern.
+        // Without these individual notifications the session would not know which breakpoints to
+        // delete in GDB - a Clear() on the store would only fire a Reset without OldItems.
         Assert.Equal([first, third], removed);
         Assert.Equal(0, resets);
     }

@@ -4,11 +4,11 @@ using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger.Helpers;
 
-// Stellt einen absoluten Dateipfad relativ zum Wurzelverzeichnis seines Projekts dar,
-// z.B. "MeinProjekt/src/top.vhd" statt "C:\dev\MeinProjekt\src\top.vhd". Rein kosmetisch:
-// BreakPoint.File bleibt der absolute Pfad,
-// den GdbSession an GDB weiterreicht und BreakPointMargin zum Abgleich mit der offenen Datei
-// nutzt. Faellt auf den vollen Pfad zurueck, wenn die Datei zu keinem geladenen Projekt gehoert.
+// Shows an absolute file path relative to the root directory of its project,
+// e.g. "MyProject/src/top.vhd" instead of "C:\dev\MyProject\src\top.vhd". Purely cosmetic:
+// BreakPoint.File stays the absolute path
+// that GdbSession passes on to GDB and BreakPointMargin uses to match against the open
+// file. Falls back to the full path if the file belongs to no loaded project.
 public class ProjectRelativePathConverter : IValueConverter
 {
     public static readonly ProjectRelativePathConverter Instance = new();
@@ -17,7 +17,7 @@ public class ProjectRelativePathConverter : IValueConverter
     {
         if (value is not string fullPath || string.IsNullOrWhiteSpace(fullPath)) return value;
 
-        // Im XAML-Previewer ist der Container nicht gesetzt - dann bleibt es beim vollen Pfad.
+        // In the XAML previewer the container is not set - then it stays the full path.
         if (ContainerLocator.Container?.GetService(typeof(IProjectExplorerService))
             is not IProjectExplorerService projectExplorer) return fullPath;
 
