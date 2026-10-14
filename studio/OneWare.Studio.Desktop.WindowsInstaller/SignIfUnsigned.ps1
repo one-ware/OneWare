@@ -7,9 +7,25 @@ param(
 $companyPrefix = 'OneWare'
 $timestampUrl  = 'http://timestamp.digicert.com'
 
+$isCi = [bool]$env:GITHUB_ACTIONS
+
+# When launched from pwsh 7, Windows PowerShell inherits a PSModulePath pointing at PS7 modules and fails to
+# autoload Microsoft.PowerShell.Security. Load the module that belongs to the running host explicitly.
+try {
+    Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1') -ErrorAction Stop
+}
+catch {
+    Write-Host ("[ERROR] Could not load Microsoft.PowerShell.Security: {0}" -f $_) -ForegroundColor Red
+    exit 1
+}
+
 # Check for signtool
 $signTool = Get-Command signtool -ErrorAction SilentlyContinue
 if (-not $signTool) {
+    if ($isCi) {
+        Write-Host "[ERROR] 'signtool' not found on CI. Refusing to ship unsigned binaries." -ForegroundColor Red
+        exit 1
+    }
     Write-Host "[WARN] 'signtool' not found. Listing files that would be signed..." -ForegroundColor Yellow
 }
 
@@ -30,7 +46,8 @@ foreach ($f in $files) {
         $sig = Get-AuthenticodeSignature -FilePath $f.FullName
     }
     catch {
-        Write-Host ("[WARN] Could not check signature for {0}: {1}" -f $f.FullName, $_)
+        Write-Host ("[ERROR] Could not check signature for {0}: {1}" -f $f.FullName, $_) -ForegroundColor Red
+        $errors++
         continue
     }
 
@@ -53,12 +70,14 @@ foreach ($f in $files) {
     }
 }
 
-if (-not $signTool) {
+if ($errors -gt 0) {
+    Write-Host ("[ERROR] Completed with {0} signing errors." -f $errors) -ForegroundColor Red
+    # Local builds without a certificate should still produce an installer; CI must not ship unsigned binaries.
+    if ($isCi) { exit 1 }
+} elseif (-not $signTool) {
     Write-Host "[INFO] Skipped actual signing because 'signtool' is missing. Displayed all unsigned company binaries above." -ForegroundColor Yellow
-} elseif ($errors -gt 0) {
-    Write-Host ("[WARN] Completed with {0} signing errors." -f $errors) -ForegroundColor Yellow
 } else {
     Write-Host "[INFO] Completed successfully. All unsigned company binaries were signed or skipped."
 }
 
-exit 0   # Always return 0 so MSBuild doesn't fail
+exit 0
