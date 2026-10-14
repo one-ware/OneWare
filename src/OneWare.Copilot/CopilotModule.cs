@@ -56,7 +56,7 @@ public class CopilotModule : OneWareModuleBase
         Id = "copilotcli",
         Type = "NativeTool",
         Name = "Copilot CLI",
-        Description = "Used for Copilot Integration",
+        Description = "Agent runtime used by the GitHub Copilot and OneWare Agents chats. OneWare Agents doesn't need a GitHub account.",
         License = "GitHub Copilot CLI License",
         IconUrl = "https://github.githubassets.com/images/modules/site/copilot/copilot.png",
         AcceptLicenseBeforeDownload = true,

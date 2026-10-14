@@ -1393,6 +1393,14 @@ public abstract class CopilotChatServiceBase(
     public event EventHandler<ChatEvent>? EventReceived;
     public event EventHandler<StatusEvent>? StatusChanged;
 
+    /// <summary>
+    /// Chats with their own model provider (e.g. OneWare Agents) still run on the Copilot CLI, which looks
+    /// like it needs GitHub. Explains that it is only the local agent runtime there.
+    /// </summary>
+    private string GetCliRuntimeNote() => _byokConfiguration == null
+        ? string.Empty
+        : $" {Name} only uses it as the local agent runtime, so no GitHub account or Copilot subscription is needed.";
+
     private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
     {
         var cliPath = CopilotModule.GetCliPath(paths);
@@ -1564,7 +1572,7 @@ public abstract class CopilotChatServiceBase(
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
                 Blocker = new ChatServiceBlocker("Copilot CLI required",
-                    $"{Name} needs the Copilot CLI. Install it to start chatting.")
+                    $"{Name} needs the Copilot CLI. Install it to start chatting.{GetCliRuntimeNote()}")
                 {
                     ActionText = "Install Copilot CLI",
                     ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))
@@ -1580,7 +1588,7 @@ public abstract class CopilotChatServiceBase(
                 {
                     StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
                     Blocker = new ChatServiceBlocker("Copilot CLI update available",
-                        "Update the Copilot CLI to continue chatting.")
+                        $"Update the Copilot CLI to continue chatting.{GetCliRuntimeNote()}")
                     {
                         ActionText = "Update Copilot CLI",
                         ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))
