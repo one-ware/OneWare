@@ -32,6 +32,7 @@ public class AiFunctionProvider(
     public event EventHandler<AiFunctionStartedEvent>? FunctionStarted;
     public event EventHandler<AiFunctionCompletedEvent>? FunctionCompleted;
     public event EventHandler<AiFunctionProgressEvent>? FunctionProgress;
+    public event EventHandler? ToolsChanged;
 
     public void RegisterFunction(IOneWareAiFunction function)
     {
@@ -42,6 +43,8 @@ public class AiFunctionProvider(
             _registeredFunctions.RemoveAll(x => string.Equals(x.Name, function.Name, StringComparison.Ordinal));
             _registeredFunctions.Add(function);
         }
+
+        ToolsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void RegisterPromptAddition(string promptAddition)
