@@ -227,6 +227,42 @@ public class PackageServiceTests
         Assert.Equal("1.1.0", state.ResolveTargetVersion()?.Version);
     }
 
+    [Fact]
+    public async Task SettingsSaved_DoesNotRefreshWhenPackageSourcesAreUnchanged()
+    {
+        SetInstalled();
+        _catalog.Manifests.Returns(new Dictionary<string, Package>());
+        await _service.RefreshAsync(true);
+        _catalog.ClearReceivedCalls();
+
+        _settingsService.Saved += Raise.EventWith(_settingsService, new SaveEventArgs(true));
+        await Task.Delay(100);
+
+        await _catalog.DidNotReceive().RefreshAsync(Arg.Any<IEnumerable<string[]>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SettingsSaved_RefreshesWhenPackageSourcesChanged()
+    {
+        SetInstalled();
+        _catalog.Manifests.Returns(new Dictionary<string, Package>());
+        await _service.RefreshAsync(true);
+        _catalog.ClearReceivedCalls();
+
+        _settingsService.GetSettingValue<System.Collections.ObjectModel.ObservableCollection<string>>(
+            "PackageManager_Sources").Returns(["https://example.com/packages.json"]);
+        _settingsService.Saved += Raise.EventWith(_settingsService, new SaveEventArgs(true));
+
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (_catalog.ReceivedCalls().All(x => x.GetMethodInfo().Name != nameof(IPackageCatalog.RefreshAsync)) &&
+               DateTime.UtcNow < deadline)
+            await Task.Delay(20);
+
+        await _catalog.Received(1).RefreshAsync(
+            Arg.Is<IEnumerable<string[]>>(x => x.Any(r => r.Contains("https://example.com/packages.json"))),
+            Arg.Any<CancellationToken>());
+    }
+
     private void SetInstalled(params InstalledPackage[] packages)
     {
         _stateStore.LoadAsync().Returns(packages.ToDictionary(x => x.Id));
