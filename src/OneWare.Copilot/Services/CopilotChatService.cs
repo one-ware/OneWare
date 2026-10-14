@@ -1572,8 +1572,8 @@ public abstract class CopilotChatServiceBase(
                 return false;
             }
 
-            if (_byokConfiguration == null &&
-                (packageService.IsLoaded || await packageService.RefreshAsync(false)))
+            // The SDK only works reliably with the CLI version it was built for, so this applies to BYOK chats too.
+            if (packageService.IsLoaded || await packageService.RefreshAsync(false))
             {
                 if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
                     state.Status is PackageStatus.UpdateAvailable)
