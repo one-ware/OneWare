@@ -497,7 +497,7 @@ public class App : Application
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
             new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with ONE AI",
-                null,
+                "Quick start guide to train and deploy your first AI model",
                 new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/quick-start-guide");
