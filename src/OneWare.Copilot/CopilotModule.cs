@@ -35,12 +35,12 @@ public class CopilotModule : OneWareModuleBase
     public const string WireApiResponses = "responses";
 
     /// <summary>
-    /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
+    /// Default model of the GitHub Copilot chat.
     /// </summary>
-    public const string DefaultModelId = "claude-sonnet-4-5";
+    public const string DefaultModelId = "claude-sonnet-5-5";
 
     /// <summary>Default model of the OneWare Agents chat.</summary>
-    public const string OneWareAgentsDefaultModelId = "gpt-6.1-sol-eu";
+    public const string OneWareAgentsDefaultModelId = "claude-sonnet-5-5";
 
     /// <summary>
     /// Id of the model that lets Copilot route each turn to a backend model itself. Sessions using
