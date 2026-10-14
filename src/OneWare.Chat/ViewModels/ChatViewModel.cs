@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Chat.Services;
@@ -26,6 +27,15 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
     public const string MaxSessionHistoryKey = "Chat_MaxSessionHistory";
 
     public const int DefaultMaxSessionHistory = 50;
+
+    /// <summary>Service that opens stored chats whose own service is no longer registered.</summary>
+    public const string LegacyFallbackServiceName = "GitHub Copilot";
+
+    /// <summary>Former names of chat services, mapped to their current name.</summary>
+    private static readonly Dictionary<string, string> LegacyServiceNames = new(StringComparer.Ordinal)
+    {
+        ["OneWare Cloud"] = "OneWare Agents"
+    };
 
     private readonly IMainDockService _mainDockService;
     private readonly IAiFunctionProvider _aiFunctionProvider;
@@ -430,15 +440,107 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
             (string.Equals(t.CurrentSessionId, sessionId, StringComparison.Ordinal) ||
              string.Equals(t.RememberedSessionId, sessionId, StringComparison.Ordinal)));
 
-    private async Task OpenOverviewItemAsync(ChatOverviewItem item)
+    private IChatService? FindService(string serviceName) =>
+        ChatServices.FirstOrDefault(s => string.Equals(s.Name, serviceName, StringComparison.Ordinal));
+
+    private static void ReportOpenFailure(string chatName, string reason, Exception? exception = null)
     {
-        if (item.Session != null && _sessions.Contains(item.Session))
+        ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+            ?.Warning($"Opening chat '{chatName}' failed: {reason}", exception);
+
+        try
         {
-            Show(item.Session);
-            return;
+            ContainerLocator.Container.Resolve<IWindowService>()
+                .ShowNotification("Chat could not be opened", $"{chatName}: {reason}", NotificationType.Warning);
+        }
+        catch
+        {
+            // No window service (e.g. in tests); the warning above is logged.
+        }
+    }
+
+    /// <summary>
+    /// Moves a stored chat to the history of another service, so it is saved, listed and pruned there from now on.
+    /// </summary>
+    private ChatSessionHistoryItem MoveHistoryItem(ChatSessionHistoryItem item, string serviceName)
+    {
+        var targetDirectory = GetServiceHistoryDirectory(serviceName);
+        var targetPath = Path.Combine(targetDirectory, Path.GetFileName(item.FilePath));
+
+        try
+        {
+            ChatSessionFile? file;
+            using (var stream = File.OpenRead(item.FilePath))
+                file = JsonSerializer.Deserialize<ChatSessionFile>(stream, ChatStateSerializerOptions);
+            if (file == null) throw new InvalidDataException("The chat file is empty.");
+
+            file.ServiceName = serviceName;
+            Directory.CreateDirectory(targetDirectory);
+            using (var stream = File.Open(targetPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                JsonSerializer.Serialize(stream, file, ChatStateSerializerOptions);
+
+            if (!string.Equals(Path.GetFullPath(targetPath), Path.GetFullPath(item.FilePath), StringComparison.Ordinal))
+                File.Delete(item.FilePath);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning($"Moving chat '{item.Name}' to {serviceName} failed", e);
+            // Keep the original file; the chat is saved to the new service on its next transcript store.
+            targetPath = item.FilePath;
         }
 
-        if (item.HistoryItem != null) await OpenHistoryItemAsync(item.HistoryItem);
+        if (_historyByService.TryGetValue(item.ServiceName, out var oldItems))
+        {
+            oldItems.Remove(item);
+            if (oldItems.Count == 0) _historyByService.Remove(item.ServiceName);
+        }
+
+        var moved = new ChatSessionHistoryItem
+        {
+            ServiceName = serviceName,
+            SessionId = item.SessionId,
+            Name = item.Name,
+            UpdatedAt = item.UpdatedAt,
+            FilePath = targetPath
+        };
+
+        if (!_historyByService.TryGetValue(serviceName, out var items))
+        {
+            items = [];
+            _historyByService[serviceName] = items;
+        }
+
+        items.RemoveAll(x => string.Equals(x.SessionId, moved.SessionId, StringComparison.Ordinal));
+        items.Add(moved);
+        items.Sort((a, b) => b.UpdatedAt.CompareTo(a.UpdatedAt));
+        RefreshOverview();
+        return moved;
+    }
+
+    private async Task OpenOverviewItemAsync(ChatOverviewItem item)
+    {
+        try
+        {
+            if (item.Session != null && _sessions.Contains(item.Session))
+            {
+                Show(item.Session);
+                return;
+            }
+
+            if (item.HistoryItem != null)
+            {
+                await OpenHistoryItemAsync(item.HistoryItem);
+                return;
+            }
+
+            ReportOpenFailure(item.Title, "The chat is no longer available.");
+            RefreshOverview();
+        }
+        catch (Exception e)
+        {
+            ReportOpenFailure(item.Title, e.Message, e);
+        }
     }
 
     private async Task OpenHistoryItemAsync(ChatSessionHistoryItem item)
@@ -449,10 +551,32 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
             return;
         }
 
-        var service = ChatServices.FirstOrDefault(s => string.Equals(s.Name, item.ServiceName, StringComparison.Ordinal));
-        if (service == null) return;
+        var service = FindService(item.ServiceName);
+        if (service == null)
+        {
+            // Chats of renamed services continue in their new service, chats of removed ones in GitHub Copilot.
+            service = (LegacyServiceNames.TryGetValue(item.ServiceName, out var renamed) ? FindService(renamed) : null)
+                      ?? FindService(LegacyFallbackServiceName);
+            if (service == null)
+            {
+                ReportOpenFailure(item.Name,
+                    $"The chat service '{item.ServiceName}' is not available and there is no fallback service.");
+                return;
+            }
 
-        TryReadSessionMessages(item, out var states);
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning($"Chat service '{item.ServiceName}' is not available, opening chat '{item.Name}' with {service.Name}");
+            item = MoveHistoryItem(item, service.Name);
+
+            if (FindLoaded(item.ServiceName, item.SessionId) is { } moved)
+            {
+                Show(moved);
+                return;
+            }
+        }
+
+        if (!TryReadSessionMessages(item, out var states))
+            ReportOpenFailure(item.Name, "The stored messages of this chat could not be read.");
 
         LeaveCurrent();
         var session = CreateSession(service, item.SessionId, states, item.Name, out var blocking);
@@ -1085,8 +1209,10 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
             messages = file.Messages;
             return true;
         }
-        catch
+        catch (Exception e)
         {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning($"Reading chat '{item.Name}' failed", e);
             return false;
         }
     }
