@@ -149,7 +149,7 @@
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="models:TabModel">
                         <Border Classes="inset">
-                            <controls:MarkdownViewer VirtualizationEnabled="False" Markdown="{Binding Content}"
+                            <controls:MarkdownViewer VirtualizationEnabled="True" Markdown="{Binding Content}"
                                                      Margin="10 5 0 0" />
                         </Border>
                     </DataTemplate>

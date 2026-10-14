@@ -588,6 +588,8 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - `UniversalFpgaToolBar_PinPlannerMenuExtension`: pin planner menu.
 - `UniversalFpgaToolBar_DownloaderConfigurationExtension`: download configuration area.
 - `CompileWindow_TopRightExtension`: pin planner window (top right region).
+- `WelcomeScreen_Header`: welcome screen, below the app logo and version. Meant for short, subtle hints
+  (one `caption` line with `link` buttons); hide the control when it no longer applies, so it leaves no gap.
 - `EditView_Top`: top editor panel (used for test bench toolbar). Use the `Border.editor-bar` /
   `WrapPanel.editor-bar-items` style classes so the bar matches the others and wraps on small screens
   (see `docs/Styling.md`, "Editor bar").

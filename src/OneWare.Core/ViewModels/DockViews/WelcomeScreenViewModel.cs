@@ -11,18 +11,24 @@ namespace OneWare.Core.ViewModels.DockViews;
 
 public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
 {
+    /// <summary>UI extension key for subtle hints below the app logo and version.</summary>
+    public const string HeaderExtensionKey = "WelcomeScreen_Header";
+
     private readonly IPaths _paths;
     private readonly IProjectManagerService _projectManager;
 
     private bool _recentProjectsAreEmpty = true;
 
-    public WelcomeScreenViewModel(IPaths paths, IProjectManagerService projectManager)
+    public WelcomeScreenViewModel(IPaths paths, IProjectManagerService projectManager, IWindowService windowService)
     {
         _paths = paths;
         _projectManager = projectManager;
+        HeaderExtensions = windowService.GetUiExtensions(HeaderExtensionKey);
         Id = "WelcomeScreen";
         Title = "Welcome";
     }
+
+    public ObservableCollection<OneWareUiExtension> HeaderExtensions { get; }
 
     public ObservableCollection<IWelcomeScreenStartItem> NewItems { get; set; } = [];
     public ObservableCollection<IWelcomeScreenStartItem> OpenItems { get; set; } = [];

@@ -386,9 +386,12 @@ public abstract class CopilotChatServiceBase(
     {
         var selectedModelSetting = settingsService.GetSettingValue<string>(GetSelectedModelSettingKey());
         return ResolveModel(selectedModelSetting) ??
-               ResolveModel(CopilotModule.DefaultModelId) ??
+               ResolveModel(DefaultModelId) ??
                Models.FirstOrDefault();
     }
+
+    /// <summary>Model selected while the user hasn't picked one; falls back to the first model when unavailable.</summary>
+    protected virtual string DefaultModelId => CopilotModule.DefaultModelId;
 
     private CopilotSessionModelStore? SessionModelStore
     {

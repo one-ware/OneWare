@@ -39,6 +39,9 @@ public class CopilotModule : OneWareModuleBase
     /// </summary>
     public const string DefaultModelId = "claude-sonnet-4-5";
 
+    /// <summary>Default model of the OneWare Agents chat.</summary>
+    public const string OneWareAgentsDefaultModelId = "gpt-6.1-sol-eu";
+
     /// <summary>
     /// Id of the model that lets Copilot route each turn to a backend model itself. Sessions using
     /// it can express a routing preference through <see cref="CopilotAutoTierSettingKey"/>.

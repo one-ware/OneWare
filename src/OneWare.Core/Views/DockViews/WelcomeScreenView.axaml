@@ -88,8 +88,8 @@
                 </Grid.Styles>
 
                 <!-- HEADER -->
-                <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0, 20">
+                <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal">
                         <Image
                             Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
                             Height="50" Width="50" />
@@ -98,6 +98,14 @@
                             <TextBlock Text="{Binding VersionInfo}" />
                         </StackPanel>
                     </StackPanel>
+                    <!-- Extensions hide themselves when not applicable, so they add no gap -->
+                    <controls:UiExtensionCollection Extensions="{Binding HeaderExtensions}">
+                        <controls:UiExtensionCollection.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical" />
+                            </ItemsPanelTemplate>
+                        </controls:UiExtensionCollection.ItemsPanel>
+                    </controls:UiExtensionCollection>
                 </StackPanel>
 
                 <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
