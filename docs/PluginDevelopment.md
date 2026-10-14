@@ -387,11 +387,13 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
-- `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
+- `RegisterFunction(IOneWareAiFunction)`: register an AI tool. Tools registered while chats are open are
+  pushed to their live sessions too.
 - `RegisterAgent(OneWareAiAgent)`: register a custom agent (see "AI agents and skills").
 - `RegisterSkill(OneWareAiSkill)`: register an on-demand skill document.
 - `RegisterSkillDirectory(string)`: register a directory of skills shipped with the plugin.
 - `GetTools()`: return the registered tools for chat or automation.
+- `ToolsChanged` event: raised when the result of `GetTools()` changes.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
 - Set `OneWareAiFunction.IsReadOnly` on tools that only read state, so read-only chat agents
