@@ -1,3 +1,10 @@
+## 1.0.45
+
+- Added a Fast option to the Copilot auto model routing for lower latency
+- Tools added by plugins while a chat is open are now available to the AI without starting a new chat
+- The OneWare Agents chat now also requires the latest Copilot CLI and explains why it needs the CLI even though no GitHub account is required
+- Chats from older versions can be opened again from the chat history
+
 ## 1.0.44
 
 - Added multiple parallel AI chats, each with its own model, plus a chat overview page to switch between them

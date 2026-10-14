@@ -386,9 +386,12 @@ public abstract class CopilotChatServiceBase(
     {
         var selectedModelSetting = settingsService.GetSettingValue<string>(GetSelectedModelSettingKey());
         return ResolveModel(selectedModelSetting) ??
-               ResolveModel(CopilotModule.DefaultModelId) ??
+               ResolveModel(DefaultModelId) ??
                Models.FirstOrDefault();
     }
+
+    /// <summary>Model selected while the user hasn't picked one; falls back to the first model when unavailable.</summary>
+    protected virtual string DefaultModelId => CopilotModule.DefaultModelId;
 
     private CopilotSessionModelStore? SessionModelStore
     {
@@ -671,6 +674,7 @@ public abstract class CopilotChatServiceBase(
     }
 
     public const string AutoTierDefault = "Default";
+    public const string AutoTierFast = "Fast";
     public const string AutoTierEfficiency = "Efficiency";
     public const string AutoTierBalance = "Balance";
     public const string AutoTierIntelligence = "Intelligence";
@@ -680,7 +684,7 @@ public abstract class CopilotChatServiceBase(
     /// choice back to the provider.
     /// </summary>
     public ObservableCollection<string> AutoTiers { get; } =
-        [AutoTierDefault, AutoTierEfficiency, AutoTierBalance, AutoTierIntelligence];
+        [AutoTierDefault, AutoTierFast, AutoTierEfficiency, AutoTierBalance, AutoTierIntelligence];
 
     /// <summary>
     /// True while the <c>auto</c> model is selected — only then does a routing preference apply.
@@ -737,6 +741,7 @@ public abstract class CopilotChatServiceBase(
 
     private AutoTier? ResolveAutoTier() => SelectedAutoTier switch
     {
+        AutoTierFast => AutoTier.Fast,
         AutoTierEfficiency => AutoTier.Efficiency,
         AutoTierBalance => AutoTier.Balance,
         AutoTierIntelligence => AutoTier.Intelligence,
@@ -746,6 +751,7 @@ public abstract class CopilotChatServiceBase(
     private static string DescribeAutoTier(AutoTier? tier) => tier?.Value switch
     {
         null => AutoTierDefault,
+        var value when value == AutoTier.Fast.Value => AutoTierFast,
         var value when value == AutoTier.Efficiency.Value => AutoTierEfficiency,
         var value when value == AutoTier.Balance.Value => AutoTierBalance,
         var value when value == AutoTier.Intelligence.Value => AutoTierIntelligence,
@@ -1390,6 +1396,14 @@ public abstract class CopilotChatServiceBase(
     public event EventHandler<ChatEvent>? EventReceived;
     public event EventHandler<StatusEvent>? StatusChanged;
 
+    /// <summary>
+    /// Chats with their own model provider (e.g. OneWare Agents) still run on the Copilot CLI, which looks
+    /// like it needs GitHub. Explains that it is only the local agent runtime there.
+    /// </summary>
+    private string GetCliRuntimeNote() => _byokConfiguration == null
+        ? string.Empty
+        : $" {Name} only uses it as the local agent runtime, so no GitHub account or Copilot subscription is needed.";
+
     private async Task<bool> InstallCopilotCLiAsync(Control? owner, bool update = false)
     {
         var cliPath = CopilotModule.GetCliPath(paths);
@@ -1561,7 +1575,7 @@ public abstract class CopilotChatServiceBase(
             {
                 StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Not found"));
                 Blocker = new ChatServiceBlocker("Copilot CLI required",
-                    $"{Name} needs the Copilot CLI. Install it to start chatting.")
+                    $"{Name} needs the Copilot CLI. Install it to start chatting.{GetCliRuntimeNote()}")
                 {
                     ActionText = "Install Copilot CLI",
                     ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x))
@@ -1569,15 +1583,15 @@ public abstract class CopilotChatServiceBase(
                 return false;
             }
 
-            if (_byokConfiguration == null &&
-                (packageService.IsLoaded || await packageService.RefreshAsync(false)))
+            // The SDK only works reliably with the CLI version it was built for, so this applies to BYOK chats too.
+            if (packageService.IsLoaded || await packageService.RefreshAsync(false))
             {
                 if (packageService.Packages.TryGetValue(CopilotModule.CopilotPackage.Id!, out var state) &&
                     state.Status is PackageStatus.UpdateAvailable)
                 {
                     StatusChanged?.Invoke(this, new StatusEvent(false, "CLI Update Available"));
                     Blocker = new ChatServiceBlocker("Copilot CLI update available",
-                        "Update the Copilot CLI to continue chatting.")
+                        $"Update the Copilot CLI to continue chatting.{GetCliRuntimeNote()}")
                     {
                         ActionText = "Update Copilot CLI",
                         ActionCommand = new AsyncRelayCommand<Control?>(x => InstallCopilotCLiAsync(x, true))
@@ -2096,6 +2110,12 @@ public abstract class CopilotChatServiceBase(
 
         _subscription = _session.On<SessionEvent>(HandleSessionEvent);
 
+        if (!_toolsChangedSubscribed)
+        {
+            toolProvider.ToolsChanged += OnToolsChanged;
+            _toolsChangedSubscribed = true;
+        }
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             // The routing preference is not part of the session config, so it has to be applied to
@@ -2404,6 +2424,13 @@ public abstract class CopilotChatServiceBase(
     public async ValueTask DisposeAsync()
     {
         var isSibling = !IsConnectionOwner;
+
+        if (_toolsChangedSubscribed)
+        {
+            toolProvider.ToolsChanged -= OnToolsChanged;
+            _toolsChangedSubscribed = false;
+        }
+        Interlocked.Exchange(ref _toolsRefreshCts, null)?.Cancel();
 
         ReleasePendingInputRequests();
         ReleasePendingPlanRequests();
@@ -2836,6 +2863,56 @@ public abstract class CopilotChatServiceBase(
     /// and building the tool list is not free. Refreshed whenever a session is created.
     /// </summary>
     private HashSet<string>? _clientToolNames;
+
+    private bool _toolsChangedSubscribed;
+    private CancellationTokenSource? _toolsRefreshCts;
+
+    /// <summary>
+    /// Tools are captured when a session is created or resumed, so tools registered later (e.g. by a plugin)
+    /// are pushed to the live session. Bursts of registrations are coalesced into one update.
+    /// </summary>
+    private void OnToolsChanged(object? sender, EventArgs e)
+    {
+        _clientToolNames = null;
+        if (_session == null) return;
+
+        var cts = new CancellationTokenSource();
+        Interlocked.Exchange(ref _toolsRefreshCts, cts)?.Cancel();
+        _ = RefreshSessionToolsAsync(cts.Token);
+    }
+
+    private async Task RefreshSessionToolsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+
+            // Session creation reads the current tools itself, so it must not interleave with an update.
+            await _initGate.WaitAsync(cancellationToken);
+            try
+            {
+                var session = _session;
+                if (session == null) return;
+
+                _clientToolNames = null;
+                var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
+                await session.SetToolsAsync(tools, cancellationToken);
+            }
+            finally
+            {
+                _initGate.Release();
+            }
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
+        {
+            // Superseded by a newer update, or the session was closed meanwhile.
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                .LogWarning(ex, "Failed to update the tools of the Copilot session.");
+        }
+    }
 
     private bool IsClientTool(string? toolName)
     {

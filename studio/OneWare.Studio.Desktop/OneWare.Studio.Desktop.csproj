@@ -47,6 +47,7 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\Startup.png"/>
+        <AvaloniaResource Include="Assets\OneAi\*.jpg"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64'">

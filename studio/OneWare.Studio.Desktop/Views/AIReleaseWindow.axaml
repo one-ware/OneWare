@@ -4,46 +4,102 @@
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                          xmlns:viewModels="clr-namespace:OneWare.Studio.Desktop.ViewModels"
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-                         Width="420" SizeToContent="WidthAndHeight"
+                         PrefWidth="640" SizeToContent="Height"
                          Title="A new plugin is available"
+                         CustomIcon="{DynamicResource AI_Img}"
                          mc:Ignorable="d" WindowStartupLocation="CenterOwner"
                          x:Class="OneWare.Studio.Desktop.Views.AiReleaseWindow"
                          x:DataType="viewModels:AiReleaseWindowViewModel">
-    <DockPanel Margin="8">
-        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="6">
-            <TextBlock Classes="h2">ONE AI is now available</TextBlock>
-            <TextBlock Classes="h4">Enhance your experience with advanced AI capabilities.</TextBlock>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-                <Panel Width="100" Height="100">
-                    <Image Margin="10" Source="{DynamicResource AI_Img}" />
-                </Panel>
-                <StackPanel Orientation="Vertical" Spacing="4">
-                    <TextBlock TextWrapping="Wrap" MaxWidth="250">
-                        Within this plugin you can manage your oneai projects and get
-                        features like annotation, model training and real-time camera checking.
-                    </TextBlock>
-                    <controls:HyperLink HorizontalAlignment="Left"
-                                        Url="https://one-ware.com/one-ai"
-                                        Label="Show more information." />
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Classes="footer">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Classes="form-row">
+                    <Button Classes="secondary"
+                            Command="{Binding Close}"
+                            CommandParameter="{Binding $self}"
+                            Content="Not now" />
+                    <Button Classes="primary"
+                            Command="{Binding InstallPluginAsync}"
+                            CommandParameter="{Binding $self}">
+                        <StackPanel Classes="form-row">
+                            <PathIcon Classes="small" Data="{StaticResource Icon.Download}" />
+                            <TextBlock Text="Install ONE AI" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
-            </StackPanel>
-            <TextBlock>Click below to download and get started.</TextBlock>
+                <CheckBox VerticalAlignment="Center"
+                          IsChecked="{Binding HideNextTime}"
+                          Content="Don't show this again" />
+            </DockPanel>
+        </Border>
+
+        <StackPanel Margin="20 20 20 16" Spacing="16">
+            <Grid ColumnDefinitions="Auto,*">
+                <Image Grid.Column="0" Width="56" Height="56" Margin="0 0 16 0" VerticalAlignment="Center"
+                       Source="{DynamicResource AI_Img}" />
+                <StackPanel Grid.Column="1" Classes="section" VerticalAlignment="Center">
+                    <TextBlock Classes="h2" Text="ONE AI is now available" />
+                    <TextBlock Classes="muted" TextWrapping="Wrap"
+                               Text="Build, train and deploy your own vision AI right inside OneWare Studio." />
+                </StackPanel>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,8,*,8,*">
+                <Border Grid.Column="0" Classes="inset" ToolTip.Tip="Classification">
+                    <Border Classes="inset-content">
+                        <Image Height="120" Stretch="UniformToFill"
+                               Source="avares://OneWareStudio/Assets/OneAi/classification.jpg" />
+                    </Border>
+                </Border>
+                <Border Grid.Column="2" Classes="inset" ToolTip.Tip="Object detection">
+                    <Border Classes="inset-content">
+                        <Image Height="120" Stretch="UniformToFill"
+                               Source="avares://OneWareStudio/Assets/OneAi/object-detection.jpg" />
+                    </Border>
+                </Border>
+                <Border Grid.Column="4" Classes="inset" ToolTip.Tip="Segmentation">
+                    <Border Classes="inset-content">
+                        <Image Height="120" Stretch="UniformToFill"
+                               Source="avares://OneWareStudio/Assets/OneAi/segmentation.jpg" />
+                    </Border>
+                </Border>
+            </Grid>
+
+            <Border Classes="card">
+                <StackPanel Classes="spacing-large">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <PathIcon Grid.Column="0" Classes="accent large" Margin="0 0 12 0" VerticalAlignment="Top"
+                                  Data="{StaticResource Icon.Tag}" />
+                        <StackPanel Grid.Column="1" Classes="section">
+                            <TextBlock Classes="semibold" Text="Manage and annotate your data" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap"
+                                       Text="Organize your ONE AI projects and label images for classification, object detection and segmentation." />
+                        </StackPanel>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <PathIcon Grid.Column="0" Classes="accent large" Margin="0 0 12 0" VerticalAlignment="Top"
+                                  Data="{StaticResource Icon.Brain}" />
+                        <StackPanel Grid.Column="1" Classes="section">
+                            <TextBlock Classes="semibold" Text="Train your own models" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap"
+                                       Text="Generate AI models tailored to your hardware and use case." />
+                        </StackPanel>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <PathIcon Grid.Column="0" Classes="accent large" Margin="0 0 12 0" VerticalAlignment="Top"
+                                  Data="{StaticResource Icon.Camera}" />
+                        <StackPanel Grid.Column="1" Classes="section">
+                            <TextBlock Classes="semibold" Text="Test in real time" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap"
+                                       Text="Check your models live on a camera feed before you deploy them." />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <controls:HyperLink HorizontalAlignment="Left"
+                                Url="https://one-ware.com/ai-extension"
+                                Label="Learn more about ONE AI" />
         </StackPanel>
-        <Panel DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Margin="0,12,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="4" VerticalAlignment="Center">
-                <CheckBox IsChecked="{Binding HideNextTime}" Content="Don't show this again" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="WindowButtons">
-                <Button Command="{Binding Close}"
-                        CommandParameter="{Binding $self}">
-                    Close
-                </Button>
-                <Button Classes="primary"
-                        Command="{Binding InstallPluginAsync}"
-                        CommandParameter="{Binding $self}">
-                    Install now
-                </Button>
-            </StackPanel>
-        </Panel>
     </DockPanel>
 </controls:FlexibleWindow>

@@ -485,11 +485,11 @@ public class App : Application
         var welcomeScreenService = Services.Resolve<IWelcomeScreenService>();
 
         welcomeScreenService.RegisterItemToWalkthrough("fundamentals",
-            new WelcomeScreenWalkthroughItem("fundamentals", "Learn the Fundamentals",
-                null,
+            new WelcomeScreenWalkthroughItem("fundamentals", "Create Your First FPGA Project",
+                "Step-by-step guide for FPGA development",
                 new RelayCommand(() =>
                 {
-                    PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/tutorials/create-project/");
+                    PlatformHelper.OpenHyperLink("https://one-ware.com/docs/studio/fpga-guides/create-project");
                 }))
             {
                 Icon = new IconModel("FluentIconsFilled.LightbulbFilled")
@@ -497,7 +497,7 @@ public class App : Application
 
         welcomeScreenService.RegisterItemToWalkthrough("getstarted_oneai",
             new WelcomeScreenWalkthroughItem("getstarted_oneai", "Get Started with ONE AI",
-                null,
+                "Quick start guide to train and deploy your first AI model",
                 new RelayCommand(() =>
                 {
                     PlatformHelper.OpenHyperLink("https://one-ware.com/docs/one-ai/getting-started/quick-start-guide");

@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Studio.Desktop.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400"
+             x:Class="OneWare.Studio.Desktop.Views.OneAiPromotionView"
+             x:DataType="viewModels:OneAiPromotionViewModel"
+             IsVisible="{Binding IsVisible}">
+    <StackPanel Classes="form-row" Margin="0,10,0,0">
+        <Image Width="16" Height="16" Source="{DynamicResource AI_Img}" />
+        <TextBlock Classes="caption" VerticalAlignment="Center" Text="ONE AI isn't installed yet" />
+        <Button Classes="link small" Content="Install" Command="{Binding InstallCommand}"
+                IsVisible="{Binding !IsInstalling}" />
+        <TextBlock Classes="caption" VerticalAlignment="Center" Text="Installing..."
+                   IsVisible="{Binding IsInstalling}" />
+        <Button Classes="link small" Content="Learn more" Command="{Binding ShowDetailsCommand}" />
+        <Button Classes="icon small" VerticalAlignment="Center"
+                ToolTip.Tip="Don't show this again" Command="{Binding DismissCommand}">
+            <PathIcon Classes="small muted" Data="{StaticResource Icon.Close}" />
+        </Button>
+    </StackPanel>
+</UserControl>

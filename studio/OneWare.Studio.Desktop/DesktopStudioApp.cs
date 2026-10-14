@@ -20,6 +20,7 @@ using OneWare.CloudIntegration;
 using OneWare.Copilot;
 using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
+using OneWare.Core.ViewModels.DockViews;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
@@ -138,6 +139,7 @@ public class DesktopStudioApp : StudioApp
         base.RegisterServices(services);
 
         services.AddSingleton<AiReleaseWindowViewModel>();
+        services.AddSingleton<OneAiPromotionViewModel>();
     }
 
     protected override AvaloniaObject CreateShell()
@@ -145,6 +147,13 @@ public class DesktopStudioApp : StudioApp
         var shell = base.CreateShell();
 
         Services.Resolve<ISettingsService>().Register(AiReleaseWindowViewModel.ShowReleaseNotificationKey, true);
+        Services.Resolve<ISettingsService>().Register(OneAiPromotionViewModel.ShowPromotionKey, true);
+
+        Services.Resolve<IWindowService>().RegisterUiExtension(WelcomeScreenViewModel.HeaderExtensionKey,
+            new OneWareUiExtension(_ => new OneAiPromotionView
+            {
+                DataContext = Services.Resolve<OneAiPromotionViewModel>()
+            }));
 
         return shell;
     }

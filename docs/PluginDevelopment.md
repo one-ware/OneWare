@@ -387,11 +387,13 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
-- `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
+- `RegisterFunction(IOneWareAiFunction)`: register an AI tool. Tools registered while chats are open are
+  pushed to their live sessions too.
 - `RegisterAgent(OneWareAiAgent)`: register a custom agent (see "AI agents and skills").
 - `RegisterSkill(OneWareAiSkill)`: register an on-demand skill document.
 - `RegisterSkillDirectory(string)`: register a directory of skills shipped with the plugin.
 - `GetTools()`: return the registered tools for chat or automation.
+- `ToolsChanged` event: raised when the result of `GetTools()` changes.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
 - Set `OneWareAiFunction.IsReadOnly` on tools that only read state, so read-only chat agents
@@ -586,6 +588,8 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - `UniversalFpgaToolBar_PinPlannerMenuExtension`: pin planner menu.
 - `UniversalFpgaToolBar_DownloaderConfigurationExtension`: download configuration area.
 - `CompileWindow_TopRightExtension`: pin planner window (top right region).
+- `WelcomeScreen_Header`: welcome screen, below the app logo and version. Meant for short, subtle hints
+  (one `caption` line with `link` buttons); hide the control when it no longer applies, so it leaves no gap.
 - `EditView_Top`: top editor panel (used for test bench toolbar). Use the `Border.editor-bar` /
   `WrapPanel.editor-bar-items` style classes so the bar matches the others and wraps on small screens
   (see `docs/Styling.md`, "Editor bar").

@@ -330,6 +330,10 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         // The platform credential store can be slow (keyring/dbus, DPAPI), keep it off the UI thread
         await Task.Run(() => StoreRefreshToken(userId, refreshToken));
 
+        // Tokens are refreshed every few minutes; only write the settings file when the account changed.
+        if (_settingService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey) == userId)
+            return;
+
         _settingService.SetSettingValue(OneWareCloudIntegrationModule.OneWareAccountUserIdKey, userId);
         _settingService.Save(_paths.SettingsPath);
     }

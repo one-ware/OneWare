@@ -102,6 +102,8 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     protected override string GetSelectedModelSettingKey() =>
         CopilotModule.CopilotOneWareCloudSelectedModelSettingKey;
 
+    protected override string DefaultModelId => CopilotModule.OneWareAgentsDefaultModelId;
+
     #region Initialization and account
 
     protected override async Task<bool> PrepareInitializationAsync()

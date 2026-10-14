@@ -133,7 +133,8 @@ Debug builds add developer tooling:
 | `--configuration-profile` | `ONEWARE_CONFIGURATION_PROFILE` | Apply a configuration profile (see the [README](../README.md#configuration-profiles)) |
 
 Using a separate `--oneware-dir` and `--oneware-appdata-dir` gives you a clean, isolated profile for testing
-without touching your normal installation.
+without touching your normal installation. `./run-fresh.sh` does this for you with a new temporary profile (pass
+OneWare Studio arguments after `--`, see `./run-fresh.sh --help`).
 
 ### Where things are stored
 

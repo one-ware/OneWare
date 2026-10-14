@@ -16,6 +16,16 @@ public interface IAiFunctionProvider
         remove { }
     }
 
+    /// <summary>
+    /// Fired when the set of tools returned by <see cref="GetTools"/> changes, e.g. when a plugin registers a
+    /// function after chat sessions were created. Chat services use it to update their live sessions.
+    /// </summary>
+    event EventHandler? ToolsChanged
+    {
+        add { }
+        remove { }
+    }
+
     /// <summary>Returns available AI tools for this provider.</summary>
     ICollection<AIFunction> GetTools();
 
