@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="32"
+             x:Class="OneWare.Debugger.Views.ValueFormatBar"
+             x:DataType="viewModels:ValueFormatViewModel">
+
+    <!-- Deliberately without GroupName: Avalonia groups radio buttons without a name by their
+         parent element. The bar sits above three tables, and a shared name would make
+         the three instances deselect each other. They show the same state anyway,
+         because all three are bound to the same view model. -->
+    <Border Background="{DynamicResource ThemeBackgroundBrush}"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+        <StackPanel Orientation="Horizontal" Margin="6,3" Spacing="8">
+            <TextBlock Text="Base"
+                       VerticalAlignment="Center"
+                       Margin="0,0,2,0"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}" />
+
+            <RadioButton Content="Hex" IsChecked="{Binding IsHex, Mode=TwoWay}"
+                         ToolTip.Tip="Raw bit pattern, as the backend delivers it" />
+            <RadioButton Content="Dec" IsChecked="{Binding IsDec, Mode=TwoWay}"
+                         ToolTip.Tip="Decimal - the only base where the sign matters" />
+            <RadioButton Content="Oct" IsChecked="{Binding IsOct, Mode=TwoWay}" />
+            <RadioButton Content="Bin" IsChecked="{Binding IsBin, Mode=TwoWay}" />
+        </StackPanel>
+    </Border>
+</UserControl>

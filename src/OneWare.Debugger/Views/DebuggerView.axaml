@@ -2,9 +2,53 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="OneWare.Debugger.Views.DebuggerView" Background="{DynamicResource ThemeControlLowBrush}">
-    <Border Classes="empty-state">
-        <TextBlock Text="Coming Soon!" />
-    </Border>
+             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             xmlns:main="clr-namespace:OneWare.Debugger.Views.Main"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="260"
+             x:Class="OneWare.Debugger.Views.DebuggerView"
+             x:DataType="viewModels:DebuggerViewModel"
+             Background="{DynamicResource ThemeControlLowBrush}">
+
+    <DockPanel LastChildFill="True">
+
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="2" Margin="4" VerticalAlignment="Center">
+                <Button Width="24" Height="24" Command="{Binding StartCommand}" ToolTip.Tip="Start Debugging">
+                    <Image Source="{DynamicResource Material.BugReport}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding PauseCommand}" ToolTip.Tip="Pause"
+                        IsVisible="{Binding IsRunning}">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Pause}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Stop}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
+                        IsVisible="{Binding !IsRunning}">
+                    <Image Source="{DynamicResource MaterialSymbols.Resume}" />
+                </Button>
+
+                <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+
+                <Button Width="24" Height="24" Command="{Binding StepOverCommand}" ToolTip.Tip="Step Over">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Over}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding StepIntoCommand}" ToolTip.Tip="Step Into">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Into}" />
+                </Button>
+                <Button Width="24" Height="24" Command="{Binding StepOutCommand}" ToolTip.Tip="Step Out">
+                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Out}" />
+                </Button>
+
+                <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+
+                <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding StatusText}" />
+            </StackPanel>
+        </Border>
+
+        <main:MainPanelView DataContext="{Binding MainPanel}" />
+    </DockPanel>
 </UserControl>

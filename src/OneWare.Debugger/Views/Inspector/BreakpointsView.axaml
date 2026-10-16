@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:inspector="clr-namespace:OneWare.Debugger.ViewModels.Inspector"
+             xmlns:editorExtensions="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
+             xmlns:converters="clr-namespace:OneWare.Debugger.Helpers"
+             mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
+             x:Class="OneWare.Debugger.Views.Inspector.BreakpointsView"
+             x:DataType="inspector:BreakpointsViewModel">
+
+    <DockPanel LastChildFill="True">
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource ThemeBackgroundBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
+            <StackPanel Orientation="Horizontal" Margin="4" Spacing="4">
+                <Button Command="{Binding RemoveBreakpointCommand}" ToolTip.Tip="Remove selected breakpoints"
+                        Width="24" Height="24">
+                    <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                </Button>
+                <Button Command="{Binding RemoveAllBreakpointsCommand}" Height="24" Padding="6,0"
+                        ToolTip.Tip="Remove all breakpoints">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <Border Margin="4"
+                CornerRadius="4"
+                ClipToBounds="True"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                Background="{DynamicResource ThemeBackgroundBrush}">
+            <DataGrid x:Name="BreakpointGrid"
+                      ItemsSource="{Binding Breakpoints}"
+                      SelectionMode="Extended"
+                      SelectionChanged="OnSelectionChanged"                            
+                      GridLinesVisibility="Vertical"
+                      VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.KeyBindings>
+                    <KeyBinding Gesture="Delete" Command="{Binding RemoveBreakpointCommand}" />
+                </DataGrid.KeyBindings>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="File" Width="*"
+                                        Binding="{CompiledBinding File, DataType=editorExtensions:BreakPoint,
+                                                  Converter={x:Static converters:ProjectRelativePathConverter.Instance}}" />
+                    <DataGridTextColumn Header="Line" Width="Auto"
+                                        Binding="{CompiledBinding Line, DataType=editorExtensions:BreakPoint}" />
+                    <DataGridCheckBoxColumn Header="Verified" Width="Auto"
+                                            Binding="{CompiledBinding IsVerified, DataType=editorExtensions:BreakPoint}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </DockPanel>
+</UserControl>
