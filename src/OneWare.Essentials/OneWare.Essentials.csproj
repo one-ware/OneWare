@@ -40,4 +40,8 @@
         <None Include="readme.md" Pack="true" PackagePath=""/>
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="OneWare.Essentials.UnitTests"/>
+    </ItemGroup>
+
 </Project> 

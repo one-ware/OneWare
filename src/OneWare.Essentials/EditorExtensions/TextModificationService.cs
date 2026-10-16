@@ -45,12 +45,19 @@ public class TextModificationService : DocumentColorizingTransformer
                 if (s.StartOffset >= f.StartOffset)
                 {
                     if (s.StartOffset <= f.EndOffset) continue; //Completely overlapped
-                    if (s.EndOffset > f.EndOffset + 1) s.StartOffset = f.EndOffset + 1;
+                    if (s.EndOffset > f.EndOffset + 1)
+                    {
+                        var endOffset = s.EndOffset;
+                        s.StartOffset = f.EndOffset + 1;
+                        s.EndOffset = endOffset;
+                    }
                 }
 
                 if (s.StartOffset < f.StartOffset)
                     if (s.EndOffset > f.EndOffset - 1)
                         s.EndOffset = f.EndOffset - 1;
+
+                if (s.Length <= 0) continue;
             }
 
             m.Add(s);
@@ -67,11 +74,19 @@ public class TextModificationService : DocumentColorizingTransformer
 
                 foreach (var overlap in overlaps)
                 {
-                    if (overlap.EndOffset > line.EndOffset) overlap.EndOffset = line.EndOffset;
-                    if (overlap.StartOffset < line.Offset) overlap.StartOffset = line.Offset;
-                    ChangeLinePart(overlap.StartOffset, overlap.EndOffset, x => ApplyChanges(x, overlap));
+                    if (!TryClampToLine(overlap, line, out var startOffset, out var endOffset)) continue;
+                    ChangeLinePart(startOffset, endOffset, x => ApplyChanges(x, overlap));
                 }
             }
+    }
+
+    // Must not mutate the segment: it is shared by all lines it spans, and setting
+    // TextSegment.StartOffset moves the segment (keeps its length) instead of trimming it.
+    internal static bool TryClampToLine(ISegment segment, DocumentLine line, out int startOffset, out int endOffset)
+    {
+        startOffset = Math.Max(segment.Offset, line.Offset);
+        endOffset = Math.Min(segment.EndOffset, line.EndOffset);
+        return endOffset > startOffset;
     }
 
     private void ApplyChanges(VisualLineElement element, TextModificationSegment segment)
