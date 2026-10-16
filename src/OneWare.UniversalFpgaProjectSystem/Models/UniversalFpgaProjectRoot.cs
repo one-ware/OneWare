@@ -38,8 +38,7 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
 
         RegisterProjectEntryModification(x =>
         {
-            if (x is IProjectFile file && TopEntityFilePath != null &&
-                file.RelativePath.EqualPaths(TopEntityFilePath))
+            if (x is IProjectFile file && IsTopEntityFile(file))
             {
                 x.AddTag("TopEntity", new ProjectExplorerTag("Top", ProjectExplorerTagKind.Accent,
                     "Top entity of the design"));
@@ -111,6 +110,23 @@ public class UniversalFpgaProjectRoot : UniversalProjectRoot
     {
         get => Properties.GetString("board");
         set => Properties.SetString("board", value);
+    }
+
+    /// <summary>
+    /// Returns true if the file at <paramref name="relativePath"/> contains the current <see cref="TopEntity"/>
+    /// (see <see cref="TopEntityFilePath"/>).
+    /// </summary>
+    public bool IsTopEntityFile(string relativePath)
+    {
+        return TopEntityFilePath != null && relativePath.EqualPaths(TopEntityFilePath);
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="file"/> contains the current <see cref="TopEntity"/>.
+    /// </summary>
+    public bool IsTopEntityFile(IProjectFile file)
+    {
+        return IsTopEntityFile(file.RelativePath);
     }
 
     public bool IsTestBench(string relativePath)
