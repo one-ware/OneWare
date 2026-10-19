@@ -111,6 +111,7 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
             defaultProperties.GetValueOrDefault("yosysToolchainConstraintFileType") ?? "", [
                 "pcf",
                 "ccf",
+                "cst"
             ])
         {
             HoverDescription = "Set NextPnr tool"
@@ -119,7 +120,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         _nextPnrToolOutputTypeSetting = new ComboBoxSetting("NextPnr Output file type",
             defaultProperties.GetValueOrDefault("yosysToolchainOutputType") ?? "", [
                 "asc",
-                "txt"
+                "txt",
+                "json"
             ])
         {
             HoverDescription = "Set NextPnr tool"
@@ -151,7 +153,8 @@ public class YosysCompileSettingsViewModel : FlexibleWindowViewModelBase
         _packOutputTypeSetting = new ComboBoxSetting("Pack output format",
             defaultProperties.GetValueOrDefault("packToolOutputFormat") ?? "", [
                 "bin",
-                "bit"
+                "bit",
+                "fs"
             ])
         {
             HoverDescription = "Set Pack tool output format"

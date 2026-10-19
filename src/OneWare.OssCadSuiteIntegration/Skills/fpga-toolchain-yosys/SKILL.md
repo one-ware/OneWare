@@ -44,8 +44,8 @@ Compile shows, grouped into Synthesis, Place & Route and Bitstream.
 | --- | --- |
 | `yosysToolchainNextPnrTool` | The `nextpnr-*` binary, e.g. `nextpnr-ice40`, `nextpnr-ecp5`, `nextpnr-himbaechel`. Must match the synth tool's family. |
 | `yosysToolchainNextPnrFlags` | Extra flags, typically the device and package selection. |
-| `yosysToolchainConstraintFileType` | `pcf` or `ccf` — the constraint format the board uses. |
-| `yosysToolchainOutputType` | `asc` or `txt` — the place & route output format the pack tool expects. |
+| `yosysToolchainConstraintFileType` | `pcf`, `ccf` or `cst` — the constraint format the board uses. `ccf` and `cst` are converted from the project's PCF file. |
+| `yosysToolchainOutputType` | `asc`, `txt` or `json` — the place & route output format the pack tool expects. |
 | `yosysToolchainNextPnrVerbose` | `true` adds `--verbose` and shows the full nextpnr output in the Output panel. Turn this on when diagnosing timing or placement problems. |
 
 ### Bitstream (pack)
@@ -54,7 +54,7 @@ Compile shows, grouped into Synthesis, Place & Route and Bitstream.
 | --- | --- |
 | `yosysToolchainPackTool` | `icepack`, `ecppack`, `gowin_pack` or `gmpack`, matching the family. |
 | `yosysToolchainPackFlags` | Extra flags for the pack tool. |
-| `packToolOutputFormat` | `bin` or `bit`. |
+| `packToolOutputFormat` | `bin`, `bit` or `fs`. |
 
 The three tool selections must agree on the FPGA family: `synth_ice40` + `nextpnr-ice40` +
 `icepack` is consistent, mixing families is not. The hardware package of a board ships correct
