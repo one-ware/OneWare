@@ -68,13 +68,13 @@
         Windows: OneWareStudio.exe is a GUI-subsystem app, so it cannot write to the calling terminal.
         Ship a copy of the same apphost as oneware.exe with the console subsystem for CLI usage.
     -->
-    <Target Name="CreateWindowsCommandAlias" AfterTargets="Publish"
+    <Target Name="CreateWindowsCommandAliasPublish" AfterTargets="Publish"
         Condition="'$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64'">
         <Copy SourceFiles="$(PublishDir)OneWareStudio.exe" DestinationFiles="$(PublishDir)oneware.exe"/>
         <SetPeConsoleSubsystem FilePath="$(PublishDir)oneware.exe"/>
     </Target>
 
-    <Target Name="CreateWindowsCommandAlias" AfterTargets="Build"
+    <Target Name="CreateWindowsCommandAliasBuild" AfterTargets="Build"
             Condition="'$(DesignTimeBuild)' != 'true' AND ('$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64')"
             Inputs="$(TargetDir)OneWareStudio.exe" Outputs="$(TargetDir)oneware.exe">
         <Copy SourceFiles="$(TargetDir)OneWareStudio.exe" DestinationFiles="$(TargetDir)oneware.exe"/>
