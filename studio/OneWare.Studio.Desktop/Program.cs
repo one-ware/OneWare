@@ -22,6 +22,7 @@ using OneWare.Core.Services;
 using OneWare.Core.Views.Windows;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
+using OneWare.Studio.Desktop.Cli;
 
 namespace OneWare.Studio.Desktop;
 
@@ -278,6 +279,14 @@ internal abstract class Program
         try
         {
             StartupTimer.Mark("Main entered");
+
+            if (StudioCli.IsCliInvocation(args))
+                return StudioCli.Run(args);
+
+            // oneware.exe is a console-subsystem copy for terminals; start the GUI detached from it.
+            if (StudioCli.IsWindowsConsoleAlias)
+                return StudioProcessController.StartStudio(args);
+
             var startupSymbols = OneWareStartupCommandLine.CreateSymbols();
             var rootCommand = OneWareStartupCommandLine.CreateRootCommand(startupSymbols);
 
@@ -287,8 +296,6 @@ internal abstract class Program
             });
             var commandLineParseResult = rootCommand.Parse(args);
             commandLineParseResult.Invoke();
-
-            if (args.LastOrDefault() is "--help" or "-h") return 0;
 
             // Check for single instance
             if (!TryBecomePrimaryInstance())

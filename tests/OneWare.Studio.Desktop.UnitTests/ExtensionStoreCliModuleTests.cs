@@ -1,8 +1,10 @@
-using Microsoft.Extensions.DependencyInjection;
 using System.CommandLine;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using OneWare.Studio.Desktop.Cli;
 using Xunit;
 
-namespace OneWare.Studio.Cli.UnitTests;
+namespace OneWare.Studio.Desktop.UnitTests;
 
 public class ExtensionStoreCliModuleTests
 {

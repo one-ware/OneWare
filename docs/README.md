@@ -114,9 +114,21 @@ Debug builds add developer tooling:
 | `--autolaunch` | `ONEWARE_AUTOLAUNCH` | Run an action registered by a plugin after startup |
 | `--package-repository` | `ONEWARE_PACKAGE_REPOSITORY` | Override the package repository URL(s), separated by `;` |
 | `--configuration-profile` | `ONEWARE_CONFIGURATION_PROFILE` | Apply a configuration profile (see the [README](../README.md#configuration-profiles)) |
+| `-C`, `--working-directory` | – | Change the working directory before anything else runs |
 
 Using a separate `--oneware-dir` and `--oneware-appdata-dir` gives you a clean, isolated profile for testing
 without touching your normal installation.
+
+### CLI commands
+
+The Studio executable also hosts headless commands (`stop`, `extensions …`, `cloud login|logout`, plus any
+`IOneWareCliModule` from installed plugins). `studio/OneWare.Studio.Desktop/Cli/StudioCli.cs` decides before
+Avalonia starts: if the first positional argument looks like a command name (letters, digits, `-`, `_`) and is
+not an existing file or folder, or `--help`/`--version` is passed, the CLI runs and the GUI is never started.
+Anything else (no arguments, a path or a `oneware://` URL) starts the GUI as before.
+
+On Windows, `OneWareStudio.exe` is a GUI-subsystem app, so the publish step also creates `oneware.exe`, a copy
+with the console subsystem. Use it from terminals; without a command it starts `OneWareStudio.exe` detached.
 
 ### Where things are stored
 

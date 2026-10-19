@@ -142,6 +142,9 @@ You can generate `compatibility.txt` automatically during build by marking depen
 - `RegisterCommands(IServiceProvider serviceProvider)` returns the commands your module contributes.
 - `Dependencies` allows declaring other CLI module IDs that must load first.
 - CLI module types must be public, non-abstract, and expose a parameterless constructor so the CLI loader can discover and instantiate them.
+- Top-level command names must be plain words (letters, digits, `-`, `_`). The Studio executable only switches to
+  CLI mode when the first argument looks like a command name, so names containing `.`, `/` or `:` would be treated
+  as a file to open in the GUI.
 
 CLI modules are intentionally headless: they should not depend on Avalonia UI state, windows, or
 desktop-only lifecycles. Prefer shared services for reusable logic and keep CLI-specific behavior in

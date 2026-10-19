@@ -1,11 +1,20 @@
+using System;
+using System.Collections.Generic;
 using System.CommandLine;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using OneWare.CloudIntegration;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
+
+namespace OneWare.Studio.Desktop.Cli;
 
 internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
 {
@@ -13,21 +22,7 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
     {
         cliHostBuilder.ModuleCatalog.AddModule(new StudioCliModule(stopStudio));
         cliHostBuilder.ModuleCatalog.AddModule(new ExtensionStoreCliModule());
-    }
-
-    public void LoadBundledCliModules()
-    {
-        var entryAssemblyPath = Assembly.GetEntryAssembly()?.Location;
-        var bundledAssemblyPaths = Directory
-            .GetFiles(AppContext.BaseDirectory, "OneWare*.dll", SearchOption.TopDirectoryOnly)
-            .Where(path => !string.Equals(
-                Path.GetFullPath(path),
-                entryAssemblyPath,
-                StringComparison.OrdinalIgnoreCase));
-
-        var loadedModules = LoadCliModulesFromFiles(bundledAssemblyPaths);
-        foreach (var module in loadedModules)
-            cliHostBuilder.Logger.LogInformation("Bundled CLI module '{ModuleId}' loaded.", module.Id);
+        cliHostBuilder.ModuleCatalog.AddModule(new OneWareCloudCliModule());
     }
 
     public void LoadPluginCliModules()

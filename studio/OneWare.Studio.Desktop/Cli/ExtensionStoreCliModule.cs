@@ -1,5 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.CommandLine;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.CloudIntegration;
 using OneWare.Essentials.Enums;
@@ -9,6 +15,8 @@ using OneWare.Essentials.PackageManager.Compatibility;
 using OneWare.Essentials.Services;
 using OneWare.PackageManager.Installers;
 using OneWare.PackageManager.Services;
+
+namespace OneWare.Studio.Desktop.Cli;
 
 public sealed class ExtensionStoreCliModule : OneWareCliModuleBase
 {

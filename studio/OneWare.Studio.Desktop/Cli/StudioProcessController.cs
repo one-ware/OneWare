@@ -1,5 +1,13 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Pipes;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace OneWare.Studio.Desktop.Cli;
 
 internal sealed class StudioProcessController
 {
@@ -10,19 +18,24 @@ internal sealed class StudioProcessController
     private static readonly string StudioExecutableName = $"OneWareStudio{ExecutableExtension}";
     private static readonly string CliExecutableName = $"oneware{ExecutableExtension}";
 
-    public Task<int> StartStudio(string? openTarget, bool detach, CancellationToken cancellationToken)
+    public static string StudioExecutablePath => Path.Combine(AppContext.BaseDirectory, StudioExecutableName);
+
+    /// <summary>
+    /// Starts the GUI executable as a separate process (used by the Windows console alias).
+    /// </summary>
+    public static int StartStudio(IEnumerable<string> args)
     {
-        var studioPath = Path.Combine(AppContext.BaseDirectory, StudioExecutableName);
-        var startInfo = new ProcessStartInfo(studioPath)
+        var startInfo = new ProcessStartInfo(StudioExecutablePath)
         {
-            UseShellExecute = detach,
+            UseShellExecute = false,
             WorkingDirectory = Environment.CurrentDirectory
         };
 
-        if (!string.IsNullOrWhiteSpace(openTarget))
-            startInfo.ArgumentList.Add(openTarget);
+        foreach (var arg in args)
+            startInfo.ArgumentList.Add(arg);
 
-        return Task.FromResult(Process.Start(startInfo) is null ? 1 : 0);
+        using var process = Process.Start(startInfo);
+        return process is null ? 1 : 0;
     }
 
     public async Task<int> StopStudio(CancellationToken cancellationToken)
