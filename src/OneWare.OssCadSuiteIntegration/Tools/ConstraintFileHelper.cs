@@ -2,7 +2,24 @@ namespace OneWare.OssCadSuiteIntegration.Tools;
 
 public class ConstraintFileHelper
 {
+    [Obsolete(message: "Use ConvertPcfToCcf instead")]
     public static void Convert(string pcfPath, string ccfPath)
+    {
+        ConvertPcfToCcf(pcfPath, ccfPath);
+    }
+
+    public static void ConvertPcfToCcf(string pcfPath, string ccfPath)
+    {
+        ConvertPcf(pcfPath, ccfPath, "#", (signal, pin) => $"NET \"{signal}\" Loc = \"{pin}\";");
+    }
+    
+    public static void ConvertPcfToCst(string pcfPath, string cstPath)
+    {
+        ConvertPcf(pcfPath, cstPath, "//", (signal, pin) => $"IO_LOC \"{signal}\" {pin};");
+    }
+    
+    private static void ConvertPcf(string pcfPath, string targetPath, string commentPrefix,
+        Func<string, string, string> formatConstraint)
     {
         if (!File.Exists(pcfPath))
             throw new FileNotFoundException("PCF file not found", pcfPath);
@@ -23,7 +40,7 @@ public class ConstraintFileHelper
 
             if (line.StartsWith("#"))
             {
-                result.Add(line);
+                result.Add(ReplaceCommentPrefix(line, commentPrefix));
                 continue;
             }
 
@@ -45,15 +62,20 @@ public class ConstraintFileHelper
             var signal = parts[1];
             var pin = parts[2];
 
-            var newLine = $"NET \"{signal}\" Loc = \"{pin}\";";
+            var newLine = formatConstraint(signal, pin);
 
             if (!string.IsNullOrEmpty(comment))
-                newLine += $" {comment}";
+                newLine += $" {ReplaceCommentPrefix(comment, commentPrefix)}";
 
             result.Add(newLine);
         }
 
-        File.WriteAllLines(ccfPath, result);
+        File.WriteAllLines(targetPath, result);
+    }
+
+    private static string ReplaceCommentPrefix(string pcfComment, string commentPrefix)
+    {
+        return commentPrefix + pcfComment[1..];
     }
     
     public static void ConvertCcfToPcf(string ccfPath, string pcfPath)
