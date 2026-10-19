@@ -74,6 +74,13 @@
         <SetPeConsoleSubsystem FilePath="$(PublishDir)oneware.exe"/>
     </Target>
 
+    <Target Name="CreateWindowsCommandAlias" AfterTargets="Build"
+            Condition="'$(DesignTimeBuild)' != 'true' AND ('$(RuntimeIdentifier)' == 'win-x64' OR '$(RuntimeIdentifier)' == 'win-arm64')"
+            Inputs="$(TargetDir)OneWareStudio.exe" Outputs="$(TargetDir)oneware.exe">
+        <Copy SourceFiles="$(TargetDir)OneWareStudio.exe" DestinationFiles="$(TargetDir)oneware.exe"/>
+        <SetPeConsoleSubsystem FilePath="$(TargetDir)oneware.exe"/>
+    </Target>
+
     <UsingTask TaskName="SetPeConsoleSubsystem" TaskFactory="RoslynCodeTaskFactory"
         AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
         <ParameterGroup>
