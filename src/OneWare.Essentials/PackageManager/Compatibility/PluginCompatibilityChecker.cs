@@ -1,7 +1,4 @@
 using System.Reflection;
-using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Services;
-
 namespace OneWare.Essentials.PackageManager.Compatibility;
 
 public class PluginCompatibilityChecker
@@ -14,15 +11,13 @@ public class PluginCompatibilityChecker
             
             if (!File.Exists(depFilePath))
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error("Compatibility Check failed: compatibility.txt not found in plugin folder");
                 return new CompatibilityReport(false, []);
             }
 
             return CheckCompatibility(File.ReadAllText(depFilePath));
         }
-        catch (Exception e)
+        catch
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
             return new CompatibilityReport(false, []);
         }
     }
@@ -36,7 +31,6 @@ public class PluginCompatibilityChecker
 
             if (deps == null)
             {
-                ContainerLocator.Container.Resolve<ILogger>().Error("Compatibility Check failed");
                 return new CompatibilityReport(false, records);
             }
 
@@ -119,9 +113,8 @@ public class PluginCompatibilityChecker
 
             return new CompatibilityReport(isCompatible, records);
         }
-        catch (Exception e)
+        catch
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
             return new CompatibilityReport(false, []);
         }
     }

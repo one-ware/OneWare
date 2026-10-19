@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Web;
+using Avalonia;
 using Avalonia.Threading;
 using GitCredentialManager;
 using Microsoft.Extensions.Logging;
@@ -765,11 +766,17 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
                         return false;
                     }
 
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    async Task PersistAsync()
                     {
                         await SaveCredentialsAsync(accessToken, refreshToken);
                         _settingService.Save(_paths.SettingsPath);
-                    });
+                    }
+
+                    // The CLI runs without an Avalonia app, so its dispatcher never processes queued work.
+                    if (Application.Current == null)
+                        await PersistAsync();
+                    else
+                        await Dispatcher.UIThread.InvokeAsync(PersistAsync);
                 }
                 else
                 {
