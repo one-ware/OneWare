@@ -129,15 +129,20 @@ internal static class StudioCli
     {
         // OneWareStudio.exe is a GUI-subsystem app. When started from a terminal, attach to it so output is visible.
         // oneware.exe (console subsystem) already has a console.
-        if (GetConsoleWindow() == IntPtr.Zero)
+        // Output that is already redirected (pipes, files, IDE runners) must keep its handles.
+        if (GetConsoleWindow() == IntPtr.Zero && GetStdHandle(StdOutputHandle) == IntPtr.Zero)
             AttachConsole(AttachParentProcess);
     }
 
     private const int AttachParentProcess = -1;
+    private const int StdOutputHandle = -11;
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool AttachConsole(int processId);
 
     [DllImport("kernel32.dll")]
     private static extern IntPtr GetConsoleWindow();
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetStdHandle(int stdHandle);
 }

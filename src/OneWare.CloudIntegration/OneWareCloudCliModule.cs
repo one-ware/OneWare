@@ -1,7 +1,7 @@
 using System.CommandLine;
-using System.IO.Pipes;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.CloudIntegration.Services;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Services;
 
 namespace OneWare.CloudIntegration;
@@ -51,6 +51,7 @@ public sealed class OneWareCloudCliModule : OneWareCliModuleBase
             return 1;
         }
 
+        await NotifyRunningStudioAsync(OneWareCloudIntegrationModule.LoginIpcCommand, userId, cancellationToken);
         Console.WriteLine("Logged in to OneWare Cloud.");
         return 0;
     }
@@ -79,7 +80,7 @@ public sealed class OneWareCloudCliModule : OneWareCliModuleBase
                         settingsService.GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareAccountUserIdKey)
                 }, autoSave: false);
 
-            await NotifyRunningStudioAsync(cancellationToken);
+            await NotifyRunningStudioAsync(OneWareCloudIntegrationModule.LogoutIpcCommand, null, cancellationToken);
             Console.WriteLine("Logged out of OneWare Cloud.");
             return 0;
         }
@@ -105,26 +106,15 @@ public sealed class OneWareCloudCliModule : OneWareCliModuleBase
         settingsService.Load(paths.SettingsPath);
     }
 
-    private static async Task NotifyRunningStudioAsync(CancellationToken cancellationToken)
+    private static async Task NotifyRunningStudioAsync(string command, string? argument,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            await using var client = new NamedPipeClientStream(".", "oneware-studio-ipc", PipeDirection.Out);
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromSeconds(2));
-            await client.ConnectAsync(timeout.Token);
+        var channel = StudioInstanceChannel.Default;
+        if (!channel.IsStudioRunning())
+            return;
 
-            await using var writer = new StreamWriter(client);
-            await writer.WriteAsync(OneWareCloudIntegrationModule.LogoutIpcMessage.AsMemory(), cancellationToken);
-            await writer.FlushAsync(cancellationToken);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            // Studio is not running or is not ready to receive IPC messages.
-        }
-        catch (IOException)
-        {
-            // Studio is not running or is not ready to receive IPC messages.
-        }
+        if (!await channel.SendCommandAsync(command, argument, cancellationToken))
+            Console.Error.WriteLine(
+                "Could not notify the running ONE WARE Studio. Restart it to apply the account change.");
     }
 }

@@ -88,6 +88,7 @@ public class App : Application
         services.AddSingleton<IProjectManagerService, ProjectManagerService>();
         services.AddSingleton<ILanguageManager, LanguageManager>();
         services.AddSingleton<IApplicationStateService, ApplicationStateService>();
+        services.AddSingleton<IIpcCommandService, IpcCommandService>();
         services.AddSingleton<IMainDockService, MainDockService>();
         services.AddSingleton<IWindowService, WindowService>();
         services.AddSingleton<BackupService>();

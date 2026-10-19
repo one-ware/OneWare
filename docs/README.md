@@ -130,6 +130,15 @@ Anything else (no arguments, a path or a `oneware://` URL) starts the GUI as bef
 On Windows, `OneWareStudio.exe` is a GUI-subsystem app, so the publish step also creates `oneware.exe`, a copy
 with the console subsystem. Use it from terminals; without a command it starts `OneWareStudio.exe` detached.
 
+### Single instance and IPC
+
+Only one Studio runs per user. `StudioInstanceChannel` (`src/OneWare.Essentials/Helpers`) holds an exclusive lock
+file and a named pipe (a Unix socket on Linux/macOS), both scoped to the current user: `%TEMP%\OneWare` on Windows,
+`$XDG_RUNTIME_DIR/oneware` (or `/tmp/oneware-<user>`) on Linux and `$TMPDIR/OneWare` on macOS. A second start
+forwards its path or `oneware://` URL to the running instance and exits. CLI commands use the same channel to send
+commands (`cmd:<name>`), for example `oneware stop` sends `shutdown` and waits for the lock to be released.
+Messages that arrive while Studio is still starting are queued until startup content has loaded.
+
 ### Where things are stored
 
 | What | Default location |

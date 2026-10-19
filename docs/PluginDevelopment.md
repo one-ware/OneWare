@@ -150,6 +150,20 @@ CLI modules are intentionally headless: they should not depend on Avalonia UI st
 desktop-only lifecycles. Prefer shared services for reusable logic and keep CLI-specific behavior in
 the command layer.
 
+To update a running Studio from a CLI command, register a handler in your GUI module and send the command from
+the CLI module. Handlers run on the UI thread; prefix command names with your plugin id to avoid collisions.
+
+```csharp
+// GUI module (Initialize)
+serviceProvider.Resolve<IIpcCommandService>()
+    .RegisterCommand("myplugin-reload", argument => ReloadAsync(argument));
+
+// CLI command
+var channel = StudioInstanceChannel.Default;
+if (channel.IsStudioRunning())
+    await channel.SendCommandAsync("myplugin-reload", "some-argument", cancellationToken);
+```
+
 Use `serviceProvider.Resolve<T>()` or `ContainerLocator.Current` to resolve OneWare services.
 
 ## Styling
@@ -202,6 +216,13 @@ The following sections document the core services and their key functions.
 - `RegisterServices(IServiceCollection)`: add services to the CLI DI container.
 - `RegisterCommands(IServiceProvider)`: return top-level CLI commands for registration.
 - Module type: must be public, non-abstract, and expose a parameterless constructor for CLI discovery.
+
+#### `IIpcCommandService` (src/OneWare.Essentials/Services/IIpcCommandService.cs)
+
+- `RegisterCommand(name, handler)`: handles a command sent to the running Studio (UI thread, optional string argument).
+- `ExecuteAsync(name, argument)`: runs a registered handler; returns false for unknown commands.
+- Send commands with `StudioInstanceChannel.Default.SendCommandAsync` (`src/OneWare.Essentials/Helpers/StudioInstanceChannel.cs`),
+  which also offers `IsStudioRunning()` and `WaitForExitAsync()`.
 
 #### `IPluginService` (src/OneWare.Essentials/Services/IPluginService.cs)
 

@@ -24,6 +24,7 @@ using OneWare.Core.ViewModels.Windows;
 using OneWare.Core.Views.Windows;
 using OneWare.Cpp;
 using OneWare.Essentials.Enums;
+using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -98,6 +99,19 @@ public class DesktopStudioApp : StudioApp
 
         Services.Resolve<IApplicationStateService>().RegisterPathLaunchAction(x => _ = PathOpenTaskAsync(x));
         Services.Resolve<IApplicationStateService>().RegisterShutdownAction(Program.ReleaseLock);
+
+        var ipcCommands = Services.Resolve<IIpcCommandService>();
+        ipcCommands.RegisterCommand(StudioInstanceChannel.ActivateCommand, _ =>
+        {
+            Program.ActivateMainWindow();
+            return Task.CompletedTask;
+        });
+        ipcCommands.RegisterCommand(StudioInstanceChannel.ShutdownCommand, _ =>
+        {
+            Services.Resolve<ILogger>().Log("Shutting down via IPC request");
+            Program.ActivateMainWindow();
+            return Services.Resolve<IApplicationStateService>().TryShutdownAsync();
+        });
     }
 
     private async Task PathOpenTaskAsync(string? path)
@@ -151,36 +165,44 @@ public class DesktopStudioApp : StudioApp
 
     protected override async Task LoadContentAsync()
     {
-        var cloudHost = Services.Resolve<ISettingsService>()
-            .GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
-
-        var repositories =
-            Environment.GetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY") is { } repositoryOverride &&
-            !string.IsNullOrWhiteSpace(repositoryOverride)
-                ? repositoryOverride
-                    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                : [
-                    new Uri(new Uri(cloudHost), "api/studio/packages").AbsoluteUri,
-                    "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
-                ];
-
-        Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
-        
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+        try
         {
-            var key = Services.Resolve<IApplicationStateService>()
-                .AddState("Loading last projects...", AppState.Loading);
-            await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
-            Services.Resolve<IMainDockService>().InitializeContent();
-            Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
-            Services.Resolve<ILogger>()?.Log("Loading last projects finished");
+            var cloudHost = Services.Resolve<ISettingsService>()
+                .GetSettingValue<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey);
 
-            if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
-                Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(pathOpen);
+            var repositories =
+                Environment.GetEnvironmentVariable("ONEWARE_PACKAGE_REPOSITORY") is { } repositoryOverride &&
+                !string.IsNullOrWhiteSpace(repositoryOverride)
+                    ? repositoryOverride
+                        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    : [
+                        new Uri(new Uri(cloudHost), "api/studio/packages").AbsoluteUri,
+                        "https://raw.githubusercontent.com/one-ware/OneWare.PublicPackages/main/oneware-packages.json"
+                    ];
+
+            Services.Resolve<IPackageService>().RegisterPackageRepositoryWithFallback(repositories);
+        
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                var key = Services.Resolve<IApplicationStateService>()
+                    .AddState("Loading last projects...", AppState.Loading);
+                await Services.Resolve<IProjectExplorerService>().OpenLastProjectsFileAsync();
+                Services.Resolve<IMainDockService>().InitializeContent();
+                Services.Resolve<IApplicationStateService>().RemoveState(key, "Projects loaded!");
+                Services.Resolve<ILogger>()?.Log("Loading last projects finished");
+
+                if (Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH") is { } pathOpen)
+                    Services.Resolve<IApplicationStateService>().ExecutePathLaunchActions(pathOpen);
+            }
+
+            // trigger AutoLaunch Actions
+            await base.LoadContentAsync();
         }
-
-        // trigger AutoLaunch Actions
-        await base.LoadContentAsync();
+        finally
+        {
+            // Messages from other instances or CLI commands are queued until startup content is loaded.
+            Program.SignalIpcReady();
+        }
 
         var settingsService = Services.Resolve<ISettingsService>();
         var packageService = Services.Resolve<IPackageService>();
