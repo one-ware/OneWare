@@ -41,7 +41,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="System.CommandLine" Version="3.0.0-rc.1.26425.128" />
+        <PackageReference Include="System.CommandLine" Version="3.0.0-rc.1.26425.128"/>
+        <InternalsVisibleTo Include="OneWare.Essentials.UnitTests"/>
     </ItemGroup>
 
 </Project> 

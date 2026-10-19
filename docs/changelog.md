@@ -1,3 +1,32 @@
+## 1.0.45
+
+- Added a Fast option to the Copilot auto model routing for lower latency
+- Tools added by plugins while a chat is open are now available to the AI without starting a new chat
+- The OneWare Agents chat now also requires the latest Copilot CLI and explains why it needs the CLI even though no GitHub account is required
+- Chats from older versions can be opened again from the chat history
+
+## 1.0.44
+
+- Added multiple parallel AI chats, each with its own model, plus a chat overview page to switch between them
+- "Allow in this chat" approvals now only apply to the current chat, and for terminal commands only to the approved command
+- The chat overview now shows how many files the AI changed in each chat
+- Added a live activity status in the chat showing which tools the AI is currently running
+- AI terminal commands now run in the correct working directory and long outputs are trimmed to the relevant start and end
+- The active file attachment in the chat can now be toggled and is only included by default when text is selected
+- Connection problems in the chat are now shown inline with a retry link
+- Improved sub agent messages in the chat
+- Fixed the conversation not staying scrolled to the end while tool output grows
+- Fixed icon sizes in the account settings
+
+## 1.0.43
+
+- Added a confirmation dialog before removing a package
+- Improved formatting of the package update prompt shown when updating the IDE
+- Improved light mode colors
+- Fixed the UI lagging while downloading large packages such as the OSS CAD Suite
+- Fixed the UI freezing while removing large packages
+- Fixed package downloads failing when the package source URL ends with a slash
+
 ## 1.0.42
 
 - New: OneWare Cloud AI provider for Copilot, with Compute Credits, plan gating and an improved browser login/logout

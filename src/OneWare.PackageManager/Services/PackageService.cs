@@ -37,6 +37,9 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     private readonly List<string[]> _repositoryUrls = [];
     
     private bool _disposed;
+
+    // Package source settings used by the last refresh, see OnSettingsSaved.
+    private volatile string? _loadedSourcesSignature;
     private Task<bool>? _currentRefreshTask;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
@@ -300,8 +303,11 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         try
         {
             await installer.PrepareRemoveAsync(context);
-            if (Directory.Exists(context.ExtractionPath))
-                Directory.Delete(context.ExtractionPath, true);
+            await Task.Run(() =>
+            {
+                if (Directory.Exists(context.ExtractionPath))
+                    Directory.Delete(context.ExtractionPath, true);
+            });
 
             var result = await installer.RemoveAsync(context);
             state.InstalledVersion = null;
@@ -430,6 +436,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
                 .ToList();
 
             var onlyCustomSources = _settingsService.GetSettingValue<bool>("PackageManager_OnlyCustomSources");
+            _loadedSourcesSignature = GetSourcesSignature();
             var allRepos = onlyCustomSources
                 ? customRepositories
                 : _repositoryUrls.Concat(customRepositories).ToList();
@@ -661,7 +668,21 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     
     private void OnSettingsSaved(object? sender, EventArgs e)
     {
-        _ = RefreshAsync(false);
+        // Settings are saved for many unrelated reasons (e.g. on every OneWare Cloud token refresh), so only
+        // reload the package sources when the source settings changed since the last refresh. Before the
+        // first refresh there is nothing to update, the startup refresh reads the current settings anyway.
+        var loaded = _loadedSourcesSignature;
+        if (loaded == null || loaded == GetSourcesSignature()) return;
+
+        // A refresh that is already running may still use the old sources.
+        _ = RefreshAsync(true);
+    }
+
+    private string GetSourcesSignature()
+    {
+        var sources = _settingsService.GetSettingValue<ObservableCollection<string>>("PackageManager_Sources");
+        var onlyCustomSources = _settingsService.GetSettingValue<bool>("PackageManager_OnlyCustomSources");
+        return $"{onlyCustomSources}\n{string.Join('\n', sources ?? [])}";
     }
 
     private void UpdateStatus(PackageState state)

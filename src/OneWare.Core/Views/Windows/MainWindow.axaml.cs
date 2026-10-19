@@ -1,4 +1,7 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -9,6 +12,7 @@ using DynamicData.Binding;
 using OneWare.Core.Extensions;
 using OneWare.Core.ViewModels.Windows;
 using OneWare.Essentials.Controls;
+using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ViewModels;
@@ -17,6 +21,7 @@ namespace OneWare.Core.Views.Windows;
 
 public partial class MainWindow : AdvancedWindow
 {
+    private IDisposable? _menuTreeSubscription;
     private NativeMenu? _nativeMenu;
 
     public MainWindow()
@@ -32,9 +37,16 @@ public partial class MainWindow : AdvancedWindow
             //     if (!ViewModel.IsStatusLoading) ViewModel.StatusText = "Ready";
             // }, RoutingStrategies.Bubble, true).DisposeWith(disposableRegistration);
 
-            vm.MainMenu.ObserveCollectionChanges()
-                .Throttle(new TimeSpan(100))
-                .Subscribe(_ => { Dispatcher.UIThread.Post(RefreshNativeMenu); });
+            // Watch the whole tree so items registered in submenus (e.g. View > Tool Windows) also show up
+            _menuTreeSubscription?.Dispose();
+            var menuChanged = new Subject<Unit>();
+            var watchTree = vm.MainMenu.WatchTreeChanges((_, _) => menuChanged.OnNext(Unit.Default),
+                (_, _) => menuChanged.OnNext(Unit.Default));
+            // Subscribed after WatchTreeChanges so the initial pass over existing items doesn't trigger a refresh
+            _menuTreeSubscription = new CompositeDisposable(watchTree,
+                menuChanged
+                    .Throttle(TimeSpan.FromMilliseconds(10))
+                    .Subscribe(_ => { Dispatcher.UIThread.Post(RefreshNativeMenu); }));
         });
 
         /*AddHandler(KeyDownEvent, (o, i) =>
@@ -112,10 +124,10 @@ public partial class MainWindow : AdvancedWindow
         foreach (var item in m)
             if (item is MenuItemModel mi)
             {
-                var nmi = new NativeMenuItem(mi.Header ?? "")
-                {
-                    Gesture = mi.InputGesture
-                };
+                var nmi = new NativeMenuItem();
+
+                nmi.Bind(NativeMenuItem.HeaderProperty, mi.WhenValueChanged(x => x.Header).Select(x => x ?? ""));
+                nmi.Bind(NativeMenuItem.GestureProperty, mi.WhenValueChanged(x => x.InputGesture));
 
                 if (mi.Icon?.IconObservable is IObservable<Bitmap> btm) nmi.Bind(NativeMenuItem.IconProperty, btm);
 

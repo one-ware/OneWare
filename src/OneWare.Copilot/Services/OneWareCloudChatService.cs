@@ -18,7 +18,7 @@ using OneWare.Essentials.Services;
 namespace OneWare.Copilot.Services;
 
 /// <summary>
-/// OneWare Cloud AI. Runs the Copilot runtime against the OneWare Cloud endpoint with the signed-in
+/// OneWare Agents. Runs the Copilot runtime against the OneWare Cloud endpoint with the signed-in
 /// OneWare account, and handles everything specific to it: account switches, per-user history,
 /// idempotency keys, plan/organization restrictions and Compute Credit billing errors.
 /// </summary>
@@ -27,7 +27,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     private const string IdempotencyHeader = "Idempotency-Key";
     private const string CloudOwnerMarkerFileName = ".oneware-cloud-owner";
 
-    /// <summary>Error code of the OneWare Cloud 403 for plans that do not include Cloud AI.</summary>
+    /// <summary>Error code of the OneWare Cloud 403 for plans that do not include OneWare Agents.</summary>
     private const string CloudAiNotInPlanErrorCode = "cloud_ai_not_in_plan";
 
     private const string CloudAiDisabledByOrganizationErrorCode = "cloud_ai_disabled_by_organization";
@@ -36,11 +36,19 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
 
     private readonly IOneWareCloudAccess _cloudAccess;
     private readonly IWindowService _windowService;
+    private readonly ISettingsService _settingsService;
+    private readonly IAiFunctionProvider _toolProvider;
+    private readonly IPackageService _packageService;
+    private readonly IPackageWindowService _packageWindowService;
+    private readonly IMainDockService _mainDockService;
+    private readonly IPaths _paths;
+    private readonly IChatAgentService _agentService;
     private readonly SemaphoreSlim _cloudAccountSync = new(1, 1);
     private IDisposable? _cloudAccountSubscription;
     private bool _wasInitialized;
     private string? _initializedCloudUserId;
-    private volatile string? _currentTurnIdempotencyKey;
+    private readonly Dictionary<string, string> _currentTurnIdempotencyKeys = new(StringComparer.Ordinal);
+    private readonly object _idempotencyKeysLock = new();
 
     public OneWareCloudChatService(
         ISettingsService settingsService,
@@ -64,22 +72,44 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     {
         _cloudAccess = cloudAccess;
         _windowService = windowService;
+        _settingsService = settingsService;
+        _toolProvider = toolProvider;
+        _packageService = packageService;
+        _packageWindowService = packageWindowService;
+        _mainDockService = mainDockService;
+        _paths = paths;
+        _agentService = agentService;
         UsesGitHubAuthentication = false;
     }
 
-    public override string Name => "OneWare Cloud";
+    public override string Name => "OneWare Agents";
 
     public override bool IsOneWareCloud => true;
+
+    protected override CopilotChatServiceBase CreateSibling() => new OneWareCloudChatService(
+        _settingsService,
+        _toolProvider,
+        _packageService,
+        _packageWindowService,
+        _windowService,
+        _mainDockService,
+        _paths,
+        _agentService,
+        _cloudAccess);
 
     private string CloudBaseUrl => _cloudAccess.BaseUrl.TrimEnd('/');
 
     protected override string GetSelectedModelSettingKey() =>
         CopilotModule.CopilotOneWareCloudSelectedModelSettingKey;
 
+    protected override string DefaultModelId => CopilotModule.OneWareAgentsDefaultModelId;
+
     #region Initialization and account
 
     protected override async Task<bool> PrepareInitializationAsync()
     {
+        if (!IsConnectionOwner) return true;
+
         _wasInitialized = true;
         EnsureCloudAccountSubscription();
         _initializedCloudUserId = _cloudAccess.UserId;
@@ -100,9 +130,9 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
             throw new InvalidOperationException("The OneWare Cloud URL is invalid.");
 
         return new ByokConfiguration(
-            CopilotModule.ProviderOneWareCloud,
+            Name,
             "openai",
-            $"{CloudBaseUrl}/api/copilot/v1",
+            $"{CloudBaseUrl}/api/cloud-ai/v1",
             string.Empty,
             string.Empty,
             CopilotModule.WireApiResponses);
@@ -133,7 +163,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
             UsesGitHubAuthentication = false;
             RaiseStatus(new StatusEvent(false, "Not Authenticated"));
             Blocker = new ChatServiceBlocker("Sign in to OneWare Cloud",
-                "OneWare Cloud AI uses your OneWare account. Sign in to start chatting.")
+                "OneWare Agents uses your OneWare account. Sign in to start chatting.")
             {
                 ActionText = "Login to OneWare Cloud",
                 ActionCommand = new AsyncRelayCommand<Control?>(AuthenticateAsync)
@@ -296,7 +326,8 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     protected override void ConfigureMessageOptions(MessageOptions options)
     {
         var idempotencyKey = Guid.NewGuid().ToString("N");
-        _currentTurnIdempotencyKey = idempotencyKey;
+        ((OneWareCloudChatService)ConnectionOwner).SetCurrentTurnIdempotencyKey(
+            CurrentSessionId, idempotencyKey);
         options.RequestHeaders = new Dictionary<string, string>
         {
             [IdempotencyHeader] = idempotencyKey
@@ -304,9 +335,23 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     }
 
     // Requests outside a user turn (e.g. background work after a restart) still need a valid key.
-    private string GetCurrentTurnIdempotencyKey()
+    private string GetCurrentTurnIdempotencyKey(string? sessionId)
     {
-        return _currentTurnIdempotencyKey ??= Guid.NewGuid().ToString("N");
+        lock (_idempotencyKeysLock)
+        {
+            if (sessionId != null && _currentTurnIdempotencyKeys.TryGetValue(sessionId, out var key))
+                return key;
+        }
+
+        return Guid.NewGuid().ToString("N");
+    }
+
+    private void SetCurrentTurnIdempotencyKey(string? sessionId, string key)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return;
+
+        lock (_idempotencyKeysLock)
+            _currentTurnIdempotencyKeys[sessionId] = key;
     }
 
     /// <summary>
@@ -393,7 +438,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
 
         if (!IsInsufficientCreditsError(error.Data.Message)) return false;
 
-        // Cloud AI is paid with Compute Credits. The 402 body carries the reason (MemberBudget when the
+        // OneWare Agents is paid with Compute Credits. The 402 body carries the reason (MemberBudget when the
         // member's own monthly budget ran out, SpendingSuspended after a chargeback, else OrganizationCredits).
         var message = error.Data.Message ?? string.Empty;
         if (message.Contains("SpendingSuspended", StringComparison.OrdinalIgnoreCase) ||
@@ -479,7 +524,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
         (string? Message, string? Code) problem = default;
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, $"{CloudBaseUrl}/api/copilot/v1/models");
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{CloudBaseUrl}/api/cloud-ai/v1/models");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer", await _cloudAccess.GetAccessTokenAsync());
             using var response = await ByokHttpClient.SendAsync(request);
@@ -489,7 +534,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
         catch (Exception ex)
         {
             ContainerLocator.Container.Resolve<ILogger>().LogWarning(ex,
-                "Could not read why OneWare Cloud rejected the OneWare Cloud AI request.");
+                "Could not read why OneWare Cloud rejected the OneWare Agents request.");
         }
 
         if (problem.Code == CloudAiNotInPlanErrorCode)
@@ -514,7 +559,7 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
     private void ReportCloudAiUpgradeRequired()
     {
         Blocker = new ChatServiceBlocker("OneWare Cloud Pro required",
-            "OneWare Cloud AI is included in the Pro plans. Upgrade your organization, then refresh.")
+            "OneWare Agents is included in the Pro plans. Upgrade your organization, then refresh.")
         {
             ActionText = "Upgrade to Pro",
             ActionCommand = new RelayCommand<Control?>(_ =>
@@ -524,14 +569,14 @@ public sealed class OneWareCloudChatService : CopilotChatServiceBase, IChatServi
 
     private void ReportCloudAiDisabledByOrganization(string? message)
     {
-        Blocker = new ChatServiceBlocker("OneWare Cloud AI disabled",
-            (message ?? "OneWare Cloud AI is turned off for this organization by its administrators.") +
+        Blocker = new ChatServiceBlocker("OneWare Agents disabled",
+            (message ?? "OneWare Agents is turned off for this organization by its administrators.") +
             " Ask an organization admin to allow it, or switch to another organization or provider.");
     }
 
-    /// <summary>OneWare Cloud refused Cloud AI for the organization (not in the plan or turned off by its admins).</summary>
+    /// <summary>OneWare Cloud refused OneWare Agents for the organization (not in the plan or turned off by its admins).</summary>
     private sealed class CloudAiBlockedException(string code, string? message)
-        : InvalidOperationException(message ?? "OneWare Cloud AI is not available for this organization.")
+        : InvalidOperationException(message ?? "OneWare Agents is not available for this organization.")
     {
         public string Code { get; } = code;
     }

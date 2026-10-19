@@ -44,6 +44,12 @@ public sealed class AiFunctionInvocationContext(string id, Action<string> report
 {
     public string Id { get; } = id;
 
+    /// <summary>
+    /// The chat session that triggered the call, when the AI backend reports one. Lets functions keep
+    /// per-session state such as the terminal an agent works in.
+    /// </summary>
+    public string? SessionId { get; init; }
+
     public void ReportProgress(string output) => reportProgress(output);
 }
 

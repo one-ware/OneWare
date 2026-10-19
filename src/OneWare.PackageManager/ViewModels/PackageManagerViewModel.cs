@@ -22,11 +22,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     private const string AllCategoryHeader = "All";
     private const string UpdatesCategoryHeader = "Updates";
 
-    /// <summary>
-    ///     The package promoted by the hero banner above the list.
-    /// </summary>
-    private const string FeaturedPackageId = "OneWare.AI";
-
     private static readonly char[] CategorySeparators = ['/', '\\'];
 
     private readonly IApplicationStateService _applicationStateService;
@@ -58,13 +53,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         PackageCategories.Add(_allCategory);
 
         _updatesCategory = _allCategory.GetOrCreateSubCategory(UpdatesCategoryHeader, PackageCategoryKind.Updates);
-
-        FeaturedPackage = new FeaturedPackageViewModel(
-            "ONE AI is available",
-            "Manage your ONE AI projects directly in the IDE and get annotation, model training and real-time camera checking.",
-            "AI_Img",
-            "https://one-ware.com/one-ai",
-            new AsyncRelayCommand(ShowFeaturedPackageDetailsAsync));
 
         RegisterCategory("Plugins");
         RegisterCategory("Plugins/Languages");
@@ -158,11 +146,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
     }
 
     public ObservableCollection<PackageCategoryViewModel> PackageCategories { get; } = [];
-
-    /// <summary>
-    ///     Pinned above the list, never part of it, so promoting a package cannot shift any row.
-    /// </summary>
-    public FeaturedPackageViewModel FeaturedPackage { get; }
 
     public bool AskForRestart { get; set; } = true;
     
@@ -313,18 +296,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
         return null;
     }
 
-    /// <summary>
-    ///     The banner ignores the search text and the segment filter, so the promoted package is not
-    ///     necessarily laid out. The query is reset first, otherwise focusing it would silently do nothing.
-    /// </summary>
-    private async Task ShowFeaturedPackageDetailsAsync()
-    {
-        if (SelectedFilterIndex != 0) SelectedFilterIndex = 0;
-        if (!string.IsNullOrEmpty(Filter)) Filter = string.Empty;
-
-        await FocusPluginAsync(FeaturedPackageId);
-    }
-
     private void ConstructPackageViewModels()    {
         foreach (var category in PackageCategories)
             ClearCategoryPackages(category);
@@ -358,10 +329,6 @@ public class PackageManagerViewModel : FlexibleWindowViewModelBase, IPackageWind
             }
 
         RefreshUpdatesCategory(false);
-
-        // Runs after the stale view models were evicted and disposed, so the banner can never hold a
-        // disposed view model.
-        FeaturedPackage.Target = _packageViewModels.GetValueOrDefault(FeaturedPackageId);
 
         // Package data changed. Rows are updated in place, membership and order stay untouched.
         SyncSelection(() => _allCategory.Resync());

@@ -16,6 +16,16 @@ public interface IAiFunctionProvider
         remove { }
     }
 
+    /// <summary>
+    /// Fired when the set of tools returned by <see cref="GetTools"/> changes, e.g. when a plugin registers a
+    /// function after chat sessions were created. Chat services use it to update their live sessions.
+    /// </summary>
+    event EventHandler? ToolsChanged
+    {
+        add { }
+        remove { }
+    }
+
     /// <summary>Returns available AI tools for this provider.</summary>
     ICollection<AIFunction> GetTools();
 
@@ -23,6 +33,12 @@ public interface IAiFunctionProvider
     void CancelActiveFunctions()
     {
     }
+
+    /// <summary>
+    /// Cancels the AI functions that are currently running for the given chat session. Providers that don't track
+    /// sessions cancel all running functions.
+    /// </summary>
+    void CancelActiveFunctions(string sessionId) => CancelActiveFunctions();
 
     /// <summary>Cancels the single running AI function with the given invocation id.</summary>
     void CancelFunction(string id)
@@ -90,4 +106,10 @@ public interface IAiFunctionProvider
     /// or <see langword="null"/> if the function has no check or is not registered.
     /// </summary>
     Func<AIFunctionArguments, string?>? GetConfirmationCheck(string functionName);
+
+    /// <summary>
+    /// Returns the display name of the named function (e.g. "Execute In Terminal"), or <see langword="null"/> if it
+    /// is not registered.
+    /// </summary>
+    string? GetFriendlyName(string functionName) => null;
 }

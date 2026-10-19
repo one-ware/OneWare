@@ -5,159 +5,227 @@
              xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
              xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
-             xmlns:models1="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
-             x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView" x:DataType="dockViews:WelcomeScreenViewModel"
+             xmlns:models="clr-namespace:OneWare.Essentials.Models;assembly=OneWare.Essentials"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="OneWare.Core.Views.DockViews.WelcomeScreenView"
+             x:DataType="dockViews:WelcomeScreenViewModel"
+             Name="WelcomeScreenViewRoot"
              Background="{DynamicResource ThemeControlLowBrush}">
+
+    <UserControl.Styles>
+        <!-- Action row (New / Open / Recents): full-width ghost button with subtle hover -->
+        <Style Selector="Button.welcome-action">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadius}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <!-- Walkthrough card button: elevated bordered card with hover & press states -->
+        <Style Selector="Button.welcome-card">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="Background" Value="{DynamicResource ThemeElevatedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+            <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCornerRadiusLarge}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.welcome-card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidHighBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        </Style>
+        <Style Selector="Button.welcome-card:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightHighBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+        </Style>
+        <Style Selector="Button.welcome-card PathIcon.welcome-chevron">
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+        <Style Selector="Button.welcome-card:pointerover PathIcon.welcome-chevron">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+        </Style>
+    </UserControl.Styles>
 
     <UserControl.DataTemplates>
 
-        <DataTemplate x:DataType="models1:WelcomeScreenStartItem">
-            <HyperlinkButton Command="{Binding Command}">
-                <HyperlinkButton.Content>
-                    <StackPanel Orientation="Horizontal">
-                        <Panel Width="18" Height="18" Margin="0,2,6,2">
-                            <controls:LayeredIconPresenter Width="18" Height="18" Value="{Binding Icon}" />
-                        </Panel>
-                        <TextBlock VerticalAlignment="Center" TextDecorations="{x:Null}" Text="{Binding Name}" />
-                    </StackPanel>
-                </HyperlinkButton.Content>
-            </HyperlinkButton>
+        <DataTemplate x:DataType="models:WelcomeScreenStartItem">
+            <Button Classes="ghost welcome-action" Command="{Binding Command}">
+                <Grid ColumnDefinitions="20,*" ColumnSpacing="10">
+                    <Panel Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <controls:LayeredIconPresenter Width="18" Height="18" Value="{Binding Icon}" />
+                    </Panel>
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                               Classes="accent"
+                               Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Button>
         </DataTemplate>
 
         <DataTemplate x:DataType="dockViews:RecentFileViewModel">
-            <DockPanel>
-                <HyperlinkButton DockPanel.Dock="Left" Margin="0,0,8,0" Content="{Binding Name}"
-                                 Command="{Binding $parent[UserControl].((dockViews:WelcomeScreenViewModel)DataContext).OpenRecentFileAsync, FallbackValue={x:Null}}"
-                                 CommandParameter="{Binding .}" />
-                <TextBlock DockPanel.Dock="Right" Text="{Binding ShortenPath}" ToolTip.Tip="{Binding Path}" />
-            </DockPanel>
+            <Button Classes="ghost welcome-action"
+                    Command="{Binding #WelcomeScreenViewRoot.((dockViews:WelcomeScreenViewModel)DataContext).OpenRecentFileAsync, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding}"
+                    ToolTip.Tip="{Binding Path}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                               Classes="accent"
+                               Text="{Binding Name}" />
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                               HorizontalAlignment="Right"
+                               Classes="caption"
+                               Text="{Binding ShortenPath}"
+                               TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Button>
         </DataTemplate>
 
-        <DataTemplate x:DataType="models1:WelcomeScreenWalkthroughItem">
-            <Button Padding="0" Margin="0" Command="{Binding Command}"
-                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                <Button.Styles>
-                    <Style Selector="Button">
-                        <Setter Property="Cursor" Value="Hand" />
-                        <Style Selector="^:pointerover">
-                            <Setter Property="Background" Value="{x:Null}" />
-                        </Style>
-                        <Style Selector="^:pressed  /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="{x:Null}" />
-                        </Style>
-                    </Style>
-                </Button.Styles>
-                <Panel>
-                    <Border CornerRadius="{DynamicResource ThemeCornerRadiusLarge}"
-                            Opacity=".4" Background="{DynamicResource ThemeControlMidBrush}" />
-                    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="40,*" Margin="6">
-                        <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Classes="semibold"
-                                   Text="{Binding Name}" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"
-                                   Classes.Hide="{Binding HideDescription}"
-                                   Text="{Binding Description}"
-                                   TextWrapping="Wrap" Name="DescriptionContainer">
-                            <TextBlock.Styles>
-                                <Style Selector="TextBlock.Hide">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </Style>
-                            </TextBlock.Styles>
-                        </TextBlock>
-                        <Panel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Width="18" Height="18"
-                               HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <controls:LayeredIconPresenter Value="{Binding Icon}" />
+        <DataTemplate x:DataType="models:WelcomeScreenWalkthroughItem">
+            <Button Classes="welcome-card" Command="{Binding Command}">
+                <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="12">
+                    <Border Grid.Column="0" Width="32" Height="32"
+                            CornerRadius="{DynamicResource ThemeCornerRadius}"
+                            Background="{DynamicResource ThemeControlLowBrush}"
+                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+                            BorderThickness="{DynamicResource ThemeBorderThickness}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Panel Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <controls:LayeredIconPresenter Width="18" Height="18" Value="{Binding Icon}" />
                         </Panel>
-                    </Grid>
-                </Panel>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Classes="semibold"
+                                   Text="{Binding Name}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Classes="caption"
+                                   IsVisible="{Binding !HideDescription}"
+                                   Text="{Binding Description}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <PathIcon Grid.Column="2" Classes="small muted welcome-chevron"
+                              VerticalAlignment="Center"
+                              Data="{StaticResource Icon.ChevronRight}" />
+                </Grid>
             </Button>
         </DataTemplate>
 
     </UserControl.DataTemplates>
-    
-    <Panel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
+    <!-- DockPanel so the footer stays pinned at the bottom while the main area scrolls -->
+    <DockPanel>
+        <!-- FOOTER -->
+        <Border DockPanel.Dock="Bottom" Classes="footer" Padding="16,8">
+            <DockPanel LastChildFill="False">
+                <controls:HyperLink DockPanel.Dock="Left" Label="https://one-ware.com" Url="https://one-ware.com"
+                                    VerticalAlignment="Center" Margin="0,0,16,0" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Classes="caption" VerticalAlignment="Center"
+                               Text="OneWare Studio is licensed under the " />
+                    <controls:HyperLink Label="Apache 2.0 license"
+                                        Url="https://github.com/one-ware/OneWare?tab=Apache-2.0-1-ov-file#"
+                                        VerticalAlignment="Center" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <Grid Margin="8" 
-                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
-                  RowDefinitions="*,Auto,Auto,*, Auto" ColumnDefinitions="*,Auto,30,Auto,*">
-                <Grid.Styles>
-                    <Style Selector="HyperlinkButton">
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="Margin" Value="0,2" />
-                    </Style>
-                </Grid.Styles>
+            <Border MaxWidth="880" Padding="32,24"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <StackPanel Spacing="20" HorizontalAlignment="Stretch">
 
-                <!-- HEADER -->
-                <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0, 20">
-                        <Image
-                            Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
-                            Height="50" Width="50" />
-                        <StackPanel Orientation="Vertical" Margin="10,0">
-                            <TextBlock Text="{Binding AppName}" Classes="h1" />
-                            <TextBlock Text="{Binding VersionInfo}" />
+                    <!-- HEADER -->
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="14">
+                            <Image Source="{Binding Icon, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                                   Height="48" Width="48" VerticalAlignment="Center" />
+                            <StackPanel VerticalAlignment="Center" Spacing="2">
+                                <TextBlock Text="{Binding AppName}" Classes="h1" />
+                                <TextBlock Text="{Binding VersionInfo}" Classes="caption" />
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-
-                <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
-                    <!-- NEW -->
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="New" Classes="h3" Margin="0,0,0,2" />
-                        <ItemsControl ItemsSource="{Binding NewItems}" />
-                    </StackPanel>
-
-                    <!-- OPEN -->
-                    <StackPanel Orientation="Vertical" Margin="0,10">
-                        <TextBlock Text="Open" Classes="h3" Margin="0,0,0,2" />
-                        <ItemsControl ItemsSource="{Binding OpenItems}" />
+                        <!-- Extensions hide themselves when not applicable, so they add no gap -->
+                        <controls:UiExtensionCollection Extensions="{Binding HeaderExtensions}">
+                            <controls:UiExtensionCollection.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical" />
+                                </ItemsPanelTemplate>
+                            </controls:UiExtensionCollection.ItemsPanel>
+                        </controls:UiExtensionCollection>
                     </StackPanel>
 
-                    <!-- RECENTS -->
-                    <StackPanel Orientation="Vertical" MinWidth="360">
-                        <TextBlock Text="Recents" Classes="h3" Margin="0,0,0,2" />
-                        <TextBlock Text="No recent projects were found..."
-                                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
-                                   Classes.Hide="{Binding !RecentProjectsAreEmpty}">
-                            <TextBlock.Styles>
-                                <Style Selector="TextBlock">
-                                    <Setter Property="IsVisible" Value="True" />
-                                </Style>
-                                <Style Selector="TextBlock.Hide">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </Style>
-                            </TextBlock.Styles>
-                        </TextBlock>
-                        <ItemsControl ItemsSource="{Binding RecentProjects}" MinWidth="180" />
-                    </StackPanel>
-                </StackPanel>
+                    <Border Classes="divider" />
 
-                <!-- WALKTHROUGH -->
-                <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="3">
-                    <TextBlock Text="Walkthrough" Classes="header" Margin="0,0,0,4" />
-                    <ItemsControl ItemsSource="{Binding WalkthroughItems}" MinWidth="320">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Vertical" Spacing="6" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </StackPanel>
-                
-                <!-- FOOTER -->
-                <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" VerticalAlignment="Bottom" Margin="0,8,0,0"
-                        Background="{DynamicResource ThemeControlLowBrush}">
-                    <DockPanel VerticalAlignment="Center" LastChildFill="True">
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="OneWare Studio is licensed under the " />
-                            <controls:HyperLink Label="Apache 2.0 license"
-                                                Url="https://github.com/one-ware/OneWare?tab=Apache-2.0-1-ov-file#" />
+                    <!-- TWO-COLUMN CONTENT -->
+                    <Grid ColumnDefinitions="2*,3*" ColumnSpacing="36">
+
+                        <!-- LEFT COLUMN: Start & Recents -->
+                        <StackPanel Grid.Column="0" Spacing="18">
+                            <!-- NEW -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="NEW" Classes="overline" Margin="8,0,0,2" />
+                                <ItemsControl ItemsSource="{Binding NewItems}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Spacing="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- OPEN -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="OPEN" Classes="overline" Margin="8,0,0,2" />
+                                <ItemsControl ItemsSource="{Binding OpenItems}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Spacing="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- RECENTS -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="RECENTS" Classes="overline" Margin="8,0,0,2" />
+                                <TextBlock Text="No recent projects were found..."
+                                           Classes="caption"
+                                           Margin="8,4,0,0"
+                                           IsVisible="{Binding RecentProjectsAreEmpty}" />
+                                <ItemsControl ItemsSource="{Binding RecentProjects}"
+                                              IsVisible="{Binding !RecentProjectsAreEmpty}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Spacing="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
-                        <controls:HyperLink DockPanel.Dock="Left" Label="https://one-ware.com" Url="https://one-ware.com" 
-                                            HorizontalAlignment="Left" VerticalAlignment="Center" />
-                    </DockPanel>
-                </Border>
-            </Grid>
+
+                        <!-- RIGHT COLUMN: Walkthroughs -->
+                        <StackPanel Grid.Column="1" Spacing="8">
+                            <TextBlock Text="WALKTHROUGHS" Classes="overline" Margin="2,0,0,2" />
+                            <ItemsControl ItemsSource="{Binding WalkthroughItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="6" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </StackPanel>
+
+                    </Grid>
+
+                </StackPanel>
+            </Border>
         </ScrollViewer>
-    </Panel>
+    </DockPanel>
 </UserControl>

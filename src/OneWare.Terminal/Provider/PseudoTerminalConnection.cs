@@ -30,6 +30,12 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
     /// </summary>
     public bool ShellIntegrationProbeFailed { get; set; }
 
+    /// <summary>
+    /// The shell's working directory as reported at its last prompt, or null while the shell has not
+    /// reported one (no shell integration).
+    /// </summary>
+    public string? CurrentWorkingDirectory { get; private set; }
+
     public event EventHandler<DataReceivedEventArgs>? DataReceived;
 
     public event EventHandler<EventArgs>? Closed;
@@ -144,6 +150,8 @@ public class PseudoTerminalConnection(IPseudoTerminal terminal) : IConnection, I
                     else if (segment.Event is { } integrationEvent)
                     {
                         ShellIntegrationDetected = true;
+                        if (integrationEvent.WorkingDirectory is { Length: > 0 } cwd)
+                            CurrentWorkingDirectory = cwd;
                         IntegrationEvent?.Invoke(this, new ShellIntegrationEventArgs(integrationEvent));
                     }
                 }

@@ -89,7 +89,7 @@ public class NativeToolPackageInstaller : PackageInstallerBase
         if (await ProcessHelper.ReleaseDirectoryAsync(context.ExtractionPath, ReleaseTimeout, cancellationToken))
             return;
 
-        ProcessHelper.FreeBusyFiles(context.ExtractionPath);
+        await Task.Run(() => ProcessHelper.FreeBusyFiles(context.ExtractionPath), cancellationToken);
     }
 
     public override Task<PackageInstallerResult> RemoveAsync(PackageInstallContext context,

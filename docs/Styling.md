@@ -203,6 +203,12 @@ border or corner radius of their own, and should not add margins to keep content
   `Background` or `CornerRadius`. `ShowProgressText` shows the percentage next to the bar. `fill` stretches the bar over its container, e.g. as a
   progress background behind a button's content. It has a transparent track and a subtle overlay fill, which turns
   light on `primary` / `danger` buttons.
+- `LogoLoader` (`OneWare.Essentials.Controls`): calm busy indicator showing the "E" of the app icon (12×12 px, text
+  color) with a soft glow passing slowly through its parts. Use it next to a status text while an agent or long
+  operation is working; it only animates while visible. Keep `Spinner` for small inline busy states.
+- `ShimmerTextBlock` (`OneWare.Essentials.Controls`): `TextBlock` whose text rests dimmed while a soft highlight sweeps
+  from left to right, in step with `LogoLoader`. Use it for the status text next to a `LogoLoader`; it styles like a
+  normal `TextBlock`.
 - `TreeDataGrid`: themed app-wide (`Controls/TreeDataGrid.axaml`), so no local theme include is needed. It has compact
   rows with a hover highlight, an accent selection and a 16 px indent per level. The Project Explorer and Problems panels use it.
 

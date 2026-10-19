@@ -23,6 +23,12 @@ public class AiEditViewModel : Document, INoSerializeLayout
 
     public string FullPath { get; }
 
+    /// <summary>The chat (session id) that made the edit, or null for edits made without a chat.</summary>
+    public string? OwnerId { get; init; }
+
+    /// <summary>The content this chat last wrote to the file.</summary>
+    public string? LastWritten { get; set; }
+
     public ICollection<ComparisonControlSection>? Chunks
     {
         get => field;

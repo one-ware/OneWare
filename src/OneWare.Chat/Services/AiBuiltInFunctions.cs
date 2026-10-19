@@ -18,6 +18,7 @@ internal static class AiBuiltInFunctions
     private const int MaxTerminalOutputChars = 12000;
 
     private static readonly TimeSpan TerminalCommandTimeout = TimeSpan.FromMinutes(30);
+    private const string TerminalTitle = "AI Chat";
 
     // Larger images are rejected by the model providers.
     private const long MaxImageBytes = 5 * 1024 * 1024;
@@ -77,7 +78,13 @@ internal static class AiBuiltInFunctions
                     [Description("1-based start line for partial edits (omit for full file)")] int? startLine = null,
                     [Description("number of lines to replace from startLine; 0 inserts before startLine")] int?
                         lineCount = null) =>
-                EditFileAsync(projectExplorerService, aiFileEditService, path, content, startLine, lineCount),
+                EditFileAsync(projectExplorerService, aiFileEditService, path, content, startLine, lineCount, null),
+            // The chat that edits owns the change, so each chat lists and rolls back only its own edits.
+            InvocationHandler = async (context, args, _) =>
+                await EditFileAsync(projectExplorerService, aiFileEditService,
+                    TryGetStringArgument(args, "path") ?? string.Empty,
+                    TryGetStringArgument(args, "content") ?? string.Empty,
+                    TryGetIntArgument(args, "startLine"), TryGetIntArgument(args, "lineCount"), context.SessionId),
             DetailExtractor = args => GetRelativePath(projectExplorerService, TryGetStringArgument(args, "path")),
             ConfirmationCheck = args =>
             {
@@ -199,16 +206,24 @@ internal static class AiBuiltInFunctions
             FriendlyName = "Execute In Terminal",
             RunOnUiThread = true,
             Description = """
-                          Executes a command in the IDE terminal and returns the output.
+                          Executes a command in this chat's IDE terminal and returns the output.
                           Use this to run shell commands; output appears in the IDE terminal panel.
+                          The terminal is a persistent session: the working directory, environment
+                          variables and other shell state carry over between calls, so a cd stays in
+                          effect. A new session starts in the active project root. Each result reports
+                          the shell's working directory after the command.
+                          Prefer relative paths; commands running in parallel get extra shells that
+                          start in the same directory but do not share environment changes.
                           On Windows the shell is PowerShell, not cmd.exe. Use PowerShell syntax, or
                           quote the complete command passed to cmd.exe (for example: cmd /c "a & b").
                           Multi-line PowerShell scripts are encoded and submitted as one complete command.
                           Output is automatically truncated to avoid oversized responses.
                           Commands must not wait for interactive input; they are aborted after 30 minutes.
+                          On Linux and macOS standard input is empty (/dev/null), so a program reading it
+                          sees end of input instead of hanging.
                           """,
             Handler = ([Description("Shell command to execute")] string command,
-                    [Description("Absolute working directory for execution (optional, defaults to active project).")]
+                    [Description("Optional directory to change to before the command, absolute or relative to the active project root. The change persists for later calls. Omit it to stay in the current directory.")]
                     string? workDir = null,
                     CancellationToken cancellationToken = default) =>
                 RunTerminalCommandAsync(projectExplorerService, terminalManagerService, null, command,
@@ -290,7 +305,8 @@ internal static class AiBuiltInFunctions
         string path,
         string content,
         int? startLine,
-        int? lineCount)
+        int? lineCount,
+        string? chatSessionId)
     {
         var resolvedPath = ResolvePath(projectExplorerService, path);
         if (string.IsNullOrWhiteSpace(resolvedPath))
@@ -298,7 +314,7 @@ internal static class AiBuiltInFunctions
 
         return new
         {
-            result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount),
+            result = await aiFileEditService.EditFileAsync(resolvedPath, content, startLine, lineCount, chatSessionId),
             error = (string?)null
         };
     }
@@ -366,7 +382,14 @@ internal static class AiBuiltInFunctions
         string? workDir,
         CancellationToken cancellationToken)
     {
-        var resolvedWorkDir = ResolvePath(projectExplorerService, workDir);
+        // Without a workDir the session stays where it is; ResolvePath would return the project root.
+        var resolvedWorkDir = string.IsNullOrWhiteSpace(workDir) ? null : ResolvePath(projectExplorerService, workDir);
+        if (resolvedWorkDir != null && !Directory.Exists(resolvedWorkDir))
+            return new
+            {
+                result = (TerminalExecutionResult?)null,
+                error = $"The working directory does not exist: {resolvedWorkDir}. The command was not run."
+            };
 
         var progress = context == null
             ? null
@@ -375,7 +398,8 @@ internal static class AiBuiltInFunctions
         var commandToExecute = PrepareTerminalCommand(command, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         var terminalResult = await terminalManagerService.ExecuteInTerminalAsync(
             commandToExecute,
-            "AI Chat",
+            GetTerminalSessionId(context?.SessionId),
+            TerminalTitle,
             resolvedWorkDir,
             true,
             TerminalCommandTimeout,
@@ -386,8 +410,10 @@ internal static class AiBuiltInFunctions
 
         // Control sequences are meaningless to the model and can make up most of the
         // payload for commands that draw progress bars, so they are removed here as well.
-        var cleanedOutput = StripAnsiEscapes(terminalResult.Output);
-        var truncatedOutput = TruncateTerminalOutput(cleanedOutput, out var outputTruncated);
+        // The terminal turns every "\n" into "\r\n"; return the line breaks the command wrote.
+        var cleanedOutput = StripAnsiEscapes(terminalResult.Output).Replace("\r\n", "\n");
+        var truncatedOutput = TruncateTerminalOutput(cleanedOutput, out var outputTruncated,
+            terminalResult.OutputLineCount);
         var result = terminalResult with { Output = truncatedOutput };
 
         // Show the final, cleaned output in the chat tool box.
@@ -397,7 +423,7 @@ internal static class AiBuiltInFunctions
         {
             result,
             outputTruncated,
-            originalOutputLength = terminalResult.Output.Length,
+            originalOutputLength = terminalResult.OutputLength > 0 ? terminalResult.OutputLength : cleanedOutput.Length,
             note = terminalResult.TimedOut
                 ? $"The command did not finish within {TerminalCommandTimeout.TotalMinutes:0} minutes and was aborted. " +
                   "The output above is partial and the exit code is unknown."
@@ -408,9 +434,20 @@ internal static class AiBuiltInFunctions
         };
     }
 
+    internal static string GetTerminalSessionId(string? chatSessionId)
+    {
+        return string.IsNullOrWhiteSpace(chatSessionId) ? TerminalTitle : $"{TerminalTitle}:{chatSessionId}";
+    }
+
     internal static string PrepareTerminalCommand(string command, bool isWindows)
     {
-        if (!isWindows || !command.ContainsAny('\r', '\n')) return command;
+        // The terminal's input would otherwise stay open, and a program reading it (cat without a file, a
+        // confirmation prompt, ...) would wait until the timeout. A brace group runs in the current shell, so
+        // cd and export still persist; the newline before "}" keeps a trailing "&" or comment valid.
+        // Password prompts (sudo, ssh) read /dev/tty and are unaffected.
+        if (!isWindows) return $"{{ {command}\n}} < /dev/null";
+
+        if (!command.ContainsAny('\r', '\n')) return command;
 
         // PowerShell's interactive parser can wait indefinitely while a pasted multi-line construct
         // appears incomplete. Submit an encoded script block as one complete REPL command instead.
@@ -447,15 +484,20 @@ internal static class AiBuiltInFunctions
         public void Report(string value) => onReport(value);
     }
 
-    private static string TruncateTerminalOutput(string output, out bool wasTruncated)
+    /// <param name="totalLineCount">
+    /// Lines the command printed, when known. Can exceed the lines in <paramref name="output" /> because the
+    /// terminal already omits the middle of very long output.
+    /// </param>
+    internal static string TruncateTerminalOutput(string output, out bool wasTruncated, long totalLineCount = 0)
     {
-        var lineLimited = TruncateByLines(output, MaxTerminalOutputLines, out var lineTruncated);
+        var lineLimited = TruncateByLines(output, MaxTerminalOutputLines, out var lineTruncated, totalLineCount);
         var charLimited = TruncateByChars(lineLimited, MaxTerminalOutputChars, out var charTruncated);
         wasTruncated = lineTruncated || charTruncated;
         return charLimited;
     }
 
-    private static string TruncateByLines(string output, int maxLines, out bool wasTruncated)
+    private static string TruncateByLines(string output, int maxLines, out bool wasTruncated,
+        long totalLineCount)
     {
         if (string.IsNullOrEmpty(output))
         {
@@ -474,7 +516,10 @@ internal static class AiBuiltInFunctions
         wasTruncated = true;
         var headCount = maxLines / 2;
         var tailCount = maxLines - headCount;
-        var omittedCount = lines.Length - maxLines;
+        // Split yields one entry more than there are lines when the output ends with a line break.
+        var endsWithNewline = normalized.EndsWith('\n');
+        var totalEntries = totalLineCount > 0 ? totalLineCount + (endsWithNewline ? 1 : 0) : lines.Length;
+        var omittedCount = Math.Max(totalEntries, lines.Length) - maxLines;
 
         var head = lines.Take(headCount);
         var tail = lines.Skip(lines.Length - tailCount);
@@ -555,6 +600,21 @@ internal static class AiBuiltInFunctions
         return normalizedPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar,
                    StringComparison.OrdinalIgnoreCase)
                || string.Equals(normalizedPath, normalizedRoot, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int? TryGetIntArgument(Microsoft.Extensions.AI.AIFunctionArguments arguments, string name)
+    {
+        if (!arguments.TryGetValue(name, out var value) || value == null) return null;
+
+        return value switch
+        {
+            int i => i,
+            long l => (int)l,
+            JsonElement { ValueKind: JsonValueKind.Number } json when json.TryGetInt32(out var n) => n,
+            JsonElement { ValueKind: JsonValueKind.String } json when int.TryParse(json.GetString(), out var n) => n,
+            string text when int.TryParse(text, out var n) => n,
+            _ => null
+        };
     }
 
     private static string? TryGetStringArgument(Microsoft.Extensions.AI.AIFunctionArguments arguments, string name)

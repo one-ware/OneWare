@@ -17,6 +17,20 @@ public interface ITerminalManagerService : IDockable
         IProgress<string>? outputProgress = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Executes a command in the terminal pool <paramref name="id" />, whose tabs are titled
+    /// <paramref name="title" />. Sequential commands share one shell, so its working directory and environment
+    /// carry over. <paramref name="workingDirectory" /> moves the shell there before the command (the move
+    /// persists); without it the command runs where the previous one left off.
+    /// </summary>
+    Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id, string title,
+        string? workingDirectory, bool showInUi, TimeSpan? timeout, IProgress<string>? outputProgress,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, outputProgress,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Executes a command in a terminal tab and returns the result.
     /// </summary>
     [Obsolete("Use the overload that accepts an IProgress<string> outputProgress parameter. " +

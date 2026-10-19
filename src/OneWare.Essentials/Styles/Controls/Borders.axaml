@@ -203,7 +203,7 @@
         <Setter Property="Background" Value="{DynamicResource ErrorBrush}" />
     </Style>
     <Style Selector="Border.badge.success">
-        <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+        <Setter Property="Background" Value="#22C55E" />
     </Style>
     <!-- Dark text reads better on the light green -->
     <Style Selector="Border.badge.success > TextBlock, Border.badge.success > StackPanel > TextBlock">

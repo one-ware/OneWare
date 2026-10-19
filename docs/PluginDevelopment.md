@@ -345,6 +345,12 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
   `timeout` is the only hard upper bound. `TerminalExecutionResult.TimedOut` is `true` when
   the command was aborted (timeout or cancellation); in that case the terminal is interrupted
   with Ctrl+C and, if that fails, its process tree is killed.
+  Calls with the same `id` share a persistent shell (concurrent calls get extra tabs), so the
+  working directory and environment carry over. A `workingDirectory` moves the shell there and
+  the move persists; without one the command runs where the previous one ended.
+  `TerminalExecutionResult.WorkingDirectory` reports the shell's directory afterwards (null
+  without shell integration). The overload with a `title` parameter sets the tab title
+  separately from the pool `id`, e.g. one pool per chat session titled "AI Chat".
 
 #### `IToolService` (src/OneWare.Essentials/Services/IToolService.cs)
 
@@ -435,12 +441,18 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `AbortAsync()`: cancel current request.
 - `NewChatAsync()`: reset conversation state.
 - Events: `SessionReset`, `EventReceived`, `StatusChanged` for UI updates.
+- `IChatServiceWithSessions`: resumable sessions (`CurrentSessionId`, `LoadSessionAsync`) for the chat history.
+- `IChatServiceWithParallelSessions`: `CreateSession()` returns another instance of the service with its own
+  session, model selection and events. The chat panel uses it whenever another chat of the service is still loaded
+  (e.g. working in the background), so several conversations can run at the same time; it disposes the instance
+  when the chat is unloaded. Services without it run one chat at a time.
 
 #### `IChatManagerService` (src/OneWare.Essentials/Services/IChatManagerService.cs)
 
 - `RegisterChatService(IChatService)`: add a chat provider.
-- `SelectedChatService`: currently selected provider.
-- `SaveState()`: persist selection.
+- `SelectedChatService`: provider of the shown chat. Setting it opens a new chat with that provider (a working
+  chat keeps running in the background).
+- `SaveState()`: persist the loaded chats and which chat was shown last.
 
 #### `IChatAgentService` (src/OneWare.Essentials/Services/IChatAgentService.cs)
 
@@ -450,11 +462,13 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
-- `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
+- `RegisterFunction(IOneWareAiFunction)`: register an AI tool. Tools registered while chats are open are
+  pushed to their live sessions too.
 - `RegisterAgent(OneWareAiAgent)`: register a custom agent (see "AI agents and skills").
 - `RegisterSkill(OneWareAiSkill)`: register an on-demand skill document.
 - `RegisterSkillDirectory(string)`: register a directory of skills shipped with the plugin.
 - `GetTools()`: return the registered tools for chat or automation.
+- `ToolsChanged` event: raised when the result of `GetTools()` changes.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
 - Set `OneWareAiFunction.IsReadOnly` on tools that only read state, so read-only chat agents
@@ -527,7 +541,7 @@ model for FPGA workflows. It is designed to be extended by plugins.
 - Project files use JSON via `UniversalProjectProperties`. Keys are case-insensitive and stored in
   the project file. Common keys:
   - `include` / `exclude`: arrays of glob-like patterns used by `IsPathIncluded`.
-  - `topEntity`: name of the top-level entity or module. The file that contains it is resolved by scanning the project's HDL files (see `FpgaService.GetAllTopEntitiesAsync`). It can be set from the project settings or via the **Set Top Entity** context menu entry on an HDL file in the project explorer. Old files that stored a file path in `topEntity` are migrated automatically on load.
+  - `topEntity`: name of the top-level entity or module. The file that contains it is resolved by scanning the project's HDL files (see `FpgaService.GetAllTopEntitiesAsync`). It can be set from the project settings or via the **Set Top Entity** context menu entry on an HDL file in the project explorer. Old files that stored a file path in `topEntity` are migrated automatically on load. Use `IsTopEntityFile(IProjectFile)` / `IsTopEntityFile(string relativePath)` to check whether a file contains the current top entity.
   - `toolchain`: toolchain ID to run on compile.
   - `loader`: loader ID to use for programming.
   - `board`: selected hardware board (evaluation board) name. The legacy key `fpga` is automatically migrated to `board` on load.
@@ -649,6 +663,8 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - `UniversalFpgaToolBar_PinPlannerMenuExtension`: pin planner menu.
 - `UniversalFpgaToolBar_DownloaderConfigurationExtension`: download configuration area.
 - `CompileWindow_TopRightExtension`: pin planner window (top right region).
+- `WelcomeScreen_Header`: welcome screen, below the app logo and version. Meant for short, subtle hints
+  (one `caption` line with `link` buttons); hide the control when it no longer applies, so it leaves no gap.
 - `EditView_Top`: top editor panel (used for test bench toolbar). Use the `Border.editor-bar` /
   `WrapPanel.editor-bar-items` style classes so the bar matches the others and wraps on small screens
   (see `docs/Styling.md`, "Editor bar").
@@ -678,6 +694,10 @@ Key points:
   shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
   for a delegated task, shown in the header of its block.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
+- OneWare functions (tools from `IAiFunctionProvider`) report `AiFunctionEvent.SessionId` so the chat shows them in
+  the right conversation. Put an object with a public string `SessionId` property (like the Copilot SDK's `ToolInvocation`) in
+  `AIFunctionArguments.Context` when invoking them, and call
+  `IAiFunctionProvider.CancelActiveFunctions(sessionId)` from `AbortAsync` to stop only your own session's tools.
 
 Skeleton example:
 

@@ -2,6 +2,9 @@
 
 public static class HttpClientExtensions
 {
+    private const float ProgressReportStep = 0.005f;
+
+
     public static async Task DownloadAsync(this HttpClient client, string requestUri, Stream destination,
         IProgress<float>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -27,6 +30,7 @@ public static class HttpClientExtensions
         }
 
         var totalBytesRead = 0L;
+        var lastReported = -1f;
         var buffer = new byte[81920];
         int bytesRead;
 
@@ -34,7 +38,13 @@ public static class HttpClientExtensions
         {
             await destination.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
             totalBytesRead += bytesRead;
-            progress.Report((float)totalBytesRead / contentLength.Value);
+
+            // Network reads are small (~16KB), so reporting each one floods the UI thread with
+            // tens of thousands of updates for large downloads. Only report noticeable changes.
+            var current = (float)totalBytesRead / contentLength.Value;
+            if (current - lastReported < ProgressReportStep) continue;
+            lastReported = current;
+            progress.Report(current);
         }
 
         // Ensure 100% progress is reported

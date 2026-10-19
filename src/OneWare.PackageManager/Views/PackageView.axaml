@@ -61,7 +61,8 @@
                     <Button>
                         <Button.Flyout>
                             <MenuFlyout>
-                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}" />
+                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}"
+                                          CommandParameter="{Binding $self}" />
                             </MenuFlyout>
                         </Button.Flyout>
                         <PathIcon Data="{StaticResource Icon.KebabVertical}" Width="12" Height="12" />
@@ -148,7 +149,7 @@
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="models:TabModel">
                         <Border Classes="inset">
-                            <controls:MarkdownViewer VirtualizationEnabled="False" Markdown="{Binding Content}"
+                            <controls:MarkdownViewer VirtualizationEnabled="True" Markdown="{Binding Content}"
                                                      Margin="10 5 0 0" />
                         </Border>
                     </DataTemplate>
