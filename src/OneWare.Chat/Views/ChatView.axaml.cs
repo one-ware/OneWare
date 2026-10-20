@@ -104,10 +104,8 @@ public partial class ChatView : UserControl
         if (e.Key is not (Key.Enter or Key.Return or Key.V)) return;
         if ((DataContext as ChatViewModel)?.ComposerSession is not { } vm) return;
 
-        // --- Ctrl+V: try image paste first ---
-        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control)
-            && !e.KeyModifiers.HasFlag(KeyModifiers.Shift)
-            && !e.KeyModifiers.HasFlag(KeyModifiers.Alt)
+        // --- Ctrl+V / Cmd+V: try image paste first ---
+        if (e.Key == Key.V && IsPasteModifier(e.KeyModifiers)
             && vm.Service is IChatService chatService)
         {
             // Mark as handled immediately (synchronously) to prevent the TextBox from
@@ -141,44 +139,81 @@ public partial class ChatView : UserControl
         Execute(vm.IsBusy ? vm.SteerCommand : vm.SendCommand, e);
     }
 
+    /// <summary>
+    /// Paste is Ctrl+V on Windows/Linux and Cmd+V (Meta) on macOS. Ctrl+V is accepted on every platform.
+    /// </summary>
+    internal static bool IsPasteModifier(KeyModifiers modifiers)
+    {
+        if ((modifiers & (KeyModifiers.Shift | KeyModifiers.Alt)) != 0) return false;
+        return (modifiers & (KeyModifiers.Control | KeyModifiers.Meta)) != 0;
+    }
+
     private async Task HandleClipboardPasteAsync(IChatService chatService)
     {
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
         if (clipboard == null) return;
 
+        if (await TryPasteEncodedImageAsync(clipboard, chatService)) return;
+        if (await TryPasteBitmapAsync(clipboard, chatService)) return;
+
+        // No image (or service doesn't support it): fall back to pasting text.
+        await FallbackTextPasteAsync();
+    }
+
+    /// <summary>
+    /// Attaches PNG/JPEG bytes as they are when the clipboard exposes them under a well-known format name.
+    /// </summary>
+    private static async Task<bool> TryPasteEncodedImageAsync(Avalonia.Input.Platform.IClipboard clipboard,
+        IChatService chatService)
+    {
         try
         {
             var formats = await clipboard.GetFormatsAsync();
 
-            // Check for image data first.
             var imageFormat = formats.FirstOrDefault(f =>
                 string.Equals(f, "PNG", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(f, "image/png", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(f, "image/jpeg", StringComparison.OrdinalIgnoreCase));
 
-            if (imageFormat != null)
-            {
-                var raw = await clipboard.GetDataAsync(imageFormat);
-                if (raw is byte[] bytes && bytes.Length > 0)
-                {
-                    var mimeType = imageFormat.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase)
-                        ? "image/jpeg"
-                        : "image/png";
-                    var ext = mimeType == "image/jpeg" ? ".jpg" : ".png";
-                    var name = $"image{ext}";
+            if (imageFormat == null) return false;
 
-                    if (chatService.TryAddImageAttachment(bytes, mimeType, name))
-                        return;
-                }
-            }
+            var raw = await clipboard.GetDataAsync(imageFormat);
+            if (raw is not byte[] { Length: > 0 } bytes) return false;
+
+            var isJpeg = imageFormat.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase);
+            return chatService.TryAddImageAttachment(bytes, isJpeg ? "image/jpeg" : "image/png",
+                isJpeg ? "image.jpg" : "image.png");
         }
         catch
         {
-            // Clipboard access failed — fall through to text paste.
+            return false;
         }
+    }
 
-        // No image (or service doesn't support it): fall back to pasting text.
-        await FallbackTextPasteAsync();
+    /// <summary>
+    /// Attaches any image the platform can decode (e.g. macOS PNG/TIFF pasteboard types), re-encoded as PNG.
+    /// </summary>
+    private static async Task<bool> TryPasteBitmapAsync(Avalonia.Input.Platform.IClipboard clipboard,
+        IChatService chatService)
+    {
+        try
+        {
+            using var data = await clipboard.TryGetDataAsync();
+            if (data == null) return false;
+
+            using var bitmap = await data.TryGetBitmapAsync();
+            if (bitmap == null) return false;
+
+            using var stream = new MemoryStream();
+            bitmap.Save(stream);
+            if (stream.Length == 0) return false;
+
+            return chatService.TryAddImageAttachment(stream.ToArray(), "image/png", "image.png");
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private async Task FallbackTextPasteAsync()
