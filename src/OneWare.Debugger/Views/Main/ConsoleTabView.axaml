@@ -8,78 +8,57 @@
              x:Class="OneWare.Debugger.Views.Main.ConsoleTabView"
              x:DataType="main:ConsoleTabViewModel">
 
-    <UserControl.Styles>
-        <!-- Issued commands stand out from the backend's answer. -->
-        <Style Selector="SelectableTextBlock.consoleLine">
-            <Setter Property="FontFamily" Value="{DynamicResource EditorFont}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Padding" Value="0,1" />
-        </Style>
-        <Style Selector="SelectableTextBlock.consoleLine.command">
-            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-    </UserControl.Styles>
-
     <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Bottom"
-                BorderThickness="0,1,0,0"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            <DockPanel Background="{DynamicResource ThemeBackgroundBrush}">
-                <Button DockPanel.Dock="Right" Margin="4" Height="26" Padding="8,0"
-                        Command="{Binding SendCommandCommand}" Content="Send" />
-                <TextBox Name="CommandBox"
+        <Border DockPanel.Dock="Bottom" Classes="footer" Padding="4">
+            <DockPanel LastChildFill="True">
+                <Button DockPanel.Dock="Right" Classes="icon" Margin="4 0 0 0"
+                        Command="{Binding SendCommandCommand}" ToolTip.Tip="Send (Enter)">
+                    <PathIcon Data="{StaticResource Icon.Send}" />
+                </Button>
+                <TextBox Name="CommandBox" Classes="small" FontFamily="{DynamicResource EditorFont}"
                          Text="{Binding CommandText, Mode=TwoWay}"
-                         Watermark="Command for the debug backend"
-                         FontFamily="{DynamicResource EditorFont}"
-                         Background="{DynamicResource ThemeControlLowBrush}"
-                         BorderThickness="0"
-                         Padding="6,2" />
+                         Watermark="GDB command, e.g. info frame">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SendCommandCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
             </DockPanel>
         </Border>
 
         <!-- Every line is its own SelectableTextBlock, so that commands stay set apart
              by colour. Nothing can be selected across line boundaries that way, though -
-             hence the button that puts the whole history on the clipboard.
-             Reachable through the context menu, because that is the gesture one
-             tries first. -->
-        <Border Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            <Border.ContextMenu>
+             hence the copy button and the context menu that put the whole history on the clipboard. -->
+        <Grid Background="Transparent">
+            <Grid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy All" Click="OnCopyConsoleClick">
                         <MenuItem.Icon>
-                            <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
+                            <PathIcon Data="{StaticResource Icon.Copy}" />
                         </MenuItem.Icon>
                     </MenuItem>
                 </ContextMenu>
-            </Border.ContextMenu>
-            <Grid>
-                <ScrollViewer Name="DebuggerConsoleScroll" Padding="8,6">
-                    <ItemsControl ItemsSource="{Binding Lines}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:ConsoleLine">
-                                <SelectableTextBlock Classes="consoleLine"
-                                                     Classes.command="{Binding IsCommand}"
-                                                     Text="{Binding Text}" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+            </Grid.ContextMenu>
 
-                <!-- Floats above the output instead of in its own bar: the console
-                     is short anyway, and the button should not cost a line. -->
-                <Button Name="CopyConsoleButton"
-                        HorizontalAlignment="Right" VerticalAlignment="Top"
-                        Margin="0,4,14,0" Width="24" Height="24"
-                        Click="OnCopyConsoleClick"
-                        ToolTip.Tip="Copy the whole console to the clipboard">
-                    <Image Width="14" Height="14"
-                           Source="{DynamicResource BoxIcons.RegularCopy}" />
-                </Button>
-            </Grid>
-        </Border>
+            <ScrollViewer Name="DebuggerConsoleScroll" Padding="8 6">
+                <ItemsControl ItemsSource="{Binding Lines}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:ConsoleLine">
+                            <SelectableTextBlock Classes="mono"
+                                                 Classes.accent="{Binding IsCommand}"
+                                                 Classes.semibold="{Binding IsCommand}"
+                                                 TextWrapping="Wrap"
+                                                 Text="{Binding Text}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Button Name="CopyConsoleButton" Classes="icon"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 4 14 0"
+                    Click="OnCopyConsoleClick"
+                    ToolTip.Tip="Copy the whole console to the clipboard">
+                <PathIcon Data="{StaticResource Icon.Copy}" />
+            </Button>
+        </Grid>
     </DockPanel>
 </UserControl>

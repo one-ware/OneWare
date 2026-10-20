@@ -100,6 +100,7 @@
     <Project Path="src/OneWare.ImageViewer/OneWare.ImageViewer.csproj" />
     <Project Path="src/OneWare.MarkdownViewer/OneWare.MarkdownViewer.csproj" />
     <Project Path="src/OneWare.PackageManager/OneWare.PackageManager.csproj" />
+    <Project Path="src/OneWare.SoftwareProjectSystem/OneWare.SoftwareProjectSystem.csproj" />
     <Project Path="src\OneWare.Chat\OneWare.Chat.csproj" />
   </Folder>
   <Folder Name="/Extensions/FpgaSupport/">
@@ -137,11 +138,14 @@
     <Project Path="tests/OneWare.ApplicationCommands.UnitTests/OneWare.ApplicationCommands.UnitTests.csproj" />
     <Project Path="tests/OneWare.Chat.UnitTests/OneWare.Chat.UnitTests.csproj" />
     <Project Path="tests/OneWare.Copilot.UnitTests/OneWare.Copilot.UnitTests.csproj" />
+    <Project Path="tests/OneWare.Debugger.UnitTests/OneWare.Debugger.UnitTests.csproj" />
     <Project Path="tests/OneWare.Dock.HeadlessTests/OneWare.Dock.HeadlessTests.csproj" />
     <Project Path="tests/OneWare.Essentials.UnitTests/OneWare.Essentials.UnitTests.csproj" />
     <Project Path="tests/OneWare.PackageManager.UnitTests/OneWare.PackageManager.UnitTests.csproj" />
+    <Project Path="tests/OneWare.ProjectExplorer.UnitTests/OneWare.ProjectExplorer.UnitTests.csproj" />
     <Project Path="tests/OneWare.Python.UnitTests/OneWare.Python.UnitTests.csproj" />
     <Project Path="tests/OneWare.SearchList.UnitTests/OneWare.SearchList.UnitTests.csproj" />
+    <Project Path="tests/OneWare.SoftwareProjectSystem.UnitTests/OneWare.SoftwareProjectSystem.UnitTests.csproj" />
     <Project Path="tests/OneWare.SourceControl.UnitTests/OneWare.SourceControl.UnitTests.csproj" />
     <Project Path="tests/OneWare.Studio.Desktop.UnitTests/OneWare.Studio.Desktop.UnitTests.csproj" />
     <Project Path="tests/OneWare.Terminal.UnitTests/OneWare.Terminal.UnitTests.csproj" />

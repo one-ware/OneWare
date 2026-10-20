@@ -9,6 +9,7 @@ using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.ProjectActions;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Debugger;
@@ -30,6 +31,7 @@ public class DebuggerModule : OneWareModuleBase
     {
         services.AddSingleton<IDebuggerService, DebuggerService>();
         services.AddSingleton<GdbSessionLauncher>();
+        services.AddSingleton<DebuggerProjectActionProvider>();
         services.AddSingleton<DebuggerViewModel>();
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<RegisterTabViewModel>();
@@ -61,6 +63,7 @@ public class DebuggerModule : OneWareModuleBase
         // RemoteEndpoint, attached targets as well; a plugin only needs its own launcher
         // if GDB cannot serve its target at all.
         serviceProvider.Resolve<IDebuggerService>().RegisterSessionLauncher<GdbSessionLauncher>();
+        serviceProvider.Resolve<IProjectActionService>().RegisterProvider<DebuggerProjectActionProvider>();
 
         settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
             new FilePathSetting(

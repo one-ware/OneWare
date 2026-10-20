@@ -1,0 +1,34 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:converters="clr-namespace:OneWare.Essentials.Converters;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.SoftwareProjectSystem.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                         PrefWidth="500" SizeToContent="Height" Padding="4"
+                         WindowStartupLocation="CenterOwner"
+                         Title="New C/C++ Project" Name="SoftwareProjectCreator"
+                         Icon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToWindowIconConverter}}"
+                         CustomIcon="{Binding Paths.AppIconPath, Converter={x:Static converters:SharedConverters.PathToBitmapConverter}}"
+                         x:Class="OneWare.SoftwareProjectSystem.Views.SoftwareProjectCreatorView"
+                         x:DataType="viewModels:SoftwareProjectCreatorViewModel">
+    <Interaction.Behaviors>
+        <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SaveAsync}"
+                                               Routes="Bubble"
+                                               CommandParameter="{Binding #SoftwareProjectCreator}" />
+    </Interaction.Behaviors>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom">
+            <Button Classes="primary" Command="{Binding SaveAsync}"
+                    CommandParameter="{Binding #SoftwareProjectCreator}">
+                <TextBlock Text="Create" />
+            </Button>
+        </StackPanel>
+        <ScrollViewer DockPanel.Dock="Top">
+            <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
+        </ScrollViewer>
+    </DockPanel>
+</controls:FlexibleWindow>

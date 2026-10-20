@@ -9,7 +9,7 @@
              x:DataType="inspector:InspectorViewModel"
              Background="{DynamicResource ThemeControlLowBrush}">
 
-    <TabControl Padding="0" Margin="0">
+    <TabControl>
         <TabItem Header="Variables">
             <views:VariablesView DataContext="{Binding Variables}" />
         </TabItem>

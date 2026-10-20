@@ -103,7 +103,9 @@ button, follow hover and selection colors, and switch with the theme automatical
 - Help → Style Gallery (Debug builds) lists every icon with its name.
 - Plugins that compile against an older `OneWare.Essentials` package should use `{DynamicResource Icon.X}`.
   `StaticResource` fails when the key is not in the referenced package.
-- Multi-color icons, such as file types, debugger actions and status badges, stay `DrawingImage` resources in
+- Debugger actions use `Icon.Debug`, `Icon.DebugStepOver` / `Into` / `Out`, `Icon.StepForward` (continue),
+  `Icon.Pause` and `Icon.Stop`.
+- Multi-color icons, such as file types and status badges, stay `DrawingImage` resources in
   `OneWare.Core/Styles/Icons.axaml` and are used with `<Image Source="{DynamicResource ...}" />`.
 - File type icons are `FileIcon.*` `DrawingImage` resources in `OneWare.Core/Styles/FileIcons.axaml`,
   converted from the MIT-licensed [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme)

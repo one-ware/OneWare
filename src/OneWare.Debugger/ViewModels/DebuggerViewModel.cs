@@ -6,6 +6,7 @@ using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.ProjectActions;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -20,11 +21,12 @@ namespace OneWare.Debugger.ViewModels;
 // only opened while a session is running.
 public partial class DebuggerViewModel : ExtendedTool
 {
-    public const string IconKey = "Material.BugReport";
+    public const string IconKey = "Codeicons.Debug";
 
     private readonly IDebuggerService _debuggerService;
     private readonly ILogger _logger;
     private readonly IMainDockService _mainDockService;
+    private readonly IProjectActionService _projectActionService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
 
@@ -42,13 +44,14 @@ public partial class DebuggerViewModel : ExtendedTool
 
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
         IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
-        MainPanelViewModel mainPanel) : base(IconKey)
+        IProjectActionService projectActionService, MainPanelViewModel mainPanel) : base(IconKey)
     {
         _debuggerService = debuggerService;
         _logger = logger;
         _settingsService = settingsService;
         _projectExplorerService = projectExplorerService;
         _mainDockService = mainDockService;
+        _projectActionService = projectActionService;
 
         // Set before subscribing -> even the first state change accesses the tabs.
         MainPanel = mainPanel;
@@ -65,6 +68,23 @@ public partial class DebuggerViewModel : ExtendedTool
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
+        // A project type that knows how to debug its projects (e.g. build first, then launch the exact
+        // artifact) runs through the action service; otherwise start directly so the console is usable
+        // even without a target.
+        if (_projectActionService.CanExecute(ProjectActionKind.Debug))
+        {
+            await _projectActionService.ExecuteAsync(ProjectActionKind.Debug);
+            return;
+        }
+
+        await StartSessionAsync();
+    }
+
+    /// <summary>
+    /// Starts a session for the active project through a target preparer or with GDB directly.
+    /// </summary>
+    public async Task<bool> StartSessionAsync()
+    {
         // On start, the traffic with the backend is what matters - so bring the matching tab to the
         // front and make the panel itself visible.
         MainPanel.ShowConsole();
@@ -73,10 +93,7 @@ public partial class DebuggerViewModel : ExtendedTool
         // Which target applies is stated in the project -> the matching preparer reports itself,
         // instead of being listed in a selection in the bar.
         if (_debuggerService.TargetPreparers.FirstOrDefault(CanPrepareSafely) is { } preparer)
-        {
-            await StartWithPreparerAsync(preparer);
-            return;
-        }
+            return await StartWithPreparerAsync(preparer);
 
         StatusText = "Starting GDB...";
 
@@ -96,7 +113,7 @@ public partial class DebuggerViewModel : ExtendedTool
         {
             MainPanel.Console.Append("GDB could not be started.");
             StatusText = "Start failed";
-            return;
+            return false;
         }
 
         // Only now, not before the start: otherwise the note would stand before GDB's version line
@@ -105,6 +122,25 @@ public partial class DebuggerViewModel : ExtendedTool
             MainPanel.Console.Append("No executable in the active project and no remote endpoint under " +
                                      "Tools > Debugger - running without a target. Registers, memory and " +
                                      "stepping need one.");
+
+        return true;
+    }
+
+    /// <summary>
+    /// Starts a session with a launch request built by a project type, e.g. after it built the program.
+    /// </summary>
+    public async Task<bool> StartSessionAsync(DebugLaunchRequest request)
+    {
+        MainPanel.ShowConsole();
+        _mainDockService.Show(this, DockShowLocation.Bottom);
+
+        StatusText = "Starting GDB...";
+
+        if (await _debuggerService.StartAsync(request)) return true;
+
+        MainPanel.Console.Append("GDB could not be started.");
+        StatusText = "Start failed";
+        return false;
     }
 
     // Starts through a preparer: it brings up its target and supplies the
@@ -113,17 +149,18 @@ public partial class DebuggerViewModel : ExtendedTool
     // program. Until then there is no session, which is why the start button is locked through
     // IsPreparing and not through IsSessionActive.
     // What happens meanwhile is reported by the preparer itself; here it only says that something runs.
-    private async Task StartWithPreparerAsync(IDebugTargetPreparer preparer)
+    private async Task<bool> StartWithPreparerAsync(IDebugTargetPreparer preparer)
     {
         IsPreparing = true;
         StatusText = $"Preparing {preparer.DisplayName}...";
 
         try
         {
-            if (await _debuggerService.StartAsync(preparer)) return;
+            if (await _debuggerService.StartAsync(preparer)) return true;
 
             MainPanel.Console.Append($"{preparer.DisplayName} could not be started.");
             StatusText = "Start failed";
+            return false;
         }
         finally
         {
@@ -205,6 +242,13 @@ public partial class DebuggerViewModel : ExtendedTool
     private string? FindProjectExecutable()
     {
         if (_projectExplorerService.ActiveProject is not { } project) return null;
+
+        // The exact file from the last build wins over any guess.
+        if (_projectActionService.GetArtifacts(project)
+                .FirstOrDefault(x => x.Kind is BuildArtifactKind.Executable or BuildArtifactKind.Elf
+                                     && File.Exists(x.Path)) is { } artifact)
+            return artifact.Path;
+
         try
         {
             if (DeclaredExecutable(project) is { } declared) return declared;

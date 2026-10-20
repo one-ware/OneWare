@@ -9,7 +9,7 @@
              x:DataType="main:MainPanelViewModel">
 
     <!-- The order here is the one MainPanelViewModel.ConsoleTabIndex refers to. -->
-    <TabControl Padding="0" Margin="0" SelectedIndex="{Binding SelectedTabIndex}">
+    <TabControl SelectedIndex="{Binding SelectedTabIndex}">
 
         <TabItem Header="Registers">
             <views:RegisterTabView DataContext="{Binding Registers}" />

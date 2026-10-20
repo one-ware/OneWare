@@ -29,12 +29,17 @@ public partial class BreakpointsViewModel : ObservableObject
         // Store and view model are both singletons and live as long as the app -
         // the subscription never has to be released.
         BreakpointStore.Instance.Breakpoints.CollectionChanged += (_, _) =>
+        {
             RemoveAllBreakpointsCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(HasBreakpoints));
+        };
 
         // IsVerified changes in the object, not in the collection - without this subscription the
         // column would stay on the value it read when opened.
         BreakpointStore.Instance.VerificationChanged += (_, _) => Breakpoints.Refresh();
     }
+
+    public bool HasBreakpoints => BreakpointStore.Instance.Breakpoints.Count > 0;
 
     private bool CanRemoveBreakpoint() => SelectedBreakpoints.Count > 0;
 

@@ -17,6 +17,38 @@
         <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.SteeringOff}" />
     </DrawingImage>
 
+    <DrawingImage x:Key="Codeicons.Debug">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.Debug}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.DebugStepInto">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.DebugStepInto}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.DebugStepOut">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.DebugStepOut}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.DebugStepOver">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.DebugStepOver}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.StepForward">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.StepForward}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.StepForward2">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.StepForward2}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.StepBackward">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.StepBackward}" />
+    </DrawingImage>
+
+    <DrawingImage x:Key="Material.StepBackward2">
+        <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.StepBackward2}" />
+    </DrawingImage>
+
     <DrawingImage x:Key="Bootstrap.Cloudy">
         <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}" Geometry="{DynamicResource Icon.Cloud}" />
     </DrawingImage>
@@ -282,6 +314,17 @@
             <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}"
                              Geometry="F1M1,2L1,7.262C1.309,7.092,1.657,7,1.999,7L2,7 2,5 14,5 14,13 8,13 8,14 15,14 15,2z" />
             <GeometryDrawing Brush="{DynamicResource ThemeAccentBrush}"
+                             Geometry="F1M6,12L6,12 6,14 2,14 2,9 5,9 5,10 6,10z M5.312,8L1.963,8C1.963,8,1,8,1,9L1,14C1,15,1.964,15,1.964,15L5.964,15C6.964,15,7,14,7,14L7,10.137z" />
+        </DrawingGroup>
+    </DrawingImage>
+
+    <!-- UniversalProject with a teal accent, used for C/C++ software projects (.swproj) -->
+    <DrawingImage x:Key="SoftwareProject">
+        <DrawingGroup>
+            <GeometryDrawing Brush="#00000000" Geometry="F1M16,16L0,16 0,0 16,0z" />
+            <GeometryDrawing Brush="{DynamicResource ThemeForegroundBrush}"
+                             Geometry="F1M1,2L1,7.262C1.309,7.092,1.657,7,1.999,7L2,7 2,5 14,5 14,13 8,13 8,14 15,14 15,2z" />
+            <GeometryDrawing Brush="#ca1de0"
                              Geometry="F1M6,12L6,12 6,14 2,14 2,9 5,9 5,10 6,10z M5.312,8L1.963,8C1.963,8,1,8,1,9L1,14C1,15,1.964,15,1.964,15L5.964,15C6.964,15,7,14,7,14L7,10.137z" />
         </DrawingGroup>
     </DrawingImage>

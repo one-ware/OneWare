@@ -33,6 +33,8 @@ public partial class ValueFormatViewModel : ObservableObject
             _selectedBase = stored;
     }
 
+    public IReadOnlyList<NumberBase> Bases { get; } = Enum.GetValues<NumberBase>();
+
     // Reports every change to the three panels, which then relabel their rows.
     // Deliberately without reading the target again: the raw values of the last halt are at hand, and
     // while the target runs there would be nothing to fetch anyway.

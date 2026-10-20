@@ -268,9 +268,14 @@ public class GdbSession(
                                                                                  
         for (var i = 0; i < files.Count; i++)                                      
         {                                                                          
-            var entry = files.GetObject(i);                                        
-            var fullname = entry.GetValue("fullname");                             
-            if (!string.IsNullOrEmpty(fullname)) fullnames.Add(fullname);          
+            var entry = files.GetObject(i);
+            var file = entry.GetValue("file");
+            var fullname = entry.GetValue("fullname");
+
+            // "fullname" has symbolic links resolved, "file" is the path the compiler was given. The
+            // editor may know the file under either one, so both are reported.
+            if (!string.IsNullOrEmpty(fullname)) fullnames.Add(fullname);
+            if (Path.IsPathRooted(file) && file != fullname) fullnames.Add(file);
         }                                                                          
                                                                                  
         return fullnames;                                                          
@@ -602,9 +607,17 @@ public class GdbSession(
 
         return new DebugStackFrame(
             NullIfEmpty(frame.GetValue("func")),
-            NullIfEmpty(frame.GetValue("fullname")),
+            PreferredSourcePath(frame.GetValue("file"), frame.GetValue("fullname")),
             line,
             NullIfEmpty(frame.GetValue("addr")));
+    }
+
+    // GDB resolves symbolic links in "fullname". The path the compiler was given ("file") is the one
+    // the project and the editor use, so it wins as long as it is absolute and exists.
+    private static string? PreferredSourcePath(string file, string fullname)
+    {
+        if (Path.IsPathRooted(file) && File.Exists(file)) return file;
+        return NullIfEmpty(fullname) ?? NullIfEmpty(file);
     }
 
     private static string? NullIfEmpty(string value)

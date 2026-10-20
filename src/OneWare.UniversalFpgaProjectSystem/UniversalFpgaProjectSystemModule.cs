@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.ProjectActions;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -23,6 +24,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
     {
         services.AddSingleton<UniversalFpgaProjectManager>();
         services.AddSingleton<FpgaService>();
+        services.AddSingleton<FpgaProjectActionProvider>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -56,6 +58,8 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
 
         serviceProvider.Resolve<IProjectManagerService>()
             .RegisterProjectManager(UniversalFpgaProjectRoot.ProjectType, manager);
+
+        serviceProvider.Resolve<IProjectActionService>().RegisterProvider<FpgaProjectActionProvider>();
 
         serviceProvider.Resolve<ILanguageManager>()
             .RegisterLanguageExtensionLink(UniversalFpgaProjectRoot.ProjectFileExtension, ".json");

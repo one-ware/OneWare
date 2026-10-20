@@ -10,31 +10,32 @@
              x:DataType="main:RegisterTabViewModel">
 
     <DockPanel LastChildFill="True">
-    <views:ValueFormatBar DockPanel.Dock="Top" DataContext="{Binding ValueFormat}" />
+        <Border DockPanel.Dock="Top" Classes="header" Padding="4">
+            <views:ValueFormatBar HorizontalAlignment="Right" DataContext="{Binding ValueFormat}" />
+        </Border>
 
-    <Border Margin="4"
-            CornerRadius="4"
-            ClipToBounds="True"
-            BorderThickness="1"
-            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-            Background="{DynamicResource ThemeBackgroundBrush}">
-        <DataGrid ItemsSource="{Binding Rows}"
-                  GridLinesVisibility="Vertical"
-                  VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
-                  BorderThickness="0"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch"
-                  HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Auto">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Register" Width="*"
-                                    Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
-                <DataGridTextColumn Header="Value" Width="*"
-                                    Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
-            </DataGrid.Columns>
-        </DataGrid>
-    </Border>
+        <Grid>
+            <DataGrid ItemsSource="{Binding Rows}"
+                      Background="{DynamicResource ThemeControlLowBrush}"
+                      RowBackground="Transparent"
+                      GridLinesVisibility="None"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="False"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Register" Width="*" FontFamily="{DynamicResource EditorFont}"
+                                        Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
+                    <DataGridTextColumn Header="Value" Width="2*" FontFamily="{DynamicResource EditorFont}"
+                                        Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Classes="empty-state" IsVisible="{Binding !Rows.Count}" IsHitTestVisible="False">
+                <TextBlock TextWrapping="Wrap" Text="Registers appear here while the program is paused." />
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

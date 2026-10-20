@@ -1,3 +1,4 @@
+using OneWare.Essentials.Helpers;
 using System.Collections.Specialized;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -23,7 +24,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     private IDebugTargetPreparer? _activePreparer;
 
-    private IReadOnlyList<string>? _sourceFiles;
+    private HashSet<string>? _sourceFiles; // normalized paths, as reported and with links resolved
 
     private IDebugSession? _session;
 
@@ -159,7 +160,12 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             return false;
         }
 
-        _sourceFiles = await session.GetSourceFilesAsync();
+        var sourceFiles = await session.GetSourceFilesAsync();
+        _sourceFiles = sourceFiles == null
+            ? null
+            : await Task.Run(() => sourceFiles
+                .SelectMany(x => new[] { NormalizePath(x), NormalizePath(ProcessHelper.ResolveRealPath(x)) })
+                .ToHashSet(StringComparer.OrdinalIgnoreCase));
 
         // Arm the breakpoints first, then let it run - the other way round the program runs
         // past exactly the places where the user wanted to stop.
@@ -370,8 +376,18 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     {
         if (_sourceFiles is not { Count: > 0 } files) return true;
 
-        return files.Any(candidate =>
-            string.Equals(NormalizePath(candidate), NormalizePath(file), StringComparison.OrdinalIgnoreCase));
+        return files.Contains(NormalizePath(file)) ||
+               files.Contains(NormalizePath(ProcessHelper.ResolveRealPath(file)));
+    }
+
+    // GDB reports source files with symbolic links resolved while the editor uses the project path,
+    // so a plain string comparison misses e.g. a project folder reached through a linked home directory.
+    private static bool IsSameFile(string a, string b)
+    {
+        if (string.Equals(NormalizePath(a), NormalizePath(b), StringComparison.OrdinalIgnoreCase)) return true;
+
+        return string.Equals(NormalizePath(ProcessHelper.ResolveRealPath(a)),
+            NormalizePath(ProcessHelper.ResolveRealPath(b)), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizePath(string path) => path.Replace('\\', '/');
@@ -434,8 +450,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         if (state.IsRunning) return null;
         if (state.CurrentFrame is not { File: { Length: > 0 } file, Line: > 0 } frame) return null;
 
-        return _breakpointStore.Breakpoints.FirstOrDefault(x =>
-                   string.Equals(x.File, file, StringComparison.OrdinalIgnoreCase) && x.Line == frame.Line)
+        return _breakpointStore.Breakpoints.FirstOrDefault(x => x.Line == frame.Line && IsSameFile(x.File, file))
                ?? new BreakPoint { File = file, Line = frame.Line };
     }
 

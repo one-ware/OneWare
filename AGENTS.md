@@ -84,6 +84,7 @@ This file provides repo-specific guidance for coding agents working in `OneWare`
   - Package manager: `src/OneWare.PackageManager`
   - Source control: `src/OneWare.SourceControl`
   - FPGA project system: `src/OneWare.UniversalFpgaProjectSystem`
+  - C/C++ software projects (`.swproj`, build/run/debug through `IProjectActionService`): `src/OneWare.SoftwareProjectSystem`
   - Tool/language integrations: `src/OneWare.*` projects under `src/`
   - `src/OneWare.CSharp` is present but **commented out** in the Desktop studio project
 - Module registration happens in three layers (`moduleCatalog.AddModule<T>()`):

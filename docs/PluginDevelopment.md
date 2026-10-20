@@ -200,6 +200,38 @@ Provides all app path locations: `AppDataDirectory`, `ProjectsDirectory`, `Packa
 - `RegisterProjectManager(id, manager)`: register a project type.
 - `GetManager(id)` / `GetManagerByExtension(extension)`: resolve project manager by ID/extension.
 
+#### `IProjectActionService` (src/OneWare.Essentials/ProjectActions/IProjectActionService.cs)
+
+Project-type independent Build / Clean / Run / Program / Debug actions. The shared toolbar, the **Build** menu
+(`Ctrl+Shift+B` build, `F5` debug, `Ctrl+F5` run) and the debugger panel all run through it.
+
+- `RegisterProvider<T>()` / `RegisterProvider(provider)`: add an `IProjectActionProvider` for your project type.
+  A provider implements `Supports(project, kind)` (cheap, called for UI state) and
+  `ExecuteAsync(ProjectActionRequest)` (honour `request.CancellationToken`).
+- `Priority`: the highest-priority supporting provider wins; generic fallbacks use negative values
+  (the debugger registers a `-100` Debug fallback for projects with a target preparer or a declared
+  `Debugger/Executable`).
+- `UsesSharedToolBar`: return `false` if your project type has its own toolbar (FPGA projects do); the actions
+  remain available through the Build menu and `ExecuteAsync`.
+- `ExecuteAsync(kind, project?)`: runs on the active project by default. Build, Run and Debug save open files
+  first. Only one top-level action runs at a time; calls made from inside a provider (e.g. Debug triggering
+  Build) run as part of the outer action.
+- Return `BuildArtifact`s from Build; `GetArtifacts(project)` exposes them, and the debugger uses the
+  first `Executable`/`Elf` artifact instead of searching the project folder.
+
+C/C++ software projects (`.swproj`, module `src/OneWare.SoftwareProjectSystem`, desktop only) are the reference
+provider. The project file stores `buildSystem` (`simple` calls the compiler directly with incremental,
+parallel builds; `cmake` uses the project's `CMakeLists.txt`), `kit`, `configuration` (`Debug`/`Release`), `output`,
+`cStandard`/`cxxStandard`, `includeDirectories`, `defines`, `compilerFlags`, `linkerFlags`, `libraries`,
+`cmakeArguments` and `runArguments`, plus the usual `include`/`exclude` file patterns and `compileExcluded` (files the
+simple build skips; toggled with "Exclude from build" in the explorer). Output goes to `build/<configuration>`, and `build/compile_commands.json`
+is written for clangd. Toolchain kits (host GCC/Clang and cross GCCs such as `arm-none-eabi` found on `PATH`)
+come from `ToolchainKitService` in that module (`RegisterKit` adds more; it isn't part of the plugin API yet).
+Compiler errors appear in the error list under the source `C/C++ Build`.
+Chat agents get `cpp_list_options`, `cpp_create_project`, `cpp_open_project` and `cpp_get_project_overview` from this
+module, and `folder_open_project` / `folder_create_project` from `OneWare.FolderProjectSystem`. New projects are
+created through `SoftwareProjectFactory`, which the creator dialog uses too.
+
 #### `IProjectSettingsService` (src/OneWare.Essentials/Services/IProjectSettingsService.cs)
 
 - `AddProjectSetting`, `AddProjectSettingIfNotExists`: register project-specific settings.
