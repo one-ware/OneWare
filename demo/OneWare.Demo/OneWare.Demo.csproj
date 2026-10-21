@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
         <UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp"/>
         <UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj"/>
         <UpToDateCheckInput Remove="Assets\DemoFiles\out.svg"/>
