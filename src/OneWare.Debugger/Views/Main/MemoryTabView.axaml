@@ -71,8 +71,13 @@
                                         Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
                     <DataGridTextColumn Header="Bytes" Width="*" IsReadOnly="True"
                                         Binding="{CompiledBinding Bytes, DataType=models:MemoryRow}" />
-                    <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True"
-                                        Binding="{CompiledBinding Value, DataType=models:MemoryRow}" />
+                    <DataGridTemplateColumn Header="Value" Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:MemoryRow">
+                                <views:EditableValueCell />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

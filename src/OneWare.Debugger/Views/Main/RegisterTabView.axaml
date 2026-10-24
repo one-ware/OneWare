@@ -31,8 +31,13 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Register" Width="*"
                                     Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
-                <DataGridTextColumn Header="Value" Width="*"
-                                    Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
+                <DataGridTemplateColumn Header="Value" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:RegisterRow">
+                            <views:EditableValueCell />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Border>

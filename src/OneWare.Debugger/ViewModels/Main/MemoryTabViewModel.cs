@@ -13,17 +13,25 @@ namespace OneWare.Debugger.ViewModels.Main;
 public partial class MemoryTabViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
+    private readonly InspectorEditSession _editSession;
 
     // Address taken from the input line and turned into a watch list entry
     // on adding.
     [ObservableProperty] private string _addressText = string.Empty;
 
-    public MemoryTabViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat)
+    public MemoryTabViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat,
+        InspectorEditSession editSession)
     {
         _debuggerService = debuggerService;
+        _editSession = editSession;
         ValueFormat = valueFormat;
 
         SelectedRows.CollectionChanged += (_, _) => RemoveWatchCommand.NotifyCanExecuteChanged();
+
+        _editSession.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(InspectorEditSession.IsEditing)) RemoveWatchCommand.NotifyCanExecuteChanged();
+        };
 
         // The only subscription of this tab, and it is not about reading: the watermark belongs
         // to the target and is only known with the session. When to read is still decided by
@@ -75,7 +83,7 @@ public partial class MemoryTabViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(AddressText)) return;
 
-        var row = new MemoryRow { Address = AddressText.Trim() };
+        var row = new MemoryRow { Address = AddressText.Trim(), Edit = new ValueEdit(_editSession) };
         Watches.Add(row);
         AddressText = string.Empty;
 
@@ -93,7 +101,7 @@ public partial class MemoryTabViewModel : ObservableObject
 
     private bool CanRemoveWatch()
     {
-        return SelectedRows.Count > 0;
+        return SelectedRows.Count > 0 && !_editSession.IsEditing;
     }
 
     // Empties the whole watch list instead of only the selection. A no-op on an empty
@@ -101,6 +109,8 @@ public partial class MemoryTabViewModel : ObservableObject
     [RelayCommand]
     private void ClearWatches()
     {
+        _editSession.CancelCommand.Execute(null);
+
         Watches.Clear();
         SelectedRows.Clear();
     }
@@ -137,6 +147,10 @@ public partial class MemoryTabViewModel : ObservableObject
     {
         row.Raw = raw;
         row.Value = ValueFormatter.FormatHexUnits(raw, ValueFormat.SelectedBase);
+        row.Edit.Bits = ValueFormatter.HexBits(raw);
+        row.Edit.LockReason = raw.Trim().Contains(' ') ? "Only a single unit can be edited"
+            : row.Edit.Bits == 0 ? "There is no value to edit"
+            : null;
     }
 
     private void RenderAll()
@@ -150,7 +164,7 @@ public partial class MemoryTabViewModel : ObservableObject
     // arithmetic -> the core holds no address parser, and a symbol or an & expression stays valid.
     // The cast is needed because a pointer cannot be multiplied: GDB rejects "(x)*2" with
     // "Argument to arithmetic operation not a number", but not "((long)(x))*2".
-    private static string ToBackendAddress(string address, int unitBytes)
+    internal static string ToBackendAddress(string address, int unitBytes)
     {
         return unitBytes <= 1 ? address : $"((long)({address}))*{unitBytes}";
     }

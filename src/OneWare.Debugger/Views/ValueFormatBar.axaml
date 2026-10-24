@@ -14,7 +14,7 @@
     <Border Background="{DynamicResource ThemeBackgroundBrush}"
             BorderThickness="0,0,0,1"
             BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-        <StackPanel Orientation="Horizontal" Margin="6,3" Spacing="8">
+        <StackPanel Orientation="Horizontal" Margin="6,3" Spacing="8" IsEnabled="{Binding !IsLocked}">
             <TextBlock Text="Base"
                        VerticalAlignment="Center"
                        Margin="0,0,2,0"

@@ -5,8 +5,10 @@ namespace OneWare.Debugger.Models;
 // One row in the Memory tab: an address entered by the user and the bytes last
 // read there.
 // The table only displays; rows appear and disappear through the buttons of the bar.
-public partial class MemoryRow : ObservableObject
+public partial class MemoryRow : ObservableObject, IEditableValueRow
 {
+    public required ValueEdit Edit { get; init; }
+
     // Address or expression in the notation the backend understands - a number, or a
     // symbol such as &buffer. Counted in addressable units of the target, not in bytes;
     // the tab does the conversion based on the profile.

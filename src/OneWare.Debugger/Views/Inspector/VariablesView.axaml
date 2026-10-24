@@ -31,8 +31,13 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Name" Width="1.5*"
                                     Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
-                <DataGridTextColumn Header="Value" Width="1.75*"
-                                    Binding="{CompiledBinding Value, DataType=models:VariableRow}" />
+                <DataGridTemplateColumn Header="Value" Width="1.75*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:VariableRow">
+                            <views:EditableValueCell />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Type" Width="0.75*"
                                     Binding="{CompiledBinding Type, DataType=models:VariableRow}" />
             </DataGrid.Columns>

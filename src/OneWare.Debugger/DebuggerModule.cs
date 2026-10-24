@@ -42,6 +42,7 @@ public class DebuggerModule : OneWareModuleBase
         // One for all three value tables -> Memory, Registers and Variables never show
         // different number bases, and the bar above them switches all of them at once.
         services.AddSingleton<ValueFormatViewModel>();
+        services.AddSingleton<InspectorEditSession>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
