@@ -32,6 +32,26 @@ public class GdbOutputParsingTests
         Assert.Equal("No symbol foo in current context.", result.ErrorMessage);
     }
 
+    [Theory]
+    [InlineData(@"C:\\Projects\\Demo\\asm\\wave.asm", @"C:\Projects\Demo\asm\wave.asm")]
+    [InlineData("/Projects/Demo/asm/wave.asm", "/Projects/Demo/asm/wave.asm")]
+    [InlineData("/home/user/Projects/Demo/asm/wave.asm", "/home/user/Projects/Demo/asm/wave.asm")]
+    public void CommandResult_ReadsSourcePathsOnEveryPlatform(string escaped, string expected)
+    {
+        var result = new GdbCommandResult(
+            $"^done,files=[{{file=\"asm/wave.asm\",fullname=\"{escaped}\",debug-fully-read=\"false\"}}]");
+
+        Assert.Equal(expected, result.GetObject("files").GetObject(0).GetValue("fullname"));
+    }
+
+    [Fact]
+    public void CommandResult_UnescapesQuotesInMessages()
+    {
+        var result = new GdbCommandResult("""^error,msg="No symbol \"foo\" in current context.\n" """.TrimEnd());
+
+        Assert.Equal("No symbol \"foo\" in current context.\n", result.ErrorMessage);
+    }
+
     [Fact]
     public void CommandResult_ReadsRunning()
     {

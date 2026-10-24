@@ -299,7 +299,7 @@ public class GdbSession(
 
         var summary = IsTargetRefusal(result.ErrorMessage) ? refusal : "The value could not be written.";
 
-        return $"{summary}\nGDB: {result.ErrorMessage}";
+        return $"{summary}\nGDB: {result.ErrorMessage.Trim()}";
     }
 
     private static bool IsTargetRefusal(string message)
