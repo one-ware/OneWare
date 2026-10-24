@@ -91,7 +91,7 @@ public class VariablesViewModel : ObservableObject
         row.Edit.Bits = BitsFor(raw);
         row.Edit.LockReason = long.TryParse(raw.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out _)
             ? null
-            : "Only numeric values can be edited";
+            : "Only whole numbers can be edited";
     }
 
     private void RenderAll()
