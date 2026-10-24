@@ -103,6 +103,31 @@ public interface IDebugSession
     public Task<string?> ReadMemoryAsync(string address, int byteCount);
 
     /// <summary>
+    /// Writes a register. <paramref name="name"/> is a name from
+    /// <see cref="DebugSessionState.Registers"/>; <paramref name="value"/> is the raw bit pattern,
+    /// which the backend fits to the register's width. Call only while halted. On success the
+    /// session reads the target again and publishes a fresh <see cref="State"/> — a write can
+    /// change more than the value written, such as the current frame when the program counter
+    /// moves, and no halt follows that would bring the panels up to date.
+    /// </summary>
+    public Task<DebugWriteResult> WriteRegisterAsync(string name, ulong value);
+
+    /// <summary>
+    /// Writes <paramref name="bytes"/> to memory, starting at <paramref name="address"/>, which
+    /// takes the same forms as in <see cref="ReadMemoryAsync"/>. The bytes go out in the order
+    /// given — arranging them for the target's byte order is up to the caller. Call only while
+    /// halted; on success the state is published again, as with <see cref="WriteRegisterAsync"/>.
+    /// </summary>
+    public Task<DebugWriteResult> WriteMemoryAsync(string address, byte[] bytes);
+
+    /// <summary>
+    /// Assigns <paramref name="value"/> to a variable from <see cref="DebugSessionState.Locals"/>;
+    /// the backend converts it to the variable's type. Call only while halted; on success the
+    /// state is published again, as with <see cref="WriteRegisterAsync"/>.
+    /// </summary>
+    public Task<DebugWriteResult> WriteVariableAsync(string name, long value);
+
+    /// <summary>
     /// Full paths of every source file that contributed to the loaded program, so a caller can
     /// tell a breakpoint that belongs to this program from one that only happens to share a
     /// running debug session (the breakpoint store is shared across every open file, not scoped

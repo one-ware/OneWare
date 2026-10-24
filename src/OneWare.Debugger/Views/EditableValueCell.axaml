@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="28"
+             x:Class="OneWare.Debugger.Views.EditableValueCell"
+             x:DataType="models:IEditableValueRow">
+
+    <UserControl.Styles>
+        <Style Selector="TextBox.invalid /template/ Border#border, TextBox.invalid:focus /template/ Border#border, TextBox.invalid:pointerover /template/ Border#border">
+            <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="4,1,2,1">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding Value}"
+                   VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis"
+                   IsVisible="{Binding !Edit.IsEditing}" />
+
+        <TextBox x:Name="EditBox"
+                 Grid.Column="0"
+                 Text="{Binding Edit.Text, Mode=TwoWay}"
+                 IsVisible="{Binding Edit.IsEditing}"
+                 Classes.invalid="{Binding Edit.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                 ToolTip.Tip="{Binding Edit.Error}"
+                 MinHeight="0"
+                 Padding="4,1"
+                 VerticalContentAlignment="Center"
+                 AutomationProperties.Name="Value">
+            <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding Edit.Session.SaveCommand}" />
+                <KeyBinding Gesture="Escape" Command="{Binding Edit.Session.CancelCommand}" />
+            </TextBox.KeyBindings>
+        </TextBox>
+
+        <Button Grid.Column="1"
+                Classes="icon small"
+                Margin="4,0,0,0"
+                IsVisible="{Binding !Edit.IsEditing}"
+                Command="{Binding Edit.Session.BeginEditCommand}"
+                CommandParameter="{Binding}"
+                ToolTip.Tip="{Binding Edit.Hint}"
+                ToolTip.ShowOnDisabled="True"
+                AutomationProperties.Name="Edit value">
+            <PathIcon Classes="small" Data="{StaticResource Icon.Edit}" />
+        </Button>
+
+        <Button Grid.Column="1"
+                Classes="icon small"
+                Margin="4,0,0,0"
+                IsVisible="{Binding Edit.IsEditing}"
+                Command="{Binding Edit.Session.SaveCommand}"
+                ToolTip.Tip="Save value"
+                AutomationProperties.Name="Save value">
+            <PathIcon Classes="small" Data="{StaticResource Icon.Save}" />
+        </Button>
+
+        <TextBlock Grid.Row="1"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   Margin="0,2,0,1"
+                   Text="{Binding Edit.Error}"
+                   IsVisible="{Binding Edit.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Foreground="{DynamicResource ErrorBrush}"
+                   FontSize="{DynamicResource FontSizeSmall}"
+                   TextWrapping="Wrap"
+                   AutomationProperties.LiveSetting="Assertive" />
+    </Grid>
+</UserControl>

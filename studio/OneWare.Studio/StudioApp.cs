@@ -6,6 +6,7 @@ using OneWare.Core.Data;
 using OneWare.Core.ModuleLogic;
 using OneWare.Core.Services;
 using OneWare.CruviAdapterExtensions;
+using OneWare.Debugger;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.MarkdownViewer;
@@ -100,5 +101,6 @@ public class StudioApp : App
         moduleCatalog.AddModule<VcdViewerModule>();
         moduleCatalog.AddModule<CruviAdapterExtensionsModule>();
         moduleCatalog.AddModule<MarkdownViewerModule>();
+        moduleCatalog.AddModule<DebuggerModule>();
     }
 }
