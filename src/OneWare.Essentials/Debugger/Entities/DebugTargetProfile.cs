@@ -45,6 +45,15 @@ public sealed record DebugTargetProfile
     public IReadOnlyList<string>? Registers { get; init; }
 
     /// <summary>
+    /// Names of the registers the target refuses to write; <see langword="null"/> means the
+    /// target has not said, and every register is offered for editing. A refused write only
+    /// shows <em>that</em> a value was not taken — the user has typed it by then, and nothing
+    /// tells a register that is read-only by design from one that refused for some other reason.
+    /// Stating it here lets the panel lock such a register before anything is typed.
+    /// </summary>
+    public IReadOnlyList<string>? ReadOnlyRegisters { get; init; }
+
+    /// <summary>
     /// How many breakpoints the target can hold at once; <see langword="null"/> means no limit.
     /// Stating it lets a caller keep the ones beyond that number unarmed instead of offering them
     /// to the target and collecting a refusal: a backend reports only <em>that</em> a breakpoint
