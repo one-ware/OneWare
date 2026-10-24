@@ -614,7 +614,7 @@ public class GdbSession(
         // lead to registers never being read again for the rest of the session.
         _registerNames = names;
         
-        var result = await RunCommandAsync("-data-list-register-values", "x"); // x = hexadecimal
+        var result = await RunCommandAsync("-data-list-register-values", "r"); // r = raw: hexadecimal, padded to the register width
         if (result.Status != CommandStatus.Done) return [];
 
         var values = result.GetObject("register-values");
