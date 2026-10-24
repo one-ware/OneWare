@@ -116,6 +116,24 @@ public interface IDebuggerService
     public Task<string?> ReadMemoryAsync(string address, int byteCount);
 
     /// <summary>
+    /// Forwards to <see cref="IDebugSession.WriteRegisterAsync"/> on <see cref="CurrentSession"/>.
+    /// Fails without asking the backend when no session is active or the target is running.
+    /// </summary>
+    public Task<DebugWriteResult> WriteRegisterAsync(string name, ulong value);
+
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.WriteMemoryAsync"/> on <see cref="CurrentSession"/>.
+    /// Fails without asking the backend when no session is active or the target is running.
+    /// </summary>
+    public Task<DebugWriteResult> WriteMemoryAsync(string address, byte[] bytes);
+
+    /// <summary>
+    /// Forwards to <see cref="IDebugSession.WriteVariableAsync"/> on <see cref="CurrentSession"/>.
+    /// Fails without asking the backend when no session is active or the target is running.
+    /// </summary>
+    public Task<DebugWriteResult> WriteVariableAsync(string name, long value);
+
+    /// <summary>
     /// Forwards to <see cref="IDebugSession.SendRawCommandAsync"/> on
     /// <see cref="CurrentSession"/>. Does nothing when no session is active.
     /// </summary>
