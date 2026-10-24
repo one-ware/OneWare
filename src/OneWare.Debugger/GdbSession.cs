@@ -23,6 +23,7 @@
 // Substantially rewritten in 2026 by Daniel Pour Bakhsh
 
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using OneWare.Debugger.Helpers;
 using OneWare.Essentials.Debugger.Entities;
@@ -257,7 +258,86 @@ public class GdbSession(
 
         return string.IsNullOrEmpty(contents) ? null : FormatBytes(contents);
     }
-    
+
+    public Task<DebugWriteResult> WriteRegisterAsync(string name, ulong value)
+    {
+        return AssignAsync($"${name}", $"0x{value:X}", "The target refused to change this register.");
+    }
+
+    public async Task<DebugWriteResult> WriteMemoryAsync(string address, byte[] bytes)
+    {
+        if (string.IsNullOrWhiteSpace(address) || bytes.Length == 0)
+            return DebugWriteResult.Failed("There is nothing to write.");
+
+        var result = await RunCommandAsync("-data-write-memory-bytes", Quote(address), Convert.ToHexString(bytes));
+        return await ConcludeWriteAsync(result, "The target refused to write to this address.");
+    }
+
+    public Task<DebugWriteResult> WriteVariableAsync(string name, long value)
+    {
+        return AssignAsync(name, value.ToString(CultureInfo.InvariantCulture),
+            "The target refused to change this variable.");
+    }
+
+    private async Task<DebugWriteResult> AssignAsync(string target, string value, string refusal)
+    {
+        var result = await RunCommandAsync("-data-evaluate-expression", Quote($"{target}={value}"));
+        return await ConcludeWriteAsync(result, refusal);
+    }
+
+    private async Task<DebugWriteResult> ConcludeWriteAsync(GdbCommandResult result, string refusal)
+    {
+        if (result.Status != CommandStatus.Done) return DebugWriteResult.Failed(Explain(result, refusal));
+
+        await RepublishHaltAsync();
+        return DebugWriteResult.Ok;
+    }
+
+    private static string Explain(GdbCommandResult result, string refusal)
+    {
+        if (string.IsNullOrWhiteSpace(result.ErrorMessage)) return DescribeFailure(result.Status);
+
+        var summary = IsTargetRefusal(result.ErrorMessage) ? refusal : "The value could not be written.";
+
+        return $"{summary}\nGDB: {result.ErrorMessage}";
+    }
+
+    private static bool IsTargetRefusal(string message)
+    {
+        return message.Contains("remote failure reply", StringComparison.OrdinalIgnoreCase) ||
+               message.StartsWith("Cannot access memory", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task RepublishHaltAsync()
+    {
+        await RunCommandAsync("-interpreter-exec", "console", Quote("maintenance flush register-cache"));
+
+        var frame = await RunCommandAsync("-stack-info-frame");
+
+        Publish(new DebugSessionState
+        {
+            IsRunning = false,
+            CurrentFrame = frame.Status == CommandStatus.Done ? ParseFrame(frame.GetObject("frame")) : State.CurrentFrame,
+            Registers = await ReadRegistersAsync(),
+            Locals = await ReadLocalsAsync()
+        });
+    }
+
+    private static string DescribeFailure(CommandStatus status)
+    {
+        return status switch
+        {
+            CommandStatus.Running => "The target is running.",
+            CommandStatus.Timeout => "GDB did not answer in time.",
+            _ => "GDB did not accept the value."
+        };
+    }
+
+    private static string Quote(string text)
+    {
+        return $"\"{text.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+    }
+
     public async Task<IReadOnlyList<string>?> GetSourceFilesAsync()                
     {                                                                              
         var result = await RunCommandAsync("-file-list-exec-source-files");        
