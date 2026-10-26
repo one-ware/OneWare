@@ -44,4 +44,5 @@ public abstract class WelcomeScreenItem : ObservableObject, IWelcomeScreenItem
 
     public string Name { get; }
     public ICommand? Command { get; }
+    public int Priority { get; init; }
 }

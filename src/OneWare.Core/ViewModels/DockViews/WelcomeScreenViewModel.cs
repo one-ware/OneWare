@@ -47,17 +47,24 @@ public class WelcomeScreenViewModel : Document, IWelcomeScreenReceiver
 
     public void HandleRegisterItemToNew(IWelcomeScreenStartItem item)
     {
-        NewItems.Add(item);
+        InsertByPriority(NewItems, item);
     }
 
     public void HandleRegisterItemToOpen(IWelcomeScreenStartItem item)
     {
-        OpenItems.Add(item);
+        InsertByPriority(OpenItems, item);
     }
 
     public void HandleRegisterItemToWalkthrough(IWelcomeScreenWalkthroughItem item)
     {
-        WalkthroughItems.Add(item);
+        InsertByPriority(WalkthroughItems, item);
+    }
+
+    private static void InsertByPriority<T>(IList<T> collection, T item) where T : IWelcomeScreenItem
+    {
+        var index = 0;
+        while (index < collection.Count && collection[index].Priority <= item.Priority) index++;
+        collection.Insert(index, item);
     }
 
     public void LoadRecentProjects()

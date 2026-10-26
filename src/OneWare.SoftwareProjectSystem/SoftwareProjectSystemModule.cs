@@ -56,12 +56,14 @@ public class SoftwareProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("new_software_project", "New C/C++ Project...",
                 new AsyncRelayCommand(manager.NewProjectDialogAsync))
             {
+                Priority = 4,
                 Icon = new IconModel("SoftwareProject")
             });
         welcomeScreenService.RegisterItemToOpen("open_software_project",
             new WelcomeScreenStartItem("open_software_project", "Open C/C++ Project...",
                 new AsyncRelayCommand(() => projectExplorerService.LoadProjectFileDialogAsync(manager, fileType)))
             {
+                Priority = 4,
                 Icon = new IconModel("SoftwareProject")
             });
 
@@ -70,13 +72,14 @@ public class SoftwareProjectSystemModule : OneWareModuleBase
             {
                 Header = "C/C++ Project",
                 Command = new AsyncRelayCommand(manager.NewProjectDialogAsync),
-                Priority = 2,
+                Priority = 4,
                 Icon = new IconModel("SoftwareProject")
             });
         windowService.RegisterMenuItem("MainWindow_MainMenu/File/Open",
             new MenuItemModel("SoftwareProject")
             {
                 Header = "C/C++ Project",
+                Priority = 4,
                 Command = new AsyncRelayCommand(() => projectExplorerService.LoadProjectFileDialogAsync(manager, fileType)),
                 Icon = new IconModel("SoftwareProject")
             });

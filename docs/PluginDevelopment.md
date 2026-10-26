@@ -522,7 +522,9 @@ Dockable serial monitor placeholder; no additional API surface today.
 #### `IWelcomeScreenService` / `IWelcomeScreenItem`
 
 - `RegisterItemToNew`, `RegisterItemToOpen`, `RegisterItemToWalkthrough`: add welcome screen items.
-- `IWelcomeScreenItem` provides `Name`, `Icon`, and `Command` for UI rendering.
+- `IWelcomeScreenItem` provides `Name`, `Icon`, `Command` and `Priority` (lower comes first, default `0`; equal
+  priorities keep registration order) for UI rendering. Built-in project types use `3`+ so plugin items with the
+  default priority appear first.
 
 #### `ICompositeServiceProvider` (src/OneWare.Essentials/Services/ICompositeServiceProvider.cs)
 

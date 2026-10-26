@@ -64,6 +64,7 @@ public class ProjectExplorerModule : OneWareModuleBase
             {
                 Header = "File",
                 Command = new RelayCommand(() => _ = vm.OpenFileDialogAsync()),
+                Priority = 10,
                 Icon = new IconModel("VsImageLib.NewFileCollection16X")
             });
 

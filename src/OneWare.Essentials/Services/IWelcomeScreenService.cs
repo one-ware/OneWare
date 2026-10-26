@@ -19,6 +19,11 @@ public interface IWelcomeScreenItem : INotifyPropertyChanged
     /// Command executed when the item is activated.
     /// </summary>
     ICommand? Command { get; }
+    /// <summary>
+    /// Sort order within its section; lower values come first. Items with equal priority keep
+    /// their registration order.
+    /// </summary>
+    int Priority => 0;
 }
 
 public interface IWelcomeScreenService

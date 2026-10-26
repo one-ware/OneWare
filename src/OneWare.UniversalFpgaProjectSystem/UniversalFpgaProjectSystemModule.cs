@@ -38,6 +38,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("new_file", "New FPGA Project...",
                 new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()))
             {
+                Priority = 3,
                 Icon = new IconModel("UniversalProject")
             });
 
@@ -51,6 +52,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
                             Patterns = [$"*{UniversalFpgaProjectRoot.ProjectFileExtension}"]
                         })))
             {
+                Priority = 3,
                 Icon = new IconModel("UniversalProject")
             });
 
@@ -69,7 +71,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             {
                 Header = "FPGA Project",
                 Command = new AsyncRelayCommand(() => _ = manager.NewProjectDialogAsync()),
-                Priority = 1,
+                Priority = 3,
                 Icon = new IconModel("UniversalProject")
             });
 
@@ -77,6 +79,7 @@ public class UniversalFpgaProjectSystemModule : OneWareModuleBase
             new MenuItemModel("FpgaProject")
             {
                 Header = "FPGA Project",
+                Priority = 3,
                 Command = new AsyncRelayCommand(() => serviceProvider.Resolve<IProjectExplorerService>()
                     .LoadProjectFileDialogAsync(manager,
                         new FilePickerFileType(

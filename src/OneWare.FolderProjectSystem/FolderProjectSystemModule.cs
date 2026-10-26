@@ -35,6 +35,7 @@ public class FolderProjectSystemModule : OneWareModuleBase
             new WelcomeScreenStartItem("open_folder", "Open folder...", new RelayCommand(() =>
                 _ = serviceProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)))
             {
+                Priority = 11,
                 Icon = new IconModel("VsImageLib.Folder16X")
             });
 
@@ -42,6 +43,7 @@ public class FolderProjectSystemModule : OneWareModuleBase
             new MenuItemModel("Folder")
             {
                 Header = "Folder",
+                Priority = 11,
                 Command = new RelayCommand(() =>
                     _ = serviceProvider.Resolve<IProjectExplorerService>().LoadProjectFolderDialogAsync(manager)),
                 Icon = new IconModel("VsImageLib.OpenFolder16X")
