@@ -784,14 +784,22 @@ public partial class ChatSessionViewModel : ObservableObject
 
     private bool TryDequeuePendingLocal(string content, out PendingLocalMessage pending)
     {
-        if (_pendingLocalMessages.Count > 0 && _pendingLocalMessages.Peek().Content == content)
+        // Echoes don't always arrive in send order (a steered message is applied before
+        // earlier queued ones), so match the oldest pending entry with the same content.
+        var match = _pendingLocalMessages.FirstOrDefault(x => string.Equals(x.Content, content, StringComparison.Ordinal));
+        if (match == null)
         {
-            pending = _pendingLocalMessages.Dequeue();
-            return true;
+            pending = default!;
+            return false;
         }
 
-        pending = default!;
-        return false;
+        var remaining = _pendingLocalMessages.Where(x => !ReferenceEquals(x, match)).ToArray();
+        _pendingLocalMessages.Clear();
+        foreach (var entry in remaining)
+            _pendingLocalMessages.Enqueue(entry);
+
+        pending = match;
+        return true;
     }
 
     private bool TryDiscardCancelledQueuedMessage(string content)
