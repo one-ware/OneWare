@@ -121,6 +121,23 @@ public interface IPackageService : INotifyPropertyChanged
     Task<CompatibilityReport> CheckCompatibilityAsync(string packageId, PackageVersion version);
 
     /// <summary>
+    /// Resolves the dependencies that have to be installed before <paramref name="version"/> of a package.
+    /// Installing the package installs them automatically, callers can use this to confirm them first.
+    /// </summary>
+    PackageDependencyPlan ResolveDependencies(string packageId, PackageVersion version)
+    {
+        return PackageDependencyPlan.Empty;
+    }
+
+    /// <summary>
+    /// Installed packages whose installed version depends on the package with <paramref name="packageId"/>.
+    /// </summary>
+    IReadOnlyList<IPackageState> GetInstalledDependents(string packageId)
+    {
+        return [];
+    }
+
+    /// <summary>
     /// Downloads a package license.
     /// </summary>
     Task<string?> DownloadLicenseAsync(Package package);

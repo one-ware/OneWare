@@ -6,7 +6,8 @@ public enum PackageInstallResultReason
     AlreadyInstalled,
     NotFound,
     ErrorDownloading,
-    Incompatible
+    Incompatible,
+    MissingDependency
 }
 
 public class PackageInstallResult

@@ -1,5 +1,6 @@
 using System.Reflection;
 using OneWare.Essentials.Helpers;
+using OneWare.Essentials.PackageManager.Compatibility;
 
 namespace OneWare.Core.Services;
 
@@ -38,5 +39,41 @@ public static class PluginAssemblyLoader
 
         assemblyName = null!;
         return false;
+    }
+
+    /// <summary>
+    ///     Reads the assemblies a plugin requires (<c>compatibility.txt</c>) and the managed assemblies it ships.
+    /// </summary>
+    public static PluginLoadInfo Describe(string pluginPath)
+    {
+        var required = new List<string>();
+        var provided = new List<string>();
+
+        try
+        {
+            var compatibilityFile = Path.Combine(pluginPath, "compatibility.txt");
+            if (File.Exists(compatibilityFile))
+                required.AddRange(PluginCompatibilityChecker.ReadRequiredAssemblies(File.ReadAllText(compatibilityFile)));
+
+            foreach (var file in Directory.GetFiles(pluginPath, "*.dll", SearchOption.AllDirectories))
+                if (ShouldProbePluginAssembly(pluginPath, file) && TryGetManagedAssemblyName(file, out var name) &&
+                    name.Name != null)
+                    provided.Add(name.Name);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // An unreadable plugin keeps its position, loading it reports the actual problem
+        }
+
+        return new PluginLoadInfo(pluginPath, required, provided);
+    }
+
+    /// <summary>
+    ///     Orders plugin folders so plugins that extend another plugin are loaded after it.
+    /// </summary>
+    public static IReadOnlyList<string> SortByDependencies(IEnumerable<string> pluginPaths)
+    {
+        var infos = pluginPaths.Select(Describe).ToList();
+        return PluginLoadOrder.Sort(infos).Select(x => x.Path).ToList();
     }
 }

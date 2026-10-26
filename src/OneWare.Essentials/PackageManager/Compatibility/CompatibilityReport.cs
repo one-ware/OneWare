@@ -31,6 +31,8 @@ public class CompatibilityReport(
 
             if (StudioUpdateSuggested)
                 report += "This package requires a newer Version of **OneWare Studio**! \n\n > Please update **OneWare Studio** to the latest version.\n\n";
+            else if (Issues.Count > 0 && Issues.All(r => r.Kind == CompatibilityRecordKind.MissingDependency))
+                report += "This package requires components that are **not available**. \n\n > Install the extensions it depends on first.\n\n";
             else
                 report += "This package version appears to be outdated and is **not compatible**. \n\n";
 
