@@ -10,6 +10,7 @@ using Avalonia.VisualTree;
 using AvaloniaEdit;
 using ColorTextBlock.Avalonia;
 using OneWare.Chat.ViewModels;
+using OneWare.Chat.ViewModels.ChatMessages;
 using OneWare.Essentials.Services;
 
 namespace OneWare.Chat.Views;
@@ -18,6 +19,7 @@ public partial class ChatView : UserControl
 {
     private CompositeDisposable _disposables = new();
     private string _contextMenuSelection = string.Empty;
+    private string _contextMenuMessage = string.Empty;
     
     public ChatView()
     {
@@ -27,6 +29,9 @@ public partial class ChatView : UserControl
         CommandBox.AddHandler(KeyDownEvent, OnCommandBoxKeyDown, RoutingStrategies.Tunnel);
 
         ScrollViewer.ScrollChanged += OnMessagesScrollChanged;
+
+        // Tunnel so the message under the pointer is known before the flyout opens.
+        ItemsControl.AddHandler(ContextRequestedEvent, OnMessagesContextRequested, RoutingStrategies.Tunnel);
     }
 
     // Whether the conversation follows its end. Content that grows after it was added (a tool block that
@@ -258,8 +263,37 @@ public partial class ChatView : UserControl
         // it again when the menu item is clicked can come up empty.
         _contextMenuSelection = GetSelectedMessageText();
 
-        if (sender is MenuFlyout { Items.Count: > 0 } flyout && flyout.Items[0] is MenuItem copyItem)
+        if (sender is not MenuFlyout flyout) return;
+        if (flyout.Items.Count > 0 && flyout.Items[0] is MenuItem copyItem)
             copyItem.IsEnabled = _contextMenuSelection.Length > 0;
+        if (flyout.Items.Count > 1 && flyout.Items[1] is MenuItem copyMessageItem)
+            copyMessageItem.IsEnabled = _contextMenuMessage.Length > 0;
+    }
+
+    private void OnMessagesContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        _contextMenuMessage = string.Empty;
+
+        for (var visual = e.Source as Visual; visual != null && visual != ItemsControl; visual = visual.GetVisualParent())
+        {
+            var text = (visual as StyledElement)?.DataContext switch
+            {
+                ChatMessageAssistantViewModel assistant => assistant.Content,
+                ChatMessageUserViewModel user => user.Message,
+                _ => null
+            };
+            if (text == null) continue;
+
+            _contextMenuMessage = text;
+            return;
+        }
+    }
+
+    private void OnCopyMessageClick(object? sender, RoutedEventArgs e)
+    {
+        if (_contextMenuMessage.Length == 0) return;
+
+        TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(_contextMenuMessage);
     }
 
     private void OnCopySelectionClick(object? sender, RoutedEventArgs e)

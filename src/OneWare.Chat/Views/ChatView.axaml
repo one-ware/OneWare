@@ -158,6 +158,11 @@
                                                 <Image Source="{DynamicResource BoxIcons.RegularCopy}" />
                                             </MenuItem.Icon>
                                         </MenuItem>
+                                        <MenuItem Header="Copy Message" Click="OnCopyMessageClick">
+                                            <MenuItem.Icon>
+                                                <PathIcon Classes="small" Data="{StaticResource Icon.Copy}" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                     </MenuFlyout>
                                 </ItemsControl.ContextFlyout>
                                 <ItemsControl.Styles>

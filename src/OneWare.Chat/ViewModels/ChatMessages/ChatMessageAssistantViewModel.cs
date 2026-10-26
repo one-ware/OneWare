@@ -20,14 +20,23 @@ public class ChatMessageAssistantViewModel : ObservableObject, IChatMessage, IEs
     public string Content
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(CanCopy));
+        }
     } = string.Empty;
 
     public bool IsStreaming
     {
         get;
-        set => SetProperty(ref field, value);
+        set
+        {
+            if (SetProperty(ref field, value)) OnPropertyChanged(nameof(CanCopy));
+        }
     }
+
+    /// <summary>Whether the finished message can be copied from its footer.</summary>
+    public bool CanCopy => !IsStreaming && !string.IsNullOrWhiteSpace(Content);
 
     /// <summary>Name of the model that wrote this message, when the chat service reports it.</summary>
     [DataMember]
@@ -57,5 +66,8 @@ public class ChatMessageAssistantViewModel : ObservableObject, IChatMessage, IEs
 
     public bool HasModel => ShowModel && !string.IsNullOrWhiteSpace(Model);
 
-    public double EstimateHeight(double width) => ChatHeightEstimation.EstimateMarkdown(Content, width);
+    public double EstimateHeight(double width) =>
+        ChatHeightEstimation.EstimateMarkdown(Content, width, CanCopy || HasModel ? FooterHeight : 0);
+
+    private const double FooterHeight = 22;
 }

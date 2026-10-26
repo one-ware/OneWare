@@ -2,24 +2,48 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:OneWare.Chat.ViewModels"
              xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
              mc:Ignorable="d"
              x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageAssistantView"
              x:DataType="chatMessages:ChatMessageAssistantViewModel">
 
-    <Border>
-        <StackPanel>
-            <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
+    <UserControl.Styles>
+        <!-- Intermediate messages reveal the copy button on hover; the final answer of a turn keeps it visible. -->
+        <Style Selector="Button.copy-message">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="UserControl:pointerover Button.copy-message, Button.copy-message.pinned, Button.copy-message:focus-visible">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </UserControl.Styles>
 
-            <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasModel}"
-                        ToolTip.Tip="Model that answered" Margin="0 2 0 0">
-                <TextBlock Text="{Binding Model}" FontSize="11" VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"
-                           Foreground="{DynamicResource ThemeForegroundLowBrush}" />
-            </StackPanel>
+    <StackPanel>
+        <controls:MarkdownViewer SelectionEnabled="True" Markdown="{Binding Content}" />
+
+        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0 2 0 0">
+            <StackPanel.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                    <Binding Path="CanCopy" />
+                    <Binding Path="HasModel" />
+                </MultiBinding>
+            </StackPanel.IsVisible>
+
+            <Button Name="CopyButton" Classes="ghost icon small copy-message" Classes.pinned="{Binding HasModel}"
+                    Width="20" Height="20" IsVisible="{Binding CanCopy}"
+                    ToolTip.Tip="Copy message (Markdown)" Click="OnCopyClick">
+                <PathIcon Name="CopyIcon" Classes="small muted" Data="{StaticResource Icon.Copy}" />
+            </Button>
+
+            <TextBlock Text="{Binding Model}" Classes="caption" VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" IsVisible="{Binding HasModel}"
+                       ToolTip.Tip="Model that answered" />
         </StackPanel>
-    </Border>
+    </StackPanel>
 
 </UserControl>
