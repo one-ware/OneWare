@@ -4,8 +4,10 @@ using Microsoft.Extensions.Logging;
 using OneWare.Debugger.ViewModels.Main;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
+using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.ProjectActions;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 
@@ -20,14 +22,16 @@ namespace OneWare.Debugger.ViewModels;
 // only opened while a session is running.
 public partial class DebuggerViewModel : ExtendedTool
 {
-    public const string IconKey = "Material.BugReport";
+    public const string IconKey = "Codeicons.Debug";
 
     private readonly IDebuggerService _debuggerService;
     private readonly InspectorEditSession _editSession;
     private readonly ILogger _logger;
     private readonly IMainDockService _mainDockService;
+    private readonly IProjectActionService _projectActionService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
+    private ExtendedTextEditor? _executionLineEditor;
 
     [ObservableProperty] private bool _isRunning;
 
@@ -43,7 +47,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
         IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
-        MainPanelViewModel mainPanel, InspectorEditSession editSession) : base(IconKey)
+        IProjectActionService projectActionService, MainPanelViewModel mainPanel, InspectorEditSession editSession) : base(IconKey)
     {
         _debuggerService = debuggerService;
         _editSession = editSession;
@@ -51,6 +55,7 @@ public partial class DebuggerViewModel : ExtendedTool
         _settingsService = settingsService;
         _projectExplorerService = projectExplorerService;
         _mainDockService = mainDockService;
+        _projectActionService = projectActionService;
 
         // Set before subscribing -> even the first state change accesses the tabs.
         MainPanel = mainPanel;
@@ -72,6 +77,23 @@ public partial class DebuggerViewModel : ExtendedTool
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
+        // A project type that knows how to debug its projects (e.g. build first, then launch the exact
+        // artifact) runs through the action service; otherwise start directly so the console is usable
+        // even without a target.
+        if (_projectActionService.CanExecute(ProjectActionKind.Debug))
+        {
+            await _projectActionService.ExecuteAsync(ProjectActionKind.Debug);
+            return;
+        }
+
+        await StartSessionAsync();
+    }
+
+    /// <summary>
+    /// Starts a session for the active project through a target preparer or with GDB directly.
+    /// </summary>
+    public async Task<bool> StartSessionAsync()
+    {
         // On start, the traffic with the backend is what matters - so bring the matching tab to the
         // front and make the panel itself visible.
         MainPanel.ShowConsole();
@@ -80,10 +102,7 @@ public partial class DebuggerViewModel : ExtendedTool
         // Which target applies is stated in the project -> the matching preparer reports itself,
         // instead of being listed in a selection in the bar.
         if (_debuggerService.TargetPreparers.FirstOrDefault(CanPrepareSafely) is { } preparer)
-        {
-            await StartWithPreparerAsync(preparer);
-            return;
-        }
+            return await StartWithPreparerAsync(preparer);
 
         StatusText = "Starting GDB...";
 
@@ -94,24 +113,43 @@ public partial class DebuggerViewModel : ExtendedTool
         // difference only shows seconds later as a connection error on a port that
         // nobody brought up. The number separates the two cases: 0 means no plugin is
         // loaded at all, otherwise none was responsible for this project.
-        MainPanel.Console.Append(
+        MainPanel.Console.AppendInfo(
             $"No target preparer is responsible for the active project " +
             $"({_debuggerService.TargetPreparers.Count} registered). Using the endpoint from " +
             $"Tools > Debugger: {request.RemoteEndpoint ?? "none"}.");
 
         if (!await _debuggerService.StartAsync(request))
         {
-            MainPanel.Console.Append("GDB could not be started.");
+            MainPanel.Console.AppendInfo("GDB could not be started.");
             StatusText = "Start failed";
-            return;
+            return false;
         }
 
         // Only now, not before the start: otherwise the note would stand before GDB's version line
         // and read like an abort, although nothing has failed.
         if (request.ExecutablePath == null && request.RemoteEndpoint == null)
-            MainPanel.Console.Append("No executable in the active project and no remote endpoint under " +
+            MainPanel.Console.AppendInfo("No executable in the active project and no remote endpoint under " +
                                      "Tools > Debugger - running without a target. Registers, memory and " +
                                      "stepping need one.");
+
+        return true;
+    }
+
+    /// <summary>
+    /// Starts a session with a launch request built by a project type, e.g. after it built the program.
+    /// </summary>
+    public async Task<bool> StartSessionAsync(DebugLaunchRequest request)
+    {
+        MainPanel.ShowConsole();
+        _mainDockService.Show(this, DockShowLocation.Bottom);
+
+        StatusText = "Starting GDB...";
+
+        if (await _debuggerService.StartAsync(request)) return true;
+
+        MainPanel.Console.AppendInfo("GDB could not be started.");
+        StatusText = "Start failed";
+        return false;
     }
 
     // Starts through a preparer: it brings up its target and supplies the
@@ -120,17 +158,18 @@ public partial class DebuggerViewModel : ExtendedTool
     // program. Until then there is no session, which is why the start button is locked through
     // IsPreparing and not through IsSessionActive.
     // What happens meanwhile is reported by the preparer itself; here it only says that something runs.
-    private async Task StartWithPreparerAsync(IDebugTargetPreparer preparer)
+    private async Task<bool> StartWithPreparerAsync(IDebugTargetPreparer preparer)
     {
         IsPreparing = true;
         StatusText = $"Preparing {preparer.DisplayName}...";
 
         try
         {
-            if (await _debuggerService.StartAsync(preparer)) return;
+            if (await _debuggerService.StartAsync(preparer)) return true;
 
-            MainPanel.Console.Append($"{preparer.DisplayName} could not be started.");
+            MainPanel.Console.AppendInfo($"{preparer.DisplayName} could not be started.");
             StatusText = "Start failed";
+            return false;
         }
         finally
         {
@@ -212,6 +251,13 @@ public partial class DebuggerViewModel : ExtendedTool
     private string? FindProjectExecutable()
     {
         if (_projectExplorerService.ActiveProject is not { } project) return null;
+
+        // The exact file from the last build wins over any guess.
+        if (_projectActionService.GetArtifacts(project)
+                .FirstOrDefault(x => x.Kind is BuildArtifactKind.Executable or BuildArtifactKind.Elf
+                                     && File.Exists(x.Path)) is { } artifact)
+            return artifact.Path;
+
         try
         {
             if (DeclaredExecutable(project) is { } declared) return declared;
@@ -259,8 +305,9 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!IsSessionActive)
         {
-            if (wasActive) MainPanel.Console.Append("GDB exited.");
+            if (wasActive) MainPanel.Console.AppendInfo("GDB exited.");
             DetachFromSession();
+            ClearExecutionLine();
             MainPanel.Registers.Clear();
             MainPanel.Memory.ClearValues();
             StatusText = "No session";
@@ -309,12 +356,25 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private async Task JumpToCurrentFrameAsync(DebugSessionState state)
     {
-        if (state.CurrentFrame is not { File: { } file, Line: > 0 } frame) return;
-        if (!File.Exists(file)) return;
+        if (state.IsRunning || state.CurrentFrame is not { File: { } file, Line: > 0 } frame || !File.Exists(file))
+        {
+            ClearExecutionLine();
+            return;
+        }
 
         try
         {
-            if (await _mainDockService.OpenFileAsync(file) is IEditor editor) editor.JumpToLine(frame.Line);
+            if (await _mainDockService.OpenFileAsync(file) is not IEditor editor) return;
+
+            // The halt may already be over while the file was opening.
+            if (!ReferenceEquals(_debuggerService.State, state)) return;
+
+            if (!ReferenceEquals(_executionLineEditor, editor.Editor)) ClearExecutionLine();
+
+            // No selection: the execution line has its own marker, independent of what the user selects.
+            editor.JumpToLine(frame.Line, false);
+            editor.Editor.ExecutionLineRenderer.Line = frame.Line;
+            _executionLineEditor = editor.Editor;
         }
         catch (Exception e)
         {
@@ -322,9 +382,17 @@ public partial class DebuggerViewModel : ExtendedTool
         }
     }
 
+    private void ClearExecutionLine()
+    {
+        if (_executionLineEditor == null) return;
+
+        _executionLineEditor.ExecutionLineRenderer.Line = null;
+        _executionLineEditor = null;
+    }
+
     private void OnOutputReceived(object? sender, string line)
     {
-        MainPanel.Console.Append(line);
+        MainPanel.Console.AppendOutput(line);
     }
 
 
@@ -340,7 +408,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private void OnCommandSent(object? sender, string command)
     {
-        MainPanel.Console.Append($"> {command}", true);
+        MainPanel.Console.AppendCommand(command);
     }
 
     private bool CanStart()

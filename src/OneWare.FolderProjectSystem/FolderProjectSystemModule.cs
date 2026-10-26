@@ -14,6 +14,7 @@ public class FolderProjectSystemModule : OneWareModuleBase
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<FolderProjectManager>();
+        services.AddSingleton<FolderProjectAiFunctions>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -23,6 +24,10 @@ public class FolderProjectSystemModule : OneWareModuleBase
         serviceProvider
             .Resolve<IProjectManagerService>()
             .RegisterProjectManager(FolderProjectRoot.ProjectType, manager);
+
+        // The chat is optional; resolving it unconditionally would build an unused provider.
+        if (serviceProvider.IsRegistered<IAiFunctionProvider>())
+            serviceProvider.Resolve<FolderProjectAiFunctions>().Register(serviceProvider.Resolve<IAiFunctionProvider>());
 
         var welcomeScreenService = serviceProvider.Resolve<IWelcomeScreenService>();
 

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.ProjectActions;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
@@ -93,8 +94,9 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     {
         if (EnsureProject() is not { } project) return;
 
-        await ProjectExplorerService.SaveOpenFilesForProjectAsync(project);
-        await FpgaService.RunToolchainAsync(project);
+        // Through the action service, so the Build menu, toolbar and busy state stay consistent.
+        await ContainerLocator.Container.Resolve<IProjectActionService>()
+            .ExecuteAsync(ProjectActionKind.Build, project);
     }
 
     public async Task OpenPinPlannerAsync()
@@ -126,12 +128,7 @@ public class UniversalFpgaProjectToolBarViewModel : ObservableObject
     public async Task DownloadAsync()
     {
         if (ProjectExplorerService.ActiveProject is UniversalFpgaProjectRoot { Loader: not null } project)
-        {
-            var loader = FpgaService.Loaders.FirstOrDefault(x => x.Id == project.Loader);
-
-            if (loader == null) return;
-            
-            await loader.DownloadAsync(project);
-        }
+            await ContainerLocator.Container.Resolve<IProjectActionService>()
+                .ExecuteAsync(ProjectActionKind.Program, project);
     }
 }

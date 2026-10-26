@@ -138,6 +138,13 @@ public interface IDebugSession
     public Task<IReadOnlyList<string>?> GetSourceFilesAsync();
 
     /// <summary>
+    /// Evaluates <paramref name="expression"/> (e.g. a variable or member access) in the current
+    /// frame and returns the value as the backend formats it, or <see langword="null"/> if it
+    /// cannot be evaluated. Call only while halted. The default implementation evaluates nothing.
+    /// </summary>
+    public Task<string?> EvaluateExpressionAsync(string expression) => Task.FromResult<string?>(null);
+
+    /// <summary>
     /// Sends a command verbatim to the backend. The response arrives through
     /// <see cref="OutputReceived"/>, like any other backend output.
     /// </summary>

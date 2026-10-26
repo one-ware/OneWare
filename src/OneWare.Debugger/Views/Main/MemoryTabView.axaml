@@ -9,77 +9,75 @@
              x:Class="OneWare.Debugger.Views.Main.MemoryTabView"
              x:DataType="main:MemoryTabViewModel">
 
-    <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="0,0,0,1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            <DockPanel Margin="4" LastChildFill="True">
-                <Button DockPanel.Dock="Right" Margin="4,0,0,0" Width="24" Height="24"
-                        Command="{Binding ClearWatchesCommand}" ToolTip.Tip="Clear all watches">
-                    <Image Width="14" Height="14" Source="{DynamicResource Material.DeleteSweep}" />
+    <!-- Same surface as the grid and no header bar: the address field sits on it like the
+         search field of the project explorer. -->
+    <DockPanel LastChildFill="True" Background="{DynamicResource ThemeControlLowBrush}">
+        <DockPanel DockPanel.Dock="Top" LastChildFill="True" Margin="4">
+            <StackPanel DockPanel.Dock="Right" Classes="toolbar" Margin="4 0 0 0">
+                <Button Classes="icon" Command="{Binding RemoveWatchCommand}"
+                        ToolTip.Tip="Remove selected addresses (Del)">
+                    <PathIcon Data="{StaticResource Icon.Remove}" />
                 </Button>
-                <Button DockPanel.Dock="Right" Width="24" Height="24"
-                        Command="{Binding RemoveWatchCommand}" ToolTip.Tip="Remove selected addresses">
-                    <Image Width="14" Height="14" Source="{DynamicResource Material.Remove}" />
+                <Button Classes="icon" Command="{Binding ClearWatchesCommand}" ToolTip.Tip="Clear all watches">
+                    <PathIcon Data="{StaticResource Icon.ClearAll}" />
                 </Button>
-                <Button DockPanel.Dock="Right" Width="24" Height="24"
-                        Command="{Binding AddWatchCommand}"
-                        ToolTip.Tip="Watch this address">
-                    <Image Width="14" Height="14"
-                           Source="{DynamicResource MaterialDesign.EyeTracking}" />
-                </Button>
-                <TextBox Text="{Binding AddressText, Mode=TwoWay}"
-                         Watermark="{Binding AddressWatermark}"
-                         FontFamily="{DynamicResource EditorFont}"
-                         Background="{DynamicResource ThemeControlLowBrush}"
-                         BorderThickness="0"
-                         Height="24"
-                         Padding="6,2">
-                    <TextBox.KeyBindings>
-                        <KeyBinding Gesture="Enter" Command="{Binding AddWatchCommand}" />
-                    </TextBox.KeyBindings>
-                </TextBox>
-            </DockPanel>
-        </Border>
+            </StackPanel>
 
-        <views:ValueFormatBar DockPanel.Dock="Top" DataContext="{Binding ValueFormat}" />
+            <TextBox Name="AddressBox" Classes="search mono" FontFamily="{DynamicResource EditorFont}"
+                     TextWrapping="NoWrap" AcceptsReturn="False"
+                     Text="{Binding AddressText, Mode=TwoWay}"
+                     Watermark="{Binding AddressWatermark}">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding AddWatchCommand}" />
+                </TextBox.KeyBindings>
+                <TextBox.InnerLeftContent>
+                    <PathIcon Classes="small muted" Margin="4 0 6 0" VerticalAlignment="Center"
+                              Data="{StaticResource Icon.Search}" />
+                </TextBox.InnerLeftContent>
+                <TextBox.InnerRightContent>
+                    <Button Classes="icon small" VerticalAlignment="Center" Margin="0 0 2 0"
+                            Command="{Binding AddWatchCommand}" ToolTip.Tip="Watch this address (Enter)"
+                            IsVisible="{Binding #AddressBox.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Eye}" />
+                    </Button>
+                </TextBox.InnerRightContent>
+            </TextBox>
+        </DockPanel>
 
-        <Border Margin="4"
-                CornerRadius="4"
-                ClipToBounds="True"
-                BorderThickness="1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                Background="{DynamicResource ThemeBackgroundBrush}">
+        <Grid>
             <DataGrid x:Name="WatchGrid"
                       ItemsSource="{Binding Watches}"
                       SelectionMode="Extended"
                       SelectionChanged="OnSelectionChanged"
-                      GridLinesVisibility="Vertical"
-                      VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
+                      Background="Transparent"
+                      RowBackground="Transparent"
+                      GridLinesVisibility="None"
                       BorderThickness="0"
                       AutoGenerateColumns="False"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch"
+                      CanUserReorderColumns="False"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto">
                 <DataGrid.KeyBindings>
                     <KeyBinding Gesture="Delete" Command="{Binding RemoveWatchCommand}" />
                 </DataGrid.KeyBindings>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Address" Width="*" IsReadOnly="True"
+                    <DataGridTextColumn Header="Address" Width="*" IsReadOnly="True" FontFamily="{DynamicResource EditorFont}"
                                         Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
-                    <DataGridTextColumn Header="Bytes" Width="*" IsReadOnly="True"
+                    <DataGridTextColumn Header="Bytes" Width="*" IsReadOnly="True" FontFamily="{DynamicResource EditorFont}"
                                         Binding="{CompiledBinding Bytes, DataType=models:MemoryRow}" />
                     <DataGridTemplateColumn Header="Value" Width="*" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="models:MemoryRow">
-                                <views:EditableValueCell />
+                                <views:EditableValueCell FontFamily="{DynamicResource EditorFont}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-        </Border>
+
+            <Border Classes="empty-state" IsVisible="{Binding !Watches.Count}" IsHitTestVisible="False">
+                <TextBlock TextWrapping="Wrap" Text="Enter an address or symbol above and press Enter to watch memory." />
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

@@ -1,9 +1,10 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
              xmlns:main="clr-namespace:OneWare.Debugger.Views.Main"
+             xmlns:views="clr-namespace:OneWare.Debugger.Views"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="260"
              x:Class="OneWare.Debugger.Views.DebuggerView"
              x:DataType="viewModels:DebuggerViewModel"
@@ -11,42 +12,55 @@
 
     <DockPanel LastChildFill="True">
 
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource ThemeBackgroundBrush}"
-                BorderThickness="0,0,0,1"
-                BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-            <StackPanel Orientation="Horizontal" Spacing="2" Margin="4" VerticalAlignment="Center">
-                <Button Width="24" Height="24" Command="{Binding StartCommand}" ToolTip.Tip="Start Debugging">
-                    <Image Source="{DynamicResource Material.BugReport}" />
-                </Button>
-                <Button Width="24" Height="24" Command="{Binding PauseCommand}" ToolTip.Tip="Pause"
-                        IsVisible="{Binding IsRunning}">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Pause}" />
-                </Button>
-                <Button Width="24" Height="24" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Stop}" />
-                </Button>
-                <Button Width="24" Height="24" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
-                        IsVisible="{Binding !IsRunning}">
-                    <Image Source="{DynamicResource MaterialSymbols.Resume}" />
-                </Button>
+        <Border DockPanel.Dock="Top" Classes="header" Padding="4">
+            <DockPanel LastChildFill="True">
+                <StackPanel Classes="toolbar">
+                    <Button Classes="icon" Command="{Binding StartCommand}" ToolTip.Tip="Start Debugging">
+                        <PathIcon Classes="warning" Data="{StaticResource Icon.Debug}" />
+                    </Button>
+                    <Button Classes="icon" Command="{Binding ContinueCommand}" ToolTip.Tip="Continue"
+                            IsVisible="{Binding !IsRunning}">
+                        <PathIcon Classes="success" Data="{StaticResource Icon.StepForward}" />
+                    </Button>
+                    <Button Classes="icon" Command="{Binding PauseCommand}" ToolTip.Tip="Pause"
+                            IsVisible="{Binding IsRunning}">
+                        <PathIcon Data="{StaticResource Icon.Pause}" />
+                    </Button>
+                    <Button Classes="icon" Command="{Binding StopCommand}" ToolTip.Tip="Stop">
+                        <PathIcon Classes="error" Data="{StaticResource Icon.Stop}" />
+                    </Button>
 
-                <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+                    <Border Classes="divider vertical" Margin="4 4" />
 
-                <Button Width="24" Height="24" Command="{Binding StepOverCommand}" ToolTip.Tip="Step Over">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Over}" />
-                </Button>
-                <Button Width="24" Height="24" Command="{Binding StepIntoCommand}" ToolTip.Tip="Step Into">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Into}" />
-                </Button>
-                <Button Width="24" Height="24" Command="{Binding StepOutCommand}" ToolTip.Tip="Step Out">
-                    <Image Source="{DynamicResource VsCodeLight.Debug-Step-Out}" />
-                </Button>
+                    <Button Classes="icon" Command="{Binding StepOverCommand}" ToolTip.Tip="Step Over">
+                        <PathIcon Data="{StaticResource Icon.DebugStepOver}" />
+                    </Button>
+                    <Button Classes="icon" Command="{Binding StepIntoCommand}" ToolTip.Tip="Step Into">
+                        <PathIcon Data="{StaticResource Icon.DebugStepInto}" />
+                    </Button>
+                    <Button Classes="icon" Command="{Binding StepOutCommand}" ToolTip.Tip="Step Out">
+                        <PathIcon Data="{StaticResource Icon.DebugStepOut}" />
+                    </Button>
 
-                <Border Classes="SplitterBorder" Margin="6,4" Width="1" />
+                    <Border Classes="divider vertical" Margin="4 4" />
 
-                <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding StatusText}" />
-            </StackPanel>
+                    <TabStrip Classes="pills" SelectedIndex="{Binding MainPanel.SelectedTabIndex}">
+                        <TabStripItem Content="Variables" />
+                        <TabStripItem Content="Registers" />
+                        <TabStripItem Content="Memory" />
+                        <TabStripItem Content="Breakpoints" />
+                        <TabStripItem Content="Console" />
+                    </TabStrip>
+                </StackPanel>
+
+                <!-- Rightmost so it stays put while the status text changes length. -->
+                <Panel DockPanel.Dock="Right" Margin="8 0 0 0" IsVisible="{Binding MainPanel.ShowsValueFormat}">
+                    <views:ValueFormatBar DataContext="{Binding MainPanel.ValueFormat}" />
+                </Panel>
+
+                <TextBlock Classes="muted" Margin="12 0 4 0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" Text="{Binding StatusText}" />
+            </DockPanel>
         </Border>
 
         <main:MainPanelView DataContext="{Binding MainPanel}" />

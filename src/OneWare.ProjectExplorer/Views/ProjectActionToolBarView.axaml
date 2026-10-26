@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OneWare.ProjectExplorer.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="30"
+             IsVisible="{Binding IsVisible}"
+             x:Class="OneWare.ProjectExplorer.Views.ProjectActionToolBarView"
+             x:DataType="viewModels:ProjectActionToolBarViewModel">
+
+    <!-- Same split-button layout as the FPGA project toolbar (UniversalFpgaProjectToolBarView). -->
+    <StackPanel Classes="toolbar">
+        <Separator IsVisible="{Binding CanBuild}" />
+        <StackPanel Classes="split" IsVisible="{Binding CanBuild}">
+            <Button ToolTip.Tip="Build the active project" Command="{Binding BuildCommand}"
+                    IsEnabled="{Binding !IsBusy}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Classes="small" Data="{StaticResource Icon.Build}" />
+                    <TextBlock Text="Build" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Classes="menu" ToolTip.Tip="Build options" IsEnabled="{Binding !IsBusy}">
+                <Button.Flyout>
+                    <Flyout FlyoutPresenterClasses="list">
+                        <StackPanel>
+                            <MenuItem Header="Clean" Command="{Binding CleanCommand}">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource Icon.ClearAll}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+                <PathIcon Data="{StaticResource Icon.ChevronDown}" Width="10" Height="10" />
+            </Button>
+        </StackPanel>
+        <Separator IsVisible="{Binding CanRun}" />
+        <StackPanel Classes="split" IsVisible="{Binding CanRun}">
+            <Button ToolTip.Tip="Build and run the active project" Command="{Binding RunCommand}"
+                    IsEnabled="{Binding !IsBusy}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Classes="success small" Data="{StaticResource Icon.Play}" />
+                    <TextBlock Text="Run" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <Separator IsVisible="{Binding CanProgram}" />
+        <StackPanel Classes="split" IsVisible="{Binding CanProgram}">
+            <Button ToolTip.Tip="Program the target" Command="{Binding ProgramCommand}"
+                    IsEnabled="{Binding !IsBusy}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Classes="accent small" Data="{StaticResource Icon.Download}" />
+                    <TextBlock Text="Program" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <Separator IsVisible="{Binding CanDebug}" />
+        <StackPanel Classes="split" IsVisible="{Binding CanDebug}">
+            <Button ToolTip.Tip="Build and debug the active project" Command="{Binding DebugCommand}"
+                    IsEnabled="{Binding !IsBusy}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Classes="warning small" Data="{StaticResource Icon.Debug}" />
+                    <TextBlock Text="Debug" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <Button Classes="icon" ToolTip.Tip="{Binding RunningActionText, StringFormat='Cancel {0}'}"
+                Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}">
+            <PathIcon Classes="error small" Data="{StaticResource Icon.Stop}" />
+        </Button>
+    </StackPanel>
+
+</UserControl>

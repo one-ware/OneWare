@@ -87,6 +87,7 @@ public class App : Application
         services.AddSingleton<IApplicationCommandService, ApplicationCommandService>();
         services.AddSingleton<IProjectManagerService, ProjectManagerService>();
         services.AddSingleton<ILanguageManager, LanguageManager>();
+        services.AddSingleton<IEditorHoverService, EditorHoverService>();
         services.AddSingleton<IApplicationStateService, ApplicationStateService>();
         services.AddSingleton<IIpcCommandService, IpcCommandService>();
         services.AddSingleton<IMainDockService, MainDockService>();

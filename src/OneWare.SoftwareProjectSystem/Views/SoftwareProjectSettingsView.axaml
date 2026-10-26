@@ -1,0 +1,40 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:viewModels="clr-namespace:OneWare.SoftwareProjectSystem.ViewModels"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+                         PrefWidth="600" PrefHeight="450" Padding="4"
+                         WindowStartupLocation="CenterOwner"
+                         Title="{Binding Title}"
+                         CustomIcon="{DynamicResource Material.SettingsOutline}"
+                         Icon="avares://OneWare.Core/Assets/Images/Icons/Settings_White.png"
+                         x:Class="OneWare.SoftwareProjectSystem.Views.SoftwareProjectSettingsView"
+                         x:DataType="viewModels:SoftwareProjectSettingsViewModel"
+                         Name="SoftwareProjectSettings">
+    <Grid ColumnDefinitions="160,Auto,*" RowDefinitions="*,Auto">
+        <ListBox Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Classes="list" BorderThickness="0"
+                 ItemsSource="{Binding SettingCategories}"
+                 SelectedItem="{Binding SelectedCategory}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Classes="divider vertical" />
+
+        <ScrollViewer Grid.Row="0" Grid.Column="2">
+            <ContentControl Padding="4" Content="{Binding SettingsCollection}" />
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Grid.Column="2" Margin="8" Classes="WindowButtons" HorizontalAlignment="Right">
+            <Button Classes="primary" Command="{Binding SaveAndCloseAsync}"
+                    CommandParameter="{Binding #SoftwareProjectSettings}">
+                <TextBlock Text="Save and Close" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</controls:FlexibleWindow>

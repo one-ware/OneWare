@@ -10,38 +10,35 @@
              x:DataType="inspector:VariablesViewModel">
 
     <DockPanel LastChildFill="True">
-    <views:ValueFormatBar DockPanel.Dock="Top" DataContext="{Binding ValueFormat}" />
+        <Grid>
+            <DataGrid ItemsSource="{Binding Variables}"
+                      Background="{DynamicResource ThemeControlLowBrush}"
+                      RowBackground="Transparent"
+                      GridLinesVisibility="None"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="False"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Width="1.5*"
+                                        Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
+                    <DataGridTemplateColumn Header="Value" Width="1.75*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:VariableRow">
+                                <views:EditableValueCell FontFamily="{DynamicResource EditorFont}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Type" Width="0.75*" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                                        Binding="{CompiledBinding Type, DataType=models:VariableRow}" />
+                </DataGrid.Columns>
+            </DataGrid>
 
-    <Border Margin="4"
-            CornerRadius="4"
-            ClipToBounds="True"
-            BorderThickness="1"
-            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-            Background="{DynamicResource ThemeBackgroundBrush}">
-        <DataGrid ItemsSource="{Binding Variables}"
-                  GridLinesVisibility="Vertical"
-                  VerticalGridLinesBrush="{DynamicResource ThemeBorderLowBrush}"
-                  BorderThickness="0"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch"
-                  HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Auto">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" Width="1.5*"
-                                    Binding="{CompiledBinding Name, DataType=models:VariableRow}" />
-                <DataGridTemplateColumn Header="Value" Width="1.75*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="models:VariableRow">
-                            <views:EditableValueCell />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Type" Width="0.75*"
-                                    Binding="{CompiledBinding Type, DataType=models:VariableRow}" />
-            </DataGrid.Columns>
-        </DataGrid>
-    </Border>
+            <Border Classes="empty-state" IsVisible="{Binding !Variables.Count}" IsHitTestVisible="False">
+                <TextBlock TextWrapping="Wrap" Text="Local variables appear here while the program is paused." />
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

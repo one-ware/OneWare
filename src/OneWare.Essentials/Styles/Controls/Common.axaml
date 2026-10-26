@@ -70,6 +70,23 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
+    <!-- Split button: a labelled action plus an optional narrow Button.menu with a flyout, both ghost -->
+    <Style Selector="StackPanel.split">
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>
+
+    <Style Selector="StackPanel.split > Button">
+        <Setter Property="Height" Value="{DynamicResource ThemeControlHeight}" />
+        <Setter Property="Padding" Value="6 0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="StackPanel.split > Button.menu">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
     <!-- Layout helpers -->
     <Style Selector="StackPanel.form">
         <Setter Property="Spacing" Value="{DynamicResource ThemeSpacing}" />

@@ -1,6 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.ProjectActions;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
@@ -19,6 +24,8 @@ public class ProjectExplorerModule : OneWareModuleBase
         services.AddSingleton<IFileWatchService, FileWatchService>();
         services.AddSingleton<ProjectExplorerViewModel>();
         services.AddSingleton<IProjectExplorerService>(provider => provider.Resolve<ProjectExplorerViewModel>());
+        services.AddSingleton<IProjectActionService, ProjectActionService>();
+        services.AddSingleton<ProjectActionToolBarViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -35,6 +42,16 @@ public class ProjectExplorerModule : OneWareModuleBase
             {
                 DataContext = vm
             }));
+
+        var actionToolBarViewModel = serviceProvider.Resolve<ProjectActionToolBarViewModel>();
+
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new OneWareUiExtension(_ =>
+            new ProjectActionToolBarView
+            {
+                DataContext = actionToolBarViewModel
+            }));
+
+        RegisterProjectActionMenu(windowService, serviceProvider.Resolve<IProjectActionService>(), vm);
 
         windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("File")
         {
@@ -66,5 +83,45 @@ public class ProjectExplorerModule : OneWareModuleBase
                 Command = new RelayCommand(() => dockService.Show(serviceProvider.Resolve<IProjectExplorerService>(), DockShowLocation.Left)),
                 Icon = new IconModel(ProjectExplorerViewModel.IconKey)
             });
+    }
+
+    // The Build menu works for every project type, including those with their own toolbar (e.g. FPGA).
+    private static void RegisterProjectActionMenu(IWindowService windowService, IProjectActionService actionService,
+        IProjectExplorerService projectExplorerService)
+    {
+        windowService.RegisterMenuItem("MainWindow_MainMenu", new MenuItemModel("Build")
+        {
+            Header = "Build",
+            Priority = 150
+        });
+
+        var items = new (ProjectActionKind Kind, string Header, string Icon, KeyGesture? Gesture)[]
+        {
+            (ProjectActionKind.Build, "Build", "CreateIcon",
+                new KeyGesture(Key.B, KeyModifiers.Shift | PlatformHelper.ControlKey)),
+            (ProjectActionKind.Clean, "Clean", "Material.DeleteSweep", null),
+            (ProjectActionKind.Run, "Run", "MaterialDesign.PlayArrow", new KeyGesture(Key.F5, PlatformHelper.ControlKey)),
+            (ProjectActionKind.Program, "Program", "VsImageLib.Download16X", null),
+            (ProjectActionKind.Debug, "Debug", "Codeicons.Debug", new KeyGesture(Key.F5))
+        };
+
+        var models = items.Select(item => (item.Kind, Model: new MenuItemModel(item.Header)
+        {
+            Header = item.Header,
+            Command = new AsyncRelayCommand(() => actionService.ExecuteAsync(item.Kind)),
+            Icon = new IconModel(item.Icon),
+            InputGesture = item.Gesture
+        })).ToArray();
+
+        void UpdateEnabled()
+        {
+            foreach (var (kind, model) in models)
+                model.IsEnabled = !actionService.IsBusy && actionService.CanExecute(kind);
+        }
+
+        actionService.StateChanged += (_, _) => Dispatcher.UIThread.Post(UpdateEnabled);
+        projectExplorerService.WhenValueChanged(x => x.ActiveProject).Subscribe(_ => UpdateEnabled());
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Build", models.Select(x => x.Model).ToArray());
     }
 }

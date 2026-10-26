@@ -5,8 +5,8 @@ using OneWare.Essentials.Services;
 namespace OneWare.Debugger.ViewModels;
 
 // The display setting that Memory, Registers and Variables share.
-// A single object for all three -> the bar sits above every table, but shows the
-// same state everywhere, and switching takes effect in all three immediately.
+// A single object for all three -> a single Base selector in the debugger toolbar,
+// shown while one of the three tabs is open, switches all of them immediately.
 // The value is held through ISettingsService.Register: stored and therefore stable across
 // restarts, but without its own entry on the settings page -> it is operated
 // in the panel, and offering the same thing in two places only causes confusion.
@@ -34,6 +34,8 @@ public partial class ValueFormatViewModel : ObservableObject
             Enum.TryParse<NumberBase>(settingsService.GetSettingValue<string>(BaseSetting), out var stored))
             _selectedBase = stored;
     }
+
+    public IReadOnlyList<NumberBase> Bases { get; } = Enum.GetValues<NumberBase>();
 
     // Reports every change to the three panels, which then relabel their rows.
     // Deliberately without reading the target again: the raw values of the last halt are at hand, and

@@ -31,7 +31,7 @@ public class VariablesViewModel : ObservableObject
     }
 
     // Number base and sign of the display. The same object also serves Memory and
-    // Registers -> the bar above the table switches all three at once.
+    // Registers -> the Base selector in the debugger toolbar switches all three at once.
     public ValueFormatViewModel ValueFormat { get; }
 
     public ObservableCollection<VariableRow> Variables { get; } = [];

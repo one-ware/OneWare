@@ -35,6 +35,7 @@ using OneWare.PackageManager.ViewModels;
 using OneWare.PackageManager.Views;
 using OneWare.Python;
 using OneWare.SerialMonitor;
+using OneWare.SoftwareProjectSystem;
 using OneWare.SourceControl;
 using OneWare.Studio.Desktop.ViewModels;
 using OneWare.Studio.Desktop.Views;
@@ -61,6 +62,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<SourceControlModule>();
         moduleCatalog.AddModule<SerialMonitorModule>();
         moduleCatalog.AddModule<CppModule>();
+        moduleCatalog.AddModule<SoftwareProjectSystemModule>();
         //moduleCatalog.AddModule<CSharpModule>();
         moduleCatalog.AddModule<VhdlModule>();
         moduleCatalog.AddModule<VerilogModule>();
