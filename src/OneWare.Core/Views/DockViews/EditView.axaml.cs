@@ -37,6 +37,7 @@ namespace OneWare.Core.Views.DockViews;
 public partial class EditView : UserControl
 {
     private readonly IErrorService _errorService;
+    private readonly IEditorHoverService _editorHoverService;
     private readonly ISettingsService _settingsService;
 
     private CompositeDisposable _compositeDisposable = new();
@@ -49,6 +50,7 @@ public partial class EditView : UserControl
     {
         _settingsService = ContainerLocator.Container.Resolve<ISettingsService>();
         _errorService = ContainerLocator.Container.Resolve<IErrorService>();
+        _editorHoverService = ContainerLocator.Container.Resolve<IEditorHoverService>();
 
         InitializeComponent();
 
@@ -588,29 +590,18 @@ public partial class EditView : UserControl
 
         if (word != null)
         {
-            if (_typeAssistance != null)
+            var hoverContent = ViewModel != null
+                ? await _editorHoverService.GetHoverContentAsync(new EditorHoverRequest(ViewModel, offset, word))
+                : null;
+
+            if (hoverContent != null)
+            {
+                HoverBoxContent.Content = hoverContent;
+            }
+            else if (_typeAssistance != null)
             {
                 var info = await _typeAssistance.GetHoverInfoAsync(offset);
-                if (info != null && info.StartsWith("%object:")) //Show debugInfo
-                {
-                    var endInfo = info.IndexOf('%', 1);
-                    var value = info[(endInfo + 1)..];
-                    var name = info[8..endInfo];
-                    var vm = ObjectValueModel.ParseValue(name, value);
-                    if (vm != null)
-                    {
-                        vm.IsExpanded = true;
-                        HoverBoxContent.Content = new VariableControlView
-                        {
-                            DataContext = new ObjectValueModel
-                            {
-                                Children = new ObservableCollection<ObjectValueModel> { vm },
-                                DisplayName = name
-                            }
-                        };
-                    }
-                }
-                else if (!string.IsNullOrWhiteSpace(info))
+                if (!string.IsNullOrWhiteSpace(info))
                 {
                     var markdown = new MarkdownViewer
                     {

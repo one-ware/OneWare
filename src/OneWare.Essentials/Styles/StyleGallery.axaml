@@ -103,6 +103,28 @@
                         <ToggleSwitch Content="Toolbar switch" IsChecked="True" />
                         <ToggleSwitch Content="Off" />
                     </StackPanel>
+                    <StackPanel Classes="toolbar">
+                        <StackPanel Classes="split">
+                            <Button>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Classes="small" Data="{StaticResource Icon.Build}" />
+                                    <TextBlock Text="split" />
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="menu">
+                                <PathIcon Data="{StaticResource Icon.ChevronDown}" Width="10" Height="10" />
+                            </Button>
+                        </StackPanel>
+                        <Separator />
+                        <StackPanel Classes="split">
+                            <Button>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Classes="success small" Data="{StaticResource Icon.Play}" />
+                                    <TextBlock Text="no menu" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
                     <Slider Value="40" />
                     <ProgressBar Value="60" />
                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -150,6 +172,11 @@
                     <ListBoxItem Content="Item 2 (selected)" />
                     <ListBoxItem Content="Item 3" />
                 </ListBox>
+                <TabStrip Classes="pills" SelectedIndex="0">
+                    <TabStripItem Content="Pill 1" />
+                    <TabStripItem Content="Pill 2" />
+                    <TabStripItem Content="Pill 3" />
+                </TabStrip>
                 <TabControl>
                     <TabItem Header="Tab 1"><TextBlock Margin="8" Text="Tab content" /></TabItem>
                     <TabItem Header="Tab 2" />

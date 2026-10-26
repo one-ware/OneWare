@@ -5,30 +5,35 @@
              xmlns:inspector="clr-namespace:OneWare.Debugger.ViewModels.Inspector"
              xmlns:editorExtensions="clr-namespace:OneWare.Essentials.EditorExtensions;assembly=OneWare.Essentials"
              xmlns:converters="clr-namespace:OneWare.Debugger.Helpers"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="420"
              x:Class="OneWare.Debugger.Views.Inspector.BreakpointsView"
              x:DataType="inspector:BreakpointsViewModel">
 
-    <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top" Classes="header" Padding="4">
-            <StackPanel Classes="toolbar">
+    <!-- Same layout as the Memory tab: a search field on the list's surface, no header bar. -->
+    <DockPanel LastChildFill="True" Background="{DynamicResource ThemeControlLowBrush}">
+        <DockPanel DockPanel.Dock="Top" LastChildFill="True" Margin="4">
+            <StackPanel DockPanel.Dock="Right" Classes="toolbar" Margin="4 0 0 0">
                 <Button Classes="icon" Command="{Binding RemoveBreakpointCommand}"
                         ToolTip.Tip="Remove selected breakpoints (Del)">
                     <PathIcon Data="{StaticResource Icon.Remove}" />
                 </Button>
                 <Button Classes="icon" Command="{Binding RemoveAllBreakpointsCommand}"
-                        ToolTip.Tip="Remove all breakpoints">
+                        ToolTip.Tip="Remove all listed breakpoints">
                     <PathIcon Data="{StaticResource Icon.ClearAll}" />
                 </Button>
             </StackPanel>
-        </Border>
+
+            <controls:SearchBox SearchText="{Binding FilterText, Mode=TwoWay}" SearchButtonVisible="False"
+                                Label="Filter by file or line..." />
+        </DockPanel>
 
         <Grid>
             <DataGrid x:Name="BreakpointGrid"
                       ItemsSource="{Binding Breakpoints}"
                       SelectionMode="Extended"
                       SelectionChanged="OnSelectionChanged"
-                      Background="{DynamicResource ThemeControlLowBrush}"
+                      Background="Transparent"
                       RowBackground="Transparent"
                       GridLinesVisibility="None"
                       BorderThickness="0"
@@ -52,7 +57,10 @@
             </DataGrid>
 
             <Border Classes="empty-state" IsVisible="{Binding !HasBreakpoints}" IsHitTestVisible="False">
-                <TextBlock TextWrapping="Wrap" Text="No breakpoints. Click left of a line number in the editor to add one." />
+                <TextBlock TextWrapping="Wrap" Text="No breakpoints in the active project. Click left of a line number in the editor to add one." />
+            </Border>
+            <Border Classes="empty-state" IsVisible="{Binding HasNoMatches}" IsHitTestVisible="False">
+                <TextBlock TextWrapping="Wrap" Text="No breakpoints match the filter." />
             </Border>
         </Grid>
     </DockPanel>

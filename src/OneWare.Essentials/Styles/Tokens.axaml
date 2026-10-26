@@ -42,6 +42,12 @@
     <SolidColorBrush x:Key="SuccessLowBrush" Color="{StaticResource SuccessLowColor}" />
     <SolidColorBrush x:Key="InfoBrush" Color="{DynamicResource ThemeAccentColor}" />
     <SolidColorBrush x:Key="InfoLowBrush" Color="{DynamicResource ThemeAccentColor}" Opacity="0.14" />
+
+    <!-- Debugger: line where execution is halted -->
+    <Color x:Key="DebugExecutionLineColor">#40E5534B</Color>
+    <Color x:Key="DebugExecutionLineAccentColor">#FFE5534B</Color>
+    <SolidColorBrush x:Key="DebugExecutionLineBrush" Color="{StaticResource DebugExecutionLineColor}" />
+    <SolidColorBrush x:Key="DebugExecutionLineAccentBrush" Color="{StaticResource DebugExecutionLineAccentColor}" />
     <Color x:Key="NeutralColor">#FF6B7280</Color>
     <SolidColorBrush x:Key="NeutralBrush" Color="{StaticResource NeutralColor}" />
 

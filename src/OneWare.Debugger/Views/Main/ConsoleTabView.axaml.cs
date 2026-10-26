@@ -1,7 +1,9 @@
 using System.Collections.Specialized;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using OneWare.Debugger.ViewModels.Main;
 
 namespace OneWare.Debugger.Views.Main;
@@ -15,10 +17,13 @@ public partial class ConsoleTabView : UserControl
         InitializeComponent();
 
         DataContextChanged += OnDataContextChanged;
+
+        // Tunnel: a single-line TextBox would otherwise use Up/Down to move the caret.
+        CommandBox.AddHandler(KeyDownEvent, OnCommandBoxKeyDown, RoutingStrategies.Tunnel);
     }
 
-    // Keeps the console at the bottom edge, so that new output stays visible without the
-    // user having to scroll.
+    private ScrollViewer? Scroll => ConsoleItems.FindDescendantOfType<ScrollViewer>();
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         Unsubscribe();
@@ -29,13 +34,37 @@ public partial class ConsoleTabView : UserControl
         _linesSource.CollectionChanged += OnLinesChanged;
     }
 
+    // Follows new output while the view is at the bottom; leaves it alone while the user reads further up.
     private void OnLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action != NotifyCollectionChangedAction.Add) return;
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            Dispatcher.UIThread.Post(() => Scroll?.ScrollToEnd(), DispatcherPriority.Background);
+            return;
+        }
 
-        // After adding, a new measure pass is needed first, otherwise the viewer jumps to
-        // a position that does not exist yet.
-        Dispatcher.UIThread.Post(DebuggerConsoleScroll.ScrollToEnd, DispatcherPriority.Background);
+        if (e.Action != NotifyCollectionChangedAction.Add || Scroll is not { } scroll) return;
+
+        // Measured before the new line is laid out -> still describes the old end.
+        var atBottom = scroll.Offset.Y >= scroll.Extent.Height - scroll.Viewport.Height - 24;
+        if (atBottom) Dispatcher.UIThread.Post(scroll.ScrollToEnd, DispatcherPriority.Background);
+    }
+
+    private void OnCommandBoxKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (DataContext is not ConsoleTabViewModel viewModel) return;
+
+        var direction = e.Key switch
+        {
+            Key.Up => -1,
+            Key.Down => 1,
+            _ => 0
+        };
+        if (direction == 0) return;
+
+        viewModel.BrowseHistory(direction);
+        CommandBox.CaretIndex = CommandBox.Text?.Length ?? 0;
+        e.Handled = true;
     }
 
     // Puts the whole history on the clipboard as text. Selecting line by line does not work
@@ -52,9 +81,7 @@ public partial class ConsoleTabView : UserControl
 
             if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
 
-            var text = string.Join(Environment.NewLine, viewModel.Lines.Select(x => x.Text));
-
-            await clipboard.SetTextAsync(text);
+            await clipboard.SetTextAsync(viewModel.GetText());
         }
         catch (Exception)
         {

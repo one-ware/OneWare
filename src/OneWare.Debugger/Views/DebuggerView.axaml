@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
              xmlns:main="clr-namespace:OneWare.Debugger.Views.Main"
+             xmlns:views="clr-namespace:OneWare.Debugger.Views"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="260"
              x:Class="OneWare.Debugger.Views.DebuggerView"
              x:DataType="viewModels:DebuggerViewModel"
@@ -40,7 +41,22 @@
                     <Button Classes="icon" Command="{Binding StepOutCommand}" ToolTip.Tip="Step Out">
                         <PathIcon Data="{StaticResource Icon.DebugStepOut}" />
                     </Button>
+
+                    <Border Classes="divider vertical" Margin="4 4" />
+
+                    <TabStrip Classes="pills" SelectedIndex="{Binding MainPanel.SelectedTabIndex}">
+                        <TabStripItem Content="Variables" />
+                        <TabStripItem Content="Registers" />
+                        <TabStripItem Content="Memory" />
+                        <TabStripItem Content="Breakpoints" />
+                        <TabStripItem Content="Console" />
+                    </TabStrip>
                 </StackPanel>
+
+                <!-- Rightmost so it stays put while the status text changes length. -->
+                <Panel DockPanel.Dock="Right" Margin="8 0 0 0" IsVisible="{Binding MainPanel.ShowsValueFormat}">
+                    <views:ValueFormatBar DataContext="{Binding MainPanel.ValueFormat}" />
+                </Panel>
 
                 <TextBlock Classes="muted" Margin="12 0 4 0" HorizontalAlignment="Right" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis" Text="{Binding StatusText}" />

@@ -43,7 +43,7 @@ public partial class MemoryTabViewModel : ObservableObject
     }
 
     // Number base and sign of the display. The same object also serves Registers and
-    // Variables -> the bar above the table switches all three at once.
+    // Variables -> the Base selector in the debugger toolbar switches all three at once.
     public ValueFormatViewModel ValueFormat { get; }
 
     // Example address in the empty input field. Comes from the target -> the core no longer holds

@@ -10,10 +10,6 @@
              x:DataType="inspector:VariablesViewModel">
 
     <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top" Classes="header" Padding="4">
-            <views:ValueFormatBar HorizontalAlignment="Right" DataContext="{Binding ValueFormat}" />
-        </Border>
-
         <Grid>
             <DataGrid ItemsSource="{Binding Variables}"
                       Background="{DynamicResource ThemeControlLowBrush}"

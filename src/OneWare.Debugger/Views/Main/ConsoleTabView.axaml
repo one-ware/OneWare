@@ -8,16 +8,28 @@
              x:Class="OneWare.Debugger.Views.Main.ConsoleTabView"
              x:DataType="main:ConsoleTabViewModel">
 
-    <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Bottom" Classes="footer" Padding="4">
-            <DockPanel LastChildFill="True">
-                <Button DockPanel.Dock="Right" Classes="icon" Margin="4 0 0 0"
-                        Command="{Binding SendCommandCommand}" ToolTip.Tip="Send (Enter)">
-                    <PathIcon Data="{StaticResource Icon.Send}" />
-                </Button>
-                <TextBox Name="CommandBox" Classes="small" FontFamily="{DynamicResource EditorFont}"
+    <DockPanel LastChildFill="True" Background="{DynamicResource ThemeControlLowBrush}">
+        <!-- Send row, laid out like the serial monitor's: input, options, primary Send. -->
+        <Border DockPanel.Dock="Bottom" Classes="footer" Padding="6 4">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Classes="form-row" Margin="6 0 0 0">
+                    <ToggleSwitch Classes="small" IsChecked="{Binding ShowProtocol, Mode=TwoWay}" Content="Protocol"
+                                  ToolTip.Tip="Also show the GDB/MI traffic the studio generates: internal commands, prompts and records" />
+                    <Button Classes="icon" Command="{Binding ClearCommand}" ToolTip.Tip="Clear the console">
+                        <PathIcon Data="{StaticResource Icon.ClearAll}" />
+                    </Button>
+                    <Button Classes="primary" Command="{Binding SendCommandCommand}" ToolTip.Tip="Send command (Enter)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Send}" />
+                            <TextBlock VerticalAlignment="Center" Text="Send" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <TextBox Name="CommandBox" Classes="mono" FontFamily="{DynamicResource EditorFont}"
+                         IsEnabled="{Binding IsSessionActive}"
                          Text="{Binding CommandText, Mode=TwoWay}"
-                         Watermark="GDB command, e.g. info frame">
+                         Watermark="GDB command, e.g. info frame (Enter to send, Up / Down for history)">
                     <TextBox.KeyBindings>
                         <KeyBinding Gesture="Enter" Command="{Binding SendCommandCommand}" />
                     </TextBox.KeyBindings>
@@ -25,10 +37,10 @@
             </DockPanel>
         </Border>
 
-        <!-- Every line is its own SelectableTextBlock, so that commands stay set apart
-             by colour. Nothing can be selected across line boundaries that way, though -
-             hence the copy button and the context menu that put the whole history on the clipboard. -->
-        <Grid Background="Transparent">
+        <!-- Every line is its own SelectableTextBlock, so that the kinds stay set apart by colour.
+             Nothing can be selected across line boundaries that way, though -
+             hence the copy overlay and the context menu that put the whole history on the clipboard. -->
+        <Grid>
             <Grid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy All" Click="OnCopyConsoleClick">
@@ -36,29 +48,62 @@
                             <PathIcon Data="{StaticResource Icon.Copy}" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    <MenuItem Header="Clear" Command="{Binding ClearCommand}">
+                        <MenuItem.Icon>
+                            <PathIcon Data="{StaticResource Icon.ClearAll}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </ContextMenu>
             </Grid.ContextMenu>
 
-            <ScrollViewer Name="DebuggerConsoleScroll" Padding="8 6">
-                <ItemsControl ItemsSource="{Binding Lines}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:ConsoleLine">
-                            <SelectableTextBlock Classes="mono"
+            <!-- The ScrollViewer sits inside the template so the panel can virtualize. -->
+            <ItemsControl Name="ConsoleItems" ItemsSource="{Binding Lines}">
+                <ItemsControl.Template>
+                    <ControlTemplate>
+                        <ScrollViewer Name="PART_ScrollViewer" Padding="0 4">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:ConsoleLine">
+                        <Grid ColumnDefinitions="22,*" Margin="0 0 8 0">
+                            <!-- Gutter: marks commands, errors, warnings and studio notes. -->
+                            <TextBlock Grid.Column="0" Classes="mono accent semibold" Text="›"
+                                       HorizontalAlignment="Center" IsVisible="{Binding IsCommand}" />
+                            <PathIcon Grid.Column="0" Classes="small error" Data="{StaticResource Icon.Close}"
+                                      IsVisible="{Binding IsError}" />
+                            <TextBlock Grid.Column="0" Classes="mono warning semibold" Text="!"
+                                       HorizontalAlignment="Center" IsVisible="{Binding IsWarning}" />
+                            <TextBlock Grid.Column="0" Classes="mono muted" Text="•"
+                                       HorizontalAlignment="Center" IsVisible="{Binding IsInfo}" />
+
+                            <SelectableTextBlock Grid.Column="1" Classes="mono" TextWrapping="Wrap"
                                                  Classes.accent="{Binding IsCommand}"
                                                  Classes.semibold="{Binding IsCommand}"
-                                                 TextWrapping="Wrap"
+                                                 Classes.error="{Binding IsError}"
+                                                 Classes.warning="{Binding IsWarning}"
+                                                 Classes.muted="{Binding IsMuted}"
                                                  Text="{Binding Text}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-            <Button Name="CopyConsoleButton" Classes="icon"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 4 14 0"
-                    Click="OnCopyConsoleClick"
-                    ToolTip.Tip="Copy the whole console to the clipboard">
+            <Button Classes="icon" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 4 14 0"
+                    Click="OnCopyConsoleClick" ToolTip.Tip="Copy the whole console to the clipboard">
                 <PathIcon Data="{StaticResource Icon.Copy}" />
             </Button>
+
+            <Border Classes="empty-state" IsVisible="{Binding !Lines.Count}" IsHitTestVisible="False">
+                <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center"
+                           Text="GDB output appears here. While a session runs, type a command below." />
+            </Border>
         </Grid>
     </DockPanel>
 </UserControl>

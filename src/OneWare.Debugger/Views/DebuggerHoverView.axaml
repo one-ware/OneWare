@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:OneWare.Debugger.Models"
+             xmlns:viewModels="clr-namespace:OneWare.Debugger.ViewModels"
+             x:Class="OneWare.Debugger.Views.DebuggerHoverView"
+             x:DataType="viewModels:DebuggerHoverViewModel"
+             MaxWidth="640">
+
+    <!-- Editor hover while the debugger is halted: the hovered value as an expandable tree. -->
+    <TreeView ItemsSource="{Binding Roots}" MaxHeight="360">
+        <TreeView.Styles>
+            <Style Selector="TreeViewItem" x:DataType="models:DebugValueNode">
+                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            </Style>
+        </TreeView.Styles>
+        <TreeView.DataTemplates>
+            <TreeDataTemplate DataType="models:DebugValueNode" ItemsSource="{Binding Children}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Classes="mono" Text="{Binding Name}" />
+                    <TextBlock Classes="mono muted" Text="=" />
+                    <TextBlock Classes="mono accent" Text="{Binding Value}" />
+                    <TextBlock Classes="muted" Margin="4 0 0 0" Text="{Binding TypeName}"
+                               IsVisible="{Binding TypeName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+            </TreeDataTemplate>
+        </TreeView.DataTemplates>
+    </TreeView>
+</UserControl>

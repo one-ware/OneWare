@@ -340,6 +340,12 @@ created through `SoftwareProjectFactory`, which the creator dialog uses too.
 - `RegisterStandaloneTypeAssistance(type, supportedFileTypes)`: editor assistance only.
 - `GetLanguageService(fullPath)`, `GetTypeAssistance(IEditor)`: resolve per-file services.
 
+#### `IEditorHoverService` (src/OneWare.Essentials/Services/IEditorHoverService.cs)
+
+- `RegisterProvider(IEditorHoverProvider)`: editors ask providers in registration order before the language
+  server hover. A provider gets an `EditorHoverRequest` (editor, offset, word) and returns a control or view
+  model for the popup, or `null` to pass. The debugger uses it to show variable values while a session is halted.
+
 #### `IErrorService` (src/OneWare.Essentials/Services/IErrorService.cs)
 
 - `RegisterErrorSource(source)`: add a diagnostic source.

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Debugger.ViewModels.Main;
 using OneWare.Essentials.Debugger.Entities;
 using OneWare.Essentials.Debugger.Interfaces;
+using OneWare.Essentials.EditorExtensions;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.ProjectActions;
@@ -30,6 +31,7 @@ public partial class DebuggerViewModel : ExtendedTool
     private readonly IProjectActionService _projectActionService;
     private readonly IProjectExplorerService _projectExplorerService;
     private readonly ISettingsService _settingsService;
+    private ExtendedTextEditor? _executionLineEditor;
 
     [ObservableProperty] private bool _isRunning;
 
@@ -111,14 +113,14 @@ public partial class DebuggerViewModel : ExtendedTool
         // difference only shows seconds later as a connection error on a port that
         // nobody brought up. The number separates the two cases: 0 means no plugin is
         // loaded at all, otherwise none was responsible for this project.
-        MainPanel.Console.Append(
+        MainPanel.Console.AppendInfo(
             $"No target preparer is responsible for the active project " +
             $"({_debuggerService.TargetPreparers.Count} registered). Using the endpoint from " +
             $"Tools > Debugger: {request.RemoteEndpoint ?? "none"}.");
 
         if (!await _debuggerService.StartAsync(request))
         {
-            MainPanel.Console.Append("GDB could not be started.");
+            MainPanel.Console.AppendInfo("GDB could not be started.");
             StatusText = "Start failed";
             return false;
         }
@@ -126,7 +128,7 @@ public partial class DebuggerViewModel : ExtendedTool
         // Only now, not before the start: otherwise the note would stand before GDB's version line
         // and read like an abort, although nothing has failed.
         if (request.ExecutablePath == null && request.RemoteEndpoint == null)
-            MainPanel.Console.Append("No executable in the active project and no remote endpoint under " +
+            MainPanel.Console.AppendInfo("No executable in the active project and no remote endpoint under " +
                                      "Tools > Debugger - running without a target. Registers, memory and " +
                                      "stepping need one.");
 
@@ -145,7 +147,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (await _debuggerService.StartAsync(request)) return true;
 
-        MainPanel.Console.Append("GDB could not be started.");
+        MainPanel.Console.AppendInfo("GDB could not be started.");
         StatusText = "Start failed";
         return false;
     }
@@ -165,7 +167,7 @@ public partial class DebuggerViewModel : ExtendedTool
         {
             if (await _debuggerService.StartAsync(preparer)) return true;
 
-            MainPanel.Console.Append($"{preparer.DisplayName} could not be started.");
+            MainPanel.Console.AppendInfo($"{preparer.DisplayName} could not be started.");
             StatusText = "Start failed";
             return false;
         }
@@ -303,8 +305,9 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!IsSessionActive)
         {
-            if (wasActive) MainPanel.Console.Append("GDB exited.");
+            if (wasActive) MainPanel.Console.AppendInfo("GDB exited.");
             DetachFromSession();
+            ClearExecutionLine();
             MainPanel.Registers.Clear();
             MainPanel.Memory.ClearValues();
             StatusText = "No session";
@@ -353,12 +356,25 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private async Task JumpToCurrentFrameAsync(DebugSessionState state)
     {
-        if (state.CurrentFrame is not { File: { } file, Line: > 0 } frame) return;
-        if (!File.Exists(file)) return;
+        if (state.IsRunning || state.CurrentFrame is not { File: { } file, Line: > 0 } frame || !File.Exists(file))
+        {
+            ClearExecutionLine();
+            return;
+        }
 
         try
         {
-            if (await _mainDockService.OpenFileAsync(file) is IEditor editor) editor.JumpToLine(frame.Line);
+            if (await _mainDockService.OpenFileAsync(file) is not IEditor editor) return;
+
+            // The halt may already be over while the file was opening.
+            if (!ReferenceEquals(_debuggerService.State, state)) return;
+
+            if (!ReferenceEquals(_executionLineEditor, editor.Editor)) ClearExecutionLine();
+
+            // No selection: the execution line has its own marker, independent of what the user selects.
+            editor.JumpToLine(frame.Line, false);
+            editor.Editor.ExecutionLineRenderer.Line = frame.Line;
+            _executionLineEditor = editor.Editor;
         }
         catch (Exception e)
         {
@@ -366,9 +382,17 @@ public partial class DebuggerViewModel : ExtendedTool
         }
     }
 
+    private void ClearExecutionLine()
+    {
+        if (_executionLineEditor == null) return;
+
+        _executionLineEditor.ExecutionLineRenderer.Line = null;
+        _executionLineEditor = null;
+    }
+
     private void OnOutputReceived(object? sender, string line)
     {
-        MainPanel.Console.Append(line);
+        MainPanel.Console.AppendOutput(line);
     }
 
 
@@ -384,7 +408,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private void OnCommandSent(object? sender, string command)
     {
-        MainPanel.Console.Append($"> {command}", true);
+        MainPanel.Console.AppendCommand(command);
     }
 
     private bool CanStart()

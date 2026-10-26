@@ -22,7 +22,7 @@ public class RegisterTabViewModel
     }
 
     // Number base and sign of the display. The same object also serves Memory and
-    // Variables -> the bar above the table switches all three at once.
+    // Variables -> the Base selector in the debugger toolbar switches all three at once.
     public ValueFormatViewModel ValueFormat { get; }
 
     // Register contents as read at the last halt.

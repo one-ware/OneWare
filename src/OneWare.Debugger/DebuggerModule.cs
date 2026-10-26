@@ -32,6 +32,7 @@ public class DebuggerModule : OneWareModuleBase
         services.AddSingleton<IDebuggerService, DebuggerService>();
         services.AddSingleton<GdbSessionLauncher>();
         services.AddSingleton<DebuggerProjectActionProvider>();
+        services.AddSingleton<DebuggerHoverProvider>();
         services.AddSingleton<DebuggerViewModel>();
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<RegisterTabViewModel>();
@@ -39,10 +40,9 @@ public class DebuggerModule : OneWareModuleBase
         services.AddSingleton<ConsoleTabViewModel>();
         services.AddSingleton<VariablesViewModel>();
         services.AddSingleton<BreakpointsViewModel>();
-        services.AddSingleton<InspectorViewModel>();
 
         // One for all three value tables -> Memory, Registers and Variables never show
-        // different number bases, and the bar above them switches all of them at once.
+        // different number bases, and the Base selector in the toolbar switches all of them at once.
         services.AddSingleton<ValueFormatViewModel>();
         services.AddSingleton<InspectorEditSession>();
     }
@@ -56,8 +56,8 @@ public class DebuggerModule : OneWareModuleBase
         // Before anything else: the view models read these values in their constructor, which
         // runs at the latest when the panels are registered further down.
         // Register instead of RegisterSetting -> stored and therefore stable across restarts,
-        // but without an entry on the settings page: the display is operated from the bar
-        // above each table.
+        // but without an entry on the settings page: the display is operated from the Base
+        // selector in the debugger toolbar.
         settingsService.Register(ValueFormatViewModel.BaseSetting, nameof(NumberBase.Hex));
 
         // The GDB launcher is the core's backend. It covers local programs and, through
@@ -65,6 +65,7 @@ public class DebuggerModule : OneWareModuleBase
         // if GDB cannot serve its target at all.
         serviceProvider.Resolve<IDebuggerService>().RegisterSessionLauncher<GdbSessionLauncher>();
         serviceProvider.Resolve<IProjectActionService>().RegisterProvider<DebuggerProjectActionProvider>();
+        serviceProvider.Resolve<IEditorHoverService>().RegisterProvider(serviceProvider.Resolve<DebuggerHoverProvider>());
 
         settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
             new FilePathSetting(
@@ -97,18 +98,13 @@ public class DebuggerModule : OneWareModuleBase
             });
 
         dockService.RegisterLayoutExtension<DebuggerViewModel>(DockShowLocation.Bottom);
-        dockService.RegisterLayoutExtension<InspectorViewModel>(DockShowLocation.RightPinned);
         
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/View/Tool Windows",
             new MenuItemModel("Debugger")
             {
                 Header = "Debugger",
                 Command = new RelayCommand(() =>
-                {
-                    dockService.Show(serviceProvider.Resolve<InspectorViewModel>(),
-                        DockShowLocation.RightPinned);
-                    dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom);
-                }),
+                    dockService.Show(serviceProvider.Resolve<DebuggerViewModel>(), DockShowLocation.Bottom)),
                 Icon = new IconModel(DebuggerViewModel.IconKey)
             });
     }

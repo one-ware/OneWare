@@ -279,6 +279,14 @@ public class GdbSession(
             "The target refused to change this variable.");
     }
 
+    public async Task<string?> EvaluateExpressionAsync(string expression)
+    {
+        if (string.IsNullOrWhiteSpace(expression)) return null;
+
+        var result = await RunCommandAsync("-data-evaluate-expression", Quote(expression));
+        return result.Status == CommandStatus.Done ? result.GetValue("value") : null;
+    }
+
     private async Task<DebugWriteResult> AssignAsync(string target, string value, string refusal)
     {
         var result = await RunCommandAsync("-data-evaluate-expression", Quote($"{target}={value}"));

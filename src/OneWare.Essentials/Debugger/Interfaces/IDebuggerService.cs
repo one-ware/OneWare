@@ -134,6 +134,17 @@ public interface IDebuggerService
     public Task<DebugWriteResult> WriteVariableAsync(string name, long value);
 
     /// <summary>
+    /// Forwards to <see cref="IDebugSession.EvaluateExpressionAsync"/> on <see cref="CurrentSession"/>.
+    /// Returns <see langword="null"/> when no session is active or the target is running.
+    /// </summary>
+    public Task<string?> EvaluateExpressionAsync(string expression)
+    {
+        return CurrentSession is { } session && IsActive && !State.IsRunning
+            ? session.EvaluateExpressionAsync(expression)
+            : Task.FromResult<string?>(null);
+    }
+
+    /// <summary>
     /// Forwards to <see cref="IDebugSession.SendRawCommandAsync"/> on
     /// <see cref="CurrentSession"/>. Does nothing when no session is active.
     /// </summary>

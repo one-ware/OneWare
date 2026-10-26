@@ -1,3 +1,4 @@
+using OneWare.Debugger.Helpers;
 using OneWare.Essentials.Helpers;
 using System.Collections.Specialized;
 using Avalonia.Controls.Notifications;
@@ -25,6 +26,10 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
     private IDebugTargetPreparer? _activePreparer;
 
     private HashSet<string>? _sourceFiles; // normalized paths, as reported and with links resolved
+
+    // Root folder of the project the session was started for. Only its breakpoints are armed;
+    // null (no active project) arms all of them.
+    private string? _projectRoot;
 
     private IDebugSession? _session;
 
@@ -148,6 +153,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         session.Exited += OnSessionExited;
 
         _session = session;
+        _projectRoot = GetActiveProjectRoot();
         State = DebugSessionState.Empty;
         TargetProfile = launchRequest.TargetProfile ?? DebugTargetProfile.Default;
         RaiseStateChanged();
@@ -200,6 +206,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
             _armed.Clear();
             _refused.Clear();
             _sourceFiles = null;
+            _projectRoot = null;
             _breakpointStore.IsTargetRunning = false;
             _breakpointStore.CurrentBreakPoint = null;
 
@@ -352,6 +359,10 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         {
             if (_armed.Contains(breakpoint) || _refused.Contains(breakpoint)) continue;
 
+            // Another project's breakpoint is not this session's business: not armed, but not
+            // reported as refused either - its dot stays as it is.
+            if (!BelongsToSessionProject(breakpoint.File)) continue;
+
             var wasVerified = breakpoint.IsVerified;
 
             if (!BelongsToLoadedProgram(breakpoint.File))
@@ -397,6 +408,23 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         return _armed.Count < limit;
     }
 
+    private bool BelongsToSessionProject(string file) =>
+        _projectRoot == null || ProjectScope.Contains(_projectRoot, file);
+
+    private string? GetActiveProjectRoot()
+    {
+        try
+        {
+            return serviceProvider.Resolve<IProjectExplorerService>().ActiveProject?.RootFolderPath;
+        }
+        catch (Exception e)
+        {
+            // Without the explorer (e.g. a host without projects) the session simply is not scoped.
+            logger.Warning($"Could not determine the active project: {e.Message}");
+            return null;
+        }
+    }
+
     private bool BelongsToLoadedProgram(string file)
     {
         if (_sourceFiles is not { Count: > 0 } files) return true;
@@ -407,7 +435,7 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
 
     // GDB reports source files with symbolic links resolved while the editor uses the project path,
     // so a plain string comparison misses e.g. a project folder reached through a linked home directory.
-    private static bool IsSameFile(string a, string b)
+    internal static bool IsSameFile(string a, string b)
     {
         if (string.Equals(NormalizePath(a), NormalizePath(b), StringComparison.OrdinalIgnoreCase)) return true;
 

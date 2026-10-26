@@ -33,6 +33,7 @@ public class ExtendedTextEditor : TextEditor
 
         BracketRenderer = new BracketHighlightRenderer(TextArea.TextView);
         LineRenderer = new LineHighlightRenderer(this);
+        ExecutionLineRenderer = new ExecutionLineRenderer(TextArea.TextView);
         //ElementGenerator = new ElementGenerator();
         //MergeService = new MergeService(this, ElementGenerator);
         WordRenderer = new WordHighlightRenderer(TextArea.TextView);
@@ -42,6 +43,7 @@ public class ExtendedTextEditor : TextEditor
 
         TextArea.TextView.BackgroundRenderers.Add(BracketRenderer);
         TextArea.TextView.BackgroundRenderers.Add(LineRenderer);
+        TextArea.TextView.BackgroundRenderers.Add(ExecutionLineRenderer);
         //TextArea.TextView.BackgroundRenderers.Add(MergeService);
         TextArea.TextView.BackgroundRenderers.Add(WordRenderer);
         TextArea.TextView.BackgroundRenderers.Add(MarkerService);
@@ -57,6 +59,11 @@ public class ExtendedTextEditor : TextEditor
     public BracketHighlightRenderer BracketRenderer { get; }
 
     public LineHighlightRenderer LineRenderer { get; }
+
+    /// <summary>
+    /// Marks the line where the debugger is halted (set <see cref="EditorExtensions.ExecutionLineRenderer.Line"/>).
+    /// </summary>
+    public ExecutionLineRenderer ExecutionLineRenderer { get; }
 
     //public MergeService MergeService { get; }
     public WordHighlightRenderer WordRenderer { get; }

@@ -57,6 +57,7 @@ Each key exists as a `...Color` and a `...Brush`.
 | `HighlightForegroundLowBrush`, `HighlightForegroundMidBrush` | Hover / pressed overlay for controls on an accent fill |
 | `SuccessBrush`, `WarningBrush`, `ErrorBrush`, `InfoBrush`, `NeutralBrush` | Status colors (`NeutralBrush` is the grey default badge fill) |
 | `SuccessLowBrush`, `WarningLowBrush`, `ErrorLowBrush`, `InfoLowBrush` | Tinted status backgrounds |
+| `DebugExecutionLineBrush` / `DebugExecutionLineAccentBrush` | Editor line where the debugger is halted (fill / left bar, drawn by `ExecutionLineRenderer`) |
 
 Non-color tokens:
 
@@ -197,6 +198,9 @@ border or corner radius of their own, and should not add margins to keep content
 - `ListBox`: `transparent`, `InvisibleSelection`. By default it is an inset field (control background, low border,
   same corner radius as `TextBox`). Setting `BorderThickness="0"` makes it square for lists that sit edge-to-edge in a panel.
   Items are rounded rows with a hover highlight and an accent selection.
+- `TabStrip`: `pills` (compact rounded tabs that fit a 24 px toolbar, accent tint on the selected one). Put it in a
+  `header` next to the toolbar and bind its `SelectedIndex` to a `TabControl` with `no-strip`, which hides the
+  control's own tab row and only shows the selected content. The Debugger panel uses this.
 - `Expander`: `card`. By default it is a flat header row with a rotating chevron and a ghost-button hover, with no padding
   around the content. `card` turns it into a bordered section with a divider between header and content. Set
   `HorizontalContentAlignment="Stretch"` to stretch custom header content (e.g. a trailing badge).
@@ -238,6 +242,7 @@ margin or background to the content. Choose a variant with `FlyoutPresenterClass
 | Class | Look |
 |---|---|
 | `toolbar` (legacy `ToolBar`) | Horizontal, 24 px high, 4 px spacing |
+| `split` | Split button inside a toolbar: a labelled ghost `Button` (icon + text) plus an optional narrow `Button.menu` that opens a flyout |
 | `editor-bar-items` (`WrapPanel`) | Groups of an editor bar; wraps onto new lines when the editor is narrow |
 | `form` | Vertical, 8 px spacing |
 | `form-row` | Horizontal, 8 px spacing, centered labels |

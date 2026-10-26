@@ -4,12 +4,18 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:main="clr-namespace:OneWare.Debugger.ViewModels.Main"
              xmlns:views="clr-namespace:OneWare.Debugger.Views.Main"
+             xmlns:inspector="clr-namespace:OneWare.Debugger.Views.Inspector"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="220"
              x:Class="OneWare.Debugger.Views.Main.MainPanelView"
              x:DataType="main:MainPanelViewModel">
 
-    <!-- The order here is the one MainPanelViewModel.ConsoleTabIndex refers to. -->
-    <TabControl SelectedIndex="{Binding SelectedTabIndex}">
+    <!-- The tabs are switched by the pills in DebuggerView's header. Both lists must keep the order
+         MainPanelViewModel.ConsoleTabIndex refers to. -->
+    <TabControl Classes="no-strip" SelectedIndex="{Binding SelectedTabIndex}">
+
+        <TabItem Header="Variables">
+            <inspector:VariablesView DataContext="{Binding Variables}" />
+        </TabItem>
 
         <TabItem Header="Registers">
             <views:RegisterTabView DataContext="{Binding Registers}" />
@@ -19,7 +25,11 @@
             <views:MemoryTabView DataContext="{Binding Memory}" />
         </TabItem>
 
-        <TabItem Header="Debugger Console">
+        <TabItem Header="Breakpoints">
+            <inspector:BreakpointsView DataContext="{Binding Breakpoints}" />
+        </TabItem>
+
+        <TabItem Header="Console">
             <views:ConsoleTabView DataContext="{Binding Console}" />
         </TabItem>
 

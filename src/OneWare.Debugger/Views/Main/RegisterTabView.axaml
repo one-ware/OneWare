@@ -10,10 +10,6 @@
              x:DataType="main:RegisterTabViewModel">
 
     <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top" Classes="header" Padding="4">
-            <views:ValueFormatBar HorizontalAlignment="Right" DataContext="{Binding ValueFormat}" />
-        </Border>
-
         <Grid>
             <DataGrid ItemsSource="{Binding Rows}"
                       Background="{DynamicResource ThemeControlLowBrush}"

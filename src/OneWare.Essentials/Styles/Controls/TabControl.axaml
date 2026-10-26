@@ -2,6 +2,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Design.PreviewWith>
+        <StackPanel Spacing="10" Margin="10">
+        <TabStrip Classes="pills" SelectedIndex="0">
+            <TabStripItem Content="Variables" />
+            <TabStripItem Content="Registers" />
+            <TabStripItem Content="Memory" />
+        </TabStrip>
         <TabControl>
             <TabItem Header="Test (1)">
                 <TextBlock Text="Tab 1" />
@@ -13,6 +19,7 @@
                 <TextBlock Text="Tab 3" />
             </TabItem>
         </TabControl>
+        </StackPanel>
     </Design.PreviewWith>
 
     <Style Selector="TabControl">
@@ -49,5 +56,53 @@
         <Setter Property="BorderThickness" Value="0 0 0 2" />
         <Setter Property="Margin" Value="0 2 0 0" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+    </Style>
+
+    <!-- no-strip: content only; the selection is driven from elsewhere, e.g. a TabStrip.pills in a header -->
+    <!-- The class selector gives these style-trigger priority, so they beat SimpleTheme's
+         [TabStripPlacement=Top] padding (which the content host also reuses as its margin). -->
+    <Style Selector="TabControl.no-strip">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="TabControl.no-strip /template/ ItemsPresenter#PART_ItemsPresenter">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+
+    <Style Selector="TabControl.no-strip /template/ ContentPresenter#PART_SelectedContentHost">
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <!-- pills: compact segmented tab strip that fits a 24 px toolbar -->
+    <Style Selector="TabStrip.pills">
+        <Setter Property="ItemsPanel">
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="2" />
+            </ItemsPanelTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="TabStrip.pills > TabStripItem">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="10 0" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMedium}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}" />
+    </Style>
+
+    <Style Selector="TabStrip.pills > TabStripItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightMidBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
+    <Style Selector="TabStrip.pills > TabStripItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}" />
+        <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+    </Style>
+
+    <Style Selector="TabStrip.pills > TabStripItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush3}" />
     </Style>
 </Styles>
