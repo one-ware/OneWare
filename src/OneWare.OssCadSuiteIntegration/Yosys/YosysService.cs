@@ -251,22 +251,20 @@ public class YosysService(
                     builder.Add("--pcf").AddPath(pcfFile);
                     break;
                 case "ccf":
-                    var absolutePcfPath = Path.Combine(project.RootFolderPath, pcfFile);
-                    outputService.WriteLine($"Converting {absolutePcfPath} to CCF File");
-
-                    if (File.Exists(absolutePcfPath))
-                    {
-                        ConstraintFileHelper.Convert(absolutePcfPath,
-                            Path.Combine(project.RootFolderPath, "./build/constrains.ccf"));
-                    }
-                    else
-                    {
-                        outputService.WriteLine($"Could not generate CCF file from {pcfFile}");
+                    if (!ConvertConstraintFile(project, pcfFile, "./build/constrains.ccf", "CCF",
+                            ConstraintFileHelper.ConvertPcfToCcf))
                         return false;
-                    }
 
                     builder.Add("-o");
                     builder.AddScript("ccf={path}", ("{path}", "./build/constrains.ccf"));
+                    break;
+                case "cst":
+                    if (!ConvertConstraintFile(project, pcfFile, "./build/constraints.cst", "CST",
+                            ConstraintFileHelper.ConvertPcfToCst))
+                        return false;
+
+                    builder.Add("-o");
+                    builder.AddScript("cst={path}", ("{path}", "./build/constraints.cst", true));
                     break;
                 default:
                     outputService.WriteLine($"Could not find Constraint file type: {cFileType}");
@@ -285,6 +283,10 @@ public class YosysService(
                     pnrOutput = "./build/impl.txt";
                     builder.Add("-o");
                     builder.AddScript("out={path}", ("{path}", pnrOutput));
+                    break;
+                case "json":
+                    pnrOutput = "./build/pnr.json";
+                    builder.Add("--write").AddPath(pnrOutput);
                     break;
                 default:
                     outputService.WriteLine($"Could not find output type: {cOutputType}");
@@ -354,6 +356,7 @@ public class YosysService(
             {
                 "asc" => "./build/nextpnr.asc",
                 "txt" => "./build/impl.txt",
+                "json" => "./build/pnr.json",
                 _ => throw new ArgumentException($"Unsupported input type: {cOutputType}")
             };
 
@@ -371,12 +374,15 @@ public class YosysService(
             {
                 "bin" => "./build/pack.bin",
                 "bit" => "./build/pack.bit",
+                "fs" => "./build/pack.fs",
                 _ => throw new ArgumentException($"Unsupported output format: {pOutputFormat}")
             };
 
             // Remove a previous result so a failing run can never be followed by a stale bitstream
             DeleteArtifact(project, outputPath);
 
+            // gowin_pack takes the output as an option, the other pack tools as the second argument
+            if (packTool == "gowin_pack") builder.Add("-o");
             builder.AddPath(outputPath);
 
             var flags = properties.GetValueOrDefault("yosysToolchainPackFlags")?.Split(' ',
@@ -438,6 +444,26 @@ public class YosysService(
 
         await toolExecutionDispatcherService.ExecuteAsync(command);
         return ReadJson(Path.Combine(buildpath, "yosys_nodes.json"));
+    }
+
+    /// <summary>
+    /// Converts the project's PCF file, which the constraint editor writes, into the format the nextpnr
+    /// architecture reads.
+    /// </summary>
+    private bool ConvertConstraintFile(UniversalFpgaProjectRoot project, string pcfFile, string targetFile,
+        string targetFormat, Action<string, string> convert)
+    {
+        var absolutePcfPath = Path.Combine(project.RootFolderPath, pcfFile);
+        outputService.WriteLine($"Converting {absolutePcfPath} to {targetFormat} File");
+
+        if (!File.Exists(absolutePcfPath))
+        {
+            outputService.WriteLine($"Could not generate {targetFormat} file from {pcfFile}");
+            return false;
+        }
+
+        convert(absolutePcfPath, Path.Combine(project.RootFolderPath, targetFile));
+        return true;
     }
 
     private static bool IsErrorLine(string line)

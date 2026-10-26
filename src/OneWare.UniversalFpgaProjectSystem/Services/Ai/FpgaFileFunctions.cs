@@ -80,7 +80,7 @@ public sealed class FpgaFileFunctions(
 
                 if (project.IsCompileExcluded(file)) flags.Add("excluded");
                 if (project.IsTestBench(file)) flags.Add("testbench");
-                if (project.TopEntityFilePath == file) flags.Add("top");
+                if (project.IsTopEntityFile(file)) flags.Add("top");
 
                 builder.AppendLine($"  - {file}{(flags.Count == 0 ? "" : $" [{string.Join(", ", flags)}]")}");
             }

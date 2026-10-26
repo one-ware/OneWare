@@ -35,9 +35,12 @@ public class CopilotModule : OneWareModuleBase
     public const string WireApiResponses = "responses";
 
     /// <summary>
-    /// Default model, matching the Copilot CLI (and the VS Code Agent Host built on it).
+    /// Default model of the GitHub Copilot chat.
     /// </summary>
-    public const string DefaultModelId = "claude-sonnet-4-5";
+    public const string DefaultModelId = "claude-sonnet-5-5";
+
+    /// <summary>Default model of the OneWare Agents chat.</summary>
+    public const string OneWareAgentsDefaultModelId = "claude-sonnet-5-5";
 
     /// <summary>
     /// Id of the model that lets Copilot route each turn to a backend model itself. Sessions using
@@ -56,7 +59,7 @@ public class CopilotModule : OneWareModuleBase
         Id = "copilotcli",
         Type = "NativeTool",
         Name = "Copilot CLI",
-        Description = "Used for Copilot Integration",
+        Description = "Agent runtime used by the GitHub Copilot and OneWare Agents chats. OneWare Agents doesn't need a GitHub account.",
         License = "GitHub Copilot CLI License",
         IconUrl = "https://github.githubassets.com/images/modules/site/copilot/copilot.png",
         AcceptLicenseBeforeDownload = true,
@@ -90,38 +93,38 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "1.0.83",
+                Version = "1.0.97",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-x64.zip"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-win32-x64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-win32-arm64.zip"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-win32-arm64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-x64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-linux-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-linux-arm64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-linux-arm64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-x64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-darwin-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.83/copilot-darwin-arm64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-darwin-arm64.tar.gz"
                     },
                 ]
             }
@@ -255,6 +258,7 @@ public class CopilotModule : OneWareModuleBase
                 new object[]
                 {
                     CopilotChatService.AutoTierDefault,
+                    CopilotChatService.AutoTierFast,
                     CopilotChatService.AutoTierEfficiency,
                     CopilotChatService.AutoTierBalance,
                     CopilotChatService.AutoTierIntelligence
@@ -262,8 +266,8 @@ public class CopilotModule : OneWareModuleBase
             {
                 HoverDescription =
                     "Routing preference for the \"auto\" model, which lets Copilot pick a backend " +
-                    "model per turn. Default: leave the choice to Copilot. Efficiency: prefer " +
-                    "faster, cheaper models. Balance: trade off speed and capability. " +
+                    "model per turn. Default: leave the choice to Copilot. Fast: prefer the " +
+                    "lowest-latency models. Efficiency: prefer cheaper models. Balance: trade off speed and capability. " +
                     "Intelligence: prefer the most capable models."
             });
 

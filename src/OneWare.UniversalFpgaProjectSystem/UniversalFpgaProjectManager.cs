@@ -277,9 +277,7 @@ public class UniversalFpgaProjectManager : IProjectManager
         foreach (var entity in entities)
         {
             var entityName = entity;
-            var isCurrent = root.TopEntity == entityName &&
-                            root.TopEntityFilePath != null &&
-                            file.RelativePath.EqualPaths(root.TopEntityFilePath);
+            var isCurrent = root.TopEntity == entityName && root.IsTopEntityFile(file);
 
             menu.Items.Add(new MenuItemModel(entityName)
             {

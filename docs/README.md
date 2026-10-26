@@ -131,9 +131,31 @@ Debug builds add developer tooling:
 | `--autolaunch` | `ONEWARE_AUTOLAUNCH` | Run an action registered by a plugin after startup |
 | `--package-repository` | `ONEWARE_PACKAGE_REPOSITORY` | Override the package repository URL(s), separated by `;` |
 | `--configuration-profile` | `ONEWARE_CONFIGURATION_PROFILE` | Apply a configuration profile (see the [README](../README.md#configuration-profiles)) |
+| `-C`, `--working-directory` | – | Change the working directory before anything else runs |
 
 Using a separate `--oneware-dir` and `--oneware-appdata-dir` gives you a clean, isolated profile for testing
-without touching your normal installation.
+without touching your normal installation. `./run-fresh.sh` does this for you with a new temporary profile (pass
+OneWare Studio arguments after `--`, see `./run-fresh.sh --help`).
+
+### CLI commands
+
+The Studio executable also hosts headless commands (`stop`, `extensions …`, `cloud login|logout`, plus any
+`IOneWareCliModule` from installed plugins). `studio/OneWare.Studio.Desktop/Cli/StudioCli.cs` decides before
+Avalonia starts: if the first positional argument looks like a command name (letters, digits, `-`, `_`) and is
+not an existing file or folder, or `--help`/`--version` is passed, the CLI runs and the GUI is never started.
+Anything else (no arguments, a path or a `oneware://` URL) starts the GUI as before.
+
+On Windows, `OneWareStudio.exe` is a GUI-subsystem app, so the publish step also creates `oneware.exe`, a copy
+with the console subsystem. Use it from terminals; without a command it starts `OneWareStudio.exe` detached.
+
+### Single instance and IPC
+
+Only one Studio runs per user. `StudioInstanceChannel` (`src/OneWare.Essentials/Helpers`) holds an exclusive lock
+file and a named pipe (a Unix socket on Linux/macOS), both scoped to the current user: `%TEMP%\OneWare` on Windows,
+`$XDG_RUNTIME_DIR/oneware` (or `/tmp/oneware-<user>`) on Linux and `$TMPDIR/OneWare` on macOS. A second start
+forwards its path or `oneware://` URL to the running instance and exits. CLI commands use the same channel to send
+commands (`cmd:<name>`), for example `oneware stop` sends `shutdown` and waits for the lock to be released.
+Messages that arrive while Studio is still starting are queued until startup content has loaded.
 
 ### Where things are stored
 

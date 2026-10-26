@@ -1,4 +1,4 @@
-<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+﻿<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -94,39 +94,8 @@
             <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
                   Background="{DynamicResource ThemeBackgroundBrush}"
                   RowDefinitions="*" ColumnDefinitions="6,*">
-                <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,*">
-                    <Border Grid.Row="0" Padding="10 8" BorderThickness="0 0 0 1"
-                            IsVisible="{Binding FeaturedPackage.IsVisible}"
-                            BorderBrush="{DynamicResource ThemeBorderLowBrush}"
-                            Background="{DynamicResource ThemeControlLowBrush}">
-                        <DockPanel LastChildFill="True">
-                            <Panel DockPanel.Dock="Left" Width="50" Height="50" Margin="0 0 10 0">
-                                <Image Source="{DynamicResource AI_Img}" />
-                            </Panel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Vertical" Spacing="4"
-                                        VerticalAlignment="Center" Margin="10 0 0 0">
-                                <Button Classes="secondary"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                        Background="{Binding FeaturedPackage.Target.PrimaryButtonBrush}"
-                                        Content="{Binding FeaturedPackage.Target.PrimaryButtonText}"
-                                        Command="{Binding FeaturedPackage.PrimaryCommand}" />
-                                <Button Classes="secondary"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                        Content="Details"
-                                        Command="{Binding FeaturedPackage.ShowDetailsCommand}" />
-                            </StackPanel>
-                            <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Classes="h3"
-                                           Text="{Binding FeaturedPackage.Title}" />
-                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Top"
-                                           Text="{Binding FeaturedPackage.Description}" />
-                                <controls:HyperLink HorizontalAlignment="Left"
-                                                    Url="{Binding FeaturedPackage.LearnMoreUrl}"
-                                                    Label="Show more information." />
-                            </StackPanel>
-                        </DockPanel>
-                    </Border>
-                    <ListBox Grid.Row="1" Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                <Grid Grid.Row="0" Grid.Column="1">
+                    <ListBox Name="PluginList" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              Background="{DynamicResource ThemeControlTransparentBrush}" BorderThickness="0"
                              SelectedItem="{Binding SelectedCategory.SelectedPackage, Mode=TwoWay, FallbackValue={x:Null}}"
                              ItemsSource="{Binding SelectedCategory.VisibleEntries, FallbackValue={x:Null}}">

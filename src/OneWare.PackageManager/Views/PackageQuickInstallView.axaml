@@ -104,10 +104,10 @@
                         <Border DockPanel.Dock="Bottom" Classes="inset"
                                 Padding="{DynamicResource ThemePaddingLarge}"
                                 Margin="0 8 0 0">
-                            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                                          VerticalScrollBarVisibility="Auto">
-                                <controls:MarkdownViewer Markdown="{Binding LicenseText}" Margin="10 5 0 0" />
-                            </ScrollViewer>
+                            <!-- Scrolls itself: an outer ScrollViewer would defeat virtualization, and building
+                                 every block of a long license at once freezes the UI -->
+                            <controls:MarkdownViewer VirtualizationEnabled="True"
+                                                     Markdown="{Binding LicenseText}" Margin="10 5 0 0" />
                         </Border>
                     </DockPanel>
 

@@ -20,6 +20,8 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
     public const string OneWareCloudHostKey = "General_OneWareCloud_Host";
     public const string OneWareAccountUserIdKey = "General_OneWareCloud_AccountUserId";
     public const string CredentialStore = OfficialHost;
+    public const string LoginIpcCommand = "cloud-login";
+    public const string LogoutIpcCommand = "cloud-logout";
 
     public override void RegisterServices(IServiceCollection services)
     {
@@ -55,6 +57,8 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
                     DataContext = serviceProvider.Resolve<OneWareCloudAccountFlyoutViewModel>()
                 }));
 
+        RegisterIpcCommands(serviceProvider);
+
         serviceProvider.Resolve<IWindowService>().RegisterMenuItem("MainWindow_MainMenu/Help",
             new MenuItemModel("Feedback")
             {
@@ -63,6 +67,32 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
                 Command = new AsyncRelayCommand(async () => await OpenFeedbackDialogAsync())
             }
         );
+    }
+
+    // Keeps a running Studio in sync with `oneware cloud login/logout`; otherwise its next settings save
+    // would restore the previous account.
+    private static void RegisterIpcCommands(IServiceProvider serviceProvider)
+    {
+        var ipcCommands = serviceProvider.Resolve<IIpcCommandService>();
+        var loginService = serviceProvider.Resolve<OneWareCloudLoginService>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+
+        ipcCommands.RegisterCommand(LoginIpcCommand, async userId =>
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return;
+
+            settingsService.SetSettingValue(OneWareAccountUserIdKey, userId);
+            await loginService.RefreshFromUserIdAsync(userId);
+        });
+
+        ipcCommands.RegisterCommand(LogoutIpcCommand, _ =>
+        {
+            if (loginService.UserId is { } userId)
+                loginService.Logout(userId);
+
+            return Task.CompletedTask;
+        });
     }
 
     public static async Task OpenFeedbackDialogAsync()

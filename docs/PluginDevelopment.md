@@ -6,9 +6,10 @@ and how UniversalFpgaProject support is wired so you can extend it safely.
 ## Quick start
 
 1) Create a class library that references `OneWare.Essentials`.
-2) Implement a module by deriving from `OneWare.Essentials.Services.OneWareModuleBase`.
-3) Add a `compatibility.txt` file next to your plugin assemblies.
-4) Package the plugin as a folder (assemblies + `compatibility.txt`) and install it via the plugin manager.
+2) Implement a GUI module by deriving from `OneWare.Essentials.Services.OneWareModuleBase`.
+3) Optionally implement a CLI module by deriving from `OneWare.Essentials.Services.OneWareCliModuleBase`.
+4) Add a `compatibility.txt` file next to your plugin assemblies.
+5) Package the plugin as a folder (assemblies + `compatibility.txt`) and install it via the plugin manager.
 
 Minimal module example:
 
@@ -34,6 +35,33 @@ public sealed class MyPluginModule : OneWareModuleBase
                 if (selected is [IProjectFile])
                     items.Add(new MenuItemModel("MyAction") { Header = "My Action" });
             });
+    }
+}
+```
+
+Minimal CLI module example:
+
+```csharp
+using System.CommandLine;
+using OneWare.Essentials.Services;
+
+namespace MyCompany.MyPlugin;
+
+public sealed class MyPluginCliModule : OneWareCliModuleBase
+{
+    public override IReadOnlyList<Command> RegisterCommands(IServiceProvider serviceProvider)
+    {
+        var helloCommand = new Command("myplugin", "Commands for MyPlugin");
+        var pingCommand = new Command("ping", "Simple health check");
+
+        pingCommand.SetAction((_, _) =>
+        {
+            Console.WriteLine("pong");
+            return Task.FromResult(0);
+        });
+
+        helloCommand.Subcommands.Add(pingCommand);
+        return [helloCommand];
     }
 }
 ```
@@ -92,17 +120,49 @@ You can generate `compatibility.txt` automatically during build by marking depen
 - A plugin must include a `compatibility.txt` file at its root. It lists assembly dependencies and
   versions using `AssemblyName : Version` lines. The check is enforced by
   `OneWare.Essentials.PackageManager.Compatibility.PluginCompatibilityChecker`.
-- Modules are discovered by scanning assemblies for `IOneWareModule` implementations.
-- If `IOneWareModule.RegisterServices` adds services, they are injected into the main container
-  before module initialization. If the app is already running, modules are initialized immediately.
+- GUI modules are discovered by scanning assemblies for `IOneWareModule` implementations.
+- CLI modules are discovered by scanning assemblies for `IOneWareCliModule` implementations.
+- `IOneWareModule.RegisterServices` contributes services to the desktop app container before
+  `Initialize(IServiceProvider)` runs.
+- `IOneWareCliModule.RegisterServices` contributes services to the CLI container before
+  `RegisterCommands(IServiceProvider)` runs.
+- A single assembly may contain both GUI and CLI modules when the feature supports both surfaces.
 
 ## Module lifecycle and dependency injection
 
-`IOneWareModule` is the entry point for plugins:
+`IOneWareModule` is the entry point for desktop/UI plugins:
 
 - `RegisterServices(IServiceCollection services)` lets you register your own services.
 - `Initialize(IServiceProvider serviceProvider)` runs after services are registered.
 - `Dependencies` allows declaring other module IDs to load before yours.
+
+`IOneWareCliModule` is the entry point for CLI plugins:
+
+- `RegisterServices(IServiceCollection services)` lets you register services needed by CLI commands.
+- `RegisterCommands(IServiceProvider serviceProvider)` returns the commands your module contributes.
+- `Dependencies` allows declaring other CLI module IDs that must load first.
+- CLI module types must be public, non-abstract, and expose a parameterless constructor so the CLI loader can discover and instantiate them.
+- Top-level command names must be plain words (letters, digits, `-`, `_`). The Studio executable only switches to
+  CLI mode when the first argument looks like a command name, so names containing `.`, `/` or `:` would be treated
+  as a file to open in the GUI.
+
+CLI modules are intentionally headless: they should not depend on Avalonia UI state, windows, or
+desktop-only lifecycles. Prefer shared services for reusable logic and keep CLI-specific behavior in
+the command layer.
+
+To update a running Studio from a CLI command, register a handler in your GUI module and send the command from
+the CLI module. Handlers run on the UI thread; prefix command names with your plugin id to avoid collisions.
+
+```csharp
+// GUI module (Initialize)
+serviceProvider.Resolve<IIpcCommandService>()
+    .RegisterCommand("myplugin-reload", argument => ReloadAsync(argument));
+
+// CLI command
+var channel = StudioInstanceChannel.Default;
+if (channel.IsStudioRunning())
+    await channel.SendCommandAsync("myplugin-reload", "some-argument", cancellationToken);
+```
 
 Use `serviceProvider.Resolve<T>()` or `ContainerLocator.Current` to resolve OneWare services.
 
@@ -148,6 +208,21 @@ The following sections document the core services and their key functions.
 - `Dependencies`: other module IDs that must load before this one.
 - `RegisterServices(IServiceCollection)`: add services to the DI container.
 - `Initialize(IServiceProvider)`: run after services are registered.
+
+#### `IOneWareCliModule` (src/OneWare.Essentials/Services/IOneWareCliModule.cs)
+
+- `Id`: module identifier (defaults to class name in `OneWareCliModuleBase`).
+- `Dependencies`: other CLI module IDs that must load before this one.
+- `RegisterServices(IServiceCollection)`: add services to the CLI DI container.
+- `RegisterCommands(IServiceProvider)`: return top-level CLI commands for registration.
+- Module type: must be public, non-abstract, and expose a parameterless constructor for CLI discovery.
+
+#### `IIpcCommandService` (src/OneWare.Essentials/Services/IIpcCommandService.cs)
+
+- `RegisterCommand(name, handler)`: handles a command sent to the running Studio (UI thread, optional string argument).
+- `ExecuteAsync(name, argument)`: runs a registered handler; returns false for unknown commands.
+- Send commands with `StudioInstanceChannel.Default.SendCommandAsync` (`src/OneWare.Essentials/Helpers/StudioInstanceChannel.cs`),
+  which also offers `IsStudioRunning()` and `WaitForExitAsync()`.
 
 #### `IPluginService` (src/OneWare.Essentials/Services/IPluginService.cs)
 
@@ -419,11 +494,13 @@ created through `SoftwareProjectFactory`, which the creator dialog uses too.
 
 #### `IAiFunctionProvider` (src/OneWare.Essentials/Services/IAiFunctionProvider.cs)
 
-- `RegisterFunction(IOneWareAiFunction)`: register an AI tool.
+- `RegisterFunction(IOneWareAiFunction)`: register an AI tool. Tools registered while chats are open are
+  pushed to their live sessions too.
 - `RegisterAgent(OneWareAiAgent)`: register a custom agent (see "AI agents and skills").
 - `RegisterSkill(OneWareAiSkill)`: register an on-demand skill document.
 - `RegisterSkillDirectory(string)`: register a directory of skills shipped with the plugin.
 - `GetTools()`: return the registered tools for chat or automation.
+- `ToolsChanged` event: raised when the result of `GetTools()` changes.
 - `FunctionStarted`, `FunctionProgress`, `FunctionCompleted` events identify each concurrent
   invocation by its unique ID.
 - Set `OneWareAiFunction.IsReadOnly` on tools that only read state, so read-only chat agents
@@ -496,7 +573,7 @@ model for FPGA workflows. It is designed to be extended by plugins.
 - Project files use JSON via `UniversalProjectProperties`. Keys are case-insensitive and stored in
   the project file. Common keys:
   - `include` / `exclude`: arrays of glob-like patterns used by `IsPathIncluded`.
-  - `topEntity`: name of the top-level entity or module. The file that contains it is resolved by scanning the project's HDL files (see `FpgaService.GetAllTopEntitiesAsync`). It can be set from the project settings or via the **Set Top Entity** context menu entry on an HDL file in the project explorer. Old files that stored a file path in `topEntity` are migrated automatically on load.
+  - `topEntity`: name of the top-level entity or module. The file that contains it is resolved by scanning the project's HDL files (see `FpgaService.GetAllTopEntitiesAsync`). It can be set from the project settings or via the **Set Top Entity** context menu entry on an HDL file in the project explorer. Old files that stored a file path in `topEntity` are migrated automatically on load. Use `IsTopEntityFile(IProjectFile)` / `IsTopEntityFile(string relativePath)` to check whether a file contains the current top entity.
   - `toolchain`: toolchain ID to run on compile.
   - `loader`: loader ID to use for programming.
   - `board`: selected hardware board (evaluation board) name. The legacy key `fpga` is automatically migrated to `board` on load.
@@ -618,6 +695,8 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 - `UniversalFpgaToolBar_PinPlannerMenuExtension`: pin planner menu.
 - `UniversalFpgaToolBar_DownloaderConfigurationExtension`: download configuration area.
 - `CompileWindow_TopRightExtension`: pin planner window (top right region).
+- `WelcomeScreen_Header`: welcome screen, below the app logo and version. Meant for short, subtle hints
+  (one `caption` line with `link` buttons); hide the control when it no longer applies, so it leaves no gap.
 - `EditView_Top`: top editor panel (used for test bench toolbar). Use the `Border.editor-bar` /
   `WrapPanel.editor-bar-items` style classes so the bar matches the others and wraps on small screens
   (see `docs/Styling.md`, "Editor bar").
@@ -625,7 +704,9 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 ## Suggested validation and troubleshooting
 
 - Ensure `compatibility.txt` matches the core dependency versions.
-- Verify your module class is public and implements `IOneWareModule`.
+- Verify your module class is public and implements `IOneWareModule` and/or `IOneWareCliModule`.
+- If CLI commands do not appear under `oneware --help`, verify the assembly is copied with the
+  plugin and the command name does not collide with an existing top-level command or alias.
 - If your UI does not appear, confirm you used the correct UI extension key.
 - For FPGA tooling, confirm your toolchain ID matches the project `toolchain` property.
 
