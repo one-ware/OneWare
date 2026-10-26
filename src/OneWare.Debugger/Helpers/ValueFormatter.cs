@@ -61,6 +61,11 @@ public static class ValueFormatter
         return Format(Mask(unchecked((ulong)parsed), bits), bits, numberBase);
     }
 
+    public static int HexBits(string raw)
+    {
+        return TryParseHex(raw, out _, out var bits) ? bits : 0;
+    }
+
     // The width is in the number itself: GDB pads to the register width, and the
     // Memory tab groups to the target's word width beforehand. That keeps a
     // 32-bit register correctly signed even when the target addresses 16-bit

@@ -8,7 +8,7 @@
              x:DataType="viewModels:ValueFormatViewModel">
 
     <!-- Sits in the header toolbar of Registers, Memory and Variables; all three share the view model. -->
-    <StackPanel Classes="toolbar">
+    <StackPanel Classes="toolbar" IsEnabled="{Binding !IsLocked}">
         <TextBlock Classes="muted" Text="Base" />
         <ComboBox Classes="small" MinWidth="64"
                   ItemsSource="{Binding Bases}"

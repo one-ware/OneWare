@@ -60,8 +60,13 @@
                                         Binding="{CompiledBinding Address, DataType=models:MemoryRow}" />
                     <DataGridTextColumn Header="Bytes" Width="*" IsReadOnly="True" FontFamily="{DynamicResource EditorFont}"
                                         Binding="{CompiledBinding Bytes, DataType=models:MemoryRow}" />
-                    <DataGridTextColumn Header="Value" Width="*" IsReadOnly="True" FontFamily="{DynamicResource EditorFont}"
-                                        Binding="{CompiledBinding Value, DataType=models:MemoryRow}" />
+                    <DataGridTemplateColumn Header="Value" Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:MemoryRow">
+                                <views:EditableValueCell FontFamily="{DynamicResource EditorFont}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 

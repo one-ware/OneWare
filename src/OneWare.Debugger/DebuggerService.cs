@@ -276,6 +276,31 @@ public class DebuggerService(ICompositeServiceProvider serviceProvider, ILogger 
         return session.ReadMemoryAsync(address, byteCount);
     }
 
+    public Task<DebugWriteResult> WriteRegisterAsync(string name, ulong value)
+    {
+        return WriteAsync(session => session.WriteRegisterAsync(name, value));
+    }
+
+    public Task<DebugWriteResult> WriteMemoryAsync(string address, byte[] bytes)
+    {
+        return WriteAsync(session => session.WriteMemoryAsync(address, bytes));
+    }
+
+    public Task<DebugWriteResult> WriteVariableAsync(string name, long value)
+    {
+        return WriteAsync(session => session.WriteVariableAsync(name, value));
+    }
+
+    private Task<DebugWriteResult> WriteAsync(Func<IDebugSession, Task<DebugWriteResult>> write)
+    {
+        var session = _session;
+
+        if (session == null) return Task.FromResult(DebugWriteResult.Failed("No debug session is running."));
+        if (State.IsRunning) return Task.FromResult(DebugWriteResult.Failed("The target is running."));
+
+        return write(session);
+    }
+
     public Task SendRawCommandAsync(string command)
     {
         if (_session == null || string.IsNullOrWhiteSpace(command)) return Task.CompletedTask;

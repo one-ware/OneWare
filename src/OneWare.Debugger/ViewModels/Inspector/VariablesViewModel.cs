@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneWare.Debugger.Helpers;
 using OneWare.Debugger.Models;
@@ -14,10 +15,13 @@ namespace OneWare.Debugger.ViewModels.Inspector;
 public class VariablesViewModel : ObservableObject
 {
     private readonly IDebuggerService _debuggerService;
+    private readonly InspectorEditSession _editSession;
 
-    public VariablesViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat)
+    public VariablesViewModel(IDebuggerService debuggerService, ValueFormatViewModel valueFormat,
+        InspectorEditSession editSession)
     {
         _debuggerService = debuggerService;
+        _editSession = editSession;
         ValueFormat = valueFormat;
 
         _debuggerService.StateChanged += (_, _) => Apply(_debuggerService.State);
@@ -63,7 +67,8 @@ public class VariablesViewModel : ObservableObject
             var row = new VariableRow
             {
                 Name = displayName,
-                Type = displayType
+                Type = displayType,
+                Edit = new ValueEdit(_editSession)
             };
             Show(row, variables[i].Value);
 
@@ -83,6 +88,10 @@ public class VariablesViewModel : ObservableObject
     {
         row.Raw = raw;
         row.Value = ValueFormatter.FormatDecimalValue(raw, BitsFor(raw), ValueFormat.SelectedBase);
+        row.Edit.Bits = BitsFor(raw);
+        row.Edit.LockReason = long.TryParse(raw.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out _)
+            ? null
+            : "Only whole numbers can be edited";
     }
 
     private void RenderAll()

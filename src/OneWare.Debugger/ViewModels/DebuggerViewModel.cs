@@ -24,6 +24,7 @@ public partial class DebuggerViewModel : ExtendedTool
     public const string IconKey = "Codeicons.Debug";
 
     private readonly IDebuggerService _debuggerService;
+    private readonly InspectorEditSession _editSession;
     private readonly ILogger _logger;
     private readonly IMainDockService _mainDockService;
     private readonly IProjectActionService _projectActionService;
@@ -44,9 +45,10 @@ public partial class DebuggerViewModel : ExtendedTool
 
     public DebuggerViewModel(IDebuggerService debuggerService, ILogger logger, ISettingsService settingsService,
         IProjectExplorerService projectExplorerService, IMainDockService mainDockService,
-        IProjectActionService projectActionService, MainPanelViewModel mainPanel) : base(IconKey)
+        IProjectActionService projectActionService, MainPanelViewModel mainPanel, InspectorEditSession editSession) : base(IconKey)
     {
         _debuggerService = debuggerService;
+        _editSession = editSession;
         _logger = logger;
         _settingsService = settingsService;
         _projectExplorerService = projectExplorerService;
@@ -60,6 +62,11 @@ public partial class DebuggerViewModel : ExtendedTool
         Title = "Debugger";
 
         _debuggerService.StateChanged += OnDebuggerStateChanged;
+
+        _editSession.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(InspectorEditSession.IsEditing)) NotifyCommandStates();
+        };
     }
 
     // The tab area below the bar.
@@ -306,7 +313,8 @@ public partial class DebuggerViewModel : ExtendedTool
 
         if (!wasActive) AttachToSession();
 
-        MainPanel.Registers.Apply(FilterRegisters(_debuggerService.State.Registers), IsRunning);
+        MainPanel.Registers.Apply(FilterRegisters(_debuggerService.State.Registers), IsRunning,
+            _debuggerService.TargetProfile.ReadOnlyRegisters);
         StatusText = DescribeState(_debuggerService.State);
 
         MainPanel.Memory.Refresh();
@@ -396,7 +404,7 @@ public partial class DebuggerViewModel : ExtendedTool
 
     private bool CanResume()
     {
-        return IsSessionEstablished() && !IsRunning;
+        return IsSessionEstablished() && !IsRunning && !_editSession.IsEditing;
     }
 
     private bool CanStepOut()

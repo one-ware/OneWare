@@ -21,6 +21,8 @@ public partial class ValueFormatViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsBin))]
     private NumberBase _selectedBase;
 
+    [ObservableProperty] private bool _isLocked;
+
     public ValueFormatViewModel(ISettingsService settingsService)
     {
         _settingsService = settingsService;

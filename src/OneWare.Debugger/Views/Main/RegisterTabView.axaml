@@ -28,8 +28,13 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Register" Width="*" FontFamily="{DynamicResource EditorFont}"
                                         Binding="{CompiledBinding Name, DataType=models:RegisterRow}" />
-                    <DataGridTextColumn Header="Value" Width="2*" FontFamily="{DynamicResource EditorFont}"
-                                        Binding="{CompiledBinding Value, DataType=models:RegisterRow}" />
+                    <DataGridTemplateColumn Header="Value" Width="2*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="models:RegisterRow">
+                                <views:EditableValueCell FontFamily="{DynamicResource EditorFont}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 
