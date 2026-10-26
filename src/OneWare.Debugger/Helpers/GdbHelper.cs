@@ -1,4 +1,3 @@
-﻿using System.Diagnostics;
 using Mono.Unix.Native;
 using OneWare.Essentials.Helpers;
 
@@ -6,38 +5,17 @@ namespace OneWare.Debugger.Helpers;
 
 public class GdbHelper
 {
+    // Halts the debugger process so that GDB accepts commands again while a target is
+    // running. Under Windows there is nothing usable for that: a Ctrl+C from an application
+    // without its own console does not reach the other process, and the SIGINT.exe formerly
+    // referenced was never shipped and made Stop fail in the middle of cleanup.
+    // -> There only the attached target halts, through -exec-interrupt on the connection.
     public static int SendCtrlC(int pid)
     {
-        switch (PlatformHelper.Platform)
+        return PlatformHelper.Platform switch
         {
-            case PlatformId.WinX64:
-            {
-                using var process = new Process();
-                process.StartInfo = new ProcessStartInfo
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "SIGINT.exe"),
-                    Arguments = $"{pid}"
-                };
-
-                process.ErrorDataReceived += (o, i) => { Console.WriteLine(i.Data); };
-                process.OutputDataReceived += (o, i) => { Console.WriteLine("CTRL+C: " + i.Data); };
-
-                process.Start();
-                process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
-                process.WaitForExit(1000);
-
-                return 1;
-            }
-            case PlatformId.WinArm64:
-                return 0;
-            default:
-                return Syscall.kill(pid, Signum.SIGINT);
-        }
+            PlatformId.WinX64 or PlatformId.WinArm64 => 0,
+            _ => Syscall.kill(pid, Signum.SIGINT)
+        };
     }
 }

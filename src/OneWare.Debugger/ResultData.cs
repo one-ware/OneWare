@@ -117,10 +117,29 @@ public class ResultData : IEnumerable
             if (str[pos] == '\\')
             {
                 pos++;
+                if (pos >= str.Length) break;
 
-                sb.Append("\\");
-                if (pos >= str.Length)
-                    break;
+                switch (str[pos])
+                {
+                    case 'n':
+                        sb.Append('\n');
+                        break;
+                    case 't':
+                        sb.Append('\t');
+                        break;
+                    case 'r':
+                        sb.Append('\r');
+                        break;
+                    case '\\' or '"':
+                        sb.Append(str[pos]);
+                        break;
+                    default:
+                        sb.Append('\\').Append(str[pos]);
+                        break;
+                }
+
+                pos++;
+                continue;
             }
 
             sb.Append(str[pos]);
