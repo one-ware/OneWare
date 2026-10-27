@@ -36,7 +36,16 @@ public class PluginService : IPluginService
         _pluginDirectory = Path.Combine(paths.SessionDirectory, "Plugins");
     }
 
+    private readonly Dictionary<string, Version> _pluginAssemblies = new(StringComparer.OrdinalIgnoreCase);
+
     public List<IPlugin> InstalledPlugins { get; } = new();
+
+    public IReadOnlyDictionary<string, Version> PluginAssemblies => _pluginAssemblies;
+
+    public IReadOnlyList<IPlugin> AddPlugins(IEnumerable<string> paths)
+    {
+        return PluginAssemblyLoader.SortByDependencies(paths).Select(AddPlugin).ToList();
+    }
 
     public IPlugin AddPlugin(string path)
     {
@@ -45,7 +54,7 @@ public class PluginService : IPluginService
         var plugin = new Plugin(Path.GetFileName(path), path);
         InstalledPlugins.Add(plugin);
 
-        if (PluginCompatibilityChecker.CheckCompatibilityPath(path) is { IsCompatible: false } test)
+        if (PluginCompatibilityChecker.CheckCompatibilityPath(path, _pluginAssemblies) is { IsCompatible: false } test)
         {
             plugin.CompatibilityReport = test.Report;
             ContainerLocator.Container?.Resolve<ILogger>().Error($"Plugin {path} failed loading:\n{test.Report}", null, false);
@@ -129,6 +138,9 @@ public class PluginService : IPluginService
         {
             if (!PluginAssemblyLoader.TryGetManagedAssemblyName(file, out var assemblyName))
                 continue;
+
+            if (assemblyName is { Name: { } name, Version: { } version })
+                _pluginAssemblies.TryAdd(name, version);
 
             if (assemblyName.FullName is { } fullName && loadedAssemblyNames.Contains(fullName))
                 continue;

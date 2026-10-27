@@ -5,6 +5,20 @@ public class PluginCompatibilityChecker
 {
     public static CompatibilityReport CheckCompatibilityPath(string path)
     {
+        return CheckCompatibilityPath(path, null);
+    }
+
+    /// <summary>
+    ///     Checks the <c>compatibility.txt</c> of the plugin at <paramref name="path" />.
+    /// </summary>
+    /// <param name="path">Plugin folder.</param>
+    /// <param name="pluginAssemblies">
+    ///     Assemblies provided by already loaded plugins. A plugin that extends another plugin requires
+    ///     assemblies that are not part of the core application.
+    /// </param>
+    public static CompatibilityReport CheckCompatibilityPath(string path,
+        IReadOnlyDictionary<string, Version>? pluginAssemblies)
+    {
         try
         {
             var depFilePath = Path.Combine(path, "compatibility.txt");
@@ -14,7 +28,7 @@ public class PluginCompatibilityChecker
                 return new CompatibilityReport(false, []);
             }
 
-            return CheckCompatibility(File.ReadAllText(depFilePath));
+            return CheckCompatibility(File.ReadAllText(depFilePath), pluginAssemblies);
         }
         catch
         {
@@ -23,6 +37,16 @@ public class PluginCompatibilityChecker
     }
 
     public static CompatibilityReport CheckCompatibility(string? deps)
+    {
+        return CheckCompatibility(deps, null);
+    }
+
+    /// <summary>
+    ///     Checks the content of a <c>compatibility.txt</c> against the core application and
+    ///     <paramref name="pluginAssemblies" />, the assemblies provided by already loaded plugins.
+    /// </summary>
+    public static CompatibilityReport CheckCompatibility(string? deps,
+        IReadOnlyDictionary<string, Version>? pluginAssemblies)
     {
         try
         {
@@ -62,7 +86,11 @@ public class PluginCompatibilityChecker
                         continue;
                 }
 
-                if (!coreDeps.TryGetValue(dependencyName, out var coreDep) || coreDep.Version == null)
+                var providedVersion = coreDeps.TryGetValue(dependencyName, out var coreDep) ? coreDep.Version : null;
+                if (providedVersion == null && pluginAssemblies != null)
+                    pluginAssemblies.TryGetValue(dependencyName, out providedVersion);
+
+                if (providedVersion == null)
                 {
                     records.Add(new CompatibilityIssue(
                         dependencyName,
@@ -74,7 +102,7 @@ public class PluginCompatibilityChecker
                 }
 
                 var required = dependencyVersionFull;
-                var provided = NormalizeVersion(coreDep.Version);
+                var provided = NormalizeVersion(providedVersion);
                 var comparison = provided.CompareTo(required);
                 var requiresCoreUpdate = comparison < 0;
                 var pluginOutdated = comparison > 0;
@@ -117,6 +145,26 @@ public class PluginCompatibilityChecker
         {
             return new CompatibilityReport(false, []);
         }
+    }
+
+    /// <summary>
+    ///     Reads the assembly names listed in the content of a <c>compatibility.txt</c>.
+    /// </summary>
+    public static IReadOnlyList<string> ReadRequiredAssemblies(string? deps)
+    {
+        if (string.IsNullOrWhiteSpace(deps)) return [];
+
+        var names = new List<string>();
+        foreach (var line in deps.Split('\n'))
+        {
+            var separator = line.IndexOf(':');
+            if (separator <= 0) continue;
+
+            var name = line[..separator].Trim();
+            if (name.Length > 0) names.Add(name);
+        }
+
+        return names;
     }
 
     private static string NormalizeVersion(string version)

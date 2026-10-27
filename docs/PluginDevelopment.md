@@ -128,6 +128,39 @@ You can generate `compatibility.txt` automatically during build by marking depen
   `RegisterCommands(IServiceProvider)` runs.
 - A single assembly may contain both GUI and CLI modules when the feature supports both surfaces.
 
+## Plugins that extend another plugin
+
+A plugin can build on another plugin, for example a camera backend for an AI plugin. Three things make that work:
+
+1. **Package dependency.** Declare the required package per version in the package manifest. The package
+   manager installs missing or outdated dependencies first (the UI asks for confirmation and for their
+   licenses) and offers to remove dependent packages together with the package they require.
+
+   ```json
+   "versions": [
+     {
+       "version": "1.0.0",
+       "dependencies": [ { "id": "OneWare.AI", "minVersion": "1.4.0" } ],
+       "targets": [ { "target": "win-x64" } ]
+     }
+   ]
+   ```
+
+2. **Shared assemblies.** Reference the other plugin's contract assembly with `Private="false"` so it is not
+   shipped twice, and list it in `compatibility.txt` like the core assemblies:
+
+   ```
+   OneWare.Essentials : 1.0.45
+   OneWare.AI.Extensibility : 1.4.0
+   ```
+
+3. **Load order and version check.** At startup, `IPluginService.AddPlugins` loads a plugin after the plugin that
+   ships an assembly listed in its `compatibility.txt`. The compatibility check accepts assemblies of loaded
+   plugins with the same rule as core assemblies (same major and minor version, equal or newer build). When the
+   required plugin is missing, the plugin is not loaded and reported as incompatible.
+
+Also declare the other plugin's module ID in `IOneWareModule.Dependencies`, so your module is initialized after it.
+
 ## Module lifecycle and dependency injection
 
 `IOneWareModule` is the entry point for desktop/UI plugins:

@@ -18,6 +18,8 @@ namespace OneWare.Studio.Desktop.Cli;
 
 internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
 {
+    private readonly Dictionary<string, Version> _pluginAssemblies = new(StringComparer.OrdinalIgnoreCase);
+
     public void RegisterBuiltInCliModules(Func<CancellationToken, Task<int>> stopStudio)
     {
         cliHostBuilder.ModuleCatalog.AddModule(new StudioCliModule(stopStudio));
@@ -27,7 +29,8 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
 
     public void LoadPluginCliModules()
     {
-        foreach (var pluginPath in GetCliPluginDirectories())
+        // Plugins that extend another plugin are loaded after it
+        foreach (var pluginPath in PluginAssemblyLoader.SortByDependencies(GetCliPluginDirectories()))
             try
             {
                 if (!IsCompatiblePlugin(pluginPath))
@@ -55,7 +58,7 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
             return false;
         }
 
-        var compatibility = PluginCompatibilityChecker.CheckCompatibilityPath(pluginPath);
+        var compatibility = PluginCompatibilityChecker.CheckCompatibilityPath(pluginPath, _pluginAssemblies);
         if (compatibility.IsCompatible)
             return true;
 
@@ -132,6 +135,9 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
 
             if (assemblyName.FullName is not { } fullName || !addedAssemblyNames.Add(fullName))
                 continue;
+
+            if (pluginPath != null && assemblyName is { Name: { } name, Version: { } version })
+                _pluginAssemblies.TryAdd(name, version);
 
             if (loadedAssembliesByName.TryGetValue(fullName, out var loadedAssembly))
             {

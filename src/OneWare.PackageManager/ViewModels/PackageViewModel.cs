@@ -278,11 +278,20 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
                     ?? (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?
                     .Windows.FirstOrDefault(x => x.IsActive);
 
-        var result = await _windowService.ShowYesNoAsync("Remove Package",
-            $"Do you really want to remove {PackageState.Package.Name ?? PackageState.Package.Id}?",
-            MessageBoxIcon.Warning, owner);
+        var dependents = _packageService.GetInstalledDependents(PackageState.Package.Id!);
+
+        var message = $"Do you really want to remove {GetDisplayName(PackageState.Package)}?";
+        if (dependents.Count > 0)
+            message += "\n\nThe following packages require it and will be removed as well:\n" +
+                       string.Join("\n", dependents.Select(x => $"• {GetDisplayName(x.Package)}"));
+
+        var result = await _windowService.ShowYesNoAsync("Remove Package", message, MessageBoxIcon.Warning, owner);
 
         if (result != MessageBoxStatus.Yes) return;
+
+        foreach (var dependent in dependents)
+            if (!await _packageService.RemoveAsync(dependent.Package.Id!))
+                return;
 
         await _packageService.RemoveAsync(PackageState.Package.Id!);
     }
@@ -301,35 +310,50 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
             if (warningResult != MessageBoxStatus.Yes) return;
         }
 
+        var dependencies = _packageService.ResolveDependencies(model.Package.Id!, version);
+
+        if (!dependencies.CanInstall)
+        {
+            await _windowService.ShowMessageAsync("Installation Failed",
+                $"{GetDisplayName(model.Package)} requires packages that are not available:\n" +
+                string.Join("\n", dependencies.Unresolved.Select(x => $"• {x.Id} {x.MinVersion}")),
+                MessageBoxIcon.Warning, topLevel as Window);
+            return;
+        }
+
+        if (dependencies.ToInstall.Count > 0)
+        {
+            var dependencyResult = await _windowService.ShowYesNoAsync("Install Dependencies",
+                $"{GetDisplayName(model.Package)} requires the following packages. They will be installed as well:\n" +
+                string.Join("\n", dependencies.ToInstall.Select(x => $"• {GetDisplayName(x.State.Package)} {x.Version.Version}")),
+                MessageBoxIcon.Info, topLevel as Window);
+
+            if (dependencyResult != MessageBoxStatus.Yes) return;
+
+            foreach (var dependency in dependencies.ToInstall)
+            {
+                if (!dependency.State.Package.AcceptLicenseBeforeDownload) continue;
+
+                var license = await _packageService.DownloadLicenseAsync(dependency.State.Package);
+                if (license == null)
+                {
+                    await _windowService.ShowMessageAsync("Installation Failed",
+                        $"The license of {GetDisplayName(dependency.State.Package)} could not be loaded.",
+                        MessageBoxIcon.Warning, topLevel as Window);
+                    return;
+                }
+
+                if (!await ConfirmLicenseAsync($"Confirm License - {GetDisplayName(dependency.State.Package)}",
+                        license, topLevel as Window))
+                    return;
+            }
+        }
+
         if (model.Package.AcceptLicenseBeforeDownload)
         {
             if (Tabs.FirstOrDefault(x => x.Title == "License") is not { } licenseTab) return;
 
-            var confirmLicenseResult = await ContainerLocator.Container!.Resolve<IWindowService>()
-                .ShowMessageBoxAsync(new MessageBoxRequest
-                {
-                    Title = "Confirm License",
-                    Icon = MessageBoxIcon.Info,
-                    Message = licenseTab.Content,
-                    Buttons =
-                    [
-                        new MessageBoxButton
-                        {
-                            Text = "Accept",
-                            Role = MessageBoxButtonRole.Yes,
-                            Style = MessageBoxButtonStyle.Primary,
-                            IsDefault = true
-                        },
-                        new MessageBoxButton
-                        {
-                            Text = "Decline",
-                            Role = MessageBoxButtonRole.No,
-                            Style = MessageBoxButtonStyle.Secondary,
-                        }
-                    ]
-                }, topLevel as Window);
-
-            if (!confirmLicenseResult.IsAccepted) return;
+            if (!await ConfirmLicenseAsync("Confirm License", licenseTab.Content, topLevel as Window)) return;
         }
 
         var installResult = await _packageService.InstallAsync(model.Package.Id!, version);
@@ -342,6 +366,47 @@ public class PackageViewModel : PackageListEntryViewModel, IDisposable
                     $"Package is incompatible with current version of OneWare\n{installResult.CompatibilityRecord.Report}", MessageBoxIcon.Warning, topLevel as Window);
             }
         }
+        else if (installResult.Status is PackageInstallResultReason.MissingDependency)
+        {
+            await _windowService.ShowMessageAsync("Installation Failed",
+                $"A package required by {GetDisplayName(model.Package)} could not be installed." +
+                (installResult.CompatibilityRecord is { IsCompatible: false } record ? $"\n{record.Report}" : ""),
+                MessageBoxIcon.Warning, topLevel as Window);
+        }
+    }
+
+    private static string GetDisplayName(Package package)
+    {
+        return package.Name ?? package.Id ?? "Package";
+    }
+
+    private static async Task<bool> ConfirmLicenseAsync(string title, string license, Window? owner)
+    {
+        var confirmLicenseResult = await ContainerLocator.Container!.Resolve<IWindowService>()
+            .ShowMessageBoxAsync(new MessageBoxRequest
+            {
+                Title = title,
+                Icon = MessageBoxIcon.Info,
+                Message = license,
+                Buttons =
+                [
+                    new MessageBoxButton
+                    {
+                        Text = "Accept",
+                        Role = MessageBoxButtonRole.Yes,
+                        Style = MessageBoxButtonStyle.Primary,
+                        IsDefault = true
+                    },
+                    new MessageBoxButton
+                    {
+                        Text = "Decline",
+                        Role = MessageBoxButtonRole.No,
+                        Style = MessageBoxButtonStyle.Secondary,
+                    }
+                ]
+            }, owner);
+
+        return confirmLicenseResult.IsAccepted;
     }
 
     /// <summary>

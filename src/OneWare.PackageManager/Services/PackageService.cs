@@ -34,6 +34,8 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
     private readonly Dictionary<string, Type> _installersByType = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Task<PackageInstallResult>> _activeInstalls = new();
     private readonly Dictionary<string, CancellationTokenSource> _installCancellation = new();
+    // Set before an install starts, the install task is only registered once it awaits for the first time
+    private readonly HashSet<string> _installing = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<string[]> _repositoryUrls = [];
     
     private bool _disposed;
@@ -238,6 +240,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _installCancellation[packageId] = cts;
 
+        _installing.Add(packageId);
         var installTask = InstallInternalAsync(state, version, includePrerelease, ignoreCompatibility, cts.Token);
         _activeInstalls[packageId] = installTask;
 
@@ -247,6 +250,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         }
         finally
         {
+            _installing.Remove(packageId);
             _activeInstalls.Remove(packageId);
             _installCancellation.Remove(packageId);
             cts.Dispose();
@@ -269,6 +273,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _installCancellation[packageId] = cts;
 
+        _installing.Add(packageId);
         var updateTask = UpdateInternalAsync(state, version, includePrerelease, ignoreCompatibility, cts.Token);
         _activeInstalls[packageId] = updateTask;
 
@@ -278,6 +283,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         }
         finally
         {
+            _installing.Remove(packageId);
             _activeInstalls.Remove(packageId);
             _installCancellation.Remove(packageId);
             cts.Dispose();
@@ -341,6 +347,105 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
         var installer = ResolveInstaller(state.Package);
 
         return installer.CheckCompatibilityAsync(state.Package, version);
+    }
+
+    public PackageDependencyPlan ResolveDependencies(string packageId, PackageVersion version)
+    {
+        if (!_packages.TryGetValue(packageId, out var state)) return PackageDependencyPlan.Empty;
+
+        return ResolveDependencies(state, version);
+    }
+
+    public IReadOnlyList<IPackageState> GetInstalledDependents(string packageId)
+    {
+        return _packages.Values
+            .Where(x => x.Package.Id != packageId && x.InstalledVersion?.Dependencies is { } dependencies &&
+                        dependencies.Any(d => string.Equals(d.Id, packageId, StringComparison.OrdinalIgnoreCase)))
+            .Cast<IPackageState>()
+            .ToList();
+    }
+
+    private PackageDependencyPlan ResolveDependencies(PackageState state, PackageVersion version)
+    {
+        if (version.Dependencies is not { Length: > 0 }) return PackageDependencyPlan.Empty;
+
+        var toInstall = new List<PackageDependencyInstall>();
+        var unresolved = new List<PackageDependency>();
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (state.Package.Id != null) visited.Add(state.Package.Id);
+
+        CollectDependencies(version, toInstall, unresolved, visited);
+
+        return new PackageDependencyPlan(toInstall, unresolved);
+    }
+
+    private void CollectDependencies(PackageVersion version, List<PackageDependencyInstall> toInstall,
+        List<PackageDependency> unresolved, HashSet<string> visited)
+    {
+        foreach (var dependency in version.Dependencies ?? [])
+        {
+            // Dependency cycles and packages that are installed right now (e.g. the package that requested
+            // this dependency) must not be installed again
+            if (dependency.Id == null || !visited.Add(dependency.Id) || _installing.Contains(dependency.Id))
+                continue;
+
+            if (!_packages.TryGetValue(dependency.Id, out var dependencyState))
+            {
+                unresolved.Add(dependency);
+                continue;
+            }
+
+            if (dependency.IsSatisfiedBy(dependencyState.InstalledVersion?.Version)) continue;
+
+            var candidates = dependencyState.Package.Versions?
+                .Where(x => x.IsSupportedByStudio() && dependency.IsSatisfiedBy(x.Version))
+                .ToList() ?? [];
+
+            // Prefer stable versions, a prerelease is only used when it is the only one that satisfies the dependency
+            var selected = candidates.LastOrDefault(x => !x.IsPrerelease) ?? candidates.LastOrDefault();
+            if (selected == null)
+            {
+                unresolved.Add(dependency);
+                continue;
+            }
+
+            CollectDependencies(selected, toInstall, unresolved, visited);
+            toInstall.Add(new PackageDependencyInstall(dependencyState, selected));
+        }
+    }
+
+    private async Task<PackageInstallResult?> InstallDependenciesAsync(PackageState state, PackageVersion version,
+        bool ignoreCompatibility, CancellationToken cancellationToken)
+    {
+        var plan = ResolveDependencies(state, version);
+
+        if (!plan.CanInstall)
+        {
+            _logger.Error(
+                $"Cannot install {state.Package.Id} {version.Version}, missing dependencies: {string.Join(", ", plan.Unresolved.Select(x => $"{x.Id} {x.MinVersion}"))}");
+            return new PackageInstallResult { Status = PackageInstallResultReason.MissingDependency };
+        }
+
+        foreach (var dependency in plan.ToInstall)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var result = await InstallAsync(dependency.State.Package.Id!, dependency.Version,
+                dependency.Version.IsPrerelease, ignoreCompatibility, cancellationToken);
+
+            if (result.Status is PackageInstallResultReason.Installed or PackageInstallResultReason.AlreadyInstalled)
+                continue;
+
+            _logger.Error(
+                $"Cannot install {state.Package.Id} {version.Version}, installing dependency {dependency.State.Package.Id} {dependency.Version.Version} failed: {result.Status}");
+            return new PackageInstallResult
+            {
+                Status = PackageInstallResultReason.MissingDependency,
+                CompatibilityRecord = result.CompatibilityRecord
+            };
+        }
+
+        return null;
     }
 
     public async Task<string?> DownloadLicenseAsync(Package package)
@@ -531,8 +636,13 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
             state.InstalledVersion?.Version == selectedVersion.Version)
             return new PackageInstallResult { Status = PackageInstallResultReason.AlreadyInstalled };
 
+        // Dependencies are installed first, a plugin that extends another plugin is checked against it
+        if (await InstallDependenciesAsync(state, selectedVersion, ignoreCompatibility, cancellationToken) is
+            { } dependencyFailure)
+            return dependencyFailure;
+
         var installer = ResolveInstaller(state.Package);
-        
+
         var compatibility = await installer.CheckCompatibilityAsync(state.Package, selectedVersion, cancellationToken);
         if (!compatibility.IsCompatible && !ignoreCompatibility)
         {

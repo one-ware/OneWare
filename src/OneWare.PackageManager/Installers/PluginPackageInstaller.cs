@@ -40,11 +40,29 @@ public class PluginPackageInstaller : PackageInstallerBase
                 return new CompatibilityReport(true);
             }
             
-            return PluginCompatibilityChecker.CheckCompatibility(deps);
+            var report = PluginCompatibilityChecker.CheckCompatibility(deps, _pluginService.PluginAssemblies);
+
+            // A plugin that extends another plugin requires its assemblies. While that plugin is not loaded,
+            // the check cannot pass yet. Installing installs the dependency first, so the check passes then.
+            if (!report.IsCompatible && report.Issues.Count > 0 &&
+                report.Issues.All(x => x.Kind == CompatibilityRecordKind.MissingDependency) &&
+                HasDependencyThatIsNotLoaded(version))
+                return new CompatibilityReport(true, report.Issues);
+
+            return report;
         }
 
         // No compatibility URL means no specific requirements - assume compatible
         return new CompatibilityReport(true);
+    }
+
+    private bool HasDependencyThatIsNotLoaded(PackageVersion version)
+    {
+        return version.Dependencies?.Any(dependency => dependency.Id != null &&
+                                                       !_pluginService.InstalledPlugins.Any(plugin =>
+                                                           plugin.IsCompatible && string.Equals(plugin.Id,
+                                                               dependency.Id, StringComparison.OrdinalIgnoreCase)))
+               ?? false;
     }
 
     public override Task<PackageInstallerResult> InstallAsync(PackageInstallContext context,

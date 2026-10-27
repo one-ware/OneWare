@@ -79,11 +79,15 @@ public class DesktopStudioApp : StudioApp
     {
         try
         {
-            if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
-                Services.Resolve<IPluginService>().AddPlugin(pluginPath);
+            var plugins = new List<string>();
 
-            var plugins = Directory.GetDirectories(Paths.PluginsDirectory);
-            foreach (var module in plugins) Services.Resolve<IPluginService>().AddPlugin(module);
+            if (Environment.GetEnvironmentVariable("ONEWARE_MODULES") is { } pluginPath)
+                plugins.Add(pluginPath);
+
+            plugins.AddRange(Directory.GetDirectories(Paths.PluginsDirectory));
+
+            // Loaded together, so plugins that extend another plugin are loaded after it
+            Services.Resolve<IPluginService>().AddPlugins(plugins);
         }
         catch (Exception e)
         {
