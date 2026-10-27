@@ -1,3 +1,17 @@
+## 1.0.46
+
+- Added a command line interface (`oneware`) to manage extensions, log in to the cloud and stop the running Studio, which plugins can extend with their own commands
+- Added C/C++ software projects (`.swproj`) with build, run and debug actions in the project toolbar
+- Added a GDB debugger with breakpoints in the editor margin, an execution line marker, variable values on hover and views for variables, registers, memory and breakpoints
+- Values of variables, registers and memory can be edited while the debugger is paused
+- Extensions can now depend on other extensions, which are installed automatically, and removing an extension also offers to remove the extensions that need it
+- Added a copy button and a "Copy Message" context menu entry to AI chat messages
+- Enabled the Yosys flow for Gowin boards
+- Fixed a crash when selecting text across a table in Markdown views
+- Fixed a crash while highlighting text in the editor
+- Fixed pasting images into the AI chat on macOS
+- Fixed a duplicated message when steering the AI while another message is queued
+
 ## 1.0.45
 
 - Added a Fast option to the Copilot auto model routing for lower latency
