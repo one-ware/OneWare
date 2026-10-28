@@ -15,6 +15,7 @@ using Dock.Model.Core;
 using Dock.Model.Mvvm.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OneWare.Acp;
 using OneWare.Chat;
 using OneWare.CloudIntegration;
 using OneWare.Copilot;
@@ -72,6 +73,7 @@ public class DesktopStudioApp : StudioApp
         moduleCatalog.AddModule<TypeScriptModule>();
         moduleCatalog.AddModule<ChatModule>();
         moduleCatalog.AddModule<CopilotModule>();
+        moduleCatalog.AddModule<AcpModule>();
         moduleCatalog.AddModule<OneWareCloudIntegrationModule>();
     }
 
