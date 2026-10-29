@@ -13,6 +13,7 @@ public class StudioCliTests
     [InlineData(new[] { "--oneware-dir", "extensions" }, false)]
     [InlineData(new[] { "--autolaunch", "action" }, false)]
     [InlineData(new[] { "extensions", "list" }, true)]
+    [InlineData(new[] { "agent", "init" }, true)]
     [InlineData(new[] { "--oneware-dir", "/tmp/x", "stop" }, true)]
     [InlineData(new[] { "-C", "/tmp", "cloud", "login" }, true)]
     [InlineData(new[] { "--help" }, true)]

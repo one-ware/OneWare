@@ -26,6 +26,9 @@ public class ExtensionStoreCliModuleTests
     [InlineData(new[] { "extensions", "update" }, true)]
     [InlineData(new[] { "extension", "uninstall", "sample" }, true)]
     [InlineData(new[] { "oneai", "train", "project.oneai", "extensions" }, false)]
+    [InlineData(new[] { "--oneware-dir", "extensions", "agent", "init" }, false)]
+    [InlineData(new[] { "--oneware-dir", "example", "extensions", "list" }, true)]
+    [InlineData(new[] { "agent", "init", "--modules", "extensions" }, false)]
     [InlineData(new[] { "studio", "start" }, false)]
     public void IsExtensionStoreCommand_IdentifiesStoreCommands(string[] args, bool expected)
     {
