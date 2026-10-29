@@ -139,11 +139,20 @@ OneWare Studio arguments after `--`, see `./run-fresh.sh --help`).
 
 ### CLI commands
 
-The Studio executable also hosts headless commands (`stop`, `extensions …`, `cloud login|logout`, plus any
+The Studio executable also hosts headless commands (`stop`, `agent init`, `extensions …`, `cloud login|logout`, plus any
 `IOneWareCliModule` from installed plugins). `studio/OneWare.Studio.Desktop/Cli/StudioCli.cs` decides before
 Avalonia starts: if the first positional argument looks like a command name (letters, digits, `-`, `_`) and is
 not an existing file or folder, or `--help`/`--version` is passed, the CLI runs and the GUI is never started.
 Anything else (no arguments, a path or a `oneware://` URL) starts the GUI as before.
+
+`oneware agent init` installs the built-in `oneware-cli` skill and synchronizes skills explicitly
+contributed by installed extensions for external coding agents into `~/.agents/skills/`. It copies the
+complete skill directory, including supporting files, and records ownership and file hashes in
+`oneware-skills.json` in the OneWare documents directory. Unchanged
+skills from uninstalled extensions and omitted `--modules` directories are removed on the next run.
+Existing unmanaged or locally modified skills are preserved and reported as conflicts. A missing package
+database prevents cleanup of package extension skills; an unreadable database or failed extension
+discovery prevents synchronization. The command does not export the Studio chat's own skills or functions.
 
 On Windows, `OneWareStudio.exe` is a GUI-subsystem app, so the publish step also creates `oneware.exe`, a copy
 with the console subsystem. Use it from terminals; without a command it starts `OneWareStudio.exe` detached.

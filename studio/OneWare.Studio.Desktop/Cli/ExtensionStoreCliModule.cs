@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.CloudIntegration;
+using OneWare.Core.Services;
 using OneWare.Essentials.Enums;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
@@ -123,11 +124,28 @@ public sealed class ExtensionStoreCliModule : OneWareCliModuleBase
     public static bool IsExtensionStoreCommand(IEnumerable<string> args)
     {
         var arguments = args.ToArray();
-        if (arguments.Any(arg => string.Equals(arg, "oneai", StringComparison.OrdinalIgnoreCase)))
-            return false;
+        var symbols = OneWareStartupCommandLine.CreateSymbols();
+        var valueOptions = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var option in OneWareStartupCommandLine.CreateRootCommand(symbols).Options)
+        {
+            valueOptions.Add(option.Name);
+            foreach (var alias in option.Aliases)
+                valueOptions.Add(alias);
+        }
 
-        return arguments.Any(arg => string.Equals(arg, "extensions", StringComparison.OrdinalIgnoreCase) ||
-                                    string.Equals(arg, "extension", StringComparison.OrdinalIgnoreCase));
+        for (var i = 0; i < arguments.Length; i++)
+        {
+            var token = arguments[i];
+            if (token == "--") return false;
+            if (token.StartsWith('-'))
+            {
+                if (valueOptions.Contains(token)) i++;
+                continue;
+            }
+            return string.Equals(token, "extensions", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(token, "extension", StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
     }
 
     private static async Task<int> SearchAsync(IServiceProvider services, string? query, CancellationToken cancellationToken)
