@@ -30,7 +30,11 @@ These are a few of the current features:
 
 Download and get started **[here](https://one-ware.com/docs/studio/setup)**!
 
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/oneware)
+<p>
+  <a href="https://snapcraft.io/oneware" target="_blank" rel="noopener noreferrer">
+    <img src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" alt="Get it from the Snap Store" width="240" />
+  </a>
+</p>
 
 [![Get it from Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/com.one_ware.OneWare)
 
