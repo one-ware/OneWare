@@ -775,6 +775,10 @@ Key points:
   wrote the message, and `ChatIdleEvent.Model` for turns whose messages carry no model. The chat
   shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
   for a delegated task, shown in the header of its block.
+- Show images a tool returned with `ChatImageEvent` (encoded bytes plus MIME type, optional description and
+  tool name). The chat shows them below the tool call, saves them under `<AppData>/Chat/Images/<sessionId>/`
+  and deletes them with their chat. The Copilot chats raise it for image contents and binary results of tool
+  calls, including images referenced through `session.binary_asset` events.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
 - OneWare functions (tools from `IAiFunctionProvider`) report `AiFunctionEvent.SessionId` so the chat shows them in
   the right conversation. Put an object with a public string `SessionId` property (like the Copilot SDK's `ToolInvocation`) in
@@ -1100,6 +1104,19 @@ MCP tools use the normal permission flow, including per-chat approvals and the s
 mode. Ask/Plan and other read-only agents only allow MCP tools that the server marks read-only
 (`readOnlyHint`). Host-capable built-in CLI tools remain unavailable, and customization discovery does not
 enable repository command hooks.
+
+#### Auto routing tiers and HydraFusion
+
+The GitHub Copilot chat starts the runtime with the `DYNAMIC_AUTO_TIERS` feature flag
+(`COPILOT_CLI_ENABLED_FEATURE_FLAGS`, merged with flags already set) and enables the HydraFusion session
+feature flags (`CopilotSessionConfiguration.ApplyFusion`). The tiers of the **Auto** model picker come from
+`client.Rpc.Models.ListAsync` (`ModelList.Auto`) and include Fusion tiers when the account offers them
+(`CopilotAutoTiers.Build`); if the runtime offers none, the built-in Default, Fast, Efficiency, Balance and
+Intelligence tiers are used. BYOK and OneWare Agents chats always use the built-in tiers and never enable Fusion.
+
+During a Fusion turn, the root phases stay in the normal message flow. Review phases (judge, critic, …) are shown
+as sub-agent blocks named *Fusion &lt;phase&gt;*, with their model, verdict, duration and token usage
+(`CopilotChatService.Fusion.cs`).
 
 ### Combining agents and skills
 

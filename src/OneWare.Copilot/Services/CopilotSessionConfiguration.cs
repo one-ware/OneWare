@@ -104,6 +104,50 @@ internal static class CopilotSessionConfiguration
             : copilotHome);
     }
 
+    internal const string EnabledFeatureFlagsVariable = "COPILOT_CLI_ENABLED_FEATURE_FLAGS";
+
+    /// <summary>
+    /// Runtime startup flag that makes the runtime report Auto's tiers (including HydraFusion) from the
+    /// Copilot service. It also moves the runtime's model catalog to the service's <c>/meta</c> endpoint.
+    /// </summary>
+    internal const string DynamicAutoTiersFeatureFlag = "DYNAMIC_AUTO_TIERS";
+
+    /// <summary>Session flags HydraFusion tiers need to run, the same set VS Code enables.</summary>
+    internal static readonly string[] FusionFeatureFlags =
+        ["HYDRAFUSION", "HYDRAFUSION_ROLLOUT", "HYDRAFUSION_INTERRUPTED_COMMIT", "HYDRAFUSION_PLAN_V2"];
+
+    /// <summary>
+    /// Adds <paramref name="flag"/> to the runtime's comma separated <see cref="EnabledFeatureFlagsVariable"/>,
+    /// keeping flags that are already enabled there.
+    /// </summary>
+    internal static IReadOnlyDictionary<string, string> WithRuntimeFeatureFlag(
+        IReadOnlyDictionary<string, string> environment, string flag, bool ignoreCase)
+    {
+        var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        var key = environment.Keys.FirstOrDefault(x => string.Equals(x, EnabledFeatureFlagsVariable, comparison))
+                  ?? EnabledFeatureFlagsVariable;
+
+        var flags = (environment.GetValueOrDefault(key) ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        if (!flags.Contains(flag, StringComparer.OrdinalIgnoreCase)) flags.Add(flag);
+
+        var result = new Dictionary<string, string>(environment,
+            ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
+        {
+            [key] = string.Join(',', flags)
+        };
+        return result;
+    }
+
+    /// <summary>Lets the session run HydraFusion when an Auto tier selects it.</summary>
+    internal static void ApplyFusion(SessionConfigBase config)
+    {
+        config.FeatureFlags ??= new Dictionary<string, bool>();
+        foreach (var flag in FusionFeatureFlags)
+            config.FeatureFlags[flag] = true;
+    }
+
     internal static void ApplyDiscovery(SessionConfigBase config, string workingDirectory,
         IList<string> skillDirectories)
     {

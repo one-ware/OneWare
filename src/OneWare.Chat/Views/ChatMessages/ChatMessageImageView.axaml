@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:chatMessages="clr-namespace:OneWare.Chat.ViewModels.ChatMessages"
+             mc:Ignorable="d"
+             x:Class="OneWare.Chat.Views.ChatMessages.ChatMessageImageView"
+             x:DataType="chatMessages:ChatMessageImageViewModel">
+
+    <StackPanel Spacing="2" HorizontalAlignment="Left">
+        <StackPanel.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Open" Click="OnOpenClick">
+                    <MenuItem.Icon>
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Image}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Save As…" Click="OnSaveAsClick">
+                    <MenuItem.Icon>
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Save}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Show in Folder" Click="OnShowInFolderClick">
+                    <MenuItem.Icon>
+                        <PathIcon Classes="small" Data="{StaticResource Icon.Folder}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+        </StackPanel.ContextMenu>
+
+        <Border Classes="inset inset-content" HorizontalAlignment="Left" Cursor="Hand"
+                IsVisible="{Binding HasImage}" ToolTip.Tip="Open image" Tapped="OnImageTapped">
+            <Image Source="{Binding Image}" MaxHeight="320" Stretch="Uniform"
+                   StretchDirection="DownOnly" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding !HasImage}">
+            <PathIcon Classes="small muted" Data="{StaticResource Icon.Image}" />
+            <TextBlock Classes="muted" Text="The image is no longer available." />
+        </StackPanel>
+
+        <TextBlock Classes="caption" Text="{Binding Caption}" TextTrimming="CharacterEllipsis"
+                   ToolTip.Tip="{Binding Caption}" />
+    </StackPanel>
+
+</UserControl>

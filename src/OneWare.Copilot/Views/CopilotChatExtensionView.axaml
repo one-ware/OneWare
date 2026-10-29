@@ -117,7 +117,8 @@
                 <Flyout FlyoutPresenterClasses="flush"
                         Placement="TopEdgeAlignedRight">
                     <ListBox ItemsSource="{Binding AutoTiers}"
-                             SelectedItem="{Binding SelectedAutoTier}" BorderThickness="0"
+                             SelectedValueBinding="{ReflectionBinding Label}"
+                             SelectedValue="{Binding SelectedAutoTier}" BorderThickness="0"
                              MinWidth="140">
                         <Interaction.Behaviors>
                             <behaviors:PointerPressedHandledEventTrigger RoutingStrategies="Bubble">
@@ -130,8 +131,16 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <TextBlock Text="{Binding}" />
+                            <DataTemplate x:DataType="services:CopilotAutoTierOption">
+                                <StackPanel Orientation="Horizontal" Spacing="6" Background="Transparent"
+                                            ToolTip.Tip="{Binding Description}"
+                                            ToolTip.ShowDelay="400">
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                    <Border Classes="badge accent small" VerticalAlignment="Center"
+                                            IsVisible="{Binding IsFusion}">
+                                        <TextBlock Text="Fusion" />
+                                    </Border>
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ListBox>

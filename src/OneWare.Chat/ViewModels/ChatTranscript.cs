@@ -35,6 +35,14 @@ internal static class ChatTranscript
                     ToolOutput = tool.ToolOutput,
                     IsSuccessful = tool.IsSuccessful
                 };
+            case ChatMessageImageViewModel image:
+                return new ChatMessageState(ChatMessageKind.Image)
+                {
+                    ImagePath = image.FilePath,
+                    MimeType = image.MimeType,
+                    Message = image.Description,
+                    ToolName = image.ToolName
+                };
             case ChatMessageErrorViewModel:
                 // Error chat messages are intentionally not serialized.
                 return null;
@@ -96,6 +104,19 @@ internal static class ChatTranscript
                     ToolOutput = state.ToolOutput,
                     IsSuccessful = state.IsSuccessful,
                     IsToolRunning = false
+                };
+                return true;
+            case ChatMessageKind.Image:
+                if (string.IsNullOrWhiteSpace(state.ImagePath))
+                {
+                    message = null!;
+                    return false;
+                }
+
+                message = new ChatMessageImageViewModel(state.ImagePath, state.MimeType ?? "image/png")
+                {
+                    Description = state.Message,
+                    ToolName = state.ToolName
                 };
                 return true;
             case ChatMessageKind.Skill:
@@ -186,6 +207,11 @@ internal sealed class ChatMessageState
     public bool ShowModel { get; set; }
     public bool IsSuccessful { get; set; }
 
+    /// <summary>File of an image message, stored by <see cref="Services.ChatImageStore" />.</summary>
+    public string? ImagePath { get; set; }
+
+    public string? MimeType { get; set; }
+
     /// <summary>Messages nested inside a sub-agent block.</summary>
     public List<ChatMessageState> Children { get; set; } = [];
 }
@@ -197,5 +223,6 @@ internal enum ChatMessageKind
     Reasoning,
     Tool,
     Skill,
-    SubAgent
+    SubAgent,
+    Image
 }

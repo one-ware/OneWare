@@ -28,6 +28,12 @@ internal interface IChatSessionHost
 
     /// <summary>The service switched the chat to another session (new chat, replacement or reset).</summary>
     void OnSessionChanged(ChatSessionViewModel session);
+
+    /// <summary>
+    /// Saves an image a tool returned next to the chat history and returns its path, or null when it could not be
+    /// saved. Called from the thread that raised the event.
+    /// </summary>
+    string? StoreImage(ChatSessionViewModel session, ChatImageEvent image);
 }
 
 /// <summary>
@@ -1280,6 +1286,22 @@ public partial class ChatSessionViewModel : ObservableObject
                 Dispatcher.UIThread.Post(() =>
                 {
                     AddErrorMessage(x.Message, x.AgentId);
+                    NotifyContentAdded();
+                });
+                break;
+            }
+            case ChatImageEvent x:
+            {
+                var path = _host.StoreImage(this, x);
+                if (path == null) break;
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddMessage(new ChatMessageImageViewModel(path, x.MimeType)
+                    {
+                        Description = x.Description,
+                        ToolName = x.ToolName
+                    }, x.AgentId);
                     NotifyContentAdded();
                 });
                 break;

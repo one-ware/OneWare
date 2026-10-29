@@ -97,38 +97,38 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "1.0.97",
+                Version = "1.0.105",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-win32-x64.zip"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-win32-x64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-win32-arm64.zip"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-win32-arm64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-linux-x64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-linux-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-linux-arm64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-linux-arm64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-darwin-x64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-darwin-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-darwin-arm64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-darwin-arm64.tar.gz"
                     },
                 ]
             }
@@ -288,7 +288,8 @@ public class CopilotModule : OneWareModuleBase
                     "Routing preference for the \"auto\" model, which lets Copilot pick a backend " +
                     "model per turn. Default: leave the choice to Copilot. Fast: prefer the " +
                     "lowest-latency models. Efficiency: prefer cheaper models. Balance: trade off speed and capability. " +
-                    "Intelligence: prefer the most capable models."
+                    "Intelligence: prefer the most capable models. Copilot can offer further tiers for your " +
+                    "account, e.g. HydraFusion, which combines several models per turn."
             });
 
         settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);

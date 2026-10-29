@@ -286,6 +286,7 @@ public abstract partial class CopilotChatServiceBase(
         Models.Clear();
         Models.AddRange(owner.Models.ToArray());
         RefreshFilteredModels();
+        SetAutoTiers(owner.AutoTiers.ToArray());
 
         if (SelectedModel == null)
             ApplyModelSelection(ResolveDefaultSelectedModel(), null, null, null, writeSettings: false,
@@ -455,7 +456,7 @@ public abstract partial class CopilotChatServiceBase(
                 SelectedContextSize = ContextSizes.FirstOrDefault(x => x.Tier == contextTier)
                                       ?? SelectedContextSize;
 
-            if (!string.IsNullOrWhiteSpace(autoTier) && AutoTiers.Contains(autoTier))
+            if (IsAutoTierOffered(autoTier))
                 SelectedAutoTier = autoTier;
         }
         finally
@@ -682,10 +683,70 @@ public abstract partial class CopilotChatServiceBase(
 
     /// <summary>
     /// Routing preferences offered for the <c>auto</c> model. <see cref="AutoTierDefault"/> hands the
-    /// choice back to the provider.
+    /// choice back to the provider. Replaced by the tiers the runtime reports for the account, which
+    /// can include HydraFusion.
     /// </summary>
-    public ObservableCollection<string> AutoTiers { get; } =
-        [AutoTierDefault, AutoTierFast, AutoTierEfficiency, AutoTierBalance, AutoTierIntelligence];
+    public ObservableCollection<CopilotAutoTierOption> AutoTiers { get; } = new(CopilotAutoTiers.Fallback);
+
+    private bool IsAutoTierOffered(string? label) =>
+        !string.IsNullOrWhiteSpace(label) && AutoTiers.Any(x => string.Equals(x.Label, label, StringComparison.Ordinal));
+
+    /// <summary>
+    /// Replaces the offered tiers and keeps the selection if it is still offered, otherwise falls
+    /// back to the persisted preference or <see cref="AutoTierDefault"/>.
+    /// </summary>
+    private void SetAutoTiers(IReadOnlyList<CopilotAutoTierOption> tiers)
+    {
+        if (AutoTiers.Select(x => (x.Label, x.Id)).SequenceEqual(tiers.Select(x => (x.Label, x.Id)))) return;
+
+        var selected = SelectedAutoTier;
+        _suppressAutoTierApply = true;
+        try
+        {
+            AutoTiers.Clear();
+            foreach (var tier in tiers) AutoTiers.Add(tier);
+
+            var persisted = settingsService.GetSettingValue<string>(CopilotModule.CopilotAutoTierSettingKey);
+            SelectedAutoTier = IsAutoTierOffered(selected) ? selected
+                : IsAutoTierOffered(persisted) ? persisted!
+                : AutoTierDefault;
+        }
+        finally
+        {
+            _suppressAutoTierApply = false;
+        }
+    }
+
+    /// <summary>
+    /// Asks the runtime which Auto tiers the account can use. They are only reported when the runtime
+    /// runs with <c>DYNAMIC_AUTO_TIERS</c>; without them the built-in tiers stay.
+    /// </summary>
+    private async Task<IReadOnlyList<CopilotAutoTierOption>> LoadAutoTiersAsync(CopilotClient client)
+    {
+        if (_byokConfiguration != null) return CopilotAutoTiers.Fallback;
+
+        try
+        {
+            var list = await client.Rpc.Models.ListAsync(null, null);
+            return CopilotAutoTiers.Build(list.Auto);
+        }
+        catch (Exception ex)
+        {
+            ContainerLocator.Container.Resolve<ILogger>()
+                .LogWarning(ex, "Failed to load the Copilot auto routing tiers.");
+            return CopilotAutoTiers.Fallback;
+        }
+    }
+
+    /// <summary>Offers the discovered tiers in the global Auto Routing setting as well.</summary>
+    private void PublishAutoTierSetting()
+    {
+        if (settingsService.GetSetting(CopilotModule.CopilotAutoTierSettingKey) is not ComboBoxSetting setting) return;
+
+        var labels = AutoTiers.Select(x => (object)x.Label).ToArray();
+        if (setting.Options.SequenceEqual(labels)) return;
+        setting.Options = labels;
+    }
 
     /// <summary>
     /// True while the <c>auto</c> model is selected — only then does a routing preference apply.
@@ -730,9 +791,7 @@ public abstract partial class CopilotChatServiceBase(
         _suppressAutoTierApply = true;
         try
         {
-            SelectedAutoTier = !string.IsNullOrWhiteSpace(persisted) && AutoTiers.Contains(persisted)
-                ? persisted
-                : AutoTierDefault;
+            SelectedAutoTier = IsAutoTierOffered(persisted) ? persisted : AutoTierDefault;
         }
         finally
         {
@@ -740,24 +799,10 @@ public abstract partial class CopilotChatServiceBase(
         }
     }
 
-    private AutoTier? ResolveAutoTier() => SelectedAutoTier switch
-    {
-        AutoTierFast => AutoTier.Fast,
-        AutoTierEfficiency => AutoTier.Efficiency,
-        AutoTierBalance => AutoTier.Balance,
-        AutoTierIntelligence => AutoTier.Intelligence,
-        _ => null
-    };
+    private AutoTier? ResolveAutoTier() =>
+        CopilotAutoTiers.ResolveId(AutoTiers, SelectedAutoTier) is { } id ? new AutoTier(id) : null;
 
-    private static string DescribeAutoTier(AutoTier? tier) => tier?.Value switch
-    {
-        null => AutoTierDefault,
-        var value when value == AutoTier.Fast.Value => AutoTierFast,
-        var value when value == AutoTier.Efficiency.Value => AutoTierEfficiency,
-        var value when value == AutoTier.Balance.Value => AutoTierBalance,
-        var value when value == AutoTier.Intelligence.Value => AutoTierIntelligence,
-        var value => value
-    };
+    private string DescribeAutoTier(AutoTier? tier) => CopilotAutoTiers.Describe(AutoTiers, tier?.Value);
 
     private void ApplyAutoTierToSession()
     {
@@ -1615,7 +1660,12 @@ public abstract partial class CopilotChatServiceBase(
 
             // MCP servers inherit the runtime's environment; the login shell's PATH lets them find npx and co.
             var connection = RuntimeConnection.ForStdio(cliPath, []);
-            connection.Environment = await McpConnectorHub.GetRuntimeEnvironmentAsync();
+            var environment = await McpConnectorHub.GetRuntimeEnvironmentAsync();
+            // Copilot's service reports the Auto tiers the account can use, including HydraFusion.
+            connection.Environment = _byokConfiguration == null
+                ? CopilotSessionConfiguration.WithRuntimeFeatureFlag(environment,
+                    CopilotSessionConfiguration.DynamicAutoTiersFeatureFlag, OperatingSystem.IsWindows())
+                : environment;
 
             var clientOptions = new CopilotClientOptions
             {
@@ -1674,6 +1724,7 @@ public abstract partial class CopilotChatServiceBase(
             await _client.StartAsync();
 
             var models = await _client.ListModelsAsync();
+            var autoTiers = await LoadAutoTiersAsync(_client);
 
             StatusChanged?.Invoke(this, new StatusEvent(true, $"Copilot started"));
             Blocker = null;
@@ -1681,6 +1732,8 @@ public abstract partial class CopilotChatServiceBase(
             Models.Clear();
             Models.AddRange(models.ToArray());
             RefreshFilteredModels();
+            SetAutoTiers(autoTiers);
+            Dispatcher.UIThread.Post(PublishAutoTierSetting);
 
             ApplyModelSelection(ResolveDefaultSelectedModel(), null, null, null, writeSettings: false,
                 applyToSession: false);
@@ -2068,6 +2121,7 @@ public abstract partial class CopilotChatServiceBase(
             };
 
             CopilotSessionConfiguration.ApplyDiscovery(sessionConfig, workingDirectory, skillDirectories);
+            if (_byokConfiguration == null) CopilotSessionConfiguration.ApplyFusion(sessionConfig);
             await ConfigureMcpAsync(sessionConfig, null);
             _session = await client.CreateSessionAsync(sessionConfig);
         }
@@ -2100,6 +2154,7 @@ public abstract partial class CopilotChatServiceBase(
                     }
                 };
                 CopilotSessionConfiguration.ApplyDiscovery(resumeConfig, workingDirectory, skillDirectories);
+                if (_byokConfiguration == null) CopilotSessionConfiguration.ApplyFusion(resumeConfig);
                 await ConfigureMcpAsync(resumeConfig, sessionId);
                 _session = await client.ResumeSessionAsync(sessionId, resumeConfig);
             }
@@ -2526,6 +2581,7 @@ public abstract partial class CopilotChatServiceBase(
         IsRemoteSession = false;
         RemoteSessionUrl = null;
         ResetUsageStats();
+        ResetImageState();
     }
 
     private void ResetUsageStats()
@@ -2565,6 +2621,9 @@ public abstract partial class CopilotChatServiceBase(
         var agentId = evt is SubagentStartedEvent or SubagentCompletedEvent or SubagentFailedEvent
             ? null
             : ResolveSubAgentId(evt);
+
+        if (HandleFusionEvent(evt)) return;
+        agentId ??= ResolveFusionAgentId(evt);
 
         switch (evt)
         {
@@ -2624,9 +2683,15 @@ public abstract partial class CopilotChatServiceBase(
                     new ChatReasoningEvent(x.Data.Content, x.Data.ReasoningId) { AgentId = agentId });
                 break;
             }
+            case SessionBinaryAssetEvent x:
+            {
+                HandleBinaryAsset(x.Data);
+                break;
+            }
             case ToolExecutionCompleteEvent x:
             {
                 var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
+                HandleToolImages(x.Data, toolAgentId);
                 if (toolAgentId == null) break;
 
                 EventReceived?.Invoke(this, new ChatToolExecutionCompleteEvent(
@@ -2652,6 +2717,7 @@ public abstract partial class CopilotChatServiceBase(
             case ToolExecutionStartEvent x:
             {
                 RememberSubAgentInstructions(x.Data);
+                RememberToolName(x.Data.ToolCallId, x.Data.ToolName);
 
                 var toolAgentId = ResolveToolAgentId(x.Data.ParentToolCallId, agentId);
 
@@ -2678,6 +2744,7 @@ public abstract partial class CopilotChatServiceBase(
                 break;
             case SessionIdleEvent when agentId == null:
                 DropForegroundSubAgents();
+                CloseFusionPhases(null);
                 EventReceived?.Invoke(this, new ChatIdleEvent { Model = _lastTurnModel });
                 break;
             case AssistantUsageEvent usage:
@@ -3012,7 +3079,7 @@ public abstract partial class CopilotChatServiceBase(
     private void SyncAutoTierFromSession(AutoTier? tier)
     {
         var label = DescribeAutoTier(tier);
-        if (!AutoTiers.Contains(label) || label == SelectedAutoTier) return;
+        if (!IsAutoTierOffered(label) || label == SelectedAutoTier) return;
 
         Dispatcher.UIThread.Post(() =>
         {

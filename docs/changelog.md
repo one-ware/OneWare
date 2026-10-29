@@ -6,6 +6,8 @@
 - Values of variables, registers and memory can be edited while the debugger is paused
 - Extensions can now depend on other extensions, which are installed automatically, and removing an extension also offers to remove the extensions that need it
 - Added a copy button and a "Copy Message" context menu entry to AI chat messages
+- The Copilot auto model routing now offers the tiers available to your account, including HydraFusion, and shows the Fusion review steps in the chat
+- Images returned by tools, such as screenshots from MCP servers, are now shown in the AI chat and can be opened or saved
 - Enabled the Yosys flow for Gowin boards
 - Fixed a crash when selecting text across a table in Markdown views
 - Fixed a crash while highlighting text in the editor
