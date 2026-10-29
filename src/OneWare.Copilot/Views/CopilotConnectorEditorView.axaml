@@ -5,142 +5,152 @@
                          xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
                          xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
                          mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="600"
-                         PrefWidth="560" PrefHeight="640"
+                         PrefWidth="580" PrefHeight="620"
                          Name="CopilotConnectorEditorViewView" Title="{Binding Title}"
                          WindowStartupLocation="CenterOwner"
                          x:Class="OneWare.Copilot.Views.CopilotConnectorEditorView"
                          x:DataType="viewModels:CopilotConnectorEditorViewModel">
-    <controls:FlexibleWindow.Resources>
-        <DataTemplate x:Key="ConnectorValueTemplate" x:DataType="viewModels:CopilotConnectorValueViewModel">
-            <Grid ColumnDefinitions="150, *, Auto, Auto" ColumnSpacing="6" Margin="0 0 0 6">
-                <TextBox Grid.Column="0" Classes="mono" Text="{Binding Key}" Watermark="Name" />
-                <TextBox Grid.Column="1" Classes="mono" Text="{Binding Value}" PasswordChar="{Binding PasswordChar}"
-                         Watermark="{Binding Watermark}" />
-                <CheckBox Grid.Column="2" Content="Secret" IsChecked="{Binding IsSecret}"
-                          ToolTip.Tip="Keep the value in your system keychain instead of the Copilot CLI configuration" />
-                <Button Grid.Column="3" Classes="icon small" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove"
-                        VerticalAlignment="Center">
-                    <PathIcon Classes="small" Data="{StaticResource Icon.Close}" />
-                </Button>
-            </Grid>
-        </DataTemplate>
-    </controls:FlexibleWindow.Resources>
-
     <DockPanel Margin="8">
-        <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0" Classes="section">
-            <Border Classes="callout error" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0" Spacing="8">
+            <Border Classes="callout error" IsVisible="{Binding HasError}">
+                <SelectableTextBlock Text="{Binding Error}" TextWrapping="Wrap" />
             </Border>
-            <StackPanel Classes="WindowButtons" HorizontalAlignment="Right">
-                <controls:Spinner Width="14" Height="14" IsVisible="{Binding IsSaving}" VerticalAlignment="Center" />
-                <Button Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}"
-                        CommandParameter="{Binding #CopilotConnectorEditorViewView}" />
-                <Button Classes="primary" Content="Save" IsDefault="True" Command="{Binding SaveCommand}"
-                        CommandParameter="{Binding #CopilotConnectorEditorViewView}" />
-            </StackPanel>
+            <Border Classes="callout" IsVisible="{Binding HasTestStatus}"
+                    Classes.success="{Binding TestSucceeded}" Classes.warning="{Binding TestFailed}">
+                <SelectableTextBlock Text="{Binding TestText}" TextWrapping="Wrap" />
+            </Border>
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="6">
+                    <Button Classes="secondary" Content="Test" Command="{Binding TestCommand}"
+                            IsEnabled="{Binding !IsBusy}"
+                            ToolTip.Tip="Starts the server with these settings to see whether it connects" />
+                    <controls:Spinner Width="14" Height="14" IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Classes="WindowButtons" HorizontalAlignment="Right">
+                    <Button Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}"
+                            CommandParameter="{Binding #CopilotConnectorEditorViewView}" />
+                    <Button Classes="primary" Content="Save" IsDefault="True" Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding !IsBusy}"
+                            CommandParameter="{Binding #CopilotConnectorEditorViewView}" />
+                </StackPanel>
+            </DockPanel>
         </StackPanel>
 
         <ScrollViewer>
             <StackPanel Classes="form" Margin="0 0 8 0">
+                <Expander Classes="card" IsExpanded="{Binding IsPasteExpanded}"
+                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                          Header="Paste configuration">
+                    <StackPanel Classes="form" Margin="8">
+                        <TextBlock Classes="caption" TextWrapping="Wrap"
+                                   Text="Paste the JSON from a server's README or an mcp.json file (VS Code, Claude or Copilot CLI format) to fill in the form." />
+                        <TextBox Classes="mono" AcceptsReturn="True" MinHeight="80" MaxHeight="200"
+                                 TextWrapping="NoWrap" Text="{Binding PasteText}"
+                                 Watermark="{}{ &quot;command&quot;: &quot;npx&quot;, &quot;args&quot;: [ … ] }" />
+                        <TextBlock Classes="caption warning" TextWrapping="Wrap" IsVisible="{Binding HasPasteMessage}"
+                                   Text="{Binding PasteMessage}" />
+                        <Button Classes="secondary small" Content="Fill In" HorizontalAlignment="Right"
+                                Command="{Binding ApplyPasteCommand}" />
+                    </StackPanel>
+                </Expander>
+
                 <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto" RowSpacing="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Name" VerticalAlignment="Center" />
                     <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" Watermark="e.g. github" />
                     <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Type" VerticalAlignment="Center" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" SelectedIndex="{Binding KindIndex}"
-                              HorizontalAlignment="Stretch">
-                        <ComboBoxItem Content="Local - runs a command (stdio)" />
-                        <ComboBoxItem Content="Remote - connects to a URL (HTTP)" />
-                    </ComboBox>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                        <RadioButton GroupName="Kind" Content="Local command" IsChecked="{Binding IsLocal}" />
+                        <RadioButton GroupName="Kind" Content="Remote URL" IsChecked="{Binding IsRemote}" />
+                    </StackPanel>
                 </Grid>
 
-                <!-- Local -->
-                <StackPanel Classes="form" IsVisible="{Binding IsLocal}">
-                    <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="8">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Command" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding Command}" Watermark="e.g. npx" />
-                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Arguments" Margin="0 6 0 0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Classes="mono" AcceptsReturn="True" MinHeight="60"
-                                 Text="{Binding Arguments}" Watermark="One argument per line" TextWrapping="NoWrap" />
-                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" Text="Working dir" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="2" Grid.Column="1" Classes="mono" Text="{Binding WorkingDirectory}"
-                                 Watermark="Optional" />
-                    </Grid>
+                <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="8"
+                      IsVisible="{Binding IsLocal}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Command" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding Command}" Watermark="e.g. npx" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Arguments" Margin="0 6 0 0" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Classes="mono" AcceptsReturn="True" MinHeight="60"
+                             Text="{Binding Arguments}" Watermark="One argument per line" TextWrapping="NoWrap" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" Text="Working dir" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Classes="mono" Text="{Binding WorkingDirectory}"
+                             Watermark="Optional" />
+                </Grid>
 
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Classes="secondary small" Content="Add Variable"
-                                Command="{Binding AddEnvCommand}" />
-                        <TextBlock Classes="overline" Text="ENVIRONMENT" VerticalAlignment="Center" />
-                    </DockPanel>
-                    <ItemsControl ItemsSource="{Binding Env}" ItemTemplate="{StaticResource ConnectorValueTemplate}" />
-                </StackPanel>
+                <Grid ColumnDefinitions="110, *" IsVisible="{Binding IsRemote}">
+                    <TextBlock Grid.Column="0" Classes="muted" Text="URL" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Classes="mono" Text="{Binding Url}" Watermark="https://example.com/mcp" />
+                </Grid>
 
-                <!-- Remote -->
-                <StackPanel Classes="form" IsVisible="{Binding IsRemote}">
-                    <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto" RowSpacing="8">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="URL" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding Url}"
-                                 Watermark="https://example.com/mcp" />
-                        <CheckBox Grid.Row="1" Grid.Column="1" Content="Legacy SSE transport" IsChecked="{Binding UseSse}" />
-                    </Grid>
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Classes="secondary small" Content="{Binding AddValueText}"
+                            Command="{Binding AddValueCommand}" />
+                    <TextBlock Classes="overline" Text="{Binding ValuesTitle}" VerticalAlignment="Center" />
+                </DockPanel>
+                <ItemsControl ItemsSource="{Binding Values}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="6" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:CopilotConnectorValueViewModel">
+                            <Grid ColumnDefinitions="150, *, Auto, Auto">
+                                <TextBox Grid.Column="0" Classes="mono" Margin="0 0 6 0" Text="{Binding Key}"
+                                         Watermark="Name" />
+                                <TextBox Grid.Column="1" Classes="mono" Text="{Binding Value}"
+                                         PasswordChar="{Binding PasswordChar}" Watermark="{Binding Watermark}">
+                                    <TextBox.InnerRightContent>
+                                        <Button Classes="icon small" IsVisible="{Binding IsSecret}"
+                                                Command="{Binding ToggleRevealCommand}" ToolTip.Tip="Show / hide">
+                                            <PathIcon Classes="small muted" Data="{StaticResource Icon.Eye}" />
+                                        </Button>
+                                    </TextBox.InnerRightContent>
+                                </TextBox>
+                                <ToggleButton Grid.Column="2" Classes="icon small" Margin="4 0 0 0"
+                                              IsChecked="{Binding IsSecret}" ToolTip.Tip="{Binding SecretToolTip}">
+                                    <PathIcon Classes="small" Data="{StaticResource Icon.Identity}" />
+                                </ToggleButton>
+                                <Button Grid.Column="3" Classes="icon small" Command="{Binding RemoveCommand}"
+                                        ToolTip.Tip="Remove">
+                                    <PathIcon Classes="small" Data="{StaticResource Icon.Close}" />
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Classes="caption" TextWrapping="Wrap"
+                           Text="Values with the key toggle on are kept in your system keychain. Others are saved in mcp.json and may reference ${VAR} from your environment." />
+                <Border Classes="callout warning" IsVisible="{Binding HasMissingVariables}">
+                    <TextBlock Text="{Binding MissingVariables}" TextWrapping="Wrap" />
+                </Border>
 
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Classes="secondary small" Content="Add Header"
-                                Command="{Binding AddHeaderCommand}" />
-                        <TextBlock Classes="overline" Text="HEADERS" VerticalAlignment="Center" />
-                    </DockPanel>
-                    <ItemsControl ItemsSource="{Binding Headers}" ItemTemplate="{StaticResource ConnectorValueTemplate}" />
-
-                    <TextBlock Classes="overline" Text="OAUTH APP" />
-                    <TextBlock Classes="caption" TextWrapping="Wrap"
-                               Text="Servers that support automatic app registration need nothing here, use Sign In after saving. Otherwise register an OAuth app with the provider using this redirect URL:" />
-                    <SelectableTextBlock Classes="mono" Text="{Binding RedirectUrl}" />
-                    <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto" RowSpacing="8">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Client ID" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding OAuthClientId}"
-                                 Watermark="Optional" />
-                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Client secret" VerticalAlignment="Center" />
-                        <DockPanel Grid.Row="1" Grid.Column="1">
-                            <Button DockPanel.Dock="Right" Classes="secondary" Content="Clear" Margin="4 0 0 0"
-                                    IsVisible="{Binding HasStoredOAuthClientSecret}"
-                                    Command="{Binding ClearOAuthClientSecretCommand}" />
-                            <TextBox PasswordChar="•" Text="{Binding OAuthClientSecret}"
-                                     Watermark="{Binding OAuthClientSecretWatermark}" />
-                        </DockPanel>
-                    </Grid>
-                </StackPanel>
-
-                <!-- Variables -->
-                <StackPanel Classes="form" IsVisible="{Binding HasVariables}">
-                    <TextBlock Classes="overline" Text="VARIABLES" />
-                    <TextBlock Classes="caption" TextWrapping="Wrap"
-                               Text="Values referenced with ${VAR}. They come from your environment or shell profile, or can be stored in your system keychain here." />
-                    <ItemsControl ItemsSource="{Binding Variables}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Spacing="6" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="viewModels:CopilotConnectorVariableViewModel">
-                                <Grid ColumnDefinitions="180, *, Auto" ColumnSpacing="6">
-                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                        <TextBlock Classes="mono" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
-                                                   ToolTip.Tip="{Binding Name}" />
-                                        <TextBlock Classes="caption" Classes.warning="{Binding IsMissing}"
-                                                   Text="{Binding SourceText}" />
-                                    </StackPanel>
-                                    <TextBox Grid.Column="1" PasswordChar="•" Text="{Binding Value}"
-                                             Watermark="{Binding Watermark}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="2" Classes="secondary" Content="Clear" VerticalAlignment="Center"
-                                            IsVisible="{Binding CanClear}" Command="{Binding ClearCommand}"
-                                            ToolTip.Tip="Removes the stored value" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+                <Expander IsExpanded="{Binding IsAdvancedExpanded}" Header="Advanced"
+                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                    <StackPanel Classes="form" Margin="0 8 0 0">
+                        <CheckBox Content="Legacy SSE transport" IsChecked="{Binding UseSse}"
+                                  IsVisible="{Binding IsRemote}" />
+                        <TextBlock Classes="overline" Text="OAUTH APP" IsVisible="{Binding IsRemote}" />
+                        <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding IsRemote}"
+                                   Text="Only needed when the server doesn't let apps register themselves. Register an OAuth app with the provider using this redirect URL:" />
+                        <SelectableTextBlock Classes="mono" Text="{Binding RedirectUrl}" IsVisible="{Binding IsRemote}" />
+                        <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="8"
+                              IsVisible="{Binding IsRemote}">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Client ID"
+                                       VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding OAuthClientId}"
+                                     Watermark="Optional" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Client secret"
+                                       VerticalAlignment="Center" />
+                            <TextBox Grid.Row="1" Grid.Column="1" PasswordChar="•" Text="{Binding OAuthClientSecret}"
+                                     Watermark="Only for confidential apps" />
+                            <CheckBox Grid.Row="2" Grid.Column="1" Content="Public client (PKCE, no secret)"
+                                      IsChecked="{Binding IsPublicClient}" />
+                        </Grid>
+                        <TextBlock Classes="caption" IsVisible="{Binding IsLocal}"
+                                   Text="No advanced options for local servers." />
+                    </StackPanel>
+                </Expander>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>
-
 </controls:FlexibleWindow>

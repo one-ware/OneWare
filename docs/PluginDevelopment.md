@@ -554,6 +554,8 @@ created through `SoftwareProjectFactory`, which the creator dialog uses too.
 - Set `OneWareAiFunction.InvocationHandler` when a tool needs an
   `AiFunctionInvocationContext` for invocation-scoped progress reporting. Keep `Handler` as the
   typed delegate used to generate the tool schema.
+- Set `OneWareAiFunction.AlwaysLoaded` only on tools the model needs in almost every turn. When a chat has
+  many tools, the others are deferred behind the runtime's tool search and found by name and description.
 
 #### `ISerialMonitorService` (src/OneWare.Essentials/Services/ISerialMonitorService.cs)
 
@@ -1018,7 +1020,8 @@ no longer registered.
 
 The GitHub Copilot, BYOK and OneWare Agents chats reuse Copilot CLI customization discovery.
 They read the user's Copilot configuration directory (`COPILOT_HOME`, or `~/.copilot` by default),
-including user skills and the MCP servers in `~/.copilot/mcp-config.json`. Provider-specific chat
+including user skills. MCP servers come from OneWare's own list (see Connectors below); the servers in
+`~/.copilot/mcp-config.json` are not started in OneWare chats but can be imported. Provider-specific chat
 history remains separate.
 
 Add arbitrary skill roots in **Settings > AI Chat > Copilot CLI > Additional Skill Directories**.
@@ -1035,49 +1038,53 @@ because OneWare's `readFile` tool replaces the CLI's built-in file viewer.
 #### Connectors (IDE-wide MCP servers)
 
 **Settings > AI Chat > Connectors** lists the MCP servers available in every chat, independent of the open
-projects. Each connector can be added, edited, enabled or disabled, tested, signed in to and removed on its
-own; *Import .mcp.json* adds the servers of an existing file (Copilot CLI `mcpServers`, VS Code `servers` or
-Claude Code layout).
+projects, for GitHub Copilot and OneWare Agents alike (both run on the Copilot CLI runtime). The same list opens
+from the chat's ⋯ menu (*Manage MCP Servers…*). Each server can be added,
+edited, enabled or disabled, tested, signed in to and removed. *Import…* adds the servers of an existing file
+(Copilot CLI `mcpServers`, VS Code `servers` or Claude Code layout), and the editor fills its form from a
+pasted snippet, e.g. from a server's README.
 
-- **Storage**: connectors are the servers of the Copilot CLI user configuration
-  (`~/.copilot/mcp-config.json`, edited through the runtime's configuration API), so the `copilot` CLI uses
-  the same list. Disabled connectors are kept in the CLI's `disabledMcpServers` setting.
-  `CopilotConnectorService` (`src/OneWare.Copilot/Connectors`) wraps this; it runs a short-lived CLI
-  process that does not need a Copilot login.
-- **Secrets**: header and environment values marked *Secret* are stored with `ISecretStore` (service
-  `oneware-mcp`) under a generated variable such as `ONEWARE_MCP_GITHUB__AUTHORIZATION`, and the
-  configuration only contains `${ONEWARE_MCP_GITHUB__AUTHORIZATION}`. Other `${VAR}` references in commands,
-  arguments, environment values and headers are listed in the editor with their source (environment, stored
-  in OneWare, or not set), and a value can be stored for them as well. URLs must be literal. Connector names
-  (and secret keys within a connector) that only differ in case or punctuation are rejected, because they
-  would share variables.
-- **Delivery of stored values**: they are never put into the runtime's environment, because every local MCP
-  server inherits that. Instead, a chat gets the connectors that use stored values as its own session MCP
-  servers (`SessionConfig.McpServers`) with only their own values filled in; these replace the configured
-  definitions of the same name. The runtime does not persist them. The standalone `copilot` CLI can't read
-  OneWare's stored values: export the variables there yourself.
-- **Environment**: the runtime expands the remaining `${VAR}` references from its own process environment.
-  OneWare starts it with the login shell's environment (Linux/macOS, so tokens exported in `~/.profile`,
-  `~/.bashrc` or `~/.zshrc` and tools such as nvm's `npx` are found when OneWare is started from a desktop
-  launcher), overlaid with OneWare's own environment. `PATH` keeps the login shell's entries first.
-- **Live updates**: adding, editing, enabling or removing a connector, or changing a stored value, reloads the
-  MCP servers of open chats and restarts the connectors that use stored values with their current values.
-- **Tool search**: chats enable the runtime's tool search (`SessionConfig.ToolSearch`), so connectors with
-  many tools (Microsoft 365 has about 400) are looked up on demand instead of filling the model's context.
-  Above about 30 tools, MCP tools and plugin AI functions are deferred; the model finds them by name and
-  description, so give plugin functions precise, searchable descriptions. OneWare's core file, terminal and
-  IDE-context functions (`readFile`, `editFile`, `runTerminalCommand`, …) are always loaded
-  (`CopilotSessionConfiguration.AlwaysLoadedTools`).
-- **Sign-in**: remote connectors are checked when the page opens; local ones only on *Test*, so their
-  command doesn't run unasked. *Sign In* runs the runtime's OAuth flow in the browser on the loopback
-  redirect `http://127.0.0.1:41347/`; the runtime keeps the tokens in the system keychain
-  (`McpOAuthTokenStorage = Persistent`), and open chats reconnect. A chat asks once per server to sign in
-  when a server reports `needs-auth`. Servers without dynamic client registration (e.g. Asana) need an OAuth
-  app registered with the provider using that redirect URL: enter its client ID and, for confidential apps,
-  its client secret (stored with `ISecretStore`, only sent when signing in).
+- **Storage**: `McpConnectorHub` (`src/OneWare.Copilot/Connectors`) owns `<AppData>/Copilot/mcp.json` in the
+  Copilot CLI format (`mcpServers`), plus OneWare's fields `id`, `disabled`, `secretEnv` and `secretHeaders`.
+  The file can be edited by hand (*Open mcp.json*); changes are picked up while OneWare runs, entries without
+  an `id` get one, and a file with errors is reported without being overwritten.
+- **Secrets**: environment variables and headers marked secret (the key toggle; credentials such as
+  `Authorization` or `*_TOKEN` are marked automatically) are left out of `mcp.json` and stored as one
+  `ISecretStore` entry per server (service `oneware-mcp`, account = the server's `id`). The OAuth client
+  secret of a confidential app is stored there as well. Other values may reference `${VAR}`; the runtime
+  expands them from its environment, and the editor warns about variables that are not set.
+- **Environment**: OneWare starts the runtime with the login shell's environment (Linux/macOS, so tokens
+  exported in `~/.profile`, `~/.bashrc` or `~/.zshrc` and tools such as nvm's `npx` are found when OneWare is
+  started from a desktop launcher), overlaid with OneWare's own environment. `PATH` keeps the login shell's
+  entries first. Secret values are never put into that environment, because every local server inherits it.
+- **Sessions**: every chat gets the enabled servers, with their secrets filled in, as session MCP servers
+  (`SessionConfig.McpServers`; SSE servers are started through `session.Rpc.Mcp.StartServerAsync`). The
+  runtime does not persist them. Servers of the Copilot CLI user configuration are disabled in OneWare chats
+  unless a connector has the same name, and the list offers to import them.
+- **Live updates**: changing the list only touches the servers that changed in open chats (compared by a
+  fingerprint of their resolved configuration): new ones are started, changed ones restarted, removed or
+  disabled ones stopped.
+- **Per chat**: the chat's ⋯ menu shows the servers of the current chat with their status, and turns servers
+  off or on for that chat only. Problems (failed, sign-in required) show as a warning dot on the ⋯ button
+  instead of being posted as chat messages.
+- **Tool search**: chats enable the runtime's tool search (`SessionConfig.ToolSearch`), so servers with many
+  tools (Microsoft 365 has about 400) are looked up on demand instead of filling the model's context. Above
+  about 30 tools, MCP tools and plugin AI functions are deferred; the model finds them by name and
+  description, so give plugin functions precise, searchable descriptions. Functions flagged
+  `IOneWareAiFunction.AlwaysLoaded` (OneWare's file, terminal and IDE-context functions such as `readFile`,
+  `editFile` and `runTerminalCommand`) are never deferred.
+- **Sign-in**: nothing is checked automatically when the list opens; *Test Connection* starts a server in a
+  separate helper session. *Sign In* runs the runtime's OAuth flow in the browser on the loopback redirect
+  `http://127.0.0.1:41347/` (in an open chat, through that chat's session); the runtime keeps the tokens in the
+  system keychain (`McpOAuthTokenStorage = Persistent`), and open chats reconnect. Only one sign-in runs at a
+  time. Servers without dynamic client registration (e.g. Asana) need an OAuth app registered with the
+  provider using that redirect URL: enter its client ID and, for confidential apps, its client secret under
+  *Advanced*.
 
-A project's own `.mcp.json` is only loaded by the Copilot runtime for the working directory, and only if
-the Copilot CLI trusts that folder. OneWare does not start MCP servers from other open projects.
+A project's own `.mcp.json` (or `.vscode/mcp.json`) is only loaded by the Copilot runtime for the working
+directory, and only if the Copilot CLI trusts that folder. When an untrusted project has one, the chat asks
+once whether to trust the folder and start its servers. OneWare does not start MCP servers from other open
+projects.
 
 #### Multiple open projects
 
@@ -1090,8 +1097,8 @@ itself and keeps open chats in sync while projects are opened or closed:
   open projects or those files change.
 
 MCP tools use the normal permission flow, including per-chat approvals and the selected approval
-mode. Ask/Plan and other read-only agents block MCP tools because OneWare cannot classify their side
-effects. Host-capable built-in CLI tools remain unavailable, and customization discovery does not
+mode. Ask/Plan and other read-only agents only allow MCP tools that the server marks read-only
+(`readOnlyHint`). Host-capable built-in CLI tools remain unavailable, and customization discovery does not
 enable repository command hooks.
 
 ### Combining agents and skills

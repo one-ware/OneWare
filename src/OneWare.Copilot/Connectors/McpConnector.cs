@@ -10,18 +10,34 @@ public enum McpConnectorKind
     Remote
 }
 
-public sealed record McpConnectorValue(string Key, string Value);
+/// <summary>An environment variable or header. Secret values are kept in the OS credential store.</summary>
+public sealed record McpConnectorValue(string Key, string Value, bool IsSecret = false);
 
 /// <summary>
-/// An MCP server ("connector") in the Copilot CLI's user configuration (<c>mcp-config.json</c>). Values may reference
-/// <c>${VAR}</c> environment variables, which the CLI resolves from its process environment. Variables stored in
-/// OneWare (secrets) are filled in by OneWare, only for the connector that references them.
+/// An IDE-wide MCP server ("connector") from OneWare's <c>mcp.json</c>. The file uses the Copilot CLI's server format
+/// plus a few OneWare fields (<see cref="IdField" />, <see cref="DisabledField" /> and the names of secret values);
+/// the secret values themselves are kept in the OS credential store under the connector's <see cref="Id" />.
+/// <c>${VAR}</c> references are expanded by the runtime from its environment.
 /// </summary>
 public sealed partial class McpConnector
 {
-    // Fields edited by OneWare; everything else from the CLI configuration (tools, timeout, …) is kept as is.
+    internal const string IdField = "id";
+    internal const string DisabledField = "disabled";
+    internal const string SecretEnvField = "secretEnv";
+    internal const string SecretHeadersField = "secretHeaders";
+
+    // Fields edited by OneWare; everything else (tools, timeout, …) is kept as is.
     private static readonly string[] EditedFields =
-        ["type", "command", "args", "cwd", "env", "url", "headers", "oauthClientId", "oauthPublicClient"];
+    [
+        IdField, DisabledField, SecretEnvField, SecretHeadersField,
+        "type", "command", "args", "cwd", "env", "url", "headers", "oauthClientId", "oauthPublicClient"
+    ];
+
+    private static readonly string[] SecretKeyMarkers =
+        ["TOKEN", "SECRET", "PASSWORD", "PASSWD", "API_KEY", "APIKEY", "API-KEY", "ACCESS_KEY"];
+
+    /// <summary>Stable identity, independent of the name; secrets are stored under it.</summary>
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
     public string Name { get; set; } = string.Empty;
 
@@ -56,9 +72,13 @@ public sealed partial class McpConnector
     [GeneratedRegex("^[A-Za-z0-9_.-]+$")]
     private static partial Regex NameRegex();
 
-    public static bool IsValidName(string name) => NameRegex().IsMatch(name) && GetVariableKey(name).Length > 0;
+    public static bool IsValidName(string name) => NameRegex().IsMatch(name) && name.Any(char.IsAsciiLetterOrDigit);
 
-    public static McpConnector FromConfig(string name, JsonObject config, bool enabled)
+    /// <summary>
+    /// Reads a server in the Copilot CLI format, with OneWare's fields if present. Values of keys listed as secret
+    /// are taken from the configuration if it has them (e.g. when importing), otherwise they are empty.
+    /// </summary>
+    public static McpConnector FromConfig(string name, JsonObject config)
     {
         var url = GetString(config, "url");
         var command = GetString(config, "command");
@@ -66,7 +86,7 @@ public sealed partial class McpConnector
         var connector = new McpConnector
         {
             Name = name,
-            Enabled = enabled,
+            Enabled = !(config[DisabledField] is JsonValue disabled && disabled.TryGetValue<bool>(out var off) && off),
             Kind = type is "http" or "sse" || (type == null && command == null && url != null)
                 ? McpConnectorKind.Remote
                 : McpConnectorKind.Local,
@@ -74,15 +94,17 @@ public sealed partial class McpConnector
             Command = command ?? string.Empty,
             Args = GetStrings(config, "args"),
             WorkingDirectory = GetString(config, "cwd"),
-            Env = GetValues(config, "env"),
+            Env = GetValues(config, "env", GetStrings(config, SecretEnvField)),
             Url = url ?? string.Empty,
-            Headers = GetValues(config, "headers"),
+            Headers = GetValues(config, "headers", GetStrings(config, SecretHeadersField)),
             OAuthClientId = GetString(config, "oauthClientId"),
             OAuthPublicClient = config["oauthPublicClient"] is JsonValue publicClient &&
                                 publicClient.TryGetValue<bool>(out var isPublic)
                 ? isPublic
                 : null
         };
+
+        if (GetString(config, IdField) is { Length: > 0 } id) connector.Id = id;
 
         foreach (var (key, value) in config)
             if (!EditedFields.Contains(key))
@@ -91,8 +113,26 @@ public sealed partial class McpConnector
         return connector;
     }
 
-    /// <summary>The configuration written to the CLI. Values keep their <c>${VAR}</c> references.</summary>
-    public JsonObject ToConfig()
+    /// <summary>The entry written to OneWare's <c>mcp.json</c>: without secret values, with OneWare's fields.</summary>
+    public JsonObject ToStoredConfig()
+    {
+        var config = new JsonObject { [IdField] = Id };
+        foreach (var (key, value) in ToCliConfig(includeSecrets: false)) config[key] = value?.DeepClone();
+
+        var values = Kind == McpConnectorKind.Local ? Env : Headers;
+        var secretKeys = values.Where(x => x.IsSecret && !string.IsNullOrWhiteSpace(x.Key))
+            .Select(x => (JsonNode?)x.Key.Trim()).ToArray();
+        if (secretKeys.Length > 0)
+            config[Kind == McpConnectorKind.Local ? SecretEnvField : SecretHeadersField] = new JsonArray(secretKeys);
+        if (!Enabled) config[DisabledField] = true;
+        return config;
+    }
+
+    /// <summary>
+    /// The configuration in the Copilot CLI format, as the runtime starts it. Values keep their <c>${VAR}</c>
+    /// references. Without <paramref name="includeSecrets" />, secret values are left out.
+    /// </summary>
+    public JsonObject ToCliConfig(bool includeSecrets = true)
     {
         var config = new JsonObject();
 
@@ -102,32 +142,32 @@ public sealed partial class McpConnector
             config["command"] = Command.Trim();
             if (Args.Count > 0) config["args"] = new JsonArray(Args.Select(x => (JsonNode?)x).ToArray());
             if (!string.IsNullOrWhiteSpace(WorkingDirectory)) config["cwd"] = WorkingDirectory.Trim();
-            if (Env.Count > 0) config["env"] = ToObject(Env);
+            if (ToObject(Env, includeSecrets) is { Count: > 0 } env) config["env"] = env;
         }
         else
         {
             config["type"] = UseSse ? "sse" : "http";
             config["url"] = Url.Trim();
-            if (Headers.Count > 0) config["headers"] = ToObject(Headers);
+            if (ToObject(Headers, includeSecrets) is { Count: > 0 } headers) config["headers"] = headers;
             if (!string.IsNullOrWhiteSpace(OAuthClientId)) config["oauthClientId"] = OAuthClientId.Trim();
             if (OAuthPublicClient is { } isPublic) config["oauthPublicClient"] = isPublic;
         }
 
         foreach (var (key, value) in OtherFields) config[key] = value?.DeepClone();
-        config["tools"] ??= new JsonArray("*");
+        if (includeSecrets) config["tools"] ??= new JsonArray("*");
 
         return config;
     }
 
     /// <summary>
-    /// The connector as a session's own MCP server, which replaces the one in the configuration. <c>null</c> for SSE
-    /// servers, which the SDK's session configuration can't express.
+    /// The connector as a session MCP server, with secret values included. <see langword="null" /> for SSE servers,
+    /// which the SDK's session configuration can't express; they are started with <see cref="ToCliConfig" />.
     /// </summary>
     public McpServerConfig? ToServerConfig()
     {
         if (Kind == McpConnectorKind.Remote && UseSse) return null;
 
-        var config = ToConfig();
+        var config = ToCliConfig();
         McpServerConfig result = Kind == McpConnectorKind.Local
             ? new McpStdioServerConfig
             {
@@ -151,61 +191,40 @@ public sealed partial class McpConnector
         return result;
     }
 
+    /// <summary>The secret values currently in the connector.</summary>
+    public McpConnectorSecrets GetSecrets(string? oauthClientSecret) => new()
+    {
+        Env = Env.Where(x => x.IsSecret && !string.IsNullOrWhiteSpace(x.Key) && x.Value.Length > 0)
+            .ToDictionary(x => x.Key.Trim(), x => x.Value, StringComparer.Ordinal),
+        Headers = Headers.Where(x => x.IsSecret && !string.IsNullOrWhiteSpace(x.Key) && x.Value.Length > 0)
+            .ToDictionary(x => x.Key.Trim(), x => x.Value, StringComparer.Ordinal),
+        OAuthClientSecret = string.IsNullOrEmpty(oauthClientSecret) ? null : oauthClientSecret
+    };
+
+    /// <summary>A copy with the stored secret values filled in.</summary>
+    public McpConnector WithSecrets(McpConnectorSecrets secrets)
+    {
+        var result = Clone();
+        result.Env = Fill(result.Env, secrets.Env);
+        result.Headers = Fill(result.Headers, secrets.Headers);
+        return result;
+
+        static List<McpConnectorValue> Fill(List<McpConnectorValue> values, IReadOnlyDictionary<string, string> stored) =>
+            values.Select(x => x.IsSecret && stored.TryGetValue(x.Key.Trim(), out var value) ? x with { Value = value } : x)
+                .ToList();
+    }
+
     /// <summary>Environment variables the connector references with <c>${VAR}</c>, sorted.</summary>
     public IReadOnlyList<string> GetVariables()
     {
         IEnumerable<string> values = Kind == McpConnectorKind.Local
-            ? [Command, WorkingDirectory ?? string.Empty, ..Args, ..Env.Select(x => x.Value)]
-            : [..Headers.Select(x => x.Value)];
+            ? [Command, WorkingDirectory ?? string.Empty, ..Args, ..Env.Where(x => !x.IsSecret).Select(x => x.Value)]
+            : [..Headers.Where(x => !x.IsSecret).Select(x => x.Value)];
 
         return values.SelectMany(x => VariableRegex().Matches(x).Select(m => m.Groups["name"].Value))
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToList();
-    }
-
-    /// <summary>
-    /// Variable a secret value of this connector is stored under, e.g. <c>ONEWARE_MCP_GITHUB__AUTHORIZATION</c>.
-    /// The parts never contain <c>__</c>, so different connectors can't produce the same name as long as their
-    /// <see cref="GetVariableKey" /> differs.
-    /// </summary>
-    public static string GetSecretVariableName(string connector, string key) =>
-        $"{GetSecretVariablePrefix(connector)}{GetVariableKey(key)}";
-
-    /// <summary>Prefix of all variables <see cref="GetSecretVariableName" /> generates for a connector.</summary>
-    public static string GetSecretVariablePrefix(string connector) => $"ONEWARE_MCP_{GetVariableKey(connector)}__";
-
-    /// <summary>
-    /// The form of a connector name or value key used in generated variable names. Names or keys with the same form
-    /// (e.g. <c>my-server</c> and <c>My_Server</c>) would share variables, so they must not be used side by side.
-    /// </summary>
-    public static string GetVariableKey(string value) =>
-        string.Join('_', new string(value.ToUpperInvariant().Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_')
-            .ToArray()).Split('_', StringSplitOptions.RemoveEmptyEntries));
-
-    /// <summary>
-    /// A copy with the given variables filled in. Unknown <c>${VAR}</c> references stay as they are.
-    /// </summary>
-    public McpConnector WithVariables(IReadOnlyDictionary<string, string> values)
-    {
-        var result = Clone();
-        string Fill(string value) => VariableRegex().Replace(value,
-            m => values.TryGetValue(m.Groups["name"].Value, out var v) ? v : m.Value);
-
-        result.Command = Fill(result.Command);
-        if (result.WorkingDirectory != null) result.WorkingDirectory = Fill(result.WorkingDirectory);
-        result.Args = result.Args.Select(Fill).ToList();
-        result.Env = result.Env.Select(x => x with { Value = Fill(x.Value) }).ToList();
-        result.Headers = result.Headers.Select(x => x with { Value = Fill(x.Value) }).ToList();
-        return result;
-    }
-
-    /// <summary>Whether <paramref name="value" /> is exactly one <c>${VAR}</c> reference.</summary>
-    public static bool IsVariableReference(string value, out string variable)
-    {
-        var match = VariableRegex().Match(value);
-        variable = match.Success && match.Length == value.Length ? match.Groups["name"].Value : string.Empty;
-        return variable.Length > 0;
     }
 
     public static string ToVariableReference(string variable) => "${" + variable + "}";
@@ -216,16 +235,25 @@ public sealed partial class McpConnector
 
     public McpConnector Clone()
     {
-        var clone = FromConfig(Name, ToConfig(), Enabled);
-        // ToConfig adds the default tool filter; a clone must not differ from the original.
-        if (!OtherFields.ContainsKey("tools")) clone.OtherFields.Remove("tools");
+        var clone = FromConfig(Name, ToStoredConfig());
+        // Stored configurations leave secret values out; a clone keeps them.
+        clone.Env = Env.ToList();
+        clone.Headers = Headers.ToList();
         return clone;
     }
 
-    private static JsonObject ToObject(IEnumerable<McpConnectorValue> values)
+    /// <summary>Whether a value with this key is most likely a credential.</summary>
+    public static bool LooksSecret(string key)
+    {
+        var upper = key.Trim().ToUpperInvariant();
+        return upper is "AUTHORIZATION" or "PROXY-AUTHORIZATION" or "COOKIE" or "PAT" ||
+               SecretKeyMarkers.Any(x => upper.Contains(x, StringComparison.Ordinal));
+    }
+
+    private static JsonObject ToObject(IEnumerable<McpConnectorValue> values, bool includeSecrets)
     {
         var result = new JsonObject();
-        foreach (var value in values.Where(x => !string.IsNullOrWhiteSpace(x.Key)))
+        foreach (var value in values.Where(x => !string.IsNullOrWhiteSpace(x.Key) && (includeSecrets || !x.IsSecret)))
             result[value.Key.Trim()] = value.Value;
         return result;
     }
@@ -239,9 +267,30 @@ public sealed partial class McpConnector
                 .ToList()
             : [];
 
-    private static List<McpConnectorValue> GetValues(JsonObject obj, string key) =>
-        obj[key] is JsonObject map
+    private static List<McpConnectorValue> GetValues(JsonObject obj, string key, IReadOnlyCollection<string> secretKeys)
+    {
+        var result = obj[key] is JsonObject map
             ? map.Where(x => x.Value is JsonValue v && v.TryGetValue<string>(out _))
-                .Select(x => new McpConnectorValue(x.Key, x.Value!.GetValue<string>())).ToList()
+                .Select(x => new McpConnectorValue(x.Key, x.Value!.GetValue<string>(), secretKeys.Contains(x.Key)))
+                .ToList()
             : [];
+
+        foreach (var secret in secretKeys.Where(x => result.All(r => r.Key != x)))
+            result.Add(new McpConnectorValue(secret, string.Empty, true));
+        return result;
+    }
+}
+
+/// <summary>Secret values of a connector, kept in the OS credential store as one entry per connector.</summary>
+public sealed class McpConnectorSecrets
+{
+    public Dictionary<string, string> Env { get; init; } = new(StringComparer.Ordinal);
+
+    public Dictionary<string, string> Headers { get; init; } = new(StringComparer.Ordinal);
+
+    /// <summary>Secret of a confidential OAuth app, only sent when signing in.</summary>
+    public string? OAuthClientSecret { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsEmpty => Env.Count == 0 && Headers.Count == 0 && string.IsNullOrEmpty(OAuthClientSecret);
 }

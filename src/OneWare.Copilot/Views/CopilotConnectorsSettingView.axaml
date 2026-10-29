@@ -11,81 +11,100 @@
         <DockPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
                 <controls:Spinner Width="14" Height="14" IsVisible="{Binding IsLoading}" />
-                <Button Classes="icon small" ToolTip.Tip="Refresh" Command="{Binding RefreshCommand}">
-                    <PathIcon Classes="small" Data="{StaticResource Icon.Refresh}" />
+                <Button Classes="icon small" ToolTip.Tip="Open mcp.json" Command="{Binding OpenFileCommand}">
+                    <PathIcon Classes="small" Data="{StaticResource Icon.FileJson}" />
                 </Button>
-                <Button Classes="secondary small" Content="Import .mcp.json"
+                <Button Classes="secondary small" Content="Import…"
                         ToolTip.Tip="Add the servers of an MCP configuration file (.mcp.json, VS Code mcp.json or Claude Code format)"
                         Command="{Binding ImportCommand}" CommandParameter="{Binding $self}" />
-                <Button Classes="primary small" Content="Add Connector"
+                <Button Classes="primary small" Content="Add Server"
                         Command="{Binding AddCommand}" CommandParameter="{Binding $self}" />
             </StackPanel>
             <TextBlock Classes="caption" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0 0 8 0"
                        ToolTip.Tip="{Binding ConfigFile}"
-                       Text="MCP servers available in every chat. They are shared with the Copilot CLI (~/.copilot/mcp-config.json); secret values stay in your system keychain." />
+                       Text="MCP servers available in every chat. Secret values are kept in your system keychain." />
         </DockPanel>
 
-        <Border Classes="callout" IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Classes.error="{Binding IsError}">
-            <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+        <Border Classes="callout error" IsVisible="{Binding LoadError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <SelectableTextBlock Text="{Binding LoadError}" TextWrapping="Wrap" />
+        </Border>
+
+        <Border Classes="callout" IsVisible="{Binding HasMessage}" Classes.error="{Binding IsError}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Classes="icon small" VerticalAlignment="Top" ToolTip.Tip="Dismiss"
+                        Command="{Binding DismissMessageCommand}">
+                    <PathIcon Classes="small" Data="{StaticResource Icon.Close}" />
+                </Button>
+                <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+            </DockPanel>
+        </Border>
+
+        <Border Classes="callout" IsVisible="{Binding CanImportCli}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Classes="secondary small" Content="Import" Margin="8 0 0 0"
+                        Command="{Binding ImportCliCommand}" />
+                <TextBlock Text="{Binding CliImportText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </DockPanel>
         </Border>
 
         <TextBlock Classes="muted" IsVisible="{Binding IsEmpty}" Margin="0 4"
-                   Text="No connectors yet. Add one or import an existing .mcp.json file." />
+                   Text="No MCP servers yet. Add one or import an existing configuration file." />
 
         <ItemsControl ItemsSource="{Binding Connectors}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Spacing="6" />
+                    <StackPanel Spacing="4" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:CopilotConnectorItemViewModel">
                     <Border Classes="card compact">
-                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto">
-                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                                <TextBlock Classes="h4" Text="{Binding Name}" VerticalAlignment="Center" />
-                                <Border Classes="badge small" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding KindText}" />
-                                </Border>
-                                <Border Classes="badge small" VerticalAlignment="Center"
-                                        IsVisible="{Binding HasStatus}"
-                                        Classes.success="{Binding IsConnected}"
-                                        Classes.warning="{Binding NeedsSignIn}"
-                                        Classes.error="{Binding IsFailed}">
-                                    <TextBlock Text="{Binding StatusText}" />
-                                </Border>
-                                <controls:Spinner Width="12" Height="12" IsVisible="{Binding IsBusy}" />
-                            </StackPanel>
-                            <ToggleSwitch Grid.Row="0" Grid.Column="1" Classes="small" Content="Enabled"
-                                          IsChecked="{Binding Enabled}" />
-
-                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Classes="caption mono"
-                                       Margin="0 4 0 0" Text="{Binding Description}" TextTrimming="CharacterEllipsis"
-                                       ToolTip.Tip="{Binding Description}" />
-                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 2 0 0">
-                                <TextBlock Classes="caption warning" TextWrapping="Wrap"
-                                           IsVisible="{Binding MissingVariables, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                           Text="{Binding MissingVariables}" />
-                                <SelectableTextBlock Classes="caption" TextWrapping="Wrap"
-                                                     Classes.error="{Binding IsFailed}"
-                                                     IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                     Text="{Binding StatusMessage}" />
+                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Classes="h4" Text="{Binding Name}" VerticalAlignment="Center" />
+                                    <Border Classes="badge small" VerticalAlignment="Center"
+                                            Classes.success="{Binding IsConnected}"
+                                            Classes.warning="{Binding NeedsSignIn}"
+                                            Classes.error="{Binding IsFailed}">
+                                        <TextBlock Text="{Binding StatusText}" />
+                                    </Border>
+                                    <controls:Spinner Width="12" Height="12" IsVisible="{Binding IsBusy}" />
+                                </StackPanel>
+                                <TextBlock Classes="caption mono" Text="{Binding Description}"
+                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Description}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="form-row"
-                                        Margin="0 6 0 0" HorizontalAlignment="Right">
-                                <Button Classes="primary small" Content="Sign In"
-                                        IsVisible="{Binding CanSignIn}" Command="{Binding SignInCommand}"
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                                        VerticalAlignment="Center" Margin="8 0 0 0">
+                                <Button Classes="primary small" Content="Sign In" IsVisible="{Binding NeedsSignIn}"
+                                        Command="{Binding SignInCommand}"
                                         ToolTip.Tip="Signs in with OAuth in your browser" />
-                                <Button Classes="secondary small" Content="Test" Command="{Binding CheckCommand}"
-                                        IsEnabled="{Binding Enabled}"
-                                        ToolTip.Tip="Starts the server to see whether it connects" />
-                                <Button Classes="secondary small" Content="Edit"
-                                        Command="{Binding EditCommand}" CommandParameter="{Binding $self}" />
-                                <Button Classes="secondary small" Content="Remove"
-                                        Command="{Binding RemoveCommand}" CommandParameter="{Binding $self}" />
+                                <ToggleSwitch Classes="small" IsChecked="{Binding Enabled}"
+                                              ToolTip.Tip="Use this server in chats" />
+                                <Button Classes="icon small" ToolTip.Tip="More">
+                                    <PathIcon Classes="small" Data="{StaticResource Icon.MoreVertical}" />
+                                    <Button.Flyout>
+                                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                            <MenuItem Header="Edit…" Command="{Binding EditCommand}"
+                                                      CommandParameter="{Binding $parent[Button]}" />
+                                            <MenuItem Header="Test Connection" Command="{Binding CheckCommand}"
+                                                      IsEnabled="{Binding Enabled}" />
+                                            <MenuItem Header="Sign In" Command="{Binding SignInCommand}"
+                                                      IsVisible="{Binding CanSignIn}" />
+                                            <Separator />
+                                            <MenuItem Header="Remove" Command="{Binding RemoveCommand}"
+                                                      CommandParameter="{Binding $parent[Button]}" />
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
                             </StackPanel>
+
+                            <SelectableTextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Classes="caption"
+                                                 Margin="0 4 0 0" TextWrapping="Wrap"
+                                                 Classes.error="{Binding IsFailed}"
+                                                 IsVisible="{Binding HasStatusMessage}"
+                                                 Text="{Binding StatusMessage}" />
                         </Grid>
                     </Border>
                 </DataTemplate>

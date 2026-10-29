@@ -3,14 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:OneWare.Copilot.Services"
-             xmlns:behaviors="clr-namespace:OneWare.Essentials.Behaviors;assembly=OneWare.Essentials"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
              mc:Ignorable="d" d:DesignWidth="30" d:DesignHeight="30"
              x:Class="OneWare.Copilot.Views.CopilotChatHeaderView" x:DataType="services:CopilotChatServiceBase">
     <Button Name="OverflowButton" VerticalAlignment="Center" ToolTip.Tip="More">
         <Button.Flyout>
-            <Flyout
-                    Placement="BottomEdgeAlignedRight">
-                <StackPanel MinWidth="200" Spacing="8">
+            <Flyout Placement="BottomEdgeAlignedRight" Opened="OnFlyoutOpened">
+                <StackPanel MinWidth="200" MaxWidth="380" Spacing="8">
 
                     <StackPanel Spacing="8" IsVisible="{Binding UsesGitHubAuthentication}">
                         <!-- Account state -->
@@ -70,9 +69,72 @@
                             <TextBlock Text="Sign in to OneWare Cloud" FontSize="11" />
                         </Button>
                     </StackPanel>
+
+                    <!-- MCP servers of this chat -->
+                    <Separator />
+                    <StackPanel Spacing="8">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Classes="icon small" ToolTip.Tip="Refresh"
+                                    IsVisible="{Binding HasMcpServers}"
+                                    Command="{Binding RefreshMcpServersCommand}">
+                                <PathIcon Classes="small" Data="{StaticResource Icon.Refresh}" />
+                            </Button>
+                            <TextBlock Classes="overline" Text="MCP SERVERS" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding !HasMcpServers}"
+                                   Text="No MCP servers in this chat." />
+
+                        <ItemsControl ItemsSource="{Binding McpServers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="6" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="services:CopilotMcpServerViewModel">
+                                    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="1" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Classes="semibold" Text="{Binding DisplayName}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                <controls:Spinner Width="10" Height="10" IsVisible="{Binding IsBusy}" />
+                                            </StackPanel>
+                                            <TextBlock Classes="caption" Text="{Binding StatusText}"
+                                                       Classes.success="{Binding IsConnected}"
+                                                       Classes.warning="{Binding NeedsSignIn}"
+                                                       Classes.error="{Binding IsFailed}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                                                    VerticalAlignment="Center" Margin="8 0 0 0">
+                                            <Button Classes="primary small" Content="Sign In"
+                                                    IsVisible="{Binding NeedsSignIn}"
+                                                    Command="{Binding SignInCommand}" />
+                                            <ToggleSwitch Classes="small" IsChecked="{Binding EnabledInChat}"
+                                                          ToolTip.Tip="Use this server in this chat" />
+                                        </StackPanel>
+                                        <SelectableTextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                             Classes="caption" TextWrapping="Wrap" MaxLines="4"
+                                                             Classes.error="{Binding IsFailed}"
+                                                             IsVisible="{Binding HasMessage}"
+                                                             Text="{Binding Message}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Button Classes="link" Content="Manage MCP Servers…" HorizontalAlignment="Left"
+                                Command="{Binding ManageMcpServersCommand}"
+                                CommandParameter="{Binding #OverflowButton}" />
+                    </StackPanel>
                 </StackPanel>
             </Flyout>
         </Button.Flyout>
-        <Image Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" Width="12" Height="12" />
+        <Panel>
+            <Image Source="{DynamicResource BoxIcons.RegularDotsVerticalRounded}" Width="12" Height="12" />
+            <Ellipse Width="6" Height="6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 -2 -3 0"
+                     Fill="{DynamicResource WarningBrush}" IsVisible="{Binding HasMcpProblems}"
+                     ToolTip.Tip="{Binding McpSummary}" />
+        </Panel>
     </Button>
 </UserControl>

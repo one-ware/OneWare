@@ -19,29 +19,62 @@ public static partial class McpConnectorImport
 
     public static IReadOnlyList<ImportedMcpConnector> Read(string file, Action<string> warn)
     {
-        JsonNode? document;
+        string text;
         try
         {
-            document = JsonNode.Parse(File.ReadAllText(file), documentOptions: new JsonDocumentOptions
-            {
-                CommentHandling = JsonCommentHandling.Skip,
-                AllowTrailingCommas = true
-            });
+            text = File.ReadAllText(file);
         }
-        catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             warn($"Failed to read {file}: {e.Message}");
             return [];
         }
 
-        if (document is not JsonObject root)
+        return Parse(text, Path.GetDirectoryName(Path.GetFullPath(file))!, warn, file);
+    }
+
+    /// <summary>
+    /// Reads pasted configuration: a file in one of the supported formats, a single <c>"name": { … }</c> entry, or
+    /// just a server's configuration, which gets <paramref name="fallbackName" />.
+    /// </summary>
+    public static IReadOnlyList<ImportedMcpConnector> ParseText(string text, Action<string> warn,
+        string fallbackName = "server")
+    {
+        var trimmed = text.Trim();
+        // A copied "name": { … } entry without the surrounding braces.
+        if (trimmed.StartsWith('"')) trimmed = "{" + trimmed.TrimEnd(',') + "}";
+        return Parse(trimmed, null, warn, "The configuration", fallbackName);
+    }
+
+    private static IReadOnlyList<ImportedMcpConnector> Parse(string text, string? directory, Action<string> warn,
+        string source, string? fallbackName = null)
+    {
+        JsonNode? document;
+        try
         {
-            warn($"{file} must contain a JSON object.");
+            document = JsonNode.Parse(text, documentOptions: new JsonDocumentOptions
+            {
+                CommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            });
+        }
+        catch (JsonException e)
+        {
+            warn($"{source} is not valid JSON: {e.Message}");
             return [];
         }
 
+        if (document is not JsonObject root)
+        {
+            warn($"{source} must contain a JSON object.");
+            return [];
+        }
+
+        // A single server's configuration.
+        if (fallbackName != null && (root["command"] is JsonValue || root["url"] is JsonValue))
+            return Convert(fallbackName, root, directory, warn) is { } single ? [single] : [];
+
         var map = root["mcpServers"] as JsonObject ?? root["servers"] as JsonObject ?? root;
-        var directory = Path.GetDirectoryName(Path.GetFullPath(file))!;
         var result = new List<ImportedMcpConnector>();
 
         foreach (var (name, node) in map)
@@ -60,7 +93,7 @@ public static partial class McpConnectorImport
         return result;
     }
 
-    private static ImportedMcpConnector? Convert(string name, JsonObject declaration, string directory,
+    private static ImportedMcpConnector? Convert(string name, JsonObject declaration, string? directory,
         Action<string> warn)
     {
         string Normalize(string value) => NormalizeVariables(value, directory, warn);
@@ -95,7 +128,10 @@ public static partial class McpConnectorImport
             if (declaration["env"] is JsonObject env) config["env"] = MapValues(env, Normalize);
             // Project files expect to run in their folder, a connector runs wherever the chat is.
             var cwd = GetString(declaration, "cwd");
-            config["cwd"] = string.IsNullOrWhiteSpace(cwd) ? directory : Path.GetFullPath(Normalize(cwd), directory);
+            if (!string.IsNullOrWhiteSpace(cwd))
+                config["cwd"] = directory == null ? Normalize(cwd) : Path.GetFullPath(Normalize(cwd), directory);
+            else if (directory != null)
+                config["cwd"] = directory;
         }
         else if (type is "http" or "sse" && !string.IsNullOrWhiteSpace(url))
         {
@@ -122,20 +158,35 @@ public static partial class McpConnectorImport
             if (declaration[key]?.DeepClone() is { } value)
                 config[key] = value;
 
-        var enabled = !(declaration["disabled"] is JsonValue disabled && disabled.TryGetValue<bool>(out var off) &&
-                        off);
-        return new ImportedMcpConnector(McpConnector.FromConfig(name, config, enabled), clientSecret);
+        if (declaration["disabled"] is JsonValue disabled && disabled.TryGetValue<bool>(out var off) && off)
+            config[McpConnector.DisabledField] = true;
+
+        var connector = McpConnector.FromConfig(name, config);
+        // Literal credentials go to the credential store instead of OneWare's configuration file.
+        connector.Env = connector.Env.Select(MarkSecret).ToList();
+        connector.Headers = connector.Headers.Select(MarkSecret).ToList();
+        return new ImportedMcpConnector(connector, clientSecret);
+
+        static McpConnectorValue MarkSecret(McpConnectorValue value) =>
+            value with { IsSecret = McpConnector.LooksSecret(value.Key) && value.Value.Length > 0 &&
+                                    !value.Value.Contains("${", StringComparison.Ordinal) };
     }
 
     /// <summary>
     /// Rewrites references to the CLI's <c>${VAR}</c> syntax: <c>${env:VAR}</c> becomes <c>${VAR}</c> and
     /// <c>${workspaceFolder}</c> the folder of the imported file.
     /// </summary>
-    internal static string NormalizeVariables(string value, string workspaceFolder, Action<string> warn) =>
+    internal static string NormalizeVariables(string value, string? workspaceFolder, Action<string> warn) =>
         VariableRegex().Replace(value, match =>
         {
             var name = match.Groups["name"].Value;
-            if (name is "workspaceFolder" or "workspaceRoot") return workspaceFolder;
+            if (name is "workspaceFolder" or "workspaceRoot")
+            {
+                if (workspaceFolder != null) return workspaceFolder;
+                warn($"${{{name}}} has no meaning outside a project; replace it with a path.");
+                return match.Value;
+            }
+
             if (name.StartsWith("env:", StringComparison.Ordinal)) name = name[4..];
             if (name.Contains(':')) return match.Value;
             if (match.Groups["default"].Success)
@@ -143,11 +194,17 @@ public static partial class McpConnectorImport
             return McpConnector.ToVariableReference(name);
         });
 
-    private static string ExpandVariables(string value, string workspaceFolder, Action<string> warn) =>
+    private static string ExpandVariables(string value, string? workspaceFolder, Action<string> warn) =>
         VariableRegex().Replace(value, match =>
         {
             var name = match.Groups["name"].Value;
-            if (name is "workspaceFolder" or "workspaceRoot") return workspaceFolder;
+            if (name is "workspaceFolder" or "workspaceRoot")
+            {
+                if (workspaceFolder != null) return workspaceFolder;
+                warn($"${{{name}}} has no meaning outside a project; replace it with a path.");
+                return match.Value;
+            }
+
             if (name.StartsWith("env:", StringComparison.Ordinal)) name = name[4..];
 
             var resolved = Environment.GetEnvironmentVariable(name);

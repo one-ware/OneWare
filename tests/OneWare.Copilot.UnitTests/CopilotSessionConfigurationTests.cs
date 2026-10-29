@@ -110,6 +110,7 @@ public sealed class CopilotSessionConfigurationTests : IDisposable
     [InlineData("task", false, false)]
     [InlineData("skill", false, false)]
     [InlineData("ask_user", false, false)]
+    [InlineData("tool_search_tool", false, false)]
     public void IsExternalTool_SeparatesMcpPermissionsFromTrustedIdeAndIsolatedTools(
         string toolName, bool isClientTool, bool expected)
     {
@@ -117,7 +118,7 @@ public sealed class CopilotSessionConfigurationTests : IDisposable
     }
 
     [Fact]
-    public async Task ApplyToolDeferral_KeepsOnlyCoreToolsLoaded()
+    public async Task ApplyToolDeferral_KeepsOnlyAlwaysLoadedToolsLoaded()
     {
         var core = AIFunctionFactory.Create(() => "content", new AIFunctionFactoryOptions
         {
@@ -126,7 +127,7 @@ public sealed class CopilotSessionConfigurationTests : IDisposable
         });
         var plugin = AIFunctionFactory.Create(() => "x", "pluginTool");
 
-        var tools = CopilotSessionConfiguration.ApplyToolDeferral([core, plugin]);
+        var tools = CopilotSessionConfiguration.ApplyToolDeferral([core, plugin], name => name == "readFile");
 
         var wrapped = Assert.IsAssignableFrom<AIFunction>(tools[0]);
         Assert.Equal("readFile", wrapped.Name);
@@ -136,20 +137,6 @@ public sealed class CopilotSessionConfigurationTests : IDisposable
 
         Assert.Same(plugin, tools[1]);
         Assert.False(plugin.AdditionalProperties.ContainsKey("defer"));
-    }
-
-    [Fact]
-    public void AlwaysLoadedTools_AreRegisteredBuiltIns()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null && !File.Exists(Path.Combine(directory.FullName, "OneWare.slnx")))
-            directory = directory.Parent;
-        Assert.NotNull(directory);
-
-        var source = File.ReadAllText(Path.Combine(directory.FullName, "src", "OneWare.Chat", "Services",
-            "AiBuiltInFunctions.cs"));
-        foreach (var name in CopilotSessionConfiguration.AlwaysLoadedTools)
-            Assert.Contains($"Name = \"{name}\"", source);
     }
 
     public void Dispose()

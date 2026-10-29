@@ -46,6 +46,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "readFile",
+            AlwaysLoaded = true,
             IsReadOnly = true,
             FriendlyName = "Read File",
             RunOnUiThread = true,
@@ -69,6 +70,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "editFile",
+            AlwaysLoaded = true,
             FriendlyName = "Edit File",
             RunOnUiThread = true,
             Description =
@@ -99,6 +101,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getActiveProject",
+            AlwaysLoaded = true,
             IsReadOnly = true,
             FriendlyName = "Get Active Project",
             RunOnUiThread = true,
@@ -114,6 +117,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getOpenFiles",
+            AlwaysLoaded = true,
             IsReadOnly = true,
             FriendlyName = "Get Open Files",
             RunOnUiThread = true,
@@ -135,6 +139,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "openFile",
+            AlwaysLoaded = true,
             FriendlyName = "Open File",
             RunOnUiThread = true,
             Description = """
@@ -159,6 +164,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getErrorsForFile",
+            AlwaysLoaded = true,
             IsReadOnly = true,
             FriendlyName = "Get Errors for File",
             RunOnUiThread = true,
@@ -171,6 +177,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "getAllErrors",
+            AlwaysLoaded = true,
             IsReadOnly = true,
             FriendlyName = "Get Errors",
             RunOnUiThread = true,
@@ -185,6 +192,7 @@ internal static class AiBuiltInFunctions
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
             Name = "runTerminalCommand",
+            AlwaysLoaded = true,
             FriendlyName = "Execute In Terminal",
             RunOnUiThread = true,
             Description = """

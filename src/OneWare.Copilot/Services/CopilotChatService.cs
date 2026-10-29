@@ -1615,7 +1615,7 @@ public abstract partial class CopilotChatServiceBase(
 
             // MCP servers inherit the runtime's environment; the login shell's PATH lets them find npx and co.
             var connection = RuntimeConnection.ForStdio(cliPath, []);
-            connection.Environment = await CopilotConnectorService.GetRuntimeEnvironmentAsync();
+            connection.Environment = await McpConnectorHub.GetRuntimeEnvironmentAsync();
 
             var clientOptions = new CopilotClientOptions
             {
@@ -2038,11 +2038,10 @@ public abstract partial class CopilotChatServiceBase(
             .ActiveProject?.RootFolderPath ?? paths.ProjectsDirectory;
         _sessionWorkingDirectory = workingDirectory;
         var skillDirectories = BuildSessionSkillDirectories(workingDirectory, await GetOpenProjectRootsAsync());
-        var connectorServers = await BuildConnectorServersAsync();
 
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            var tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools());
+            var tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools(), toolProvider.IsFunctionAlwaysLoaded);
             var sessionConfig = new SessionConfig
             {
                 Model = SelectedModel.Id,
@@ -2069,7 +2068,7 @@ public abstract partial class CopilotChatServiceBase(
             };
 
             CopilotSessionConfiguration.ApplyDiscovery(sessionConfig, workingDirectory, skillDirectories);
-            sessionConfig.McpServers = connectorServers;
+            await ConfigureMcpAsync(sessionConfig, null);
             _session = await client.CreateSessionAsync(sessionConfig);
         }
         else
@@ -2088,7 +2087,7 @@ public abstract partial class CopilotChatServiceBase(
                     ContextTier = ResolveContextTier(),
                     IncludeSubAgentStreamingEvents = true,
                     SystemMessage = BuildSystemMessageConfig(),
-                    Tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools()),
+                    Tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools(), toolProvider.IsFunctionAlwaysLoaded),
                     AvailableTools = CopilotSessionConfiguration.BuildAvailableTools(),
                     ExcludedTools = ExcludedBuiltInTools.ToList(),
                     CustomAgents = BuildCustomAgents(),
@@ -2101,7 +2100,7 @@ public abstract partial class CopilotChatServiceBase(
                     }
                 };
                 CopilotSessionConfiguration.ApplyDiscovery(resumeConfig, workingDirectory, skillDirectories);
-                resumeConfig.McpServers = connectorServers;
+                await ConfigureMcpAsync(resumeConfig, sessionId);
                 _session = await client.ResumeSessionAsync(sessionId, resumeConfig);
             }
             finally
@@ -2111,7 +2110,6 @@ public abstract partial class CopilotChatServiceBase(
         }
 
         CurrentSessionId = _session?.SessionId ?? sessionId;
-        if (_session != null) _ = ApplyConnectorsAsync(_session, reload: false);
         var sdkModelState = string.IsNullOrWhiteSpace(sessionId) || storedModelState != null
             ? null
             : await TryGetSdkModelStateAsync();
@@ -2138,6 +2136,7 @@ public abstract partial class CopilotChatServiceBase(
         }
 
         SubscribeToProjectChanges();
+        OnMcpSessionStarted(_session, workingDirectory);
         _ = StartWorkspaceSync(_session, updateSkills: false);
 
         if (string.IsNullOrWhiteSpace(sessionId))
@@ -2574,6 +2573,11 @@ public abstract partial class CopilotChatServiceBase(
                 HandleMcpServerStatusChanged(x.Data);
                 break;
             }
+            case SessionMcpServersLoadedEvent:
+            {
+                ScheduleMcpRefresh();
+                break;
+            }
             case SubagentStartedEvent x:
             {
                 HandleSubAgentStarted(x);
@@ -2929,7 +2933,7 @@ public abstract partial class CopilotChatServiceBase(
                 if (session == null) return;
 
                 _clientToolNames = null;
-                var tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools());
+                var tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools(), toolProvider.IsFunctionAlwaysLoaded);
                 await session.SetToolsAsync(tools, cancellationToken);
             }
             finally
@@ -3182,7 +3186,8 @@ public abstract partial class CopilotChatServiceBase(
 
     /// <summary>
     /// Returns why the selected agent must not call the given tool, or <see langword="null"/> if it
-    /// may. Read-only agents cannot run external tools whose side effects OneWare cannot classify.
+    /// may. Read-only agents cannot run OneWare functions that change anything; MCP tools are decided
+    /// in <see cref="OnPermissionRequestAsync"/>, where the runtime reports whether they are read-only.
     /// </summary>
     private string? GetAgentToolDenyReason(string toolName)
     {
@@ -3196,7 +3201,7 @@ public abstract partial class CopilotChatServiceBase(
         if (agent.Tools != null && !agent.Tools.Contains(toolName, StringComparer.OrdinalIgnoreCase))
             return $"The {agent.DisplayName} agent is not allowed to use '{toolName}'.";
 
-        if (agent.IsReadOnly && isOneWareTool != true)
+        if (agent.IsReadOnly && isOneWareTool == false)
             return $"'{toolName}' changes the workspace, which is not allowed in {agent.DisplayName} mode. " +
                    "Report what you would change instead, or ask the user to switch to Agent mode.";
 
@@ -3300,13 +3305,20 @@ public abstract partial class CopilotChatServiceBase(
                 PermissionDecisionReason = denyReason
             });
 
+        var isExternal = CopilotSessionConfiguration.IsExternalTool(input.ToolName, IsClientTool(input.ToolName));
+
+        // Read-only agents only run MCP tools the server declares read-only, which the permission
+        // request reports, so they must reach it even when approvals are bypassed.
+        if (isExternal && agentService.SelectedAgent is { IsReadOnly: true })
+            return Task.FromResult<PreToolUseHookOutput?>(null);
+
         // Bypass Approval / Autopilot: auto-approve all permission requests without prompting
         if (IsApprovalBypassed)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
         // MCP tools must retain the runtime's permission checks rather than inheriting the
         // automatic approval of OneWare tools without a confirmation check.
-        if (CopilotSessionConfiguration.IsExternalTool(input.ToolName, IsClientTool(input.ToolName)))
+        if (isExternal)
             return Task.FromResult<PreToolUseHookOutput?>(null);
 
         var check = toolProvider.GetConfirmationCheck(input.ToolName);
@@ -3344,9 +3356,12 @@ public abstract partial class CopilotChatServiceBase(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
-        if (request is PermissionRequestMcp && agentService.SelectedAgent is { IsReadOnly: true } agent)
+        if (request is PermissionRequestMcp { ReadOnly: not true } mcpRequest &&
+            agentService.SelectedAgent is { IsReadOnly: true } agent)
             return Task.FromResult(PermissionDecision.Reject(
-                $"MCP tools are not allowed in {agent.DisplayName} mode because their side effects are unknown."));
+                $"'{mcpRequest.ToolName}' of MCP server '{mcpRequest.ServerName}' may change data, which is not " +
+                $"allowed in {agent.DisplayName} mode. Only tools the server declares read-only can be used; " +
+                "ask the user to switch to Agent mode."));
 
         // Bypass Approval / Autopilot: auto-approve all permission requests
         if (IsApprovalBypassed)

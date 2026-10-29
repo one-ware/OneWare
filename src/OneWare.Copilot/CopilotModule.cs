@@ -148,7 +148,7 @@ public class CopilotModule : OneWareModuleBase
 
     public override void RegisterServices(IServiceCollection services)
     {
-        services.AddSingleton<CopilotConnectorService>();
+        services.AddSingleton<McpConnectorHub>();
         services.AddTransient<CopilotChatService>();
         services.AddTransient<OneWareCloudChatService>();
     }
@@ -174,7 +174,7 @@ public class CopilotModule : OneWareModuleBase
             });
 
         settingsService.RegisterCustom("AI Chat", "Connectors", CopilotConnectorsSettingKey,
-            new CopilotConnectorsSetting(serviceProvider.Resolve<CopilotConnectorService>()));
+            new CopilotConnectorsSetting(serviceProvider.Resolve<McpConnectorHub>()));
 
         // Reading the login shell's environment takes a moment; the first chat needs it.
         _ = LoginShellEnvironment.GetAsync();

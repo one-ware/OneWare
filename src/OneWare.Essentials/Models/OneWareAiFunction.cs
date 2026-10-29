@@ -38,6 +38,13 @@ public interface IOneWareAiFunction
     /// function that changes files, the IDE or the system must leave this <see langword="false"/>.
     /// </summary>
     bool IsReadOnly => false;
+
+    /// <summary>
+    /// Whether the function is always sent to the model. Chats that defer tools behind a tool search (because MCP
+    /// servers add hundreds of tools) only load the others when the model searches for them, so mark only the few
+    /// functions almost every request needs.
+    /// </summary>
+    bool AlwaysLoaded => false;
 }
 
 public sealed class AiFunctionInvocationContext(string id, Action<string> reportProgress)
@@ -70,4 +77,7 @@ public sealed class OneWareAiFunction : IOneWareAiFunction
 
     /// <inheritdoc />
     public bool IsReadOnly { get; init; }
+
+    /// <inheritdoc />
+    public bool AlwaysLoaded { get; init; }
 }

@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Copilot.Connectors;
@@ -12,12 +11,11 @@ namespace OneWare.Copilot.ViewModels;
 /// <summary>Adds or edits a connector. Values marked as secret are kept in the OS credential store.</summary>
 public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBase
 {
-    private readonly CopilotConnectorService _service;
+    private readonly McpConnectorHub _hub;
     private readonly McpConnector? _original;
-    private readonly HashSet<string> _otherNames;
-    private readonly IReadOnlySet<string> _storedVariables;
+    private readonly IReadOnlyDictionary<string, string> _environment;
     private string _name = string.Empty;
-    private int _kindIndex;
+    private bool _isRemote;
     private string _command = string.Empty;
     private string _arguments = string.Empty;
     private string _workingDirectory = string.Empty;
@@ -25,56 +23,51 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
     private bool _useSse;
     private string _oauthClientId = string.Empty;
     private string _oauthClientSecret = string.Empty;
-    private bool _hasStoredOAuthClientSecret;
-    private bool _clearOAuthClientSecret;
+    private bool _isPublicClient;
+    private bool _isAdvancedExpanded;
+    private bool _isPasteExpanded;
+    private string _pasteText = string.Empty;
+    private string? _pasteMessage;
     private string? _error;
-    private bool _isSaving;
+    private bool _isBusy;
+    private McpConnectorStatus? _testStatus;
+    private string _missingVariables = string.Empty;
 
-    private CopilotConnectorEditorViewModel(CopilotConnectorService service, McpConnector? original,
-        IEnumerable<string> otherNames, IReadOnlySet<string> storedVariables)
+    private CopilotConnectorEditorViewModel(McpConnectorHub hub, McpConnector? original,
+        IReadOnlyDictionary<string, string> environment)
     {
-        _service = service;
+        _hub = hub;
         _original = original;
-        // Names with the same variable key would share stored values.
-        _otherNames = otherNames.Select(McpConnector.GetVariableKey).ToHashSet(StringComparer.Ordinal);
-        _storedVariables = storedVariables;
-        Title = original == null ? "Add Connector" : $"Edit Connector - {original.Name}";
+        _environment = environment;
+        Title = original == null ? "Add MCP Server" : $"Edit MCP Server - {original.Name}";
 
-        AddEnvCommand = new RelayCommand(() => AddValue(Env, new McpConnectorValue("", ""), false, false));
-        AddHeaderCommand = new RelayCommand(() => AddValue(Headers, new McpConnectorValue("", ""), false, false));
-        ClearOAuthClientSecretCommand = new RelayCommand(() =>
-        {
-            ClearOAuthClientSecret = true;
-            OAuthClientSecret = string.Empty;
-        });
+        AddValueCommand = new RelayCommand(() =>
+            AddValue(IsRemote ? Headers : Env, new McpConnectorValue(string.Empty, string.Empty, false)));
+        ApplyPasteCommand = new RelayCommand(ApplyPaste);
+        TestCommand = new AsyncRelayCommand(TestAsync);
         SaveCommand = new AsyncRelayCommand<FlexibleWindow?>(SaveAsync);
         CancelCommand = new RelayCommand<FlexibleWindow?>(x => x?.Close());
 
-        if (original == null) return;
-
-        _name = original.Name;
-        _kindIndex = original.Kind == McpConnectorKind.Remote ? 1 : 0;
-        _command = original.Command;
-        _arguments = string.Join(Environment.NewLine, original.Args);
-        _workingDirectory = original.WorkingDirectory ?? string.Empty;
-        _url = original.Url;
-        _useSse = original.UseSse;
-        _oauthClientId = original.OAuthClientId ?? string.Empty;
-
-        foreach (var value in original.Env) AddLoadedValue(Env, value);
-        foreach (var value in original.Headers) AddLoadedValue(Headers, value);
+        // New servers start with the paste box open, which is the quickest way to add one from a README.
+        _isPasteExpanded = original == null;
+        Load(original ?? new McpConnector());
     }
 
-    public static async Task<CopilotConnectorEditorViewModel> CreateAsync(CopilotConnectorService service,
-        McpConnector? connector, IEnumerable<string> otherNames)
+    /// <param name="connector">The connector to edit, or <see langword="null" /> to add one.</param>
+    public static async Task<CopilotConnectorEditorViewModel> CreateAsync(McpConnectorHub hub,
+        McpConnector? connector)
     {
-        var stored = await service.GetStoredVariablesAsync();
-        var editor = new CopilotConnectorEditorViewModel(service, connector?.Clone(), otherNames, stored);
-        if (connector != null)
-            editor.HasStoredOAuthClientSecret = await service.HasOAuthClientSecretAsync(connector.Name);
-        editor.UpdateVariables();
+        var environment = await McpConnectorHub.GetRuntimeEnvironmentAsync();
+        if (connector == null) return new CopilotConnectorEditorViewModel(hub, null, environment);
+
+        var resolved = await hub.ResolveAsync(connector);
+        var editor = new CopilotConnectorEditorViewModel(hub, resolved, environment);
+        editor.OAuthClientSecret = (await hub.GetSecretsAsync(connector.Id)).OAuthClientSecret ?? string.Empty;
+        editor.IsAdvancedExpanded = editor.HasAdvancedValues;
         return editor;
     }
+
+    public bool IsNew => _original == null;
 
     public bool Saved { get; private set; }
 
@@ -84,22 +77,25 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
         set => SetProperty(ref _name, value);
     }
 
-    /// <summary>0 = local command, 1 = remote URL.</summary>
-    public int KindIndex
+    public bool IsRemote
     {
-        get => _kindIndex;
+        get => _isRemote;
         set
         {
-            if (!SetProperty(ref _kindIndex, value)) return;
+            if (!SetProperty(ref _isRemote, value)) return;
             OnPropertyChanged(nameof(IsLocal));
-            OnPropertyChanged(nameof(IsRemote));
+            OnPropertyChanged(nameof(Values));
+            OnPropertyChanged(nameof(ValuesTitle));
+            OnPropertyChanged(nameof(AddValueText));
             UpdateVariables();
         }
     }
 
-    public bool IsLocal => KindIndex == 0;
-
-    public bool IsRemote => KindIndex == 1;
+    public bool IsLocal
+    {
+        get => !IsRemote;
+        set => IsRemote = !value;
+    }
 
     public string Command
     {
@@ -110,7 +106,7 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
         }
     }
 
-    /// <summary>One argument per line.</summary>
+    /// <summary>Arguments, one per line.</summary>
     public string Arguments
     {
         get => _arguments;
@@ -150,83 +146,149 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
     public string OAuthClientSecret
     {
         get => _oauthClientSecret;
-        set
-        {
-            if (SetProperty(ref _oauthClientSecret, value) && value.Length > 0) ClearOAuthClientSecret = false;
-        }
+        set => SetProperty(ref _oauthClientSecret, value);
     }
 
-    public bool HasStoredOAuthClientSecret
+    public bool IsPublicClient
     {
-        get => _hasStoredOAuthClientSecret;
+        get => _isPublicClient;
+        set => SetProperty(ref _isPublicClient, value);
+    }
+
+    public bool IsAdvancedExpanded
+    {
+        get => _isAdvancedExpanded;
+        set => SetProperty(ref _isAdvancedExpanded, value);
+    }
+
+    public string RedirectUrl => McpConnectorHub.OAuthRedirectUrl;
+
+    public bool IsPasteExpanded
+    {
+        get => _isPasteExpanded;
+        set => SetProperty(ref _isPasteExpanded, value);
+    }
+
+    public string PasteText
+    {
+        get => _pasteText;
+        set => SetProperty(ref _pasteText, value);
+    }
+
+    public string? PasteMessage
+    {
+        get => _pasteMessage;
         private set
         {
-            if (SetProperty(ref _hasStoredOAuthClientSecret, value))
-                OnPropertyChanged(nameof(OAuthClientSecretWatermark));
+            if (SetProperty(ref _pasteMessage, value)) OnPropertyChanged(nameof(HasPasteMessage));
         }
     }
 
-    public bool ClearOAuthClientSecret
-    {
-        get => _clearOAuthClientSecret;
-        private set
-        {
-            if (SetProperty(ref _clearOAuthClientSecret, value))
-                OnPropertyChanged(nameof(OAuthClientSecretWatermark));
-        }
-    }
-
-    public string OAuthClientSecretWatermark => HasStoredOAuthClientSecret && !ClearOAuthClientSecret
-        ? "Stored - leave empty to keep"
-        : "Only for confidential apps";
-
-    public string RedirectUrl => CopilotConnectorService.OAuthRedirectUrl;
+    public bool HasPasteMessage => !string.IsNullOrEmpty(PasteMessage);
 
     public ObservableCollection<CopilotConnectorValueViewModel> Env { get; } = [];
 
     public ObservableCollection<CopilotConnectorValueViewModel> Headers { get; } = [];
 
-    /// <summary>Variables referenced with <c>${VAR}</c> that are not secret values of this editor.</summary>
-    public ObservableCollection<CopilotConnectorVariableViewModel> Variables { get; } = [];
+    /// <summary>Environment variables of local servers, headers of remote ones.</summary>
+    public ObservableCollection<CopilotConnectorValueViewModel> Values => IsRemote ? Headers : Env;
 
-    public bool HasVariables => Variables.Count > 0;
+    public string ValuesTitle => IsRemote ? "Headers" : "Environment variables";
+
+    public string AddValueText => IsRemote ? "Add header" : "Add variable";
+
+    /// <summary>Referenced <c>${VAR}</c>s that are not set in the environment OneWare starts servers with.</summary>
+    public string MissingVariables
+    {
+        get => _missingVariables;
+        private set
+        {
+            if (SetProperty(ref _missingVariables, value)) OnPropertyChanged(nameof(HasMissingVariables));
+        }
+    }
+
+    public bool HasMissingVariables => MissingVariables.Length > 0;
 
     public string? Error
     {
         get => _error;
-        private set => SetProperty(ref _error, value);
+        private set
+        {
+            if (SetProperty(ref _error, value)) OnPropertyChanged(nameof(HasError));
+        }
     }
 
-    public bool IsSaving
+    public bool HasError => !string.IsNullOrEmpty(Error);
+
+    public bool IsBusy
     {
-        get => _isSaving;
-        private set => SetProperty(ref _isSaving, value);
+        get => _isBusy;
+        private set => SetProperty(ref _isBusy, value);
     }
 
-    public RelayCommand AddEnvCommand { get; }
-
-    public RelayCommand AddHeaderCommand { get; }
-
-    public RelayCommand ClearOAuthClientSecretCommand { get; }
-
-    public AsyncRelayCommand<FlexibleWindow?> SaveCommand { get; }
-
-    public RelayCommand<FlexibleWindow?> CancelCommand { get; }
-
-    private void AddLoadedValue(ObservableCollection<CopilotConnectorValueViewModel> target, McpConnectorValue value)
+    public McpConnectorStatus? TestStatus
     {
-        // A value that is exactly this connector's generated variable is shown as a stored secret.
-        var isSecret = McpConnector.IsVariableReference(value.Value, out var variable) &&
-                       variable == McpConnector.GetSecretVariableName(_original!.Name, value.Key);
-        AddValue(target, isSecret ? value with { Value = string.Empty } : value, isSecret,
-            isSecret && _storedVariables.Contains(variable));
+        get => _testStatus;
+        private set
+        {
+            if (!SetProperty(ref _testStatus, value)) return;
+            OnPropertyChanged(nameof(TestText));
+            OnPropertyChanged(nameof(HasTestStatus));
+            OnPropertyChanged(nameof(TestSucceeded));
+            OnPropertyChanged(nameof(TestFailed));
+        }
     }
 
-    private void AddValue(ObservableCollection<CopilotConnectorValueViewModel> target, McpConnectorValue value,
-        bool isSecret, bool hasStoredValue)
+    public bool HasTestStatus => TestStatus != null;
+
+    public bool TestSucceeded => TestStatus?.State == McpConnectorState.Connected;
+
+    public bool TestFailed => TestStatus is { State: not McpConnectorState.Connected };
+
+    public string? TestText => TestStatus?.State switch
     {
-        var row = new CopilotConnectorValueViewModel(value.Key, value.Value, isSecret, hasStoredValue,
-            isSecret ? value.Key : null);
+        null => null,
+        McpConnectorState.Connected => "Connected",
+        McpConnectorState.NeedsSignIn =>
+            "Reachable, sign-in required. Save and use Sign in to authorize OneWare.",
+        _ => string.IsNullOrWhiteSpace(TestStatus.Message) ? "Failed to connect." : TestStatus.Message
+    };
+
+    public IRelayCommand AddValueCommand { get; }
+
+    public IRelayCommand ApplyPasteCommand { get; }
+
+    public IAsyncRelayCommand TestCommand { get; }
+
+    public IAsyncRelayCommand<FlexibleWindow?> SaveCommand { get; }
+
+    public IRelayCommand<FlexibleWindow?> CancelCommand { get; }
+
+    private bool HasAdvancedValues => !string.IsNullOrWhiteSpace(OAuthClientId) || OAuthClientSecret.Length > 0 ||
+                                      IsPublicClient || UseSse;
+
+    private void Load(McpConnector connector)
+    {
+        Name = connector.Name;
+        IsRemote = connector.Kind == McpConnectorKind.Remote;
+        Command = connector.Command;
+        Arguments = string.Join(Environment.NewLine, connector.Args);
+        WorkingDirectory = connector.WorkingDirectory ?? string.Empty;
+        Url = connector.Url;
+        UseSse = connector.UseSse;
+        OAuthClientId = connector.OAuthClientId ?? string.Empty;
+        IsPublicClient = connector.OAuthPublicClient == true;
+
+        Env.Clear();
+        Headers.Clear();
+        foreach (var value in connector.Env) AddValue(Env, value);
+        foreach (var value in connector.Headers) AddValue(Headers, value);
+        UpdateVariables();
+    }
+
+    private void AddValue(ObservableCollection<CopilotConnectorValueViewModel> target, McpConnectorValue value)
+    {
+        var row = new CopilotConnectorValueViewModel(value.Key, value.Value, value.IsSecret);
         row.RemoveCommand = new RelayCommand(() =>
         {
             target.Remove(row);
@@ -243,7 +305,34 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
             UpdateVariables();
     }
 
-    private McpConnector BuildConnector(bool forVariables)
+    private void ApplyPaste()
+    {
+        var warnings = new List<string>();
+        var fallbackName = string.IsNullOrWhiteSpace(Name) ? "server" : Name.Trim();
+        var servers = McpConnectorImport.ParseText(PasteText, warnings.Add, fallbackName);
+        if (servers.Count == 0)
+        {
+            PasteMessage = warnings.Count > 0 ? string.Join(" ", warnings) : "No MCP server found.";
+            return;
+        }
+
+        var imported = servers[0];
+        // Editing keeps the identity (and so the stored secrets) of the connector.
+        if (_original != null) imported.Connector.Id = _original.Id;
+        Load(imported.Connector);
+        if (imported.OAuthClientSecret != null) OAuthClientSecret = imported.OAuthClientSecret;
+        if (HasAdvancedValues) IsAdvancedExpanded = true;
+
+        if (servers.Count > 1)
+            warnings.Insert(0, $"Found {servers.Count} servers, only '{imported.Connector.Name}' was used. " +
+                               "Use Import to add all of them.");
+        PasteMessage = warnings.Count > 0 ? string.Join(" ", warnings) : null;
+        PasteText = string.Empty;
+        IsPasteExpanded = warnings.Count > 0;
+        TestStatus = null;
+    }
+
+    private McpConnector BuildConnector()
     {
         var connector = _original?.Clone() ?? new McpConnector();
         connector.Name = Name.Trim();
@@ -254,37 +343,27 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
         connector.Url = Url.Trim();
         connector.UseSse = UseSse;
         connector.OAuthClientId = string.IsNullOrWhiteSpace(OAuthClientId) ? null : OAuthClientId.Trim();
+        connector.OAuthPublicClient = IsPublicClient ? true : _original?.OAuthPublicClient == false ? false : null;
 
-        McpConnectorValue ToValue(CopilotConnectorValueViewModel row) => new(row.Key.Trim(), row.IsSecret
-            ? forVariables
-                ? string.Empty
-                : McpConnector.ToVariableReference(McpConnector.GetSecretVariableName(connector.Name, row.Key.Trim()))
-            : row.Value);
+        static List<McpConnectorValue> ToValues(IEnumerable<CopilotConnectorValueViewModel> rows) => rows
+            .Where(x => !string.IsNullOrWhiteSpace(x.Key))
+            .Select(x => new McpConnectorValue(x.Key.Trim(), x.Value, x.IsSecret))
+            .ToList();
 
-        connector.Env = Env.Where(x => !string.IsNullOrWhiteSpace(x.Key)).Select(ToValue).ToList();
-        connector.Headers = Headers.Where(x => !string.IsNullOrWhiteSpace(x.Key)).Select(ToValue).ToList();
+        // Only the values of the selected kind are kept.
+        connector.Env = IsRemote ? [] : ToValues(Env);
+        connector.Headers = IsRemote ? ToValues(Headers) : [];
         return connector;
     }
 
     private void UpdateVariables()
     {
-        var names = BuildConnector(true).GetVariables();
-        foreach (var removed in Variables.Where(x => !names.Contains(x.Name)).ToList()) Variables.Remove(removed);
-        for (var i = 0; i < names.Count; i++)
-        {
-            if (Variables.Any(x => x.Name == names[i])) continue;
-            var variable = new CopilotConnectorVariableViewModel(names[i], _storedVariables.Contains(names[i]));
-            Variables.Insert(Math.Min(i, Variables.Count), variable);
-            if (!variable.HasStoredValue) _ = ResolveSourceAsync(variable);
-        }
-
-        OnPropertyChanged(nameof(HasVariables));
-    }
-
-    private async Task ResolveSourceAsync(CopilotConnectorVariableViewModel variable)
-    {
-        var source = await _service.GetVariableSourceAsync(variable.Name);
-        await Dispatcher.UIThread.InvokeAsync(() => variable.Source = source);
+        var missing = BuildConnector().GetVariables().Where(x => !_environment.ContainsKey(x)).ToList();
+        MissingVariables = missing.Count == 0
+            ? string.Empty
+            : $"{string.Join(", ", missing.Select(McpConnector.ToVariableReference))} " +
+              (missing.Count == 1 ? "is" : "are") +
+              " not set in your environment. Set it before starting OneWare, or mark the value as secret and enter it here.";
     }
 
     private string? Validate(McpConnector connector)
@@ -292,8 +371,6 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
         if (string.IsNullOrWhiteSpace(connector.Name)) return "Enter a name.";
         if (!McpConnector.IsValidName(connector.Name))
             return "The name needs a letter or digit and may only contain letters, digits, '.', '-' and '_'.";
-        if (_otherNames.Contains(McpConnector.GetVariableKey(connector.Name)))
-            return $"A connector named '{connector.Name}' or with a similar name already exists.";
 
         if (connector.Kind == McpConnectorKind.Local)
         {
@@ -305,68 +382,48 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
             return "Enter the server's http(s) URL.";
         }
 
-        var rows = IsRemote ? Headers : Env;
-        var keys = rows.Where(x => !string.IsNullOrWhiteSpace(x.Key)).Select(x => x.Key.Trim()).ToList();
+        var keys = Values.Where(x => !string.IsNullOrWhiteSpace(x.Key)).Select(x => x.Key.Trim()).ToList();
         if (keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() != keys.Count)
             return IsRemote ? "Each header may only be set once." : "Each variable may only be set once.";
 
-        var secretKeys = rows.Where(x => x.IsSecret && !string.IsNullOrWhiteSpace(x.Key))
-            .Select(x => McpConnector.GetVariableKey(x.Key)).ToList();
-        if (secretKeys.Distinct(StringComparer.Ordinal).Count() != secretKeys.Count)
-            return "Secret values need names that differ in more than case and punctuation.";
-
-        var missingSecret = rows.FirstOrDefault(x =>
-            x.IsSecret && !string.IsNullOrWhiteSpace(x.Key) && x.Value.Length == 0 &&
-            !(x.HasStoredValue && x.Key.Trim() == x.StoredKey));
+        var missingSecret = Values.FirstOrDefault(x =>
+            x.IsSecret && !string.IsNullOrWhiteSpace(x.Key) && x.Value.Length == 0);
         return missingSecret != null ? $"Enter the secret value of '{missingSecret.Key.Trim()}'." : null;
+    }
+
+    private async Task TestAsync()
+    {
+        var connector = BuildConnector();
+        Error = Validate(connector);
+        if (Error != null || IsBusy) return;
+
+        IsBusy = true;
+        TestStatus = new McpConnectorStatus(McpConnectorState.Pending);
+        try
+        {
+            TestStatus = await _hub.CheckAsync(connector, report: false);
+            if (McpConnectorHub.IsDynamicRegistrationError(TestStatus.Message)) IsAdvancedExpanded = true;
+        }
+        catch (Exception e)
+        {
+            TestStatus = new McpConnectorStatus(McpConnectorState.Failed, e.Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task SaveAsync(FlexibleWindow? window)
     {
-        var connector = BuildConnector(false);
+        var connector = BuildConnector();
         Error = Validate(connector);
         if (Error != null) return;
 
-        IsSaving = true;
+        IsBusy = true;
         try
         {
-            // Secret values keyed by the variables they are stored under; null removes a stored value.
-            var values = new Dictionary<string, string?>(StringComparer.Ordinal);
-            var renames = new Dictionary<string, string>(StringComparer.Ordinal);
-            var rows = IsRemote ? Headers : Env;
-            var activeSecrets = new HashSet<string>(StringComparer.Ordinal);
-
-            foreach (var row in rows.Where(x => !string.IsNullOrWhiteSpace(x.Key)))
-            {
-                if (!row.IsSecret) continue;
-                var variable = McpConnector.GetSecretVariableName(connector.Name, row.Key.Trim());
-                activeSecrets.Add(variable);
-                if (row.Value.Length > 0) values[variable] = row.Value;
-                else if (_original != null && row.StoredKey != null)
-                    renames[McpConnector.GetSecretVariableName(_original.Name, row.StoredKey)] = variable;
-            }
-
-            // Secrets of removed rows, rows that are no longer secret and of the old name.
-            if (_original != null)
-                foreach (var variable in _original.Env.Concat(_original.Headers)
-                             .Select(x => McpConnector.GetSecretVariableName(_original.Name, x.Key))
-                             .Where(x => _storedVariables.Contains(x) && !activeSecrets.Contains(x) &&
-                                         !renames.ContainsKey(x)))
-                    values.TryAdd(variable, null);
-
-            foreach (var variable in Variables)
-                if (variable.Value.Length > 0) values[variable.Name] = variable.Value;
-                else if (variable.ClearRequested) values[variable.Name] = null;
-
-            await _service.SaveAsync(connector, _original?.Name);
-            if (renames.Count > 0) await _service.RenameVariablesAsync(renames);
-            await _service.SetVariablesAsync(values);
-
-            if (OAuthClientSecret.Length > 0)
-                await _service.SetOAuthClientSecretAsync(connector.Name, OAuthClientSecret);
-            else if (ClearOAuthClientSecret || connector.Kind == McpConnectorKind.Local)
-                await _service.SetOAuthClientSecretAsync(connector.Name, null);
-
+            await _hub.SaveAsync(connector, OAuthClientSecret.Length > 0 ? OAuthClientSecret : null);
             Saved = true;
             window?.Close();
         }
@@ -376,7 +433,7 @@ public sealed class CopilotConnectorEditorViewModel : FlexibleWindowViewModelBas
         }
         finally
         {
-            IsSaving = false;
+            IsBusy = false;
         }
     }
 }
@@ -387,21 +444,25 @@ public sealed class CopilotConnectorValueViewModel : ObservableObject
     private string _key;
     private string _value;
     private bool _isSecret;
+    private bool _isRevealed;
 
-    public CopilotConnectorValueViewModel(string key, string value, bool isSecret, bool hasStoredValue,
-        string? storedKey)
+    public CopilotConnectorValueViewModel(string key, string value, bool isSecret)
     {
         _key = key;
         _value = value;
         _isSecret = isSecret;
-        HasStoredValue = hasStoredValue;
-        StoredKey = storedKey;
+        ToggleRevealCommand = new RelayCommand(() => IsRevealed = !IsRevealed);
     }
 
     public string Key
     {
         get => _key;
-        set => SetProperty(ref _key, value);
+        set
+        {
+            if (!SetProperty(ref _key, value)) return;
+            // Suggests storing credentials securely; never silently unmarks a value the user marked.
+            if (!IsSecret && Value.Length == 0 && McpConnector.LooksSecret(value)) IsSecret = true;
+        }
     }
 
     public string Value
@@ -410,102 +471,37 @@ public sealed class CopilotConnectorValueViewModel : ObservableObject
         set => SetProperty(ref _value, value);
     }
 
-    /// <summary>Stores the value in the OS credential store instead of the Copilot CLI configuration.</summary>
+    /// <summary>Stores the value in the OS credential store instead of mcp.json.</summary>
     public bool IsSecret
     {
         get => _isSecret;
         set
         {
             if (!SetProperty(ref _isSecret, value)) return;
-            OnPropertyChanged(nameof(Watermark));
             OnPropertyChanged(nameof(PasswordChar));
+            OnPropertyChanged(nameof(Watermark));
+            OnPropertyChanged(nameof(SecretToolTip));
         }
     }
 
-    public bool HasStoredValue { get; }
+    public bool IsRevealed
+    {
+        get => _isRevealed;
+        set
+        {
+            if (SetProperty(ref _isRevealed, value)) OnPropertyChanged(nameof(PasswordChar));
+        }
+    }
 
-    /// <summary>Key the stored secret belongs to when the editor was opened.</summary>
-    public string? StoredKey { get; }
+    public char PasswordChar => IsSecret && !IsRevealed ? '•' : '\0';
 
-    public char PasswordChar => IsSecret ? '•' : '\0';
+    public string Watermark => IsSecret ? "Secret value" : "Value, may use ${VAR}";
 
-    public string Watermark => IsSecret && HasStoredValue ? "Stored - leave empty to keep" :
-        IsSecret ? "Secret value" : "Value, may use ${VAR}";
+    public string SecretToolTip => IsSecret
+        ? "Stored in the OS credential store. Click to store it in mcp.json instead."
+        : "Stored in mcp.json. Click to store it in the OS credential store instead.";
+
+    public IRelayCommand ToggleRevealCommand { get; }
 
     public IRelayCommand? RemoveCommand { get; set; }
-}
-
-/// <summary>A <c>${VAR}</c> a connector references, with where its value comes from.</summary>
-public sealed class CopilotConnectorVariableViewModel : ObservableObject
-{
-    private McpVariableSource? _source;
-    private string _value = string.Empty;
-    private bool _clearRequested;
-
-    public CopilotConnectorVariableViewModel(string name, bool hasStoredValue)
-    {
-        Name = name;
-        HasStoredValue = hasStoredValue;
-        if (hasStoredValue) _source = McpVariableSource.OneWare;
-        ClearCommand = new RelayCommand(() =>
-        {
-            ClearRequested = true;
-            Value = string.Empty;
-        });
-    }
-
-    public string Name { get; }
-
-    public bool HasStoredValue { get; }
-
-    public McpVariableSource? Source
-    {
-        get => _source;
-        set
-        {
-            if (!SetProperty(ref _source, value)) return;
-            OnPropertyChanged(nameof(SourceText));
-            OnPropertyChanged(nameof(IsMissing));
-        }
-    }
-
-    public bool IsMissing => Source == McpVariableSource.Missing && Value.Length == 0;
-
-    public string SourceText => ClearRequested ? "Removed on save" : Source switch
-    {
-        McpVariableSource.OneWare => "Stored in OneWare",
-        McpVariableSource.Environment => "From your environment",
-        McpVariableSource.Missing => "Not set",
-        _ => "Checking..."
-    };
-
-    public string Watermark => HasStoredValue && !ClearRequested ? "Stored - leave empty to keep" :
-        Source == McpVariableSource.Environment ? "Optional, overrides the environment" : "Value";
-
-    public string Value
-    {
-        get => _value;
-        set
-        {
-            if (!SetProperty(ref _value, value)) return;
-            if (value.Length > 0) ClearRequested = false;
-            OnPropertyChanged(nameof(IsMissing));
-        }
-    }
-
-    public bool ClearRequested
-    {
-        get => _clearRequested;
-        private set
-        {
-            if (!SetProperty(ref _clearRequested, value)) return;
-            OnPropertyChanged(nameof(SourceText));
-            OnPropertyChanged(nameof(Watermark));
-            OnPropertyChanged(nameof(CanClear));
-        }
-    }
-
-    public bool CanClear => HasStoredValue && !ClearRequested;
-
-    public IRelayCommand ClearCommand { get; }
 }

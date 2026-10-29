@@ -155,26 +155,12 @@ internal static class CopilotSessionConfiguration
     }
 
     /// <summary>
-    /// OneWare's core tools (from <c>OneWare.Chat/Services/AiBuiltInFunctions.cs</c>), always sent to the model.
-    /// They replace the runtime's <c>view</c>, <c>create</c>, <c>edit</c> and <c>bash</c> or give the IDE context
-    /// almost every request needs. All other tools (plugins, MCP servers) may be deferred behind tool search.
+    /// Marks the functions flagged <see cref="OneWare.Essentials.Models.IOneWareAiFunction.AlwaysLoaded" /> so tool
+    /// search never defers them. All other tools (plugins, MCP servers) may be deferred behind tool search.
     /// </summary>
-    internal static readonly IReadOnlySet<string> AlwaysLoadedTools = new HashSet<string>(StringComparer.Ordinal)
-    {
-        "readFile",
-        "editFile",
-        "runTerminalCommand",
-        "getErrorsForFile",
-        "getAllErrors",
-        "getActiveProject",
-        "getOpenFiles",
-        "openFile"
-    };
-
-    /// <summary>Marks the <see cref="AlwaysLoadedTools" /> so tool search never defers them.</summary>
-    internal static List<AIFunctionDeclaration> ApplyToolDeferral(IEnumerable<AIFunction> tools) =>
-        tools.Select(AIFunctionDeclaration (x) => AlwaysLoadedTools.Contains(x.Name) ? new AlwaysLoadedTool(x) : x)
-            .ToList();
+    internal static List<AIFunctionDeclaration> ApplyToolDeferral(IEnumerable<AIFunction> tools,
+        Func<string, bool> isAlwaysLoaded) =>
+        tools.Select(AIFunctionDeclaration (x) => isAlwaysLoaded(x.Name) ? new AlwaysLoadedTool(x) : x).ToList();
 
     // Same as CopilotTool.DefineTool with CopilotToolOptions.Defer = Never, for an existing function.
     private sealed class AlwaysLoadedTool(AIFunction inner) : DelegatingAIFunction(inner)
@@ -190,6 +176,10 @@ internal static class CopilotSessionConfiguration
         .AddMcp("*")
         .AddBuiltIn(BuiltInTools.Isolated);
 
+    /// <summary>The runtime's tool search, which only looks up other tools.</summary>
+    internal const string ToolSearchToolName = "tool_search_tool";
+
     internal static bool IsExternalTool(string toolName, bool isClientTool) =>
-        !isClientTool && !BuiltInTools.Isolated.Contains(toolName, StringComparer.Ordinal);
+        !isClientTool && toolName != ToolSearchToolName &&
+        !BuiltInTools.Isolated.Contains(toolName, StringComparer.Ordinal);
 }

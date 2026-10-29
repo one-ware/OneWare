@@ -1,0 +1,16 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
+                         xmlns:views="clr-namespace:OneWare.Copilot.Views"
+                         mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
+                         PrefWidth="640" PrefHeight="520"
+                         Title="MCP Servers" WindowStartupLocation="CenterOwner"
+                         x:Class="OneWare.Copilot.Views.CopilotConnectorsWindow"
+                         x:DataType="viewModels:CopilotConnectorsSettingViewModel">
+    <ScrollViewer>
+        <views:CopilotConnectorsSettingView Margin="12 8" />
+    </ScrollViewer>
+</controls:FlexibleWindow>
