@@ -117,8 +117,34 @@ public class MainDockService : Factory, IMainDockService
         {
             if (value == field) return;
             field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentDocument)));
+            RaiseCurrentDocumentChanged();
         }
+    }
+
+    // A throwing handler must neither skip the others nor reach the focus subscription in the Layout setter, which
+    // would end it and leave CurrentDocument stuck.
+    private void RaiseCurrentDocumentChanged()
+    {
+        if (PropertyChanged is not { } handlers) return;
+
+        var args = new PropertyChangedEventArgs(nameof(CurrentDocument));
+        foreach (var handler in handlers.GetInvocationList().Cast<PropertyChangedEventHandler>())
+            try
+            {
+                handler(this, args);
+            }
+            catch (Exception e)
+            {
+                ContainerLocator.Container.Resolve<ILogger>()
+                    .LogError(e, "A handler for the current document change failed.");
+            }
+    }
+
+    // Covers documents in floating windows too, whose focus is tracked by their window's root dock instead of Layout.
+    public override void OnFocusedDockableChanged(IDockable? dockable)
+    {
+        base.OnFocusedDockableChanged(dockable);
+        if (dockable is IExtendedDocument document) CurrentDocument = document;
     }
     
     public override void FloatDockable(IDockable dockable)
@@ -404,7 +430,11 @@ public class MainDockService : Factory, IMainDockService
     public override void OnDockableClosed(IDockable? dockable)
     {
         base.OnDockableClosed(dockable);
-        if (dockable == CurrentDocument) CurrentDocument = null;
+        // Usually the next tab got focus already; otherwise continue with the tab that is shown now.
+        if (dockable == CurrentDocument)
+            CurrentDocument = new[] { (dockable?.Owner as IDock)?.ActiveDockable, _mainDocumentDockViewModel.ActiveDockable }
+                .OfType<IExtendedDocument>()
+                .FirstOrDefault(x => x != dockable);
     }
 
     public void ResetLayout()

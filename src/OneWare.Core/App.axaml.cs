@@ -84,6 +84,7 @@ public class App : Application
         services.AddSingleton<OnnxRuntimeBootstrapper>();
         services.AddSingleton<IOnnxRuntimeService, OnnxRuntimeService>();
         services.AddSingleton<IHttpService, HttpService>();
+        services.AddSingleton<ISecretStore, SecretStore>();
         services.AddSingleton<IApplicationCommandService, ApplicationCommandService>();
         services.AddSingleton<IProjectManagerService, ProjectManagerService>();
         services.AddSingleton<ILanguageManager, LanguageManager>();

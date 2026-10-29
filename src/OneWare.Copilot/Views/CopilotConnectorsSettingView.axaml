@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="300"
+             x:Class="OneWare.Copilot.Views.CopilotConnectorsSettingView"
+             x:DataType="viewModels:CopilotConnectorsSettingViewModel">
+    <StackPanel Classes="section" Margin="0 4">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                <controls:Spinner Width="14" Height="14" IsVisible="{Binding IsLoading}" />
+                <Button Classes="icon small" ToolTip.Tip="Refresh" Command="{Binding RefreshCommand}">
+                    <PathIcon Classes="small" Data="{StaticResource Icon.Refresh}" />
+                </Button>
+                <Button Classes="secondary small" Content="Import .mcp.json"
+                        ToolTip.Tip="Add the servers of an MCP configuration file (.mcp.json, VS Code mcp.json or Claude Code format)"
+                        Command="{Binding ImportCommand}" CommandParameter="{Binding $self}" />
+                <Button Classes="primary small" Content="Add Connector"
+                        Command="{Binding AddCommand}" CommandParameter="{Binding $self}" />
+            </StackPanel>
+            <TextBlock Classes="caption" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0 0 8 0"
+                       ToolTip.Tip="{Binding ConfigFile}"
+                       Text="MCP servers available in every chat. They are shared with the Copilot CLI (~/.copilot/mcp-config.json); secret values stay in your system keychain." />
+        </DockPanel>
+
+        <Border Classes="callout" IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Classes.error="{Binding IsError}">
+            <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+        </Border>
+
+        <TextBlock Classes="muted" IsVisible="{Binding IsEmpty}" Margin="0 4"
+                   Text="No connectors yet. Add one or import an existing .mcp.json file." />
+
+        <ItemsControl ItemsSource="{Binding Connectors}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="viewModels:CopilotConnectorItemViewModel">
+                    <Border Classes="card compact">
+                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="6">
+                                <TextBlock Classes="h4" Text="{Binding Name}" VerticalAlignment="Center" />
+                                <Border Classes="badge small" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding KindText}" />
+                                </Border>
+                                <Border Classes="badge small" VerticalAlignment="Center"
+                                        IsVisible="{Binding HasStatus}"
+                                        Classes.success="{Binding IsConnected}"
+                                        Classes.warning="{Binding NeedsSignIn}"
+                                        Classes.error="{Binding IsFailed}">
+                                    <TextBlock Text="{Binding StatusText}" />
+                                </Border>
+                                <controls:Spinner Width="12" Height="12" IsVisible="{Binding IsBusy}" />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Row="0" Grid.Column="1" Classes="small" Content="Enabled"
+                                          IsChecked="{Binding Enabled}" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Classes="caption mono"
+                                       Margin="0 4 0 0" Text="{Binding Description}" TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding Description}" />
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 2 0 0">
+                                <TextBlock Classes="caption warning" TextWrapping="Wrap"
+                                           IsVisible="{Binding MissingVariables, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                           Text="{Binding MissingVariables}" />
+                                <SelectableTextBlock Classes="caption" TextWrapping="Wrap"
+                                                     Classes.error="{Binding IsFailed}"
+                                                     IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                     Text="{Binding StatusMessage}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="form-row"
+                                        Margin="0 6 0 0" HorizontalAlignment="Right">
+                                <Button Classes="primary small" Content="Sign In"
+                                        IsVisible="{Binding CanSignIn}" Command="{Binding SignInCommand}"
+                                        ToolTip.Tip="Signs in with OAuth in your browser" />
+                                <Button Classes="secondary small" Content="Test" Command="{Binding CheckCommand}"
+                                        IsEnabled="{Binding Enabled}"
+                                        ToolTip.Tip="Starts the server to see whether it connects" />
+                                <Button Classes="secondary small" Content="Edit"
+                                        Command="{Binding EditCommand}" CommandParameter="{Binding $self}" />
+                                <Button Classes="secondary small" Content="Remove"
+                                        Command="{Binding RemoveCommand}" CommandParameter="{Binding $self}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,146 @@
+<controls:FlexibleWindow xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                         xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+                         xmlns:viewModels="clr-namespace:OneWare.Copilot.ViewModels"
+                         mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="600"
+                         PrefWidth="560" PrefHeight="640"
+                         Name="CopilotConnectorEditorViewView" Title="{Binding Title}"
+                         WindowStartupLocation="CenterOwner"
+                         x:Class="OneWare.Copilot.Views.CopilotConnectorEditorView"
+                         x:DataType="viewModels:CopilotConnectorEditorViewModel">
+    <controls:FlexibleWindow.Resources>
+        <DataTemplate x:Key="ConnectorValueTemplate" x:DataType="viewModels:CopilotConnectorValueViewModel">
+            <Grid ColumnDefinitions="150, *, Auto, Auto" ColumnSpacing="6" Margin="0 0 0 6">
+                <TextBox Grid.Column="0" Classes="mono" Text="{Binding Key}" Watermark="Name" />
+                <TextBox Grid.Column="1" Classes="mono" Text="{Binding Value}" PasswordChar="{Binding PasswordChar}"
+                         Watermark="{Binding Watermark}" />
+                <CheckBox Grid.Column="2" Content="Secret" IsChecked="{Binding IsSecret}"
+                          ToolTip.Tip="Keep the value in your system keychain instead of the Copilot CLI configuration" />
+                <Button Grid.Column="3" Classes="icon small" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove"
+                        VerticalAlignment="Center">
+                    <PathIcon Classes="small" Data="{StaticResource Icon.Close}" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+    </controls:FlexibleWindow.Resources>
+
+    <DockPanel Margin="8">
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 8 0 0" Classes="section">
+            <Border Classes="callout error" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+            </Border>
+            <StackPanel Classes="WindowButtons" HorizontalAlignment="Right">
+                <controls:Spinner Width="14" Height="14" IsVisible="{Binding IsSaving}" VerticalAlignment="Center" />
+                <Button Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}"
+                        CommandParameter="{Binding #CopilotConnectorEditorViewView}" />
+                <Button Classes="primary" Content="Save" IsDefault="True" Command="{Binding SaveCommand}"
+                        CommandParameter="{Binding #CopilotConnectorEditorViewView}" />
+            </StackPanel>
+        </StackPanel>
+
+        <ScrollViewer>
+            <StackPanel Classes="form" Margin="0 0 8 0">
+                <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Name" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" Watermark="e.g. github" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Type" VerticalAlignment="Center" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" SelectedIndex="{Binding KindIndex}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="Local - runs a command (stdio)" />
+                        <ComboBoxItem Content="Remote - connects to a URL (HTTP)" />
+                    </ComboBox>
+                </Grid>
+
+                <!-- Local -->
+                <StackPanel Classes="form" IsVisible="{Binding IsLocal}">
+                    <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Command" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding Command}" Watermark="e.g. npx" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Arguments" Margin="0 6 0 0" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Classes="mono" AcceptsReturn="True" MinHeight="60"
+                                 Text="{Binding Arguments}" Watermark="One argument per line" TextWrapping="NoWrap" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" Text="Working dir" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Classes="mono" Text="{Binding WorkingDirectory}"
+                                 Watermark="Optional" />
+                    </Grid>
+
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Classes="secondary small" Content="Add Variable"
+                                Command="{Binding AddEnvCommand}" />
+                        <TextBlock Classes="overline" Text="ENVIRONMENT" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding Env}" ItemTemplate="{StaticResource ConnectorValueTemplate}" />
+                </StackPanel>
+
+                <!-- Remote -->
+                <StackPanel Classes="form" IsVisible="{Binding IsRemote}">
+                    <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto" RowSpacing="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="URL" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding Url}"
+                                 Watermark="https://example.com/mcp" />
+                        <CheckBox Grid.Row="1" Grid.Column="1" Content="Legacy SSE transport" IsChecked="{Binding UseSse}" />
+                    </Grid>
+
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Classes="secondary small" Content="Add Header"
+                                Command="{Binding AddHeaderCommand}" />
+                        <TextBlock Classes="overline" Text="HEADERS" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding Headers}" ItemTemplate="{StaticResource ConnectorValueTemplate}" />
+
+                    <TextBlock Classes="overline" Text="OAUTH APP" />
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                               Text="Servers that support automatic app registration need nothing here, use Sign In after saving. Otherwise register an OAuth app with the provider using this redirect URL:" />
+                    <SelectableTextBlock Classes="mono" Text="{Binding RedirectUrl}" />
+                    <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto" RowSpacing="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Client ID" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Classes="mono" Text="{Binding OAuthClientId}"
+                                 Watermark="Optional" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Client secret" VerticalAlignment="Center" />
+                        <DockPanel Grid.Row="1" Grid.Column="1">
+                            <Button DockPanel.Dock="Right" Classes="secondary" Content="Clear" Margin="4 0 0 0"
+                                    IsVisible="{Binding HasStoredOAuthClientSecret}"
+                                    Command="{Binding ClearOAuthClientSecretCommand}" />
+                            <TextBox PasswordChar="•" Text="{Binding OAuthClientSecret}"
+                                     Watermark="{Binding OAuthClientSecretWatermark}" />
+                        </DockPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Variables -->
+                <StackPanel Classes="form" IsVisible="{Binding HasVariables}">
+                    <TextBlock Classes="overline" Text="VARIABLES" />
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                               Text="Values referenced with ${VAR}. They come from your environment or shell profile, or can be stored in your system keychain here." />
+                    <ItemsControl ItemsSource="{Binding Variables}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="6" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:CopilotConnectorVariableViewModel">
+                                <Grid ColumnDefinitions="180, *, Auto" ColumnSpacing="6">
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Classes="mono" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                                   ToolTip.Tip="{Binding Name}" />
+                                        <TextBlock Classes="caption" Classes.warning="{Binding IsMissing}"
+                                                   Text="{Binding SourceText}" />
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1" PasswordChar="•" Text="{Binding Value}"
+                                             Watermark="{Binding Watermark}" VerticalAlignment="Center" />
+                                    <Button Grid.Column="2" Classes="secondary" Content="Clear" VerticalAlignment="Center"
+                                            IsVisible="{Binding CanClear}" Command="{Binding ClearCommand}"
+                                            ToolTip.Tip="Removes the stored value" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+</controls:FlexibleWindow>

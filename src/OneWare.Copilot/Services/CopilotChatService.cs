@@ -20,6 +20,7 @@ using GitHub.Copilot;
 using GitHub.Copilot.Rpc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using OneWare.Copilot.Connectors;
 using OneWare.Copilot.ViewModels;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Enums;
@@ -39,7 +40,7 @@ public sealed record ContextSizeOption(string Label, string Tier, long Tokens)
     public override string ToString() => Label;
 }
 
-public abstract class CopilotChatServiceBase(
+public abstract partial class CopilotChatServiceBase(
     ISettingsService settingsService,
     IAiFunctionProvider toolProvider,
     IPackageService packageService,
@@ -1210,6 +1211,7 @@ public abstract class CopilotChatServiceBase(
 
     private bool _attachmentTrackingInitialized;
     private bool _activeFileDismissed;
+    private IExtendedDocument? _activeDocument;
     private IEditor? _trackedEditor;
 
     // The active file is only sent when text is selected in it, unless the user switched the chip.
@@ -1249,42 +1251,53 @@ public abstract class CopilotChatServiceBase(
 
     private void RefreshActiveFileAttachment(bool focusChanged)
     {
-        var currentDocument = mainDockService.CurrentDocument;
-
-        if (currentDocument is IEditor editor && !ReferenceEquals(currentDocument, _trackedEditor))
+        try
         {
-            if (_trackedEditor != null)
-                _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
+            var currentDocument = mainDockService.CurrentDocument;
 
-            _trackedEditor = editor;
-
-            if (_trackedEditor != null)
-                _trackedEditor.Editor.TextArea.SelectionChanged += OnEditorSelectionChanged;
-
-            // Moving focus to a different file revives a previously dismissed active-file chip.
-            if (focusChanged)
+            if (!ReferenceEquals(currentDocument, _activeDocument))
             {
-                _activeFileDismissed = false;
+                _activeDocument = currentDocument;
+                TrackSelection(currentDocument as IEditor);
+
+                // Moving focus to a different file revives a previously dismissed active-file chip.
+                if (focusChanged)
+                {
+                    _activeFileDismissed = false;
+                    _activeFileIncludedOverride = null;
+                }
+            }
+
+            var attachment = _activeFileDismissed ? null : BuildActiveFileAttachment(currentDocument);
+            var hasSelection = attachment?.Detail != null;
+            if (hasSelection != _activeFileHadSelection)
+            {
+                _activeFileHadSelection = hasSelection;
                 _activeFileIncludedOverride = null;
             }
-        }
 
-        var attachment = _activeFileDismissed ? null : BuildActiveFileAttachment(currentDocument);
-        var hasSelection = attachment?.Detail != null;
-        if (hasSelection != _activeFileHadSelection)
+            if (attachment != null)
+            {
+                attachment.IsIncluded = _activeFileIncludedOverride ?? hasSelection;
+                attachment.OnToggled(a => _activeFileIncludedOverride = a.IsIncluded);
+            }
+
+            var previous = ActiveFileAttachment;
+            ActiveFileAttachment = attachment;
+            previous?.Dispose();
+        }
+        catch (Exception e)
         {
-            _activeFileHadSelection = hasSelection;
-            _activeFileIncludedOverride = null;
+            ContainerLocator.Container.Resolve<ILogger>().LogWarning(e, "Failed to update the active file attachment.");
         }
+    }
 
-        if (attachment != null)
-        {
-            attachment.IsIncluded = _activeFileIncludedOverride ?? hasSelection;
-            attachment.OnToggled(a => _activeFileIncludedOverride = a.IsIncluded);
-        }
-
-        ActiveFileAttachment?.Dispose();
-        ActiveFileAttachment = attachment;
+    private void TrackSelection(IEditor? editor)
+    {
+        if (ReferenceEquals(editor, _trackedEditor)) return;
+        if (_trackedEditor != null) _trackedEditor.Editor.TextArea.SelectionChanged -= OnEditorSelectionChanged;
+        _trackedEditor = editor;
+        if (_trackedEditor != null) _trackedEditor.Editor.TextArea.SelectionChanged += OnEditorSelectionChanged;
     }
 
     private CopilotAttachmentViewModel? BuildActiveFileAttachment(IExtendedDocument? document)
@@ -1600,11 +1613,15 @@ public abstract class CopilotChatServiceBase(
                 }
             }
 
+            // MCP servers inherit the runtime's environment; the login shell's PATH lets them find npx and co.
+            var connection = RuntimeConnection.ForStdio(cliPath, []);
+            connection.Environment = await CopilotConnectorService.GetRuntimeEnvironmentAsync();
+
             var clientOptions = new CopilotClientOptions
             {
                 WorkingDirectory = paths.ProjectsDirectory,
                 ClientInfo = BuildClientInfo(),
-                Connection = RuntimeConnection.ForStdio(cliPath, []),
+                Connection = connection,
                 UseLoggedInUser = _byokConfiguration == null
             };
 
@@ -2017,10 +2034,15 @@ public abstract class CopilotChatServiceBase(
 
         // Plugins can register tools at any time, so the cache is rebuilt per session.
         _clientToolNames = null;
+        var workingDirectory = ContainerLocator.Container.Resolve<IProjectExplorerService>()
+            .ActiveProject?.RootFolderPath ?? paths.ProjectsDirectory;
+        _sessionWorkingDirectory = workingDirectory;
+        var skillDirectories = BuildSessionSkillDirectories(workingDirectory, await GetOpenProjectRootsAsync());
+        var connectorServers = await BuildConnectorServersAsync();
 
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
+            var tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools());
             var sessionConfig = new SessionConfig
             {
                 Model = SelectedModel.Id,
@@ -2033,14 +2055,9 @@ public abstract class CopilotChatServiceBase(
                 IncludeSubAgentStreamingEvents = true,
                 SystemMessage = BuildSystemMessageConfig(),
                 Tools = tools,
-                // Restrict the session to OneWare's own tools plus the session-isolated built-ins
-                // (task/skill delegation, ask_user, …) that plugin-contributed agents and skills
-                // need. Host-capable built-ins stay unavailable.
-                AvailableTools = BuildAvailableTools(),
+                AvailableTools = CopilotSessionConfiguration.BuildAvailableTools(),
                 ExcludedTools = ExcludedBuiltInTools.ToList(),
                 CustomAgents = BuildCustomAgents(),
-                SkillDirectories = BuildSkillDirectories(),
-                EnableSkills = true,
                 ClientName = "OneWare Studio",
                 OnPermissionRequest = OnPermissionRequestAsync,
                 OnUserInputRequest = OnUserInputRequestAsync,
@@ -2051,6 +2068,8 @@ public abstract class CopilotChatServiceBase(
                 }
             };
 
+            CopilotSessionConfiguration.ApplyDiscovery(sessionConfig, workingDirectory, skillDirectories);
+            sessionConfig.McpServers = connectorServers;
             _session = await client.CreateSessionAsync(sessionConfig);
         }
         else
@@ -2062,19 +2081,17 @@ public abstract class CopilotChatServiceBase(
                 // A session can only be tracked once per client: an unloaded chat may still hold it.
                 await ReleaseSessionHeldByOthersAsync(sessionId);
 
-                _session = await client.ResumeSessionAsync(sessionId, new ResumeSessionConfig()
+                var resumeConfig = new ResumeSessionConfig()
                 {
                     Streaming = true,
                     Provider = BuildProviderConfig(),
                     ContextTier = ResolveContextTier(),
                     IncludeSubAgentStreamingEvents = true,
                     SystemMessage = BuildSystemMessageConfig(),
-                    Tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList(),
-                    AvailableTools = BuildAvailableTools(),
+                    Tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools()),
+                    AvailableTools = CopilotSessionConfiguration.BuildAvailableTools(),
                     ExcludedTools = ExcludedBuiltInTools.ToList(),
                     CustomAgents = BuildCustomAgents(),
-                    SkillDirectories = BuildSkillDirectories(),
-                    EnableSkills = true,
                     OnPermissionRequest = OnPermissionRequestAsync,
                     OnUserInputRequest = OnUserInputRequestAsync,
                     OnExitPlanModeRequest = OnExitPlanModeRequestAsync,
@@ -2082,7 +2099,10 @@ public abstract class CopilotChatServiceBase(
                     {
                         OnPreToolUse = OnPreToolUseAsync
                     }
-                });
+                };
+                CopilotSessionConfiguration.ApplyDiscovery(resumeConfig, workingDirectory, skillDirectories);
+                resumeConfig.McpServers = connectorServers;
+                _session = await client.ResumeSessionAsync(sessionId, resumeConfig);
             }
             finally
             {
@@ -2091,6 +2111,7 @@ public abstract class CopilotChatServiceBase(
         }
 
         CurrentSessionId = _session?.SessionId ?? sessionId;
+        if (_session != null) _ = ApplyConnectorsAsync(_session, reload: false);
         var sdkModelState = string.IsNullOrWhiteSpace(sessionId) || storedModelState != null
             ? null
             : await TryGetSdkModelStateAsync();
@@ -2116,6 +2137,9 @@ public abstract class CopilotChatServiceBase(
             _toolsChangedSubscribed = true;
         }
 
+        SubscribeToProjectChanges();
+        _ = StartWorkspaceSync(_session, updateSkills: false);
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             // The routing preference is not part of the session config, so it has to be applied to
@@ -2131,22 +2155,19 @@ public abstract class CopilotChatServiceBase(
     }
 
     /// <summary>
-    /// Allow-list for the session: every tool OneWare registers, plus the built-ins that operate
-    /// only inside the session (agent delegation via <c>task</c>, <c>skill</c> loading, …). Built-ins
-    /// with host filesystem, shell or network access stay out, because <see cref="OnPreToolUseAsync"/>
-    /// auto-approves any tool that has no OneWare confirmation check.
-    /// </summary>
-    private ToolSet BuildAvailableTools()
-    {
-        return new ToolSet()
-            .AddCustom("*")
-            .AddBuiltIn(BuiltInTools.Isolated);
-    }
-
-    /// <summary>
     /// Converts the agents contributed by modules/plugins (e.g. a dataset agent from an FPGA AI
     /// extension) into Copilot custom agents the main agent can delegate to.
     /// </summary>
+    private IList<string> BuildSessionSkillDirectories(string workingDirectory, IReadOnlyList<string> projectRoots)
+    {
+        return CopilotSessionConfiguration.BuildSkillDirectories(
+            toolProvider.GetSkillDirectories()
+                .Concat(CopilotSessionConfiguration.GetProjectSkillDirectories(projectRoots, workingDirectory)),
+            settingsService.GetSettingValue<ObservableCollection<string>>(CopilotModule.CopilotSkillDirectoriesSettingKey),
+            workingDirectory,
+            message => ContainerLocator.Container.Resolve<ILogger>().LogWarning("{Message}", message));
+    }
+
     private IList<CustomAgentConfig> BuildCustomAgents()
     {
         return toolProvider.GetAgents()
@@ -2163,11 +2184,6 @@ public abstract class CopilotChatServiceBase(
                 Infer = agent.Infer
             })
             .ToList();
-    }
-
-    private IList<string> BuildSkillDirectories()
-    {
-        return toolProvider.GetSkillDirectories().ToList();
     }
 
     private SystemMessageConfig BuildSystemMessageConfig()    {
@@ -2189,12 +2205,16 @@ public abstract class CopilotChatServiceBase(
                 Content = """
 
                           OneWare Studio IDE context tools — use these instead of assumptions:
-                          - Active file path  → `getFocusedFile`
                           - Open file paths   → `getOpenFiles`
                           - Active project    → `getActiveProject`
                           - LSP diagnostics   → `getErrorsForFile` or `getAllErrors`
+                          The file the user is working on (and any selection) arrives as a message attachment
+                          when the user includes it.
 
                           PATH RULES: always pass ABSOLUTE paths to file tools; take paths verbatim from tool outputs.
+                          Follow the repository's AGENTS.md instructions. Before working in a subdirectory,
+                          use `readFile` to check for more specific AGENTS.md files along that directory's
+                          path and follow their scope. OneWare file tools do not use the CLI's built-in viewer.
                           """
             },
 
@@ -2300,7 +2320,7 @@ public abstract class CopilotChatServiceBase(
 
         var options = new MessageOptions
         {
-            Prompt = ApplyAgentInstructions(prompt, agent),
+            Prompt = await ApplyWorkspaceContextAsync(ApplyAgentInstructions(prompt, agent)),
             AgentMode = agent?.TurnMode switch
             {
                 ChatAgentTurnMode.Plan => AgentMode.Plan,
@@ -2431,6 +2451,7 @@ public abstract class CopilotChatServiceBase(
             _toolsChangedSubscribed = false;
         }
         Interlocked.Exchange(ref _toolsRefreshCts, null)?.Cancel();
+        UnsubscribeFromProjectChanges();
 
         ReleasePendingInputRequests();
         ReleasePendingPlanRequests();
@@ -2489,6 +2510,7 @@ public abstract class CopilotChatServiceBase(
     {
         _subscription?.Dispose();
         _subscription = null;
+        ResetWorkspaceState();
 
         if (_session != null)
         {
@@ -2547,6 +2569,11 @@ public abstract class CopilotChatServiceBase(
 
         switch (evt)
         {
+            case SessionMcpServerStatusChangedEvent x:
+            {
+                HandleMcpServerStatusChanged(x.Data);
+                break;
+            }
             case SubagentStartedEvent x:
             {
                 HandleSubAgentStarted(x);
@@ -2632,6 +2659,13 @@ public abstract class CopilotChatServiceBase(
                     });
                 break;
             }
+            case SessionWarningEvent { Data.WarningType: "compaction_static_context_blocked" } warning
+                when agentId == null:
+                // Followed by a generic "No response was returned" error that doesn't say why.
+                EventReceived?.Invoke(this, new ChatErrorEvent(
+                    $"{warning.Data.Message} Disable connectors with many tools in Settings › AI Chat › Connectors " +
+                    "or choose a model with a larger context."));
+                break;
             case SessionErrorEvent error:
                 if (HandleSessionError(error, agentId)) break;
 
@@ -2895,7 +2929,7 @@ public abstract class CopilotChatServiceBase(
                 if (session == null) return;
 
                 _clientToolNames = null;
-                var tools = toolProvider.GetTools().Cast<AIFunctionDeclaration>().ToList();
+                var tools = CopilotSessionConfiguration.ApplyToolDeferral(toolProvider.GetTools());
                 await session.SetToolsAsync(tools, cancellationToken);
             }
             finally
@@ -3148,24 +3182,21 @@ public abstract class CopilotChatServiceBase(
 
     /// <summary>
     /// Returns why the selected agent must not call the given tool, or <see langword="null"/> if it
-    /// may. Only OneWare tools can reach the workspace or the IDE — backend built-ins that touch the
-    /// host are already kept out of the session by <see cref="BuildAvailableTools"/> — so a read-only
-    /// agent is enforced by blocking every OneWare tool that is not marked read-only.
+    /// may. Read-only agents cannot run external tools whose side effects OneWare cannot classify.
     /// </summary>
     private string? GetAgentToolDenyReason(string toolName)
     {
         var agent = agentService.SelectedAgent;
         if (agent == null) return null;
 
-        // Only tools OneWare provides are restricted: the session built-ins (task/skill delegation,
-        // planning bookkeeping, …) are what the agent works with and are never named in a tool list.
         var isOneWareTool = toolProvider.IsFunctionReadOnly(toolName);
-        if (isOneWareTool == null) return null;
+        if (isOneWareTool == null &&
+            !CopilotSessionConfiguration.IsExternalTool(toolName, IsClientTool(toolName))) return null;
 
         if (agent.Tools != null && !agent.Tools.Contains(toolName, StringComparer.OrdinalIgnoreCase))
             return $"The {agent.DisplayName} agent is not allowed to use '{toolName}'.";
 
-        if (agent.IsReadOnly && isOneWareTool == false)
+        if (agent.IsReadOnly && isOneWareTool != true)
             return $"'{toolName}' changes the workspace, which is not allowed in {agent.DisplayName} mode. " +
                    "Report what you would change instead, or ask the user to switch to Agent mode.";
 
@@ -3273,6 +3304,11 @@ public abstract class CopilotChatServiceBase(
         if (IsApprovalBypassed)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
 
+        // MCP tools must retain the runtime's permission checks rather than inheriting the
+        // automatic approval of OneWare tools without a confirmation check.
+        if (CopilotSessionConfiguration.IsExternalTool(input.ToolName, IsClientTool(input.ToolName)))
+            return Task.FromResult<PreToolUseHookOutput?>(null);
+
         var check = toolProvider.GetConfirmationCheck(input.ToolName);
         if (check == null)
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
@@ -3308,6 +3344,10 @@ public abstract class CopilotChatServiceBase(
         PermissionRequest request,
         PermissionInvocation invocation)
     {
+        if (request is PermissionRequestMcp && agentService.SelectedAgent is { IsReadOnly: true } agent)
+            return Task.FromResult(PermissionDecision.Reject(
+                $"MCP tools are not allowed in {agent.DisplayName} mode because their side effects are unknown."));
+
         // Bypass Approval / Autopilot: auto-approve all permission requests
         if (IsApprovalBypassed)
             return Task.FromResult(PermissionDecision.ApproveOnce());

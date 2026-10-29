@@ -12,7 +12,6 @@ using System.Text.Json.Serialization;
 using System.Web;
 using Avalonia;
 using Avalonia.Threading;
-using GitCredentialManager;
 using Microsoft.Extensions.Logging;
 using OneWare.CloudIntegration.Dto;
 using OneWare.Essentials.Extensions;
@@ -31,7 +30,10 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
     private readonly IPaths _paths;
     private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
     private readonly ISettingsService _settingService;
-    private readonly string _tokenPath;
+    private readonly ISecretStore _secretStore;
+
+    // Before the shared secret store, Windows refresh tokens were kept in Cloud/<user>.bin; they are moved on use.
+    private readonly string _legacyWindowsTokenPath;
 
     private int? _port;
     private string? _codeVerifier;
@@ -46,13 +48,14 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
     private CancellationTokenSource? _pendingLoginCts;
 
     public OneWareCloudLoginService(ILogger logger, ISettingsService settingService, IHttpService httpService,
-        IPaths paths)
+        IPaths paths, ISecretStore secretStore)
     {
         _logger = logger;
         _settingService = settingService;
         _httpService = httpService;
         _paths = paths;
-        _tokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
+        _secretStore = secretStore;
+        _legacyWindowsTokenPath = Path.Combine(paths.AppDataDirectory, "Cloud");
 
         settingService.GetSettingObservable<string>(OneWareCloudIntegrationModule.OneWareCloudHostKey)
             .Skip(1)
@@ -217,23 +220,9 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
 
         try
         {
-            string? refreshToken = null;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
-                if (File.Exists(tokenPath))
-                {
-                    refreshToken = TryReadWindowsRefreshToken(tokenPath);
-                    File.Delete(tokenPath);
-                }
-            }
-            else
-            {
-                var store = CredentialManager.Create("oneware");
-                refreshToken = store.Get(OneWareCloudIntegrationModule.CredentialStore, userId)?.Password;
-                store.Remove(OneWareCloudIntegrationModule.CredentialStore, userId);
-            }
+            MigrateLegacyWindowsRefreshToken(userId);
+            var refreshToken = _secretStore.Get(OneWareCloudIntegrationModule.CredentialStore, userId);
+            _secretStore.Remove(OneWareCloudIntegrationModule.CredentialStore, userId);
 
             _jwtBearerTokenCache.Remove(userId);
 
@@ -246,19 +235,26 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         }
     }
 
-    private string? TryReadWindowsRefreshToken(string tokenPath)
+    private void MigrateLegacyWindowsRefreshToken(string userId)
     {
+        if (!OperatingSystem.IsWindows()) return;
+
+        var tokenPath = Path.Combine(_legacyWindowsTokenPath, $"{userId}.bin");
+        if (!File.Exists(tokenPath)) return;
+
         try
         {
             var plaintext = ProtectedData.Unprotect(File.ReadAllBytes(tokenPath), null,
                 DataProtectionScope.CurrentUser);
-            return Encoding.UTF8.GetString(plaintext);
+            _secretStore.Set(OneWareCloudIntegrationModule.CredentialStore, userId,
+                Encoding.UTF8.GetString(plaintext));
         }
         catch (Exception e)
         {
             _logger.Warning($"Could not read the stored refresh token: {e.Message}", null, false);
-            return null;
         }
+
+        File.Delete(tokenPath);
     }
 
     /// <summary>Ends the offline session at the auth provider, so the signed-out token can no longer be used.</summary>
@@ -343,20 +339,7 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
     {
         try
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Directory.CreateDirectory(_tokenPath);
-                var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
-
-                var plaintext = Encoding.UTF8.GetBytes(refreshToken);
-                var encrypted = ProtectedData.Protect(plaintext, null, DataProtectionScope.CurrentUser);
-                File.WriteAllBytes(tokenPath, encrypted);
-            }
-            else
-            {
-                var store = CredentialManager.Create("oneware");
-                store.AddOrUpdate(OneWareCloudIntegrationModule.CredentialStore, userId, refreshToken);
-            }
+            _secretStore.Set(OneWareCloudIntegrationModule.CredentialStore, userId, refreshToken);
         }
         catch (Exception e)
         {
@@ -799,29 +782,13 @@ public sealed class OneWareCloudLoginService : IOneWareCloudAccess
         }
     }
 
-    private async Task<string?> GetRefreshToken(string userId)
+    private Task<string?> GetRefreshToken(string userId)
     {
-        string? refreshToken = null;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        return Task.Run(() =>
         {
-            var tokenPath = Path.Combine(_tokenPath, $"{userId}.bin");
-            if (File.Exists(tokenPath))
-            {
-                var encrypted = await File.ReadAllBytesAsync(tokenPath);
-                var plaintext = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
-                refreshToken = Encoding.UTF8.GetString(plaintext);
-            }
-        }
-        else
-        {
-            refreshToken = await Task.Run(() =>
-            {
-                var store = CredentialManager.Create("oneware");
-                return store.Get(OneWareCloudIntegrationModule.CredentialStore, userId)?.Password;
-            });
-        }
-
-        return refreshToken;
+            MigrateLegacyWindowsRefreshToken(userId);
+            return _secretStore.Get(OneWareCloudIntegrationModule.CredentialStore, userId);
+        });
     }
 
     private static bool ShouldLogoutAfterTokenRefreshFailure(HttpStatusCode status)

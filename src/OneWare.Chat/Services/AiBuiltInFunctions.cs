@@ -134,24 +134,6 @@ internal static class AiBuiltInFunctions
 
         functionProvider.RegisterFunction(new OneWareAiFunction
         {
-            Name = "getFocusedFile",
-            IsReadOnly = true,
-            FriendlyName = "Get Focused File",
-            RunOnUiThread = true,
-            Description = """
-                          Returns the absolute full path of the currently focused editor file.
-                          This is the ONLY way to know which file is active.
-                          """,
-            Handler = () => new
-            {
-                currentFile = ResolvePath(projectExplorerService, dockService.CurrentDocument?.FullPath)
-            },
-            DetailExtractor = _ => GetRelativePath(projectExplorerService, dockService.CurrentDocument?.FullPath)
-                                   ?? "focused file"
-        });
-
-        functionProvider.RegisterFunction(new OneWareAiFunction
-        {
             Name = "openFile",
             FriendlyName = "Open File",
             RunOnUiThread = true,
