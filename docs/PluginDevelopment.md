@@ -1118,6 +1118,57 @@ During a Fusion turn, the root phases stay in the normal message flow. Review ph
 as sub-agent blocks named *Fusion &lt;phase&gt;*, with their model, verdict, duration and token usage
 (`CopilotChatService.Fusion.cs`).
 
+### Skills for external agents
+
+Studio chat skills and functions are not automatically available to external agents. To contribute
+skills for external agents, implement `IExternalAgentSkillProvider` in a public, non-abstract plugin
+class with a public parameterless constructor. It is discovered independently of CLI and GUI modules:
+
+```csharp
+public sealed class ExternalSkills : IExternalAgentSkillProvider
+{
+    public IReadOnlyCollection<string> GetSkillDirectories()
+    {
+        var assemblyDirectory = Path.GetDirectoryName(typeof(ExternalSkills).Assembly.Location)
+            ?? throw new InvalidOperationException("The plugin assembly has no directory.");
+        return [Path.Combine(assemblyDirectory, "ExternalSkills")];
+    }
+}
+```
+
+Return absolute paths to existing discovery roots. Each direct child directory is a skill with a
+`SKILL.md`; its name must match the `name` in the front matter and contain only lowercase letters,
+digits, and single hyphens. The front matter must also contain a `description`. For example:
+
+```text
+ExternalSkills/
+└── my-plugin-workflow/
+    ├── SKILL.md
+    └── references/
+        └── guide.md
+```
+
+Include all files in the plugin package, not just Markdown:
+
+```xml
+<ItemGroup>
+  <Content Include="ExternalSkills\**\*" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+`oneware agent init` copies these directories to `~/.agents/skills/` and tracks their origin and
+contents in `<OneWare documents directory>/oneware-skills.json`. Duplicate skill names are rejected;
+unmanaged or locally edited skills are never overwritten or deleted. Unchanged skills are removed
+after their extension is uninstalled and the command runs again. Skills from folders loaded with
+`--modules` are also removed when that option is omitted on a subsequent run. Symbolic links are not
+supported within skill directories. Design the skills for external agents: Studio chat functions
+such as `fpga_*` are not made available by copying a skill.
+
+For a provider compiled into Studio rather than shipped as an installed plugin, register it
+explicitly with `CliModuleLoader.RegisterBuiltInSkillProvider<T>()` in
+`studio/OneWare.Studio.Desktop/Cli/CliModuleLoader.cs`. Built-in skills are not automatically
+removed as a result of a plugin uninstall.
+
 ### Combining agents and skills
 
 `OneWareAiAgent.Skills` behaves differently from on-demand loading: the listed skills are

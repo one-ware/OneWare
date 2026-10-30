@@ -51,6 +51,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include="ExternalSkills\**\*" CopyToOutputDirectory="PreserveNewest"
+                 CopyToPublishDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <AvaloniaResource Include="Assets\Startup.png"/>
         <AvaloniaResource Include="Assets\OneAi\*.jpg"/>
     </ItemGroup>
