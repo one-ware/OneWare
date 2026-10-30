@@ -1,4 +1,4 @@
-## 1.0.46
+## 1.0.47
 
 - Added a command line interface (`oneware`) to manage extensions, log in to the cloud and stop the running Studio, which plugins can extend with their own commands
 - Added C/C++ software projects (`.swproj`) with build, run and debug actions in the project toolbar
