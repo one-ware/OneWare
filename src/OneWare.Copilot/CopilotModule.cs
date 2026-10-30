@@ -1,7 +1,9 @@
 using System.Reactive.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using OneWare.CloudIntegration;
+using OneWare.Copilot.Connectors;
 using OneWare.Copilot.Services;
+using OneWare.Copilot.Settings;
 using OneWare.Copilot.Views;
 using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
@@ -17,6 +19,8 @@ public class CopilotModule : OneWareModuleBase
     public const string CopilotApprovalModeSettingKey = "AI_Chat_Copilot_ApprovalMode";
     public const string CopilotContextTierSettingKey = "AI_Chat_Copilot_ContextTier";
     public const string CopilotAutoTierSettingKey = "AI_Chat_Copilot_AutoTier";
+    public const string CopilotSkillDirectoriesSettingKey = "AI_Chat_Copilot_SkillDirectories";
+    public const string CopilotConnectorsSettingKey = "AI_Chat_Copilot_Connectors";
     public const string CopilotProviderSettingKey = "AI_Chat_Copilot_Provider";
     public const string CopilotByokEndpointSettingKey = "AI_Chat_Copilot_BYOK_Endpoint";
     public const string CopilotByokApiKeyEnvironmentVariableSettingKey =
@@ -93,38 +97,38 @@ public class CopilotModule : OneWareModuleBase
         [
             new PackageVersion()
             {
-                Version = "1.0.97",
+                Version = "1.0.105",
                 Targets =
                 [
                     new PackageTarget()
                     {
                         Target = "win-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-win32-x64.zip"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-win32-x64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "win-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-win32-arm64.zip"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-win32-arm64.zip"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-linux-x64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-linux-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "linux-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-linux-arm64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-linux-arm64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-x64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-darwin-x64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-darwin-x64.tar.gz"
                     },
                     new PackageTarget()
                     {
                         Target = "osx-arm64",
-                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.97/copilot-darwin-arm64.tar.gz"
+                        Url = "https://github.com/github/copilot-cli/releases/download/v1.0.105/copilot-darwin-arm64.tar.gz"
                     },
                 ]
             }
@@ -144,6 +148,7 @@ public class CopilotModule : OneWareModuleBase
 
     public override void RegisterServices(IServiceCollection services)
     {
+        services.AddSingleton<McpConnectorHub>();
         services.AddTransient<CopilotChatService>();
         services.AddTransient<OneWareCloudChatService>();
     }
@@ -158,6 +163,21 @@ public class CopilotModule : OneWareModuleBase
         serviceProvider.Resolve<IPackageService>().RegisterPackage(CopilotPackage);
 
         var settingsService = serviceProvider.Resolve<ISettingsService>();
+
+        settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotSkillDirectoriesSettingKey,
+            new ListBoxSetting("Additional Skill Directories")
+            {
+                HoverDescription =
+                    "Additional folders containing SKILL.md bundles, alongside Copilot CLI user/project skills " +
+                    "and plugin skills. Supports absolute paths, ~/ paths, and paths relative to the active " +
+                    "project. Applied when starting or reopening a chat."
+            });
+
+        settingsService.RegisterCustom("AI Chat", "Connectors", CopilotConnectorsSettingKey,
+            new CopilotConnectorsSetting(serviceProvider.Resolve<McpConnectorHub>()));
+
+        // Reading the login shell's environment takes a moment; the first chat needs it.
+        _ = LoginShellEnvironment.GetAsync();
 
         settingsService.RegisterSetting("AI Chat", "Copilot CLI", CopilotProviderSettingKey,
             new ComboBoxSetting("Model Provider", ProviderGitHubCopilot,
@@ -268,7 +288,8 @@ public class CopilotModule : OneWareModuleBase
                     "Routing preference for the \"auto\" model, which lets Copilot pick a backend " +
                     "model per turn. Default: leave the choice to Copilot. Fast: prefer the " +
                     "lowest-latency models. Efficiency: prefer cheaper models. Balance: trade off speed and capability. " +
-                    "Intelligence: prefer the most capable models."
+                    "Intelligence: prefer the most capable models. Copilot can offer further tiers for your " +
+                    "account, e.g. HydraFusion, which combines several models per turn."
             });
 
         settingsService.Register(CopilotSelectedModelSettingKey, DefaultModelId);

@@ -42,6 +42,7 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
     private readonly ISettingsService _settingsService;
     private readonly string _statePath;
     private readonly string _historyRootPath;
+    private readonly ChatImageStore _imageStore;
 
     private readonly Dictionary<string, List<ChatSessionHistoryItem>> _historyByService = new(StringComparer.Ordinal);
 
@@ -79,6 +80,7 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
         var chatDirectory = Path.Combine(paths.AppDataDirectory, "Chat");
         _statePath = Path.Combine(chatDirectory, "ChatState.json");
         _historyRootPath = Path.Combine(chatDirectory, "History");
+        _imageStore = new ChatImageStore(Path.Combine(chatDirectory, "Images"));
 
         AiFileEditService = aiFileEditService;
         aiFileEditService.ActiveEdits.CollectionChanged += (_, _) => Dispatcher.UIThread.Post(() =>
@@ -682,6 +684,21 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
 
     void IChatSessionHost.SaveNow() => SaveState();
 
+    string? IChatSessionHost.StoreImage(ChatSessionViewModel session, ChatImageEvent image)
+    {
+        try
+        {
+            return _imageStore.Store(session.CurrentSessionId ?? session.RememberedSessionId, image.Data,
+                image.MimeType);
+        }
+        catch (Exception e)
+        {
+            ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                ?.Warning("Saving a chat image failed", e);
+            return null;
+        }
+    }
+
     void IChatSessionHost.OnSending(ChatSessionViewModel session)
     {
         if (ReferenceEquals(session, DraftSession)) Show(session);
@@ -781,6 +798,20 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
     private void ClearServiceHistory(IChatService service)
     {
         var serviceName = service.Name;
+
+        if (_historyByService.TryGetValue(serviceName, out var removedItems))
+            foreach (var item in removedItems)
+            {
+                try
+                {
+                    _imageStore.DeleteSession(item.SessionId);
+                }
+                catch (Exception ex)
+                {
+                    ContainerLocator.Container.Resolve<Microsoft.Extensions.Logging.ILogger>()
+                        ?.Warning($"Deleting the images of chat '{item.Name}' failed", ex);
+                }
+            }
 
         _historyByService.Remove(serviceName);
 
@@ -1008,12 +1039,14 @@ public class ChatViewModel : ExtendedTool, IChatManagerService, IChatSessionHost
         }
     }
 
-    private static bool TryDeleteSessionFile(ChatSessionHistoryItem item)
+    private bool TryDeleteSessionFile(ChatSessionHistoryItem item)
     {
         try
         {
             if (!string.IsNullOrWhiteSpace(item.FilePath) && File.Exists(item.FilePath))
                 File.Delete(item.FilePath);
+
+            _imageStore.DeleteSession(item.SessionId);
 
             return true;
         }

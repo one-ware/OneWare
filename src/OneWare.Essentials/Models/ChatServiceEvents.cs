@@ -151,6 +151,28 @@ public sealed class ChatSkillLoadedEvent(string skillName, string content)
     public string Content { get; } = content;
 }
 
+/// <summary>
+/// An image the AI received from a tool (for example a screenshot of an MCP server or an image file it read).
+/// The chat UI shows it below the tool call and keeps it in the chat history.
+/// </summary>
+public sealed class ChatImageEvent(byte[] data, string mimeType)
+    : ChatEvent()
+{
+    /// <summary>Encoded image bytes (PNG, JPEG, GIF, WebP, …).</summary>
+    public byte[] Data { get; } = data;
+
+    public string MimeType { get; } = mimeType;
+
+    /// <summary>Short description of the image, when the tool provides one.</summary>
+    public string? Description { get; init; }
+
+    /// <summary>Id of the tool call that returned the image, when known.</summary>
+    public string? ToolCallId { get; init; }
+
+    /// <summary>Name of the tool that returned the image, when known.</summary>
+    public string? ToolName { get; init; }
+}
+
 public sealed class ChatErrorEvent(string message)
     : ChatEvent()
 {

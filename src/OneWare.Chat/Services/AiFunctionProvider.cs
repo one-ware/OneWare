@@ -275,6 +275,17 @@ public class AiFunctionProvider(
         }
     }
 
+    public bool IsFunctionAlwaysLoaded(string functionName)
+    {
+        EnsureBuiltInsRegistered();
+        lock (_registrationLock)
+        {
+            return _registeredFunctions
+                .FirstOrDefault(f => string.Equals(f.Name, functionName, StringComparison.Ordinal))
+                ?.AlwaysLoaded == true;
+        }
+    }
+
     public string? GetFriendlyName(string functionName)
     {
         EnsureBuiltInsRegistered();

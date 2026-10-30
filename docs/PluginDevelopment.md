@@ -505,6 +505,13 @@ created through `SoftwareProjectFactory`, which the creator dialog uses too.
 - `DownloadAndExtractArchiveAsync(url, location, progress, timeout, cancellationToken)`.
 - `DownloadImageAsync(url, timeout, cancellationToken)`, `DownloadTextAsync(url, timeout, cancellationToken)`.
 
+#### `ISecretStore` (src/OneWare.Essentials/Services/ISecretStore.cs)
+
+- `Get(service, account)`, `Set(service, account, secret)`, `Remove(service, account)`: secrets in the OS
+  credential store (Keychain, Secret Service, Windows: DPAPI-encrypted files in the app data folder).
+- Calls may block (unlock prompts, D-Bus), so call them off the UI thread. Pick a `service` name unique to
+  your plugin. The OneWare Cloud login and the Copilot connectors use it.
+
 #### `IChatService` (src/OneWare.Essentials/Services/IChatService.cs)
 
 - `InitializeAsync()`: setup and authenticate.
@@ -547,6 +554,8 @@ created through `SoftwareProjectFactory`, which the creator dialog uses too.
 - Set `OneWareAiFunction.InvocationHandler` when a tool needs an
   `AiFunctionInvocationContext` for invocation-scoped progress reporting. Keep `Handler` as the
   typed delegate used to generate the tool schema.
+- Set `OneWareAiFunction.AlwaysLoaded` only on tools the model needs in almost every turn. When a chat has
+  many tools, the others are deferred behind the runtime's tool search and found by name and description.
 
 #### `ISerialMonitorService` (src/OneWare.Essentials/Services/ISerialMonitorService.cs)
 
@@ -766,6 +775,10 @@ Key points:
   wrote the message, and `ChatIdleEvent.Model` for turns whose messages carry no model. The chat
   shows it beneath the message that ended the turn. `ChatSubAgentStartedEvent.Model` does the same
   for a delegated task, shown in the header of its block.
+- Show images a tool returned with `ChatImageEvent` (encoded bytes plus MIME type, optional description and
+  tool name). The chat shows them below the tool call, saves them under `<AppData>/Chat/Images/<sessionId>/`
+  and deletes them with their chat. The Copilot chats raise it for image contents and binary results of tool
+  calls, including images referenced through `session.binary_asset` events.
 - Call `IChatManagerService.RegisterChatService` during module initialization.
 - OneWare functions (tools from `IAiFunctionProvider`) report `AiFunctionEvent.SessionId` so the chat shows them in
   the right conversation. Put an object with a public string `SessionId` property (like the Copilot SDK's `ToolInvocation`) in
@@ -1006,6 +1019,104 @@ runtime:
 Names must be unique; registering an existing name replaces the previous agent or skill. Skill
 directories generated from `RegisterSkill` are cleaned up automatically when a skill is renamed or
 no longer registered.
+
+### User skills, MCP servers and repository instructions
+
+The GitHub Copilot, BYOK and OneWare Agents chats reuse Copilot CLI customization discovery.
+They read the user's Copilot configuration directory (`COPILOT_HOME`, or `~/.copilot` by default),
+including user skills. MCP servers come from OneWare's own list (see Connectors below); the servers in
+`~/.copilot/mcp-config.json` are not started in OneWare chats but can be imported. Provider-specific chat
+history remains separate.
+
+Add arbitrary skill roots in **Settings > AI Chat > Copilot CLI > Additional Skill Directories**.
+These are merged with plugin skill directories, not substituted for them. Paths can be absolute,
+start with `~/`, or be relative to the active project. Missing directories are logged and skipped.
+Start or reopen a chat after changing customization settings.
+
+New and resumed sessions use the active project's root as their working directory, falling back to
+the default projects directory if no project is active. The runtime discovers project skills and
+repository instructions, including `AGENTS.md` and `.github/copilot-instructions.md`, from that context.
+The assistant is also instructed to read scoped `AGENTS.md` files when working in subdirectories,
+because OneWare's `readFile` tool replaces the CLI's built-in file viewer.
+
+#### Connectors (IDE-wide MCP servers)
+
+**Settings > AI Chat > Connectors** lists the MCP servers available in every chat, independent of the open
+projects, for GitHub Copilot and OneWare Agents alike (both run on the Copilot CLI runtime). The same list opens
+from the chat's ⋯ menu (*Manage MCP Servers…*). Each server can be added,
+edited, enabled or disabled, tested, signed in to and removed. *Import…* adds the servers of an existing file
+(Copilot CLI `mcpServers`, VS Code `servers` or Claude Code layout), and the editor fills its form from a
+pasted snippet, e.g. from a server's README.
+
+- **Storage**: `McpConnectorHub` (`src/OneWare.Copilot/Connectors`) owns `<AppData>/Copilot/mcp.json` in the
+  Copilot CLI format (`mcpServers`), plus OneWare's fields `id`, `disabled`, `secretEnv` and `secretHeaders`.
+  The file can be edited by hand (*Open mcp.json*); changes are picked up while OneWare runs, entries without
+  an `id` get one, and a file with errors is reported without being overwritten.
+- **Secrets**: environment variables and headers marked secret (the key toggle; credentials such as
+  `Authorization` or `*_TOKEN` are marked automatically) are left out of `mcp.json` and stored as one
+  `ISecretStore` entry per server (service `oneware-mcp`, account = the server's `id`). The OAuth client
+  secret of a confidential app is stored there as well. Other values may reference `${VAR}`; the runtime
+  expands them from its environment, and the editor warns about variables that are not set.
+- **Environment**: OneWare starts the runtime with the login shell's environment (Linux/macOS, so tokens
+  exported in `~/.profile`, `~/.bashrc` or `~/.zshrc` and tools such as nvm's `npx` are found when OneWare is
+  started from a desktop launcher), overlaid with OneWare's own environment. `PATH` keeps the login shell's
+  entries first. Secret values are never put into that environment, because every local server inherits it.
+- **Sessions**: every chat gets the enabled servers, with their secrets filled in, as session MCP servers
+  (`SessionConfig.McpServers`; SSE servers are started through `session.Rpc.Mcp.StartServerAsync`). The
+  runtime does not persist them. Servers of the Copilot CLI user configuration are disabled in OneWare chats
+  unless a connector has the same name, and the list offers to import them.
+- **Live updates**: changing the list only touches the servers that changed in open chats (compared by a
+  fingerprint of their resolved configuration): new ones are started, changed ones restarted, removed or
+  disabled ones stopped.
+- **Per chat**: the chat's ⋯ menu shows the servers of the current chat with their status, and turns servers
+  off or on for that chat only. Problems (failed, sign-in required) show as a warning dot on the ⋯ button
+  instead of being posted as chat messages.
+- **Tool search**: chats enable the runtime's tool search (`SessionConfig.ToolSearch`), so servers with many
+  tools (Microsoft 365 has about 400) are looked up on demand instead of filling the model's context. Above
+  about 30 tools, MCP tools and plugin AI functions are deferred; the model finds them by name and
+  description, so give plugin functions precise, searchable descriptions. Functions flagged
+  `IOneWareAiFunction.AlwaysLoaded` (OneWare's file, terminal and IDE-context functions such as `readFile`,
+  `editFile` and `runTerminalCommand`) are never deferred.
+- **Sign-in**: nothing is checked automatically when the list opens; *Test Connection* starts a server in a
+  separate helper session. *Sign In* runs the runtime's OAuth flow in the browser on the loopback redirect
+  `http://127.0.0.1:41347/` (in an open chat, through that chat's session); the runtime keeps the tokens in the
+  system keychain (`McpOAuthTokenStorage = Persistent`), and open chats reconnect. Only one sign-in runs at a
+  time. Servers without dynamic client registration (e.g. Asana) need an OAuth app registered with the
+  provider using that redirect URL: enter its client ID and, for confidential apps, its client secret under
+  *Advanced*.
+
+A project's own `.mcp.json` (or `.vscode/mcp.json`) is only loaded by the Copilot runtime for the working
+directory, and only if the Copilot CLI trusts that folder. When an untrusted project has one, the chat asks
+once whether to trust the folder and start its servers. OneWare does not start MCP servers from other open
+projects.
+
+#### Multiple open projects
+
+The runtime only knows one working directory, so OneWare adds the following from the other open projects
+itself and keeps open chats in sync while projects are opened or closed:
+
+- **Skills** in `.github/skills`, `.agents/skills` and `.claude/skills` of every open project are added.
+- **Instructions**: the root `AGENTS.md` and `.github/copilot-instructions.md` of the other projects
+  are sent with the next message, together with the list of open projects. They are sent again only when the
+  open projects or those files change.
+
+MCP tools use the normal permission flow, including per-chat approvals and the selected approval
+mode. Ask/Plan and other read-only agents only allow MCP tools that the server marks read-only
+(`readOnlyHint`). Host-capable built-in CLI tools remain unavailable, and customization discovery does not
+enable repository command hooks.
+
+#### Auto routing tiers and HydraFusion
+
+The GitHub Copilot chat starts the runtime with the `DYNAMIC_AUTO_TIERS` feature flag
+(`COPILOT_CLI_ENABLED_FEATURE_FLAGS`, merged with flags already set) and enables the HydraFusion session
+feature flags (`CopilotSessionConfiguration.ApplyFusion`). The tiers of the **Auto** model picker come from
+`client.Rpc.Models.ListAsync` (`ModelList.Auto`) and include Fusion tiers when the account offers them
+(`CopilotAutoTiers.Build`); if the runtime offers none, the built-in Default, Fast, Efficiency, Balance and
+Intelligence tiers are used. BYOK and OneWare Agents chats always use the built-in tiers and never enable Fusion.
+
+During a Fusion turn, the root phases stay in the normal message flow. Review phases (judge, critic, …) are shown
+as sub-agent blocks named *Fusion &lt;phase&gt;*, with their model, verdict, duration and token usage
+(`CopilotChatService.Fusion.cs`).
 
 ### Skills for external agents
 

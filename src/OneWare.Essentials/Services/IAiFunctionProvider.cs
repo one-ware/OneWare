@@ -102,6 +102,11 @@ public interface IAiFunctionProvider
     bool? IsFunctionReadOnly(string functionName) => null;
 
     /// <summary>
+    /// Returns whether the named function is registered and marked <see cref="IOneWareAiFunction.AlwaysLoaded"/>.
+    /// </summary>
+    bool IsFunctionAlwaysLoaded(string functionName) => false;
+
+    /// <summary>
     /// Returns the <see cref="IOneWareAiFunction.ConfirmationCheck"/> delegate for the named function,
     /// or <see langword="null"/> if the function has no check or is not registered.
     /// </summary>
