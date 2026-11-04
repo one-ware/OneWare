@@ -174,6 +174,11 @@ Messages that arrive while Studio is still starting are queued until startup con
 | Packages, plugins, native tools | `~/OneWareStudio/Packages` |
 | Projects | `~/OneWareStudio/Projects` |
 | Settings and layouts | `%APPDATA%\OneWareStudio` (Windows), `~/.config/OneWareStudio` (Linux), `~/Library/Application Support/OneWareStudio` (macOS) |
+| Cache | `%LOCALAPPDATA%\OneWareStudio` (Windows), `${XDG_CACHE_HOME:-~/.cache}/OneWareStudio` (Linux), `~/Library/Caches/OneWareStudio` (macOS) |
+
+On Windows, uninstalling removes the current user's default cache. Settings, packages and projects are
+kept unless user data removal is selected; updates keep the cache and user data. With a custom
+`ONEWARE_APPDATA_DIR`, the cache is stored in its `Cache` subdirectory instead.
 
 ## Building, testing and packaging
 
