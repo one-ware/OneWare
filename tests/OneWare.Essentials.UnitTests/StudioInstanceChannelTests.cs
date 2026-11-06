@@ -60,6 +60,39 @@ public sealed class StudioInstanceChannelTests : IDisposable
     }
 
     [Fact]
+    public void ForAppDataDirectory_WithoutDirectory_ReturnsUserChannel()
+    {
+        var channel = StudioInstanceChannel.ForAppDataDirectory(null);
+
+        Assert.Equal("oneware-studio.lock", Path.GetFileName(channel.LockFilePath));
+        Assert.Equal(channel.PipeName, StudioInstanceChannel.ForAppDataDirectory(" ").PipeName);
+    }
+
+    [Fact]
+    public void ForAppDataDirectory_SeparatesDirectories()
+    {
+        var user = StudioInstanceChannel.ForAppDataDirectory(null);
+        var first = StudioInstanceChannel.ForAppDataDirectory(Path.Combine(_directory, "a"));
+        var second = StudioInstanceChannel.ForAppDataDirectory(Path.Combine(_directory, "b"));
+
+        Assert.NotEqual(user.LockFilePath, first.LockFilePath);
+        Assert.NotEqual(user.PipeName, first.PipeName);
+        Assert.NotEqual(first.LockFilePath, second.LockFilePath);
+        Assert.NotEqual(first.PipeName, second.PipeName);
+    }
+
+    [Fact]
+    public void ForAppDataDirectory_IgnoresTrailingSeparator()
+    {
+        var path = Path.Combine(_directory, "portable");
+        var first = StudioInstanceChannel.ForAppDataDirectory(path);
+        var second = StudioInstanceChannel.ForAppDataDirectory(path + Path.DirectorySeparatorChar);
+
+        Assert.Equal(first.LockFilePath, second.LockFilePath);
+        Assert.Equal(first.PipeName, second.PipeName);
+    }
+
+    [Fact]
     public void Lock_IsDetectedWhileHeldAndReleasedOnDispose()
     {
         var channel = CreateChannel();

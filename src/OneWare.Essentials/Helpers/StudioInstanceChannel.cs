@@ -1,4 +1,5 @@
 using System.IO.Pipes;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace OneWare.Essentials.Helpers;
@@ -6,6 +7,8 @@ namespace OneWare.Essentials.Helpers;
 /// <summary>
 /// Per-user single-instance lock and IPC channel of the running OneWare Studio.
 /// Used by the desktop app (lock + server) and by CLI modules or a second instance to talk to it.
+/// A Studio started with its own application data directory (<c>--oneware-appdata-dir</c>, e.g. a portable
+/// copy) gets its own channel, so it neither forwards to nor receives requests from the default instance.
 /// </summary>
 public sealed class StudioInstanceChannel
 {
@@ -33,9 +36,12 @@ public sealed class StudioInstanceChannel
     }
 
     /// <summary>
-    /// Channel used by OneWare Studio for the current user.
+    /// Channel of the OneWare Studio that uses the current <c>ONEWARE_APPDATA_DIR</c>
+    /// (set by <c>--oneware-appdata-dir</c>), or the default channel of the current user.
+    /// Read it after the startup arguments were applied.
     /// </summary>
-    public static StudioInstanceChannel Default { get; } = CreateDefault();
+    public static StudioInstanceChannel Default =>
+        ForAppDataDirectory(Environment.GetEnvironmentVariable("ONEWARE_APPDATA_DIR"));
 
     public string LockFilePath { get; }
 
@@ -242,14 +248,29 @@ public sealed class StudioInstanceChannel
             PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
     }
 
-    private static StudioInstanceChannel CreateDefault()
+    /// <summary>
+    /// Channel of the Studio that stores its application data in <paramref name="appDataDirectory" />.
+    /// <c>null</c> or empty returns the default channel of the current user.
+    /// </summary>
+    public static StudioInstanceChannel ForAppDataDirectory(string? appDataDirectory)
     {
+        var suffix = string.IsNullOrWhiteSpace(appDataDirectory) ? "" : "-" + HashDirectory(appDataDirectory);
         var directory = GetUserRuntimeDirectory();
         var pipeName = OperatingSystem.IsWindows()
-            ? $"oneware-studio-ipc-{SanitizeName(Environment.UserName)}"
-            : Path.Combine(directory, "ipc.sock");
+            ? $"oneware-studio-ipc-{SanitizeName(Environment.UserName)}{suffix}"
+            : Path.Combine(directory, $"ipc{suffix}.sock");
 
-        return new StudioInstanceChannel(Path.Combine(directory, "oneware-studio.lock"), pipeName);
+        return new StudioInstanceChannel(Path.Combine(directory, $"oneware-studio{suffix}.lock"), pipeName);
+    }
+
+    private static string HashDirectory(string directory)
+    {
+        var path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
+        if (OperatingSystem.IsWindows())
+            path = path.ToUpperInvariant();
+
+        // Short enough for the Unix socket path limit, long enough to keep distinct folders apart.
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16].ToLowerInvariant();
     }
 
     private static string GetUserRuntimeDirectory()
