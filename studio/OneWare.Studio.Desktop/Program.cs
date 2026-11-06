@@ -28,11 +28,17 @@ namespace OneWare.Studio.Desktop;
 
 internal abstract class Program
 {
-    private static readonly StudioInstanceChannel InstanceChannel = StudioInstanceChannel.Default;
+    private static StudioInstanceChannel? _instanceChannel;
     private static readonly Queue<string> PendingIpcMessages = new();
     private static FileStream? _lockFileStream;
     private static CancellationTokenSource? _ipcCancellation;
     private static bool _ipcReady;
+
+    /// <summary>
+    /// The channel depends on --oneware-appdata-dir, so it is created after the startup arguments were applied.
+    /// </summary>
+    private static StudioInstanceChannel GetInstanceChannel() =>
+        _instanceChannel ??= StudioInstanceChannel.Default;
 
     public static void ReleaseLock()
     {
@@ -106,7 +112,7 @@ internal abstract class Program
     {
         try
         {
-            _lockFileStream = InstanceChannel.TryAcquirePrimaryLock();
+            _lockFileStream = GetInstanceChannel().TryAcquirePrimaryLock();
             if (_lockFileStream == null)
             {
                 Console.WriteLine("Another instance is already running.");
@@ -240,7 +246,7 @@ internal abstract class Program
                               ?? Environment.GetEnvironmentVariable("ONEWARE_OPEN_PATH")
                               ?? StudioInstanceChannel.FormatCommand(StudioInstanceChannel.ActivateCommand);
 
-                if (InstanceChannel.SendMessageAsync(message).GetAwaiter().GetResult())
+                if (GetInstanceChannel().SendMessageAsync(message).GetAwaiter().GetResult())
                 {
                     Console.WriteLine("Request forwarded successfully.");
                     return 0;
@@ -253,7 +259,7 @@ internal abstract class Program
             // We are the primary instance - start IPC server
             _ipcCancellation = new CancellationTokenSource();
             var ipcToken = _ipcCancellation.Token;
-            _ = Task.Run(() => InstanceChannel.RunServerAsync(ReceiveIpcMessage,
+            _ = Task.Run(() => GetInstanceChannel().RunServerAsync(ReceiveIpcMessage,
                 ex => Console.WriteLine($"IPC Server error: {ex.Message}"), ipcToken));
 
             var appBuilder = BuildAvaloniaApp();
