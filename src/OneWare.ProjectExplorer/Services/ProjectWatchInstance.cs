@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Extensions;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 
 namespace OneWare.ProjectExplorer.Services;
 
@@ -230,7 +231,7 @@ public class ProjectWatchInstance : IDisposable
             var openTab = _mainDockService.OpenFiles
                 .FirstOrDefault(x => x.Key.EqualPaths(path));
 
-            if (openTab.Value != null && File.Exists(path))
+            if (openTab.Value is not null and not ISelfWatchingDocument && File.Exists(path))
             {
                 var lastWriteTime = File.GetLastWriteTime(path);
                 if (lastWriteTime > openTab.Value.LastSaveTime)

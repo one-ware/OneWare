@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:OneWare.Essentials.Controls;assembly=OneWare.Essentials"
+             xmlns:dockViews="clr-namespace:OneWare.Core.ViewModels.DockViews"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OneWare.Core.Views.DockViews.FileConflictView" x:DataType="dockViews:FileConflictViewModel">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Classes="editor-bar">
+            <WrapPanel Classes="editor-bar-items">
+                <Button Classes="primary" Command="{Binding OverwriteCommand}"
+                        ToolTip.Tip="Save your version and overwrite the file on disk">
+                    <TextBlock Text="Overwrite" />
+                </Button>
+                <Button Classes="secondary" Command="{Binding UseFileVersionCommand}"
+                        ToolTip.Tip="Discard your changes and use the version on disk">
+                    <TextBlock Text="Use File Version" />
+                </Button>
+                <TextBlock Classes="muted" VerticalAlignment="Center"
+                           Text="The file was changed outside of OneWare Studio. Left: on disk, right: your version." />
+            </WrapPanel>
+        </Border>
+        <controls:ComparisonControl Chunks="{Binding Chunks}" Language="{Binding LanguageExtension, Mode=OneWay}" />
+    </DockPanel>
+</UserControl>
