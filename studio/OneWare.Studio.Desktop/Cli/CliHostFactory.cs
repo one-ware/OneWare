@@ -28,6 +28,7 @@ internal static class CliHostFactory
 
         services.AddSingleton<IPaths>(paths);
         services.AddSingleton<IHttpService, HttpService>();
+        services.AddSingleton<ISecretStore, SecretStore>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton(moduleCatalog);
         services.AddSingleton(moduleManager);
