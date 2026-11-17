@@ -40,6 +40,10 @@ public class NativeToolPackageInstaller : PackageInstallerBase
         if (target == null && PlatformHelper.Platform is PlatformId.OsxArm64)
             target = version.Targets?.FirstOrDefault(x => x.Target == "osx-x64");
 
+        // Windows on ARM runs x64 executables through emulation
+        if (target == null && PlatformHelper.Platform is PlatformId.WinArm64)
+            target = version.Targets?.FirstOrDefault(x => x.Target == "win-x64");
+
         return target;
     }
 
