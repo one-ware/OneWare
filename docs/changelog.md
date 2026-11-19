@@ -1,3 +1,11 @@
+## 1.0.48
+
+- Fixed the project explorer not showing existing files when creating an FPGA project in an existing folder
+- Fixed cloud login from the command line interface
+- Studios started with their own `--oneware-appdata-dir` now run as a separate instance instead of forwarding to the default one
+- The Windows uninstaller now also removes the local cache
+- Added a fallback to the win-x64 build of native tools when no native package exists for the current platform
+
 ## 1.0.47
 
 - Added a command line interface (`oneware`) to manage extensions, log in to the cloud and stop the running Studio, which plugins can extend with their own commands
