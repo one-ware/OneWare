@@ -130,6 +130,9 @@ public class UniversalFpgaProjectCreatorViewModel : FlexibleWindowViewModelBase
 
             await _manager.SaveProjectAsync(root);
 
+            // Load files that already exist in the folder
+            await root.InitializeAsync();
+
             _projectExplorerService.AddProject(root);
 
             _projectExplorerService.ActiveProject = root;
