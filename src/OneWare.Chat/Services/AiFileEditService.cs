@@ -24,6 +24,8 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
     // Latest content the AI wrote per file (shared by all chats, the file exists once on disk).
     private readonly Dictionary<string, string> _currentEdits = new();
 
+    private readonly Dictionary<string, SemaphoreSlim> _fileLocks = new(StringComparer.Ordinal);
+
     /// <summary>The unreviewed edits of one chat; null lists edits made without a chat.</summary>
     public IEnumerable<AiEditViewModel> GetEdits(string? ownerId) =>
         ActiveEdits.Where(x => string.Equals(x.OwnerId, ownerId, StringComparison.Ordinal));
@@ -74,6 +76,23 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
     public async Task<bool> EditFileAsync(string filePath, string newContent, int? startLine, int? lineCount,
         string? ownerId)
     {
+        // Edits run on the UI thread but await in between, so parallel tool calls on one file would interleave:
+        // each would apply its change to a stale buffer and the concurrent writes would corrupt the file.
+        var fileLock = GetFileLock(filePath);
+        await fileLock.WaitAsync();
+        try
+        {
+            return await EditFileLockedAsync(filePath, newContent, startLine, lineCount, ownerId);
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
+
+    private async Task<bool> EditFileLockedAsync(string filePath, string newContent, int? startLine,
+        int? lineCount, string? ownerId)
+    {
         var openTab = ActiveEdits.FirstOrDefault(x =>
             x.FullPath == filePath && string.Equals(x.OwnerId, ownerId, StringComparison.Ordinal));
         
@@ -106,7 +125,7 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
 
             if (startLine is null && lineCount is null)
             {
-                await File.WriteAllTextAsync(filePath, newContent);
+                await WriteFileAtomicAsync(filePath, newContent);
                 _currentEdits[filePath] = newContent;
                 openTab.LastWritten = newContent;
                 await openTab.RefreshChanges(newContent);
@@ -121,7 +140,7 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
 
                 var currentContent = _currentEdits.TryGetValue(filePath, out var value) ? value : openTab.Original;
                 var updatedContent = ApplyLineEdit(currentContent, startLine.Value, lineCount.Value, newContent);
-                await File.WriteAllTextAsync(filePath, updatedContent);
+                await WriteFileAtomicAsync(filePath, updatedContent);
                 _currentEdits[filePath] = updatedContent;
                 openTab.LastWritten = updatedContent;
                 await openTab.RefreshChanges(updatedContent, startLine.Value);
@@ -151,9 +170,11 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
             return;
         }
 
+        var fileLock = GetFileLock(edit.FullPath);
+        await fileLock.WaitAsync();
         try
         {
-            await File.WriteAllTextAsync(edit.FullPath, edit.Original);
+            await WriteFileAtomicAsync(edit.FullPath, edit.Original);
             mainDockService.CloseDockable(edit);
             ActiveEdits.Remove(edit);
             ForgetCurrentContent(edit.FullPath, edit.Original);
@@ -161,6 +182,53 @@ public class AiFileEditService(IMainDockService mainDockService, ISettingsServic
         catch (Exception e)
         {
             ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
+
+    private SemaphoreSlim GetFileLock(string filePath)
+    {
+        var key = Path.GetFullPath(filePath);
+        lock (_fileLocks)
+        {
+            if (!_fileLocks.TryGetValue(key, out var fileLock))
+                _fileLocks[key] = fileLock = new SemaphoreSlim(1, 1);
+            return fileLock;
+        }
+    }
+
+    /// <summary>
+    /// Writes to a temp file next to the target, verifies it and renames it over the target, so the file is
+    /// never seen half-written and a failed write leaves the original intact.
+    /// </summary>
+    internal static async Task WriteFileAtomicAsync(string filePath, string content)
+    {
+        EnsureParentDirectoryExists(filePath);
+
+        var directory = Path.GetDirectoryName(Path.GetFullPath(filePath))!;
+        var tempPath = Path.Combine(directory, $".{Path.GetFileName(filePath)}.{Guid.NewGuid():N}.tmp");
+        var bytes = new UTF8Encoding(false).GetBytes(content);
+
+        try
+        {
+            await File.WriteAllBytesAsync(tempPath, bytes);
+
+            if (!OperatingSystem.IsWindows() && File.Exists(filePath))
+                File.SetUnixFileMode(tempPath, File.GetUnixFileMode(filePath));
+
+            var written = await File.ReadAllBytesAsync(tempPath);
+            if (!written.AsSpan().SequenceEqual(bytes))
+                throw new IOException($"Verification of the written content failed for {filePath}.");
+
+            File.Move(tempPath, filePath, true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+                File.Delete(tempPath);
         }
     }
 

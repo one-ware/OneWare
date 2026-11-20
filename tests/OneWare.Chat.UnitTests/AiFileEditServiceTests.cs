@@ -1,4 +1,13 @@
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using OneWare.Chat.Services;
+using OneWare.Essentials.Services;
+using OneWare.Essentials.ViewModels;
 using Xunit;
 
 namespace OneWare.Chat.UnitTests;
@@ -46,5 +55,72 @@ public class AiFileEditServiceTests
     public void ApplyLineEdit_PreservesWindowsNewlinesOfOriginal()
     {
         Assert.Equal("A\r\nB\r\nX\r\nD", AiFileEditService.ApplyLineEdit("A\r\nB\r\nC\r\nD", 3, 1, "X\n"));
+    }
+
+    [Fact]
+    public async Task EditFileAsync_ParallelLineEditsOnOneFile_AllApplyWithoutCorruption()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"aiedit-{Guid.NewGuid():N}.txt");
+        try
+        {
+            var lines = Enumerable.Range(1, 1000)
+                .Select(i => $"Zeile {i}: Grüße äöü ß → – {new string('x', 100)}").ToArray();
+            await File.WriteAllTextAsync(path, string.Join("\r\n", lines));
+
+            var service = new AiFileEditService(FakeService<IMainDockService>.Create(),
+                FakeService<ISettingsService>.Create());
+
+            var results = await Task.WhenAll(Enumerable.Range(1, 10)
+                .Select(i => Task.Run(() => service.EditFileAsync(path, $"E{i}", i * 100, 1, "chat"))));
+
+            Assert.All(results, Assert.True);
+            for (var i = 1; i <= 10; i++)
+                lines[i * 100 - 1] = $"E{i}";
+
+            var written = await File.ReadAllBytesAsync(path);
+            Assert.DoesNotContain((byte)0, written);
+            Assert.Equal(string.Join("\r\n", lines), Encoding.UTF8.GetString(written));
+            Assert.Single(service.ActiveEdits);
+            Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.*.tmp"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task WriteFileAtomicAsync_ReplacesContentAndKeepsFileMode()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"aiedit-{Guid.NewGuid():N}.txt");
+        try
+        {
+            await File.WriteAllTextAsync(path, new string('a', 10_000));
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+            await AiFileEditService.WriteFileAtomicAsync(path, "short");
+
+            Assert.Equal("short", await File.ReadAllTextAsync(path));
+            if (!OperatingSystem.IsWindows())
+                Assert.True(File.GetUnixFileMode(path).HasFlag(UnixFileMode.UserExecute));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private class FakeService<T> : DispatchProxy where T : class
+    {
+        public static T Create() => DispatchProxy.Create<T, FakeService<T>>();
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            var type = targetMethod!.ReturnType;
+            if (type == typeof(void)) return null;
+            if (type == typeof(Dictionary<string, IExtendedDocument>)) return new Dictionary<string, IExtendedDocument>();
+            return type.IsValueType ? Activator.CreateInstance(type) : null;
+        }
     }
 }
