@@ -324,7 +324,7 @@ COMPONENTS UNDER THE APACHE LICENSE 2.0
   - Castle.Core 5.1.1
   - DiffPlex 1.9.0
   - MediatR 8.1.0
-  - OpenCvSharp4 4.11.0.20250507
+  - OpenCvSharp5 5.1.0.20261115
   - RestSharp 113.1.0
   - Serilog 4.3.0
   - Serilog.Extensions.Logging 10.0.0
