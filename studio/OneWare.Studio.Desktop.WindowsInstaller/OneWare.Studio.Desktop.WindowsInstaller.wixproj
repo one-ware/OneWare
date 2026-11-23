@@ -35,7 +35,7 @@
     <Exec Command="rd /s /q $(StudioPublish)" IgnoreExitCode="true" />
 
     <!-- Publish OneWare Studio -->
-    <Exec Command='dotnet publish "$(StudioProj)" -f net10.0 -c Release -r win-$(InstallerPlatform) -o "$(StudioPublish)"' />
+    <Exec Command='dotnet publish "$(StudioProj)" -f net11.0 -c Release -r win-$(InstallerPlatform) -o "$(StudioPublish)"' />
 
     <!-- Sign all published binaries using PowerShell script -->
     <Exec
@@ -49,8 +49,16 @@
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
 
+    <!-- MSI ProductVersion allows a major version of at most 255, so CalVer 2027.1.0 is packaged as 27.1.0.
+         This still sorts above the old 1.0.x versions, so MajorUpgrade keeps working. -->
     <PropertyGroup>
-      <DefineConstants>BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+      <_StudioAssemblyVersion>%(AssemblyVersion.Version)</_StudioAssemblyVersion>
+      <_StudioMajor>$([System.Version]::Parse('$(_StudioAssemblyVersion)').Major)</_StudioMajor>
+      <_StudioMinor>$([System.Version]::Parse('$(_StudioAssemblyVersion)').Minor)</_StudioMinor>
+      <_StudioBuild>$([System.Version]::Parse('$(_StudioAssemblyVersion)').Build)</_StudioBuild>
+      <_MsiMajor>$(_StudioMajor)</_MsiMajor>
+      <_MsiMajor Condition="$(_StudioMajor) &gt;= 2000">$([MSBuild]::Subtract($(_StudioMajor), 2000))</_MsiMajor>
+      <DefineConstants>BuildVersion=$(_MsiMajor).$(_StudioMinor).$(_StudioBuild)</DefineConstants>
     </PropertyGroup>
   </Target>
 
