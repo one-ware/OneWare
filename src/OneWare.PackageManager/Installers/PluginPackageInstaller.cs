@@ -28,19 +28,20 @@ public class PluginPackageInstaller : PackageInstallerBase
     public override async Task<CompatibilityReport> CheckCompatibilityAsync(Package package, PackageVersion version,
         CancellationToken cancellationToken = default)
     {
-        if (version.CompatibilityUrl != null || package.SourceUrl != null)
+        if (version.ManifestUrl != null || package.SourceUrl != null)
         {
-            var depsUrl = version.CompatibilityUrl ?? $"{package.SourceUrl!.TrimEnd('/')}/{version.Version}/compatibility.txt";
-            var deps = await _httpService.DownloadTextAsync(depsUrl);
+            var manifestUrl = version.ManifestUrl ??
+                              $"{package.SourceUrl!.TrimEnd('/')}/{version.Version}/{PluginManifest.FileName}";
+            var manifest = await _httpService.DownloadTextAsync(manifestUrl, cancellationToken: cancellationToken);
             
             // If download fails (network error), skip compatibility check and assume compatible
             // This allows offline usage without showing errors
-            if (deps == null)
+            if (manifest == null)
             {
                 return new CompatibilityReport(true);
             }
             
-            var report = PluginCompatibilityChecker.CheckCompatibility(deps, _pluginService.PluginAssemblies);
+            var report = PluginCompatibilityChecker.CheckCompatibility(manifest, _pluginService.PluginAssemblies);
 
             // A plugin that extends another plugin requires its assemblies. While that plugin is not loaded,
             // the check cannot pass yet. Installing installs the dependency first, so the check passes then.
@@ -52,7 +53,7 @@ public class PluginPackageInstaller : PackageInstallerBase
             return report;
         }
 
-        // No compatibility URL means no specific requirements - assume compatible
+        // No manifest URL means no specific requirements - assume compatible
         return new CompatibilityReport(true);
     }
 

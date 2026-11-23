@@ -42,7 +42,7 @@ public static class PluginAssemblyLoader
     }
 
     /// <summary>
-    ///     Reads the assemblies a plugin requires (<c>compatibility.txt</c>) and the managed assemblies it ships.
+    ///     Reads the assemblies a plugin requires (<c>oneware-plugin.json</c>) and the managed assemblies it ships.
     /// </summary>
     public static PluginLoadInfo Describe(string pluginPath)
     {
@@ -51,9 +51,8 @@ public static class PluginAssemblyLoader
 
         try
         {
-            var compatibilityFile = Path.Combine(pluginPath, "compatibility.txt");
-            if (File.Exists(compatibilityFile))
-                required.AddRange(PluginCompatibilityChecker.ReadRequiredAssemblies(File.ReadAllText(compatibilityFile)));
+            if (PluginManifest.Load(pluginPath) is { } manifest)
+                required.AddRange(manifest.Dependencies.Keys);
 
             foreach (var file in Directory.GetFiles(pluginPath, "*.dll", SearchOption.AllDirectories))
                 if (ShouldProbePluginAssembly(pluginPath, file) && TryGetManagedAssemblyName(file, out var name) &&

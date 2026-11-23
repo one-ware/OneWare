@@ -69,7 +69,7 @@ Every feature is a module: a class deriving from `OneWareModuleBase` (`IOneWareM
    panels, languages, file icons, project types, toolchains or settings.
 
 Built-in modules and external plugins use the same contract. Plugins are folders under
-`~/OneWareStudio/Packages/Plugins` that contain the assemblies and a `compatibility.txt`, and are usually
+`~/OneWareStudio/Packages/Plugins` that contain the assemblies and an `oneware-plugin.json`, and are usually
 installed through the package manager. See [Plugin Development](PluginDevelopment.md) for details and the
 list of available services.
 

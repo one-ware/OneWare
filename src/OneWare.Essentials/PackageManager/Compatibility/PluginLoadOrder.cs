@@ -4,7 +4,7 @@ namespace OneWare.Essentials.PackageManager.Compatibility;
 ///     Describes a plugin folder for <see cref="PluginLoadOrder" />.
 /// </summary>
 /// <param name="Path">Plugin folder.</param>
-/// <param name="RequiredAssemblies">Assembly names listed in the plugin's <c>compatibility.txt</c>.</param>
+/// <param name="RequiredAssemblies">Assembly names listed in the plugin's <c>oneware-plugin.json</c>.</param>
 /// <param name="ProvidedAssemblies">Names of the managed assemblies the plugin ships.</param>
 public sealed record PluginLoadInfo(
     string Path,

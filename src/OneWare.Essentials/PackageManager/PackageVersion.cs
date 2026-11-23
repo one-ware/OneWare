@@ -10,7 +10,10 @@ public class PackageVersion
 
     public PackageTarget[]? Targets { get; init; }
 
-    public string? CompatibilityUrl { get; init; }
+    /// <summary>
+    ///     URL of the plugin's <c>oneware-plugin.json</c>. Defaults to <c>{SourceUrl}/{Version}/oneware-plugin.json</c>.
+    /// </summary>
+    public string? ManifestUrl { get; init; }
 
     /// <summary>
     ///     Packages that must be installed before this version. The package manager installs missing

@@ -13,10 +13,7 @@
         <ProjectReference Include="..\..\src\OneWare.Essentials\OneWare.Essentials.csproj" Private="false" ExcludeAssets="runtime;Native"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <None Update="compatibility.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
+    <!-- Package references get this through OneWare.Essentials' buildTransitive targets -->
+    <Import Project="..\..\src\OneWare.Essentials\buildTransitive\OneWare.Essentials.targets"/>
 
 </Project>

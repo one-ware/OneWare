@@ -38,6 +38,7 @@
 
     <ItemGroup>
         <None Include="readme.md" Pack="true" PackagePath=""/>
+        <None Include="buildTransitive/OneWare.Essentials.targets" Pack="true" PackagePath="build;buildTransitive"/>
     </ItemGroup>
 
     <ItemGroup>

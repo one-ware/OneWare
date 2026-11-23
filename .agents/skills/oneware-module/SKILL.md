@@ -80,11 +80,13 @@ examples. The public API surface and extension points are documented in
 
 - Reference `OneWare.Essentials` (and optionally `OneWare.UniversalFpgaProjectSystem`) as NuGet packages with
   `Private="false" ExcludeAssets="runtime;Native"` and set `<EnableDynamicLoading>true</EnableDynamicLoading>`.
-- Ship a `compatibility.txt` (`AssemblyName : Version` per line) next to the assemblies. The csproj snippet in
-  `docs/PluginDevelopment.md` generates it on build.
-- A plugin that extends another plugin declares `dependencies` in its package manifest version and lists the
-  other plugin's shared assembly in `compatibility.txt`; see "Plugins that extend another plugin" in
-  `docs/PluginDevelopment.md`.
+- Ship an `oneware-plugin.json` next to the assemblies. `OneWare.Essentials` generates it on build from all
+  `Private="false"` references (buildTransitive targets); in-repo plugins with a `ProjectReference` import
+  `src/OneWare.Essentials/buildTransitive/OneWare.Essentials.targets`. `OneWare.*` and other-plugin assemblies need
+  the same major.minor, third-party assemblies only need to be present.
+- A plugin that extends another plugin declares `dependencies` in its package manifest version and references the
+  other plugin's shared assembly with `Private="false"`, so it is listed in `oneware-plugin.json`; see
+  "Plugins that extend another plugin" in `docs/PluginDevelopment.md`.
 - `tests/OneWare.TestPlugin` is a minimal in-repo plugin for reference.
 
 ## Validation

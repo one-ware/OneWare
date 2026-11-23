@@ -399,7 +399,7 @@ public sealed class ExtensionStoreCliModule : OneWareCliModuleBase
     }
 }
 
-internal sealed class CliPluginPackageInstaller(IHttpService httpService) : PackageInstallerBase
+internal sealed class CliPluginPackageInstaller(IHttpService httpService, IPaths paths) : PackageInstallerBase
 {
     public override string GetExtractionPath(Package package, IPaths paths)
     {
@@ -412,15 +412,45 @@ internal sealed class CliPluginPackageInstaller(IHttpService httpService) : Pack
     public override async Task<CompatibilityReport> CheckCompatibilityAsync(Package package, PackageVersion version,
         CancellationToken cancellationToken = default)
     {
-        if (version.CompatibilityUrl is null && package.SourceUrl is null)
+        if (version.ManifestUrl is null && package.SourceUrl is null)
             return new CompatibilityReport(true);
 
-        var compatibilityUrl = version.CompatibilityUrl ??
-                               $"{package.SourceUrl}/{version.Version}/compatibility.txt";
-        var compatibility = await httpService.DownloadTextAsync(compatibilityUrl, cancellationToken: cancellationToken);
-        return compatibility is null
-            ? new CompatibilityReport(true)
-            : PluginCompatibilityChecker.CheckCompatibility(compatibility);
+        var manifestUrl = version.ManifestUrl ??
+                          $"{package.SourceUrl!.TrimEnd('/')}/{version.Version}/{PluginManifest.FileName}";
+        var manifest = await httpService.DownloadTextAsync(manifestUrl, cancellationToken: cancellationToken);
+        if (manifest is null) return new CompatibilityReport(true);
+
+        var report = PluginCompatibilityChecker.CheckCompatibility(manifest, GetInstalledPluginAssemblies());
+
+        // Assemblies of a required plugin are only available after that plugin is installed, which happens first
+        if (!report.IsCompatible && report.Issues.Count > 0 &&
+            report.Issues.All(x => x.Kind == CompatibilityRecordKind.MissingDependency) &&
+            version.Dependencies?.Any(x => x.Id != null &&
+                                           !Directory.Exists(Path.Combine(paths.PluginsDirectory, x.Id))) == true)
+            return new CompatibilityReport(true, report.Issues);
+
+        return report;
+    }
+
+    private Dictionary<string, Version> GetInstalledPluginAssemblies()
+    {
+        var assemblies = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
+        if (!Directory.Exists(paths.PluginsDirectory)) return assemblies;
+
+        foreach (var pluginPath in Directory.GetDirectories(paths.PluginsDirectory))
+            try
+            {
+                foreach (var file in Directory.GetFiles(pluginPath, "*.dll", SearchOption.AllDirectories))
+                    if (PluginAssemblyLoader.ShouldProbePluginAssembly(pluginPath, file) &&
+                        PluginAssemblyLoader.TryGetManagedAssemblyName(file, out var name) &&
+                        name is { Name: { } assemblyName, Version: { } assemblyVersion })
+                        assemblies.TryAdd(assemblyName, assemblyVersion);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+            }
+
+        return assemblies;
     }
 
     public override Task<PackageInstallerResult> InstallAsync(PackageInstallContext context,

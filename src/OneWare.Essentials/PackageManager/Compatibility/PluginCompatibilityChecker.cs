@@ -1,15 +1,23 @@
 using System.Reflection;
 namespace OneWare.Essentials.PackageManager.Compatibility;
 
-public class PluginCompatibilityChecker
+/// <summary>
+///     Checks the <see cref="PluginManifest" /> of a plugin against OneWare Studio and the loaded plugins.
+/// </summary>
+/// <remarks>
+///     <list type="bullet">
+///         <item>
+///             OneWare assemblies (<c>OneWare.*</c>) and assemblies provided by other plugins must have the same
+///             major and minor version and an equal or newer build.
+///         </item>
+///         <item>Other (third-party) assemblies only need to be present, their version is not checked.</item>
+///         <item>A plugin without a valid manifest is not compatible.</item>
+///     </list>
+/// </remarks>
+public static class PluginCompatibilityChecker
 {
-    public static CompatibilityReport CheckCompatibilityPath(string path)
-    {
-        return CheckCompatibilityPath(path, null);
-    }
-
     /// <summary>
-    ///     Checks the <c>compatibility.txt</c> of the plugin at <paramref name="path" />.
+    ///     Checks the <c>oneware-plugin.json</c> of the plugin at <paramref name="path" />.
     /// </summary>
     /// <param name="path">Plugin folder.</param>
     /// <param name="pluginAssemblies">
@@ -17,176 +25,107 @@ public class PluginCompatibilityChecker
     ///     assemblies that are not part of the core application.
     /// </param>
     public static CompatibilityReport CheckCompatibilityPath(string path,
-        IReadOnlyDictionary<string, Version>? pluginAssemblies)
+        IReadOnlyDictionary<string, Version> pluginAssemblies)
     {
-        try
-        {
-            var depFilePath = Path.Combine(path, "compatibility.txt");
-            
-            if (!File.Exists(depFilePath))
-            {
-                return new CompatibilityReport(false, []);
-            }
-
-            return CheckCompatibility(File.ReadAllText(depFilePath), pluginAssemblies);
-        }
-        catch
-        {
-            return new CompatibilityReport(false, []);
-        }
-    }
-
-    public static CompatibilityReport CheckCompatibility(string? deps)
-    {
-        return CheckCompatibility(deps, null);
+        var manifest = PluginManifest.Load(path);
+        return manifest == null ? InvalidManifest() : CheckCompatibility(manifest, pluginAssemblies);
     }
 
     /// <summary>
-    ///     Checks the content of a <c>compatibility.txt</c> against the core application and
-    ///     <paramref name="pluginAssemblies" />, the assemblies provided by already loaded plugins.
+    ///     Checks the content of an <c>oneware-plugin.json</c>.
     /// </summary>
-    public static CompatibilityReport CheckCompatibility(string? deps,
-        IReadOnlyDictionary<string, Version>? pluginAssemblies)
+    public static CompatibilityReport CheckCompatibility(string? manifestJson,
+        IReadOnlyDictionary<string, Version> pluginAssemblies)
     {
-        try
-        {
-            var records = new List<CompatibilityIssue>();
-            var isCompatible = true;
+        return PluginManifest.TryParse(manifestJson, out var manifest)
+            ? CheckCompatibility(manifest!, pluginAssemblies)
+            : InvalidManifest();
+    }
 
-            if (deps == null)
+    public static CompatibilityReport CheckCompatibility(PluginManifest manifest,
+        IReadOnlyDictionary<string, Version> pluginAssemblies)
+    {
+        var hostAssemblies = GetReferencedAssembliesRecursive(Assembly.GetEntryAssembly()!)
+            .Where(x => x.Value.Version != null)
+            .ToDictionary(x => x.Key, x => x.Value.Version!, StringComparer.OrdinalIgnoreCase);
+
+        return CheckCompatibility(manifest, hostAssemblies, pluginAssemblies);
+    }
+
+    internal static CompatibilityReport CheckCompatibility(PluginManifest manifest,
+        IReadOnlyDictionary<string, Version> hostAssemblies, IReadOnlyDictionary<string, Version> pluginAssemblies)
+    {
+        if (manifest.ManifestVersion > PluginManifest.SupportedManifestVersion)
+            return new CompatibilityReport(false, [
+                new CompatibilityIssue(PluginManifest.FileName, new Version(manifest.ManifestVersion, 0),
+                    new Version(PluginManifest.SupportedManifestVersion, 0), CompatibilityRecordKind.RequiresCoreUpdate)
+            ]);
+
+        var issues = new List<CompatibilityIssue>();
+        var isCompatible = true;
+
+        foreach (var (name, required) in manifest.Dependencies)
+        {
+            Version? provided;
+            bool checkVersion;
+
+            if (hostAssemblies.TryGetValue(name, out var hostVersion))
             {
-                return new CompatibilityReport(false, records);
+                provided = hostVersion;
+                checkVersion = IsOneWareAssembly(name);
+            }
+            else if (pluginAssemblies.TryGetValue(name, out var pluginVersion))
+            {
+                provided = pluginVersion;
+                checkVersion = true;
+            }
+            else
+            {
+                issues.Add(new CompatibilityIssue(name, required, null, CompatibilityRecordKind.MissingDependency));
+                isCompatible = false;
+                continue;
             }
 
-            var depsList = deps.Trim().Split('\n');
+            if (!checkVersion) continue;
 
-            var coreDeps = GetReferencedAssembliesRecursive(Assembly.GetEntryAssembly()!);
+            provided = NormalizeVersion(provided);
+            var comparison = provided.CompareTo(required);
 
-            foreach (var dep in depsList)
+            if (provided.Major != required.Major || provided.Minor != required.Minor ||
+                provided.Build < required.Build)
             {
-                var parts = dep.Split(':');
-
-                if (parts.Length < 2)
-                {
-                    isCompatible = false;
-                    break;
-                }
-                var dependencyName = parts[0].Trim();
-                var versionString = parts[1].Trim();
-
-                var dependencyVersionFull = Version.Parse(NormalizeVersion(versionString));
-
-                switch (dependencyName)
-                {
-                    //TODO
-                    case "OneWare.Markdown.Avalonia.Tight":
-                    case "OneWare.Markdown.Avalonia.SyntaxHigh":
-                    case "OneWare.AvaloniaEdit":
-                    case "OneWare.AvaloniaEdit.TextMate":
-                        continue;
-                }
-
-                var providedVersion = coreDeps.TryGetValue(dependencyName, out var coreDep) ? coreDep.Version : null;
-                if (providedVersion == null && pluginAssemblies != null)
-                    pluginAssemblies.TryGetValue(dependencyName, out providedVersion);
-
-                if (providedVersion == null)
-                {
-                    records.Add(new CompatibilityIssue(
-                        dependencyName,
-                        dependencyVersionFull,
-                        null,
-                        CompatibilityRecordKind.MissingDependency));
-                    isCompatible = false;
-                    continue;
-                }
-
-                var required = dependencyVersionFull;
-                var provided = NormalizeVersion(providedVersion);
-                var comparison = provided.CompareTo(required);
-                var requiresCoreUpdate = comparison < 0;
-                var pluginOutdated = comparison > 0;
-
-                if (provided.Major != required.Major ||
-                    provided.Minor != required.Minor ||
-                    provided.Build < required.Build)
-                {
-                    if (requiresCoreUpdate)
-                    {
-                        records.Add(new CompatibilityIssue(
-                            dependencyName,
-                            required,
-                            provided,
-                            CompatibilityRecordKind.RequiresCoreUpdate));
-                    }
-                    else if (pluginOutdated)
-                    {
-                        records.Add(new CompatibilityIssue(
-                            dependencyName,
-                            required,
-                            provided,
-                            CompatibilityRecordKind.PluginOutdated));
-                    }
-                    isCompatible = false;
-                }
-                else if (pluginOutdated)
-                {
-                    records.Add(new CompatibilityIssue(
-                        dependencyName,
-                        required,
-                        provided,
-                        CompatibilityRecordKind.PluginOutdated));
-                }
+                issues.Add(new CompatibilityIssue(name, required, provided,
+                    comparison < 0 ? CompatibilityRecordKind.RequiresCoreUpdate : CompatibilityRecordKind.PluginOutdated));
+                isCompatible = false;
             }
+            else if (comparison > 0)
+            {
+                issues.Add(new CompatibilityIssue(name, required, provided, CompatibilityRecordKind.PluginOutdated));
+            }
+        }
 
-            return new CompatibilityReport(isCompatible, records);
-        }
-        catch
-        {
-            return new CompatibilityReport(false, []);
-        }
+        return new CompatibilityReport(isCompatible, issues);
     }
 
     /// <summary>
-    ///     Reads the assembly names listed in the content of a <c>compatibility.txt</c>.
+    ///     Assemblies of OneWare Studio itself. Their version is checked, other host assemblies only need to be present.
     /// </summary>
-    public static IReadOnlyList<string> ReadRequiredAssemblies(string? deps)
+    public static bool IsOneWareAssembly(string assemblyName)
     {
-        if (string.IsNullOrWhiteSpace(deps)) return [];
-
-        var names = new List<string>();
-        foreach (var line in deps.Split('\n'))
-        {
-            var separator = line.IndexOf(':');
-            if (separator <= 0) continue;
-
-            var name = line[..separator].Trim();
-            if (name.Length > 0) names.Add(name);
-        }
-
-        return names;
+        return assemblyName.StartsWith("OneWare.", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string NormalizeVersion(string version)
+    private static CompatibilityReport InvalidManifest()
     {
-        var parts = version.Split('.');
-        while (parts.Length < 4)
-        {
-            Array.Resize(ref parts, parts.Length + 1);
-            parts[^1] = "0";
-        }
-
-        return string.Join('.', parts);
+        return new CompatibilityReport(false, [
+            new CompatibilityIssue(PluginManifest.FileName, null, null, CompatibilityRecordKind.InvalidManifest)
+        ]);
     }
 
     private static Version NormalizeVersion(Version version)
     {
-        var major = Math.Max(version.Major, 0);
-        var minor = Math.Max(version.Minor, 0);
-        var build = Math.Max(version.Build, 0);
-        var revision = Math.Max(version.Revision, 0);
-
-        return new Version(major, minor, build, revision);
+        return new Version(Math.Max(version.Major, 0), Math.Max(version.Minor, 0), Math.Max(version.Build, 0),
+            Math.Max(version.Revision, 0));
     }
 
     public static Dictionary<string, AssemblyName> GetReferencedAssembliesRecursive(Assembly rootAssembly)
