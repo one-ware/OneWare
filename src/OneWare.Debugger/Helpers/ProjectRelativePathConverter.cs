@@ -7,7 +7,7 @@ namespace OneWare.Debugger.Helpers;
 // Shows an absolute file path relative to the root directory of its project,
 // e.g. "MyProject/src/top.vhd" instead of "C:\dev\MyProject\src\top.vhd". Purely cosmetic:
 // BreakPoint.File stays the absolute path
-// that GdbSession passes on to GDB and BreakPointMargin uses to match against the open
+// that GdbSession passes on to GDB and BreakPointLineNumberMargin uses to match against the open
 // file. Falls back to the full path if the file belongs to no loaded project.
 public class ProjectRelativePathConverter : IValueConverter
 {

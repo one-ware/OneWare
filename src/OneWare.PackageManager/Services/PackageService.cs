@@ -159,13 +159,7 @@ public class PackageService : ObservableObject, IPackageService, IDisposable
             cts.Cancel();
     }
 
-    [Obsolete]
-    public Task<bool> RefreshAsync()
-    {
-        return RefreshAsync(false);
-    }
-
-    public async Task<bool> RefreshAsync(bool force)
+    public async Task<bool> RefreshAsync(bool force = false)
     {
         try
         {

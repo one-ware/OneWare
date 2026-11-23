@@ -52,28 +52,6 @@ public class ToolCommand
             argument.Prepare(osPlatform, pathMapper);
         }
     }
-    [Obsolete("Use IToolExecutionDispatcherService.CreateToolCommandBuilder instead.")]
-    public static ToolCommand FromShellParams(
-        string path,
-        IReadOnlyCollection<string> arguments,
-        string workingDirectory,
-        string status,
-        AppState state = AppState.Loading,
-        bool showTimer = false,
-        Func<string, bool>? outputAction = null,
-        Func<string, bool>? errorAction = null)
-    {
-        return ContainerLocator.Current.Resolve<IToolExecutionDispatcherService>().
-            CreateToolCommandBuilder(Path.GetFileNameWithoutExtension(path))
-            .WithExecutable(path)
-            .WithWorkingDirectory(workingDirectory)
-            .WithStatus(status, state)
-            .WithOutputHandler(outputAction)
-            .WithErrorHandler(errorAction)
-            .WithTimer(showTimer)
-            .AddRange(arguments)
-            .Build();
-    }
 }
 
 public record ToolPort(int Number, string Protocol = "TCP");

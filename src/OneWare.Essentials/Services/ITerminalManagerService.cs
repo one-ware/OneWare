@@ -29,13 +29,4 @@ public interface ITerminalManagerService : IDockable
         return ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, outputProgress,
             cancellationToken);
     }
-
-    /// <summary>
-    /// Executes a command in a terminal tab and returns the result.
-    /// </summary>
-    [Obsolete("Use the overload that accepts an IProgress<string> outputProgress parameter. " +
-              "This overload is kept for plugin binary compatibility and will be removed in a future release.")]
-    Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command,
-        string id, string? workingDirectory, bool showInUi, TimeSpan? timeout,
-        CancellationToken cancellationToken);
 }

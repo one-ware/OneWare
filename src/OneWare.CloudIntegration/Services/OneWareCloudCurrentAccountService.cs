@@ -48,18 +48,6 @@ public class OneWareCloudCurrentAccountService : ObservableObject
         set => SetProperty(ref field, value);
     }
 
-    /// <summary>Legacy whole-Credit view of <see cref="ActiveOrganization" />, kept for older plugins.</summary>
-    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
-    public UserBalanceDto? CurrentBalance
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
-
-    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
-    public string MonthlyIncludedCreditsValue =>
-        $"{CurrentUser?.UserPlan.IncludedMonthlyCredits - CurrentBalance?.IncludedMonthlyCreditsUsed ?? 0}";
-
     public CurrentUserDto? CurrentUser
     {
         get;
@@ -136,37 +124,7 @@ public class OneWareCloudCurrentAccountService : ObservableObject
     private void ApplyActiveOrganization(OrganizationBalanceDto? organization)
     {
         ActiveOrganization = organization;
-#pragma warning disable CS0618 // Keep the legacy members in sync for older plugins.
-        if (CurrentUser != null)
-            CurrentUser.UserPlan.IncludedMonthlyCredits =
-                organization?.CanViewBalances == true ? ToLegacyCredits(organization.IncludedMonthlyCredits) : 0;
-        CurrentBalance = ToLegacyBalance(organization);
-        OnPropertyChanged(nameof(MonthlyIncludedCreditsValue));
-#pragma warning restore CS0618
     }
-
-    // Same mapping as the cloud's legacy GET /api/credits/balance.
-    [Obsolete(LegacyCloudContract.ObsoleteMessage)]
-    private static UserBalanceDto? ToLegacyBalance(OrganizationBalanceDto? organization)
-    {
-        if (organization == null) return null;
-
-        if (organization.CanViewBalances)
-            return new UserBalanceDto
-            {
-                Balance = ToLegacyCredits(organization.CreditBalance),
-                IncludedMonthlyCreditsUsed = ToLegacyCredits(organization.IncludedMonthlyCreditsUsed)
-            };
-
-        return new UserBalanceDto
-        {
-            Balance = ToLegacyCredits(organization.MonthlyCreditsRemaining),
-            IncludedMonthlyCreditsUsed = 0
-        };
-    }
-
-    private static int ToLegacyCredits(decimal? amount) =>
-        (int)Math.Clamp(decimal.Floor(amount ?? 0), int.MinValue, int.MaxValue);
 
     private async Task ResolveAsync()
     {

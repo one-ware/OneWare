@@ -31,11 +31,11 @@ public class ApplicationSettingsViewModel : FlexibleWindowViewModelBase
 
         foreach (var category in s.SettingCategories.OrderBy(x => x.Value.Priority))
         {
-            var pageModel = new SettingsPageViewModel(category.Key, category.Value.IconKey);
+            var pageModel = new SettingsPageViewModel(category.Key);
 
             foreach (var subCategory in category.Value.SettingSubCategories.OrderBy(x => x.Value.Priority))
             {
-                var subCategoryModel = new SettingsCollectionViewModel(subCategory.Key, subCategory.Value.IconKey)
+                var subCategoryModel = new SettingsCollectionViewModel(subCategory.Key)
                 {
                     SettingModels = { subCategory.Value.Settings }
                 };

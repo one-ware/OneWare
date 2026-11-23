@@ -21,7 +21,7 @@ namespace OneWare.Essentials.EditorExtensions;
 // breakpoints.
 public class BreakPointLineNumberMargin : LineNumberMargin
 {
-    // Colours taken unchanged from BreakPointMargin.
+    // Breakpoint marker colours.
     private static readonly IBrush BreakPointBrush = new SolidColorBrush(Color.Parse("#FF3737"));
     private static readonly IBrush PreviewBrush = new SolidColorBrush(Color.Parse("#E67466"));
 

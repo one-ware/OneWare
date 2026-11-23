@@ -151,12 +151,6 @@ public class ComboBoxSetting : TitledSetting
 {
     private object[] _options;
 
-    [Obsolete("Use alternative constructor with object[] constructor instead")]
-    public ComboBoxSetting(string title, object defaultValue, IEnumerable<object> options) : base(title, defaultValue)
-    {
-        _options = options.ToArray();
-    }
-
     public ComboBoxSetting(string title, object defaultValue, object[] options) : base(title, defaultValue)
     {
         _options = options;
@@ -223,12 +217,6 @@ public class AdvancedComboBoxOption
     public string? HoverDescription { get; init; }
 
     public string? MarkdownDocumentation { get; init; }
-
-    [Obsolete("Rather modify the parents collection. This property will not work. Only kept here to avoid compatibility issues")]
-    public IObservable<bool>? IsEnabledObservable { get; init; }
-
-    [Obsolete("Rather modify the parents collection. This property will not work. Only kept here to avoid compatibility issues")]
-    public IObservable<bool>? IsVisibleObservable { get; init; }
 
     public override string? ToString()
     {
