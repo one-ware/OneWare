@@ -3,7 +3,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -80,7 +79,7 @@ public partial class CommandManagerViewModel : FlexibleWindowViewModelBase
 
         _allTab.WhenValueChanged(x => x.SearchText)
             .Throttle(TimeSpan.FromMilliseconds(150))
-            .ObserveOn(AvaloniaScheduler.Instance)
+            .ObserveOn(UiScheduler.Instance)
             .Subscribe(text => _ = UpdateFileSearchAsync(_allTab, text));
         _filesTab.WhenValueChanged(x => x.SearchText)
             .Throttle(TimeSpan.FromMilliseconds(150))

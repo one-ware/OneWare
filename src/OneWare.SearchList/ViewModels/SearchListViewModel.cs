@@ -3,7 +3,6 @@ using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
-using Avalonia.ReactiveUI;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
 using Dock.Model.Core;
@@ -13,7 +12,8 @@ using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SearchList.Helpers;
 using OneWare.SearchList.Models;
-using ReactiveUI;
+using OneWare.Essentials.Helpers;
+using DynamicData.Binding;
 
 namespace OneWare.SearchList.ViewModels;
 
@@ -36,9 +36,9 @@ public partial class SearchListViewModel : ExtendedTool
         Title = "Find in files";
         Id = "Search";
 
-        this.WhenAnyValue(x => x.SearchString)
+        this.WhenValueChanged(x => x.SearchString)
             .Throttle(TimeSpan.FromMilliseconds(50))
-            .ObserveOn(AvaloniaScheduler.Instance)
+            .ObserveOn(UiScheduler.Instance)
             .Subscribe(Search);
     }
 

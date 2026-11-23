@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Vcd.Parser.Data;
 using OneWare.WaveFormViewer.Models;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.WaveFormViewer.Controls;
 

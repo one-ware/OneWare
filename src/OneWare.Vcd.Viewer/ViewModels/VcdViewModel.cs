@@ -15,6 +15,7 @@ using OneWare.Vcd.Parser.Data;
 using OneWare.Vcd.Viewer.Context;
 using OneWare.Vcd.Viewer.Models;
 using OneWare.WaveFormViewer.ViewModels;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.Vcd.Viewer.ViewModels;
 

@@ -14,6 +14,7 @@ using OneWare.UniversalFpgaProjectSystem.Fpga;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Parser;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.UniversalFpgaProjectSystem.ViewModels;
 

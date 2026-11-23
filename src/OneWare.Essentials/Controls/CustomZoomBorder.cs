@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.PanAndZoom;
 using Avalonia.Input;
 using Avalonia.Threading;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.Essentials.Controls;
 

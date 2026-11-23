@@ -15,7 +15,6 @@ using OneWare.Studio.Styles;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using OneWare.Vcd.Viewer;
-using ReactiveUI;
 
 namespace OneWare.Studio;
 

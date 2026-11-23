@@ -12,6 +12,7 @@ using ColorTextBlock.Avalonia;
 using OneWare.Chat.ViewModels;
 using OneWare.Chat.ViewModels.ChatMessages;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.Chat.Views;
 

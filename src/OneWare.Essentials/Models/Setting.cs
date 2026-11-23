@@ -4,7 +4,6 @@ using System.Reactive.Linq;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Avalonia.ReactiveUI;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
 using OneWare.Essentials.Helpers;

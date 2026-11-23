@@ -9,6 +9,7 @@ using OneWare.Core.ViewModels.DockViews;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.MarkdownViewer.ViewModels;
 

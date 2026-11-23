@@ -6,7 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
@@ -16,6 +15,7 @@ using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.SourceControl.EditorExtensions;
+using OneWare.Essentials.Helpers;
 
 namespace OneWare.Essentials.Controls;
 
@@ -229,7 +229,7 @@ public class ComparisonControl : TemplatedControl
             _chunksDisposable.Disposable = Observable
                 .FromEventPattern(observableCollection, nameof(observableCollection.CollectionChanged))
                 .Throttle(TimeSpan.FromSeconds(1))
-                .ObserveOn(AvaloniaScheduler.Instance)
+                .ObserveOn(UiScheduler.Instance)
                 .Subscribe(_ => ApplyChunks());
         }
     }

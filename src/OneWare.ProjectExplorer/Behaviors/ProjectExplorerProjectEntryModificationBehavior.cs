@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Xaml.Interactions.Custom;
 using Avalonia.Xaml.Interactivity;
 using OneWare.Essentials.Models;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.ProjectExplorer.Behaviors;
 

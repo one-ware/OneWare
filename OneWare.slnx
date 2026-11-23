@@ -29,7 +29,6 @@
     <File Path="build/props/Avalonia.Diagnostics.props" />
     <File Path="build/props/Avalonia.Fonts.Inter.props" />
     <File Path="build/props/Avalonia.props" />
-    <File Path="build/props/ReactiveUI.Avalonia.props" />
     <File Path="build/props/Avalonia.Themes.Simple.props" />
     <File Path="build/props/AvaloniaEdit.props" />
     <File Path="build/props/AvaloniaEdit.TextMate.props" />
