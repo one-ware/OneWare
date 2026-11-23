@@ -120,8 +120,10 @@ Publish the manifest next to the plugin zip of each release (`{SourceUrl}/{versi
 `OneWare.Essentials.PackageManager.Compatibility.PluginCompatibilityChecker` checks the manifest before a plugin
 is loaded or installed:
 
-- **OneWare assemblies** (`OneWare.*`) and **assemblies of other plugins** need the same major and minor version
-  and an equal or newer build. A plugin built for `2027.1.0` runs on `2027.1.x`, but not on `2027.2`.
+- **OneWare assemblies** (`OneWare.*`) and **assemblies of other plugins** need the same major version and an equal
+  or newer version. With calendar versioning the major version is the year: a plugin built for `2027.1.0` runs on
+  every `2027.x` release, but not on `2028.1`. A plugin built for `2027.3.0` needs at least `2027.3.0`.
+  Breaking API changes in OneWare only happen in the first release of a year.
 - **Third-party assemblies** (Avalonia, Jint, ONNX Runtime, ...) only need to be present. Their version is not checked.
 - A plugin without a valid `oneware-plugin.json` (for example one with the old `compatibility.txt`) is not loaded.
 
@@ -220,7 +222,7 @@ A plugin can build on another plugin, for example a camera backend for an AI plu
 
 3. **Load order and version check.** At startup, `IPluginService.AddPlugins` loads a plugin after the plugin that
    ships an assembly listed in its `oneware-plugin.json`. The compatibility check accepts assemblies of loaded
-   plugins with the same rule as core assemblies (same major and minor version, equal or newer build). When the
+   plugins with the same rule as core assemblies (same major version, equal or newer version). When the
    required plugin is missing, the plugin is not loaded and reported as incompatible.
 
 Also declare the other plugin's module ID in `IOneWareModule.Dependencies`, so your module is initialized after it.
@@ -817,7 +819,8 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 
 ## Suggested validation and troubleshooting
 
-- Ensure `oneware-plugin.json` matches the core dependency versions (same major and minor version).
+- Ensure `oneware-plugin.json` matches the core dependency versions (same major version, not newer than the
+  running OneWare Studio).
 - Verify your module class is public and implements `IOneWareModule` and/or `IOneWareCliModule`.
 - If CLI commands do not appear under `oneware --help`, verify the assembly is copied with the
   plugin and the command name does not collide with an existing top-level command or alias.

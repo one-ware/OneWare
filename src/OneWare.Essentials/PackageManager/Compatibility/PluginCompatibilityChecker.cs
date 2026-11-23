@@ -8,7 +8,8 @@ namespace OneWare.Essentials.PackageManager.Compatibility;
 ///     <list type="bullet">
 ///         <item>
 ///             OneWare assemblies (<c>OneWare.*</c>) and assemblies provided by other plugins must have the same
-///             major and minor version and an equal or newer build.
+///             major version and an equal or newer version. With calendar versioning the major version is the year,
+///             so a plugin built for 2027.1 runs on every 2027.x release from 2027.1 on.
 ///         </item>
 ///         <item>Other (third-party) assemblies only need to be present, their version is not checked.</item>
 ///         <item>A plugin without a valid manifest is not compatible.</item>
@@ -91,8 +92,7 @@ public static class PluginCompatibilityChecker
             provided = NormalizeVersion(provided);
             var comparison = provided.CompareTo(required);
 
-            if (provided.Major != required.Major || provided.Minor != required.Minor ||
-                provided.Build < required.Build)
+            if (provided.Major != required.Major || comparison < 0)
             {
                 issues.Add(new CompatibilityIssue(name, required, provided,
                     comparison < 0 ? CompatibilityRecordKind.RequiresCoreUpdate : CompatibilityRecordKind.PluginOutdated));

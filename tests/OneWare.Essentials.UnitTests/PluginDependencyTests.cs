@@ -132,8 +132,11 @@ public class PluginDependencyTests
     [InlineData("2027.1.0", "2027.1.0.0", true)]
     [InlineData("2027.1.0", "2027.1.3.0", true)]
     [InlineData("2027.1.3", "2027.1.0.0", false)]
-    [InlineData("2027.1.0", "2027.2.0.0", false)]
+    [InlineData("2027.1.0", "2027.2.0.0", true)]
+    [InlineData("2027.1.3", "2027.4.0.0", true)]
     [InlineData("2027.2.0", "2027.1.0.0", false)]
+    [InlineData("2027.2.0", "2027.1.5.0", false)]
+    [InlineData("2027.1.0", "2028.1.0.0", false)]
     [InlineData("2026.1.0", "2027.1.0.0", false)]
     public void CheckCompatibility_ChecksVersionOfOneWareAssemblies(string required, string provided, bool expected)
     {
@@ -181,9 +184,19 @@ public class PluginDependencyTests
         Assert.True(report.IsCompatible);
     }
 
+    [Fact]
+    public void CheckCompatibility_AcceptsNewerMinorOfPluginAssembly()
+    {
+        var report = PluginCompatibilityChecker.CheckCompatibility(Manifest(("Base.Extensibility", "1.4.2")),
+            NoAssemblies, new Dictionary<string, Version> { ["Base.Extensibility"] = new(1, 5, 0, 0) });
+
+        Assert.True(report.IsCompatible);
+    }
+
     [Theory]
-    [InlineData("1.5.0.0")]
+    [InlineData("2.0.0.0")]
     [InlineData("1.4.1.0")]
+    [InlineData("1.3.9.0")]
     public void CheckCompatibility_RejectsIncompatiblePluginAssemblyVersion(string provided)
     {
         var report = PluginCompatibilityChecker.CheckCompatibility(Manifest(("Base.Extensibility", "1.4.2")),
