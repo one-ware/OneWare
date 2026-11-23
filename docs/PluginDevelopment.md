@@ -82,7 +82,7 @@ You can generate `compatibility.txt` automatically during build by marking depen
 
     <PropertyGroup>
         <Version>1.0.0</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <EnableDynamicLoading>true</EnableDynamicLoading>

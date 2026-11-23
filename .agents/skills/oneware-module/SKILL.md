@@ -25,7 +25,7 @@ examples. The public API surface and extension points are documented in
    </Project>
    ```
 
-   `OneWare.Module.props` sets `net10.0`, nullable, implicit usings and compiled Avalonia bindings. For a
+   `OneWare.Module.props` sets `net11.0`, nullable, implicit usings and compiled Avalonia bindings. For a
    new NuGet package, add `build/props/<Package>.props` (and list it under the `/build/props/` folder in `OneWare.slnx`).
 
 2. **Entry point**: `<Name>Module.cs` in the project root:

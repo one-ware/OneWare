@@ -13,7 +13,7 @@ End-user documentation lives at [one-ware.com/docs](https://one-ware.com/docs/st
 
 ## Tech stack
 
-- **.NET 10**, C# with nullable reference types
+- **.NET 11**, C# with nullable reference types
 - **[Avalonia 11.3](https://docs.avaloniaui.net/)** with `SimpleTheme` and a shared design layer
   ([Styling](Styling.md)), [Dock.Avalonia](https://github.com/wieslawsoltes/Dock) for the docking layout and
   [AvaloniaEdit](https://github.com/AvaloniaUI/AvaloniaEdit) + TextMate for the editor

@@ -81,7 +81,7 @@ mkdir -p "source/OneWare Studio.app/Contents"
 cp -r Contents "source/OneWare Studio.app"
 mkdir -p "source/OneWare Studio.app/Contents/MacOS"
 
-dotnet publish -c Release -f net10.0 -r osx-arm64 --self-contained \
+dotnet publish -c Release -f net11.0 -r osx-arm64 --self-contained \
   ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
   -o "source/OneWare Studio.app/Contents/MacOS"
 
@@ -115,7 +115,7 @@ mkdir -p "source/OneWare Studio.app/Contents"
 cp -r Contents "source/OneWare Studio.app"
 mkdir -p "source/OneWare Studio.app/Contents/MacOS"
 
-dotnet publish -c Release -f net10.0 -r osx-x64 --self-contained \
+dotnet publish -c Release -f net11.0 -r osx-x64 --self-contained \
   ../OneWare.Studio.Desktop/OneWare.Studio.Desktop.csproj \
   -o "source/OneWare Studio.app/Contents/MacOS"
 

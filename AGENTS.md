@@ -18,7 +18,7 @@ This file provides repo-specific guidance for coding agents working in `OneWare`
 
 ## Prerequisites
 
-- .NET SDK `10.0.x`
+- .NET SDK `11.0.x`
 - Clone with submodules:
   - `git clone --recursive <repo-url>`
   - or `git submodule update --init --recursive` in an existing clone
@@ -124,7 +124,7 @@ module registration layout changes).
   - `src/OneWare.PackageManager/Services/PackageService.cs`
   - `src/OneWare.PackageManager/ViewModels/PackageManagerViewModel.cs`
 - For offline/network-sensitive flows, avoid surfacing user-facing exceptions; prefer graceful fallback and logging.
-- Keep changes compatible with .NET 10 and existing nullable settings in each project.
+- Keep changes compatible with .NET 11 and existing nullable settings in each project.
 - **Package versions are centralized** in `build/props/*.props` (one file per package). Import the relevant `.props` file in a project's `.csproj` rather than adding inline `<PackageReference>` with a version. The global ONNX Runtime version lives in `Directory.Build.props` (`OnnxRuntimeVersion`).
 - **Module entry point**: every feature module exposes a `*Module.cs` deriving from `OneWareModuleBase` (e.g., `CopilotModule.cs`, `ChatModule.cs`, `OneWareCloudIntegrationModule.cs`) that wires the module into the DI container. New modules must follow this pattern.
 - All module `.csproj` files import `build/props/Base.props` (version and package metadata, `StudioVersion`) and `build/props/OneWare.Module.props` (`TargetFramework`, `Nullable`, `ImplicitUsings`, `LangVersion`, `AvaloniaUseCompiledBindingsByDefault`).
