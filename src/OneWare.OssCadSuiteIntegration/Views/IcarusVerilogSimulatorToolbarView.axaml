@@ -9,7 +9,7 @@
     <WrapPanel Classes="editor-bar-items">
         <StackPanel Classes="form-row">
             <TextBlock Text="Arguments" ToolTip.Tip="Additional arguments passed to iverilog" />
-            <TextBox Width="180" Watermark="iverilog arguments" Text="{Binding IcarusVerilogArguments}" />
+            <TextBox Width="180" PlaceholderText="iverilog arguments" Text="{Binding IcarusVerilogArguments}" />
         </StackPanel>
         <StackPanel Classes="form-row">
             <TextBlock Text="Format"

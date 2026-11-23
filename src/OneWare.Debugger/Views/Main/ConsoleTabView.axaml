@@ -29,7 +29,7 @@
                 <TextBox Name="CommandBox" Classes="mono" FontFamily="{DynamicResource EditorFont}"
                          IsEnabled="{Binding IsSessionActive}"
                          Text="{Binding CommandText, Mode=TwoWay}"
-                         Watermark="GDB command, e.g. info frame (Enter to send, Up / Down for history)">
+                         PlaceholderText="GDB command, e.g. info frame (Enter to send, Up / Down for history)">
                     <TextBox.KeyBindings>
                         <KeyBinding Gesture="Enter" Command="{Binding SendCommandCommand}" />
                     </TextBox.KeyBindings>

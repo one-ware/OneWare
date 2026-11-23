@@ -227,7 +227,7 @@ public partial class WaveFormView : UserControl
         try
         {
             using var bitmap = RenderImage(includeMarkers);
-            bitmap?.Save(path);
+            bitmap?.Save(path, PngBitmapEncoderOptions.Default);
         }
         catch (Exception exception)
         {

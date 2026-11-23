@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using OneWare.Vcd.Parser.Data;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OneWare.Vcd.Parser.UnitTests;
 

@@ -72,7 +72,7 @@ examples. The public API surface and extension points are documented in
 5. **UI**: follow the `oneware-styling` skill for any `.axaml`.
 
 6. **Tests** (when the module has logic): `tests/OneWare.<Name>.UnitTests/`, importing `build/props/XUnit.props`
-   (xUnit v2). For UI tests, also import `build/props/Avalonia.Headless.XUnit.props`, add a `TestApp.cs` with
+   (xUnit v3, so the test project is an executable). For UI tests, also import `build/props/Avalonia.Headless.XUnit.props`, add a `TestApp.cs` with
    `[assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]` and use `[AvaloniaFact]` (see
    `tests/OneWare.Dock.HeadlessTests`). Add the test project to the `/Tests/` folder in `OneWare.slnx`.
 

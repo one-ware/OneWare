@@ -26,7 +26,7 @@ public class HotkeyTextBox : TextBox
 
     protected override Type StyleKeyOverride => typeof(TextBox);
 
-    protected override void OnGotFocus(GotFocusEventArgs e)
+    protected override void OnGotFocus(FocusChangedEventArgs e)
     {
         base.OnGotFocus(e);
     }

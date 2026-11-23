@@ -72,7 +72,7 @@ public partial class SearchBox : UserControl
 
     protected override Type StyleKeyOverride => typeof(SearchBox);
 
-    protected override void OnGotFocus(GotFocusEventArgs e)
+    protected override void OnGotFocus(FocusChangedEventArgs e)
     {
         if (SearchTextBox.IsFocused) return;
 

@@ -6,7 +6,6 @@
 
     <PropertyGroup>
         <TargetFramework>net11.0</TargetFramework>
-        <OutputType>Library</OutputType>
         <IsPackable>False</IsPackable>
         <IsTestProject>True</IsTestProject>
         <GenerateAssemblyInfo>False</GenerateAssemblyInfo>

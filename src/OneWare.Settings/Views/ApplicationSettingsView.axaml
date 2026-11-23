@@ -39,7 +39,7 @@
                     <Border Padding="{DynamicResource ThemePaddingSmall}">
                         <TextBox Name="SearchBox" Classes="search"
                                  Text="{Binding SearchText, Mode=TwoWay}"
-                                 Watermark="Search settings..."
+                                 PlaceholderText="Search settings..."
                                  ToolTip.Tip="Search categories and settings">
                             <TextBox.InnerLeftContent>
                                 <PathIcon Classes="small muted" Margin="4 0"

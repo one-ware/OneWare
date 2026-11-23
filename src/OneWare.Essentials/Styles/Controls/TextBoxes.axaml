@@ -3,9 +3,9 @@
 
     <Design.PreviewWith>
         <StackPanel Margin="20" Spacing="8" Width="240">
-            <TextBox Watermark="Text" />
-            <TextBox Classes="small" Watermark="Small" />
-            <TextBox Classes="search" Watermark="Search...">
+            <TextBox PlaceholderText="Text" />
+            <TextBox Classes="small" PlaceholderText="Small" />
+            <TextBox Classes="search" PlaceholderText="Search...">
                 <TextBox.InnerLeftContent>
                     <PathIcon Classes="small muted" Margin="4 0" Data="{StaticResource Icon.Search}" />
                 </TextBox.InnerLeftContent>
@@ -211,7 +211,7 @@
                                      IsReadOnly="{TemplateBinding IsReadOnly}"
                                      Text="{TemplateBinding Text}"
                                      TextAlignment="{TemplateBinding TextAlignment}"
-                                     Watermark="{TemplateBinding Watermark}"
+                                     PlaceholderText="{TemplateBinding PlaceholderText}"
                                      InnerLeftContent="{Binding InnerLeftContent, RelativeSource={RelativeSource TemplatedParent}}"
                                      InnerRightContent="{Binding InnerRightContent, RelativeSource={RelativeSource TemplatedParent}}" />
                         </ButtonSpinner>

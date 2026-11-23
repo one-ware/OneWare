@@ -301,7 +301,7 @@
                 <ContentControl Grid.Row="0"
                                 Content="{Binding Service.TopUiExtension, FallbackValue={x:Null}}" />
 
-                <TextBox Grid.Row="1" Name="CommandBox" Watermark="Type your task here..."
+                <TextBox Grid.Row="1" Name="CommandBox" PlaceholderText="Type your task here..."
                          AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" MaxHeight="240"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                          Padding="10 10 10 8" BorderThickness="0" Background="Transparent"

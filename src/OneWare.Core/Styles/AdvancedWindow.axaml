@@ -21,10 +21,7 @@
                             IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}" />
                     <Panel Margin="{TemplateBinding WindowDecorationMargin}"
                            Background="{DynamicResource ThemeControlTransparentBrush}" />
-                    <VisualLayerManager>
-                        <VisualLayerManager.ChromeOverlayLayer>
-                            <TitleBar />
-                        </VisualLayerManager.ChromeOverlayLayer>
+                    <VisualLayerManager Name="PART_VisualLayerManager">
                         <Panel Margin="{TemplateBinding OffScreenMargin}">
                             <Panel Margin="{TemplateBinding WindowDecorationMargin}">
                                 <Panel Margin="{x:Static helpers:PlatformHelper.WindowsOnlyBorder}">

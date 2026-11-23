@@ -4,12 +4,13 @@
 
     <PropertyGroup>
         <TargetFramework>net11.0</TargetFramework>
-        <OutputType>Library</OutputType>
         <IsPackable>False</IsPackable>
         <IsTestProject>True</IsTestProject>
         <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
         <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
         <Nullable>enable</Nullable>
+        <!-- xUnit v3 test projects are executables; Studio.Desktop is self-contained but only referenced as a library here -->
+        <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
     </PropertyGroup>
 
     <ItemGroup>

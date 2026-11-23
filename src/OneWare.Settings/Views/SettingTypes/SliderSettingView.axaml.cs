@@ -12,7 +12,7 @@ public partial class SliderSettingView : UserControl
         InitializeComponent();
     }
 
-    private void ValueTextBox_OnLostFocus(object? sender, RoutedEventArgs e)
+    private void ValueTextBox_OnLostFocus(object? sender, FocusChangedEventArgs e)
     {
         (DataContext as SliderSettingViewModel)?.CommitText();
     }

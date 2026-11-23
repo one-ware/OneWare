@@ -71,7 +71,7 @@
                                                        Data="{StaticResource Icon.Search}"
                                                        Width="14" />
                                                 <TextBox                                                 Background="{DynamicResource ThemeControlTransparentBrush}" DockPanel.Dock="Left"
-                                                         VerticalAlignment="Center" Watermark="Search..."
+                                                         VerticalAlignment="Center" PlaceholderText="Search..."
                                                          BorderThickness="0" Name="PART_SearchBox" />
                                             </DockPanel>
                                         </Border>

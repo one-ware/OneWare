@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- xUnit v3 (required by Avalonia.Headless.XUnit 12). Keep xunit.v3 in sync with its xunit.v3.extensibility.core dependency. -->
     <ItemGroup>
-        <PackageReference Include="xunit" Version="2.9.3"/>
-        <PackageReference Include="xunit.abstractions" Version="2.0.3"/>
-        <PackageReference Include="xunit.assert" Version="2.9.3"/>
-        <PackageReference Include="xunit.core" Version="2.9.3"/>
-        <PackageReference Include="xunit.extensibility.core" Version="2.9.3"/>
-        <PackageReference Include="xunit.extensibility.execution" Version="2.9.3"/>
-        <PackageReference Include="xunit.runner.console" Version="2.9.3"/>
+        <PackageReference Include="xunit.v3" Version="3.2.2"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0"/>
     </ItemGroup>

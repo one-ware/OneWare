@@ -20,9 +20,6 @@ public class AdvancedHostWindow : HostWindow
 
     public AdvancedHostWindow(IMainDockService mainDockService)
     {
-#if DEBUG
-        this.AttachDevTools();
-#endif
         _mainDockService = mainDockService;
 
         KeyDown += (s, args) =>

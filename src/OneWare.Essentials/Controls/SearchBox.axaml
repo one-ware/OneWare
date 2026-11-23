@@ -9,7 +9,7 @@
 
     <!-- One regular TextBox, so the search field looks and focuses like every other input. -->
     <TextBox Name="SearchTextBox" Classes="search"
-             Watermark="{Binding #SearchBoxView.Label}"
+             PlaceholderText="{Binding #SearchBoxView.Label}"
              Text="{Binding #SearchBoxView.SearchText}"
              TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False">
         <TextBox.InnerLeftContent>

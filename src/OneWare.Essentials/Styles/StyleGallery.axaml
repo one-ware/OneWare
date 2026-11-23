@@ -79,7 +79,7 @@
             <StackPanel Classes="section">
                 <TextBlock Classes="overline" Text="INPUTS" />
                 <StackPanel Classes="form" MaxWidth="360" HorizontalAlignment="Left">
-                    <TextBox Watermark="TextBox" />
+                    <TextBox PlaceholderText="TextBox" />
                     <controls:SearchBox />
                     <controls:SearchBox SearchText="query" SearchButtonVisible="False" IsBusy="True" />
                     <TextBox Text="Invalid" Classes="small" />

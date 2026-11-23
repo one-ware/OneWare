@@ -5,7 +5,6 @@ using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -68,6 +67,9 @@ public class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+#if DEBUG
+        this.AttachDeveloperTools();
+#endif
 
         Animation.RegisterCustomAnimator<string, CustomStringAnimator>();
     }
@@ -751,8 +753,6 @@ public class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
         {
-            DisableAvaloniaDataAnnotationValidation();
-
             var mainWindow = Services.Resolve<MainWindow>();
             mainWindow.NotificationManager = new WindowNotificationManager(mainWindow)
             {
@@ -874,11 +874,14 @@ public class App : Application
                 !glyphTypeface.FamilyName.Equals(familyName, StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            var glyphs = "iMW0_".Select(c => glyphTypeface.GetGlyph(c)).ToArray();
+            var map = glyphTypeface.CharacterToGlyphMap;
+            var glyphs = "iMW0_".Select(c => map.GetGlyph(c)).ToArray();
             if (glyphs.Any(x => x == 0)) return false;
 
-            var advance = glyphTypeface.GetGlyphAdvance(glyphs[0]);
-            return advance > 0 && glyphs.All(x => glyphTypeface.GetGlyphAdvance(x) == advance);
+            var advances = new ushort[glyphs.Length];
+            if (!glyphTypeface.TryGetHorizontalGlyphAdvances(glyphs, advances)) return false;
+
+            return advances[0] > 0 && advances.All(x => x == advances[0]);
         }
         catch
         {
@@ -922,15 +925,5 @@ public class App : Application
             .ExecuteAutoLaunchActions(Environment.GetEnvironmentVariable("ONEWARE_AUTOLAUNCH"));
 
         return Task.CompletedTask;
-    }
-
-    private void DisableAvaloniaDataAnnotationValidation()
-    {
-        // Get an array of plugins to remove
-        var dataValidationPluginsToRemove =
-            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
-
-        // remove each entry found
-        foreach (var plugin in dataValidationPluginsToRemove) BindingPlugins.DataValidators.Remove(plugin);
     }
 }

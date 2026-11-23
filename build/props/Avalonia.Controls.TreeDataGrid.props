@@ -7,6 +7,6 @@
             ContentPresenter child while the subtree is mid-detach throws
             "Visual is atached to visual tree but root could not be found".
         -->
-        <PackageReference Include="TreeDataGrid" Version="11.3.12.1"/>
+        <PackageReference Include="TreeDataGrid" Version="12.1.5"/>
     </ItemGroup>
 </Project>

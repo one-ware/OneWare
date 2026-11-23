@@ -47,7 +47,7 @@ public class RenamingTextBox : TextBox
         Dispatcher.UIThread.Post(() => Focus());
     }
 
-    protected override void OnLostFocus(RoutedEventArgs e)
+    protected override void OnLostFocus(FocusChangedEventArgs e)
     {
         base.OnLostFocus(e);
         Reset();

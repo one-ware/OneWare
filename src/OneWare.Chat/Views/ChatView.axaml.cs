@@ -1,4 +1,6 @@
 ﻿using System.Reactive.Disposables;
+using Avalonia.Media.Imaging;
+using Avalonia.Input.Platform;
 using System.Reactive.Linq;
 using System.Text;
 using Avalonia;
@@ -174,19 +176,30 @@ public partial class ChatView : UserControl
     {
         try
         {
-            var formats = await clipboard.GetFormatsAsync();
+            using var data = await clipboard.TryGetDataAsync();
+            if (data == null) return false;
 
-            var imageFormat = formats.FirstOrDefault(f =>
-                string.Equals(f, "PNG", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(f, "image/png", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(f, "image/jpeg", StringComparison.OrdinalIgnoreCase));
+            var imageFormat = data.Formats.FirstOrDefault(f =>
+                string.Equals(f.Identifier, "PNG", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f.Identifier, "image/png", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f.Identifier, "image/jpeg", StringComparison.OrdinalIgnoreCase));
 
             if (imageFormat == null) return false;
 
-            var raw = await clipboard.GetDataAsync(imageFormat);
-            if (raw is not byte[] { Length: > 0 } bytes) return false;
+            byte[]? bytes = null;
+            foreach (var item in data.Items)
+            {
+                if (!item.Formats.Contains(imageFormat)) continue;
+                if (await item.TryGetRawAsync(imageFormat) is byte[] { Length: > 0 } raw)
+                {
+                    bytes = raw;
+                    break;
+                }
+            }
 
-            var isJpeg = imageFormat.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase);
+            if (bytes == null) return false;
+
+            var isJpeg = imageFormat.Identifier.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase);
             return chatService.TryAddImageAttachment(bytes, isJpeg ? "image/jpeg" : "image/png",
                 isJpeg ? "image.jpg" : "image.png");
         }
@@ -211,7 +224,7 @@ public partial class ChatView : UserControl
             if (bitmap == null) return false;
 
             using var stream = new MemoryStream();
-            bitmap.Save(stream);
+            bitmap.Save(stream, PngBitmapEncoderOptions.Default);
             if (stream.Length == 0) return false;
 
             return chatService.TryAddImageAttachment(stream.ToArray(), "image/png", "image.png");
@@ -229,7 +242,7 @@ public partial class ChatView : UserControl
 
         try
         {
-            var text = await clipboard.GetTextAsync();
+            var text = await clipboard.TryGetTextAsync();
             if (string.IsNullOrEmpty(text)) return;
 
             await Dispatcher.UIThread.InvokeAsync(() =>

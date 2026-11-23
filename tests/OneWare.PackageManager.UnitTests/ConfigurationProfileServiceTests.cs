@@ -184,13 +184,9 @@ public class ConfigurationProfileServiceTests
             .Returns(new PackageInstallResult { Status = PackageInstallResultReason.Installed });
 
         var reports = new List<ConfigurationImportProgress>();
-        var progress = new Progress<ConfigurationImportProgress>();
-        progress.ProgressChanged += (_, p) => reports.Add(p);
+        var progress = new SynchronousProgress<ConfigurationImportProgress>(reports.Add);
 
         await _service.ImportAsync(profile, progress);
-
-        // Progress<T> marshals to the synchronization context, so give the callbacks a chance to run
-        await Task.Delay(50);
 
         Assert.Contains(reports, r => r.Step == ConfigurationImportStep.Packages && r.Detail == "Test Plugin (1/2)");
         Assert.Contains(reports, r => r.Step == ConfigurationImportStep.Packages && r.Value is > 0 and < 1);
@@ -403,4 +399,9 @@ public class ConfigurationProfileServiceTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.LoadFromSourceAsync(url));
     }
+}
+
+file sealed class SynchronousProgress<T>(Action<T> handler) : IProgress<T>
+{
+    public void Report(T value) => handler(value);
 }
