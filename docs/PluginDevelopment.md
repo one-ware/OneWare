@@ -132,6 +132,50 @@ is loaded or installed:
 3. Publish `oneware-plugin.json` instead of `compatibility.txt` as release asset, and rename `compatibilityUrl` in
    package manifests to `manifestUrl`.
 
+### Migrating plugins to OneWare Studio 2027.1
+
+2027.1 is a breaking release. Plugins built for 1.x are not loaded and have to be rebuilt:
+
+- **.NET 11**: target `net11.0`.
+- **Manifest**: replace `compatibility.txt` with `oneware-plugin.json` (see above).
+- **Avalonia 12**: OneWare uses Avalonia 12, Dock 12 and the OneWare forks `OneWare.AvaloniaEdit` and
+  `OneWare.Markdown.Avalonia.*`. Follow the
+  [Avalonia 12 breaking changes](https://docs.avaloniaui.net/docs/avalonia12-breaking-changes). The changes plugins
+  hit most often:
+  - `Watermark` on `TextBox` / `NumericUpDown` is now `PlaceholderText`.
+  - `GotFocus` / `LostFocus` handlers take `FocusChangedEventArgs`.
+  - Clipboard access is async and the extension methods (`SetTextAsync`, `TryGetTextAsync`) live in
+    `Avalonia.Input.Platform`.
+  - `Window.SystemDecorations` is now `WindowDecorations`. Custom window templates no longer have `TitleBar`,
+    `CaptionButtons` or `ChromeOverlayLayer` parts.
+  - `DragDrop.DoDragDropAsync` needs the `PointerPressedEventArgs` that started the drag.
+- **ReactiveUI removed**: OneWare no longer references ReactiveUI or ReactiveUI.Avalonia. `System.Reactive` and
+  DynamicData are still available:
+  - `AvaloniaScheduler.Instance` → `OneWare.Essentials.Helpers.UiScheduler.Instance`
+  - ReactiveUI's `DisposeWith` → `OneWare.Essentials.Extensions.DisposableExtensions.DisposeWith`
+  - `WhenAnyValue` → DynamicData's `WhenValueChanged` or `INotifyPropertyChanged`
+  - Use CommunityToolkit.Mvvm (`ObservableObject`, `RelayCommand`) instead of `ReactiveObject` / `ReactiveCommand`.
+- **OpenCvSharp5**: `OpenCvSharp4` is replaced by `OpenCvSharp5` 5.1 with the official runtimes. Update your
+  package references.
+- **Removed obsolete APIs**:
+
+  | Removed | Replacement |
+  |---|---|
+  | `ISettingsService.RegisterTitled*` | `RegisterSetting` |
+  | `ComboBoxSetting` constructor taking `IEnumerable<object>` | constructor taking `object[]` |
+  | `AdvancedComboBoxOption.IsEnabledObservable` / `IsVisibleObservable` (had no effect) | modify the options collection of the setting |
+  | `ToolCommand.FromShellParams` | `IToolExecutionDispatcherService.CreateToolCommandBuilder` |
+  | `ITerminalManagerService.ExecuteInTerminalAsync` without `outputProgress` | overload with `outputProgress` |
+  | `IPackageService.RefreshAsync()` | `RefreshAsync(force: false)` |
+  | `StorageProviderHelper.SelectSaveFileAsync` short overload | overload with all parameters |
+  | `BreakPointMargin` | `BreakPointLineNumberMargin` |
+  | `CommandOnEnterBehavior` | `CommandOnKeyPressedBehavior` |
+  | `ConstraintFileHelper.Convert` | `ConvertPcfToCcf` |
+  | `YosysService.CreateNetListJsonAsync` | `CreateJsonNetListAsync` |
+  | Legacy cloud DTOs (`UserPlanDto`, `UserBalanceDto`, `CurrentBalance`, ...) | current cloud account API |
+
+- **Tests**: test projects that use `Avalonia.Headless.XUnit` need xUnit v3 (`xunit.v3`) and are executables.
+
 ## Plugin packaging and loading
 
 - Plugins are loaded through `IPluginService.AddPlugin(path)`, which copies the plugin folder into a
