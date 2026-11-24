@@ -95,8 +95,10 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
 
     public async Task TryCloseProjectAsync(IProjectRoot project)
     {
+        // Files stay open while another loaded project (e.g. the same folder opened as a different type) covers them.
         var openFiles = _mainDockService.OpenFiles
-            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath))
+            .Where(x => IsUnderRoot(project.RootFolderPath, x.Value.FullPath) &&
+                        !Projects.Any(p => p != project && IsUnderRoot(p.RootFolderPath, x.Value.FullPath)))
             .ToList();
 
         foreach (var tab in openFiles)
@@ -187,8 +189,11 @@ public class ProjectExplorerViewModel : ProjectViewModelBase, IProjectExplorerSe
         
         if (project == null)
             return null;
-        
-        AddProject(project);
+
+        if (GetLoadedProject(project) is { } loaded)
+            project = loaded;
+        else
+            AddProject(project);
 
         if (expand)
         {

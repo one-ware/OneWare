@@ -54,9 +54,20 @@ public abstract class ProjectViewModelBase : ExtendedTool
     public HierarchicalTreeDataGridSource<IProjectExplorerNode> Source { get; }
 
 
+    /// <summary>
+    ///     Projects are identified by type and project path, so one folder can be open as several
+    ///     project types at once (e.g. as a Folder project and through its .fpgaproj file).
+    /// </summary>
+    public IProjectRoot? GetLoadedProject(IProjectRoot project)
+    {
+        return Projects.FirstOrDefault(x => x == project ||
+                                            (x.ProjectTypeId == project.ProjectTypeId &&
+                                             x.ProjectPath.EqualPaths(project.ProjectPath)));
+    }
+
     public virtual void AddProject(IProjectRoot entry)
     {
-        if (Projects.Any(x => x.FullPath.EqualPaths(entry.FullPath)))
+        if (GetLoadedProject(entry) != null)
         {
             ContainerLocator.Container.Resolve<ILogger>()?.Error("Project already loaded");
             return;
@@ -185,12 +196,7 @@ public abstract class ProjectViewModelBase : ExtendedTool
         if (string.IsNullOrWhiteSpace(fullPath))
             return null;
 
-        fullPath = Path.GetFullPath(fullPath);
-
-        return (from project in Projects
-            let projectRoot = Path.GetFullPath(project.RootFolderPath)
-            where fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase)
-            select project).FirstOrDefault();
+        return GetRootsForFile(fullPath).Select(x => x.Root).FirstOrDefault();
     }
 
     public IProjectEntry? GetEntryFromFullPath(string fullPath)
@@ -198,21 +204,47 @@ public abstract class ProjectViewModelBase : ExtendedTool
         if (string.IsNullOrWhiteSpace(fullPath))
             return null;
 
+        foreach (var (project, relative) in GetRootsForFile(fullPath))
+            if (project.GetEntry(relative) is { } entry)
+                return entry;
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Returns all roots containing <paramref name="fullPath" />, best match first: the most specific root
+    ///     folder, then roots that include the file, then typed projects over plain folders, then the active one.
+    /// </summary>
+    private List<(IProjectRoot Root, string RelativePath)> GetRootsForFile(string fullPath)
+    {
         fullPath = Path.GetFullPath(fullPath);
+
+        var matches = new List<(IProjectRoot Root, string RelativePath, int RootLength)>();
 
         foreach (var project in Projects)
         {
-            var projectRoot = Path.GetFullPath(project.RootFolderPath);
+            var projectRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(project.RootFolderPath));
 
-            if (!fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
+            if (!fullPath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase)) continue;
+            if (fullPath.Length > projectRoot.Length &&
+                fullPath[projectRoot.Length] != Path.DirectorySeparatorChar &&
+                fullPath[projectRoot.Length] != Path.AltDirectorySeparatorChar &&
+                !Path.EndsInDirectorySeparator(projectRoot))
                 continue;
 
-            var relative = Path.GetRelativePath(projectRoot, fullPath);
-
-            return project.GetEntry(relative);
+            matches.Add((project, Path.GetRelativePath(projectRoot, fullPath), projectRoot.Length));
         }
 
-        return null;
+        if (matches.Count < 2)
+            return matches.Select(x => (x.Root, x.RelativePath)).ToList();
+
+        return matches
+            .OrderByDescending(x => x.RootLength)
+            .ThenByDescending(x => x.Root.IsPathIncluded(x.RelativePath))
+            .ThenByDescending(x => x.Root is IProjectRootWithFile)
+            .ThenByDescending(x => x.Root.IsActive)
+            .Select(x => (x.Root, x.RelativePath))
+            .ToList();
     }
 
     public void CollapseAll(IEnumerable<IProjectExplorerNode> list)

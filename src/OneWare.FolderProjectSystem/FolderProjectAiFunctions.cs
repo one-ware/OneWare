@@ -99,7 +99,8 @@ public sealed class FolderProjectAiFunctions(
     private async Task<string> LoadAsync(string folder)
     {
         // Loading the same folder twice would create a detached second root.
-        if (projectExplorerService.Projects.FirstOrDefault(x => x.RootFolderPath.EqualPaths(folder)) is { } loaded)
+        if (projectExplorerService.Projects.FirstOrDefault(x =>
+                x is FolderProjectRoot && x.RootFolderPath.EqualPaths(folder)) is { } loaded)
         {
             projectExplorerService.ActiveProject = loaded;
             return $"'{folder}' was already open as '{loaded.Name}' and is now the active project.";
