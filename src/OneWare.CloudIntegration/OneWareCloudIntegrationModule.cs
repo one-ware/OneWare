@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
@@ -34,9 +33,6 @@ public class OneWareCloudIntegrationModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
-
         serviceProvider.Resolve<ISettingsService>()
             .RegisterSetting("Experimental", "OneWare Cloud", OneWareCloudHostKey,
                 new TextBoxSetting("Host", OfficialHost, OfficialHost));

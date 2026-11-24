@@ -13,6 +13,14 @@ public sealed class SecretStore(IPaths paths) : ISecretStore
 {
     private const string Namespace = "oneware";
 
+    // GCM has no default store on Linux and throws without one. Selected here rather than in a module's Initialize,
+    // because the CLI never initializes modules and must use the same store as the GUI.
+    static SecretStore()
+    {
+        if (OperatingSystem.IsLinux())
+            Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
+    }
+
     public string? Get(string service, string account)
     {
         if (!OperatingSystem.IsWindows()) return CredentialManager.Create(Namespace).Get(service, account)?.Password;
