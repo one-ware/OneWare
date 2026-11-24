@@ -1,3 +1,4 @@
+using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;

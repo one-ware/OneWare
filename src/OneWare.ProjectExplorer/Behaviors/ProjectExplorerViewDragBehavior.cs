@@ -22,7 +22,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
     private bool _captured;
     private Point _dragStartPoint;
     private bool _lock;
-    private PointerEventArgs? _triggerEvent;
+    private PointerPressedEventArgs? _triggerEvent;
     
     public double HorizontalDragThreshold
     {
@@ -58,7 +58,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
         AssociatedObject?.RemoveHandler(InputElement.PointerCaptureLostEvent, AssociatedObject_CaptureLost);
     }
 
-    private async Task DoDragDropAsync(PointerEventArgs triggerEvent, DataTransfer data)
+    private async Task DoDragDropAsync(PointerPressedEventArgs triggerEvent, DataTransfer data)
     {
         var effect = DragDropEffects.None;
 
@@ -112,9 +112,7 @@ public class ProjectExplorerViewDragBehavior : Behavior<Control>
                     && AssociatedObject?.DataContext == control.DataContext)
                 {
                     _dragStartPoint = e.GetPosition(null);
-                    _triggerEvent = e;
                     _lock = true;
-                    _captured = true;
                 }
             }
 

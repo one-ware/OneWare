@@ -27,9 +27,6 @@ public class AdvancedWindow : Window
 
     public AdvancedWindow()
     {
-#if DEBUG
-        this.AttachDevTools();
-#endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {

@@ -116,10 +116,9 @@ internal sealed class CliModuleLoader(CliHostBuilderContext cliHostBuilder)
 
     private bool IsCompatiblePlugin(string pluginPath)
     {
-        var compatibilityFile = Path.Combine(pluginPath, "compatibility.txt");
-        if (!File.Exists(compatibilityFile))
+        if (!File.Exists(Path.Combine(pluginPath, PluginManifest.FileName)))
         {
-            ReportIncompatiblePlugin(pluginPath, "compatibility.txt is missing.");
+            ReportIncompatiblePlugin(pluginPath, $"{PluginManifest.FileName} is missing.");
             return false;
         }
 

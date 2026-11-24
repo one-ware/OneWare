@@ -1,3 +1,4 @@
+using OneWare.Essentials.PackageManager.Compatibility;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -92,7 +93,8 @@ public class ExternalSkillProviderDiscoveryTests
             ExternalSkillTestProvider.SkillRoot = skillRoot;
             File.Copy(typeof(ExternalSkillTestProvider).Assembly.Location,
                 Path.Combine(plugin, "TestPlugin.dll"));
-            File.WriteAllText(Path.Combine(plugin, "compatibility.txt"), "UnavailableTestDependency: 1.0.0");
+            File.WriteAllText(Path.Combine(plugin, PluginManifest.FileName),
+                """{ "manifestVersion": 1, "dependencies": { "UnavailableTestDependency": "1.0.0" } }""");
             var catalog = new OneWareCliModuleCatalog();
             var logger = new TestLogger();
             var context = new CliHostBuilderContext(new ServiceCollection(), paths, catalog,

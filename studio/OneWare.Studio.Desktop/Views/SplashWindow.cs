@@ -56,7 +56,7 @@ public class SplashWindow : Window
         Width = CardWidth + ShadowMargin * 2;
         Height = CardHeight + ShadowMargin * 2;
         CanResize = false;
-        SystemDecorations = SystemDecorations.None;
+        WindowDecorations = WindowDecorations.None;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Title = "OneWare Studio";
         Background = Brushes.Transparent;

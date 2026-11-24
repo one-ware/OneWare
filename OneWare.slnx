@@ -26,10 +26,9 @@
     <File Path="build/props/Avalonia.Controls.DataGrid.props" />
     <File Path="build/props/Avalonia.Controls.TreeDataGrid.props" />
     <File Path="build/props/Avalonia.Desktop.props" />
-    <File Path="build/props/Avalonia.Diagnostics.props" />
+    <File Path="build/props/AvaloniaUI.DiagnosticsSupport.props" />
     <File Path="build/props/Avalonia.Fonts.Inter.props" />
     <File Path="build/props/Avalonia.props" />
-    <File Path="build/props/ReactiveUI.Avalonia.props" />
     <File Path="build/props/Avalonia.Themes.Simple.props" />
     <File Path="build/props/AvaloniaEdit.props" />
     <File Path="build/props/AvaloniaEdit.TextMate.props" />
@@ -57,8 +56,8 @@
     <File Path="build\props\Microsoft.Extensions.Logging.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.props" />
     <File Path="build\props\Microsoft.ML.OnnxRuntime.Managed.props" />
-    <File Path="build\props\OpenCvSharp4.props" />
-    <File Path="build\props\OpenCvSharp4.runtime.props" />
+    <File Path="build\props\OpenCvSharp5.props" />
+    <File Path="build\props\OpenCvSharp5.runtime.props" />
     <File Path="build\props\DiffPlex.props" />
     <File Path="build\props\LiveChartsCore.SkiaSharpView.Avalonia.props" />
   </Folder>

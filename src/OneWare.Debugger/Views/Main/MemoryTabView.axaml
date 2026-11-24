@@ -26,7 +26,7 @@
             <TextBox Name="AddressBox" Classes="search mono" FontFamily="{DynamicResource EditorFont}"
                      TextWrapping="NoWrap" AcceptsReturn="False"
                      Text="{Binding AddressText, Mode=TwoWay}"
-                     Watermark="{Binding AddressWatermark}">
+                     PlaceholderText="{Binding AddressWatermark}">
                 <TextBox.KeyBindings>
                     <KeyBinding Gesture="Enter" Command="{Binding AddWatchCommand}" />
                 </TextBox.KeyBindings>

@@ -8,8 +8,9 @@ and how UniversalFpgaProject support is wired so you can extend it safely.
 1) Create a class library that references `OneWare.Essentials`.
 2) Implement a GUI module by deriving from `OneWare.Essentials.Services.OneWareModuleBase`.
 3) Optionally implement a CLI module by deriving from `OneWare.Essentials.Services.OneWareCliModuleBase`.
-4) Add a `compatibility.txt` file next to your plugin assemblies.
-5) Package the plugin as a folder (assemblies + `compatibility.txt`) and install it via the plugin manager.
+4) Reference OneWare packages with `Private="false"`. The build writes `oneware-plugin.json` next to your
+   plugin assemblies.
+5) Package the plugin as a folder (assemblies + `oneware-plugin.json`) and install it via the plugin manager.
 
 Minimal module example:
 
@@ -66,23 +67,32 @@ public sealed class MyPluginCliModule : OneWareCliModuleBase
 }
 ```
 
-Minimal `compatibility.txt` (one dependency per line):
+### Plugin manifest (oneware-plugin.json)
 
+Every plugin ships an `oneware-plugin.json` at its root. It lists the assemblies the plugin expects from
+OneWare Studio or from other plugins, with the versions it was built against:
+
+```json
+{
+  "manifestVersion": 1,
+  "dependencies": {
+    "OneWare.Essentials": "2027.1.0.0",
+    "OneWare.UniversalFpgaProjectSystem": "2027.1.0.0"
+  }
+}
 ```
-OneWare.Essentials : 1.0.0
-```
 
-### Auto-generate compatibility.txt from your csproj
-
-You can generate `compatibility.txt` automatically during build by marking dependencies with
-`Private="false"` and writing them into the output directory:
+The `OneWare.Essentials` package generates this file for every project with `EnableDynamicLoading=true`. All
+`PackageReference` and `ProjectReference` items marked `Private="false"` are written with their assembly version,
+and the file is copied to the build and publish output. Set `OneWareGeneratePluginManifest=false` to write it
+yourself.
 
 ```msbuild
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <Version>1.0.0</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <EnableDynamicLoading>true</EnableDynamicLoading>
@@ -95,31 +105,85 @@ You can generate `compatibility.txt` automatically during build by marking depen
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="OneWare.Essentials" Version="1.0.0" Private="false" ExcludeAssets="runtime;Native" />
-        <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="1.0.0" Private="false" ExcludeAssets="runtime;Native" />
+        <PackageReference Include="OneWare.Essentials" Version="2027.1.0" Private="false" ExcludeAssets="runtime;Native" />
+        <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="2027.1.0" Private="false" ExcludeAssets="runtime;Native" />
     </ItemGroup>
-
-    <Target Name="GenerateCompatibilityFile" AfterTargets="Build">
-        <ItemGroup>
-            <FilteredDependencies Include="@(PackageReference)" Condition="'%(Private)' == 'false'" />
-        </ItemGroup>
-
-        <WriteLinesToFile
-                File="$(OutDir)compatibility.txt"
-                Lines="@(FilteredDependencies->'%(Identity) : %(Version)')"
-                Overwrite="true" />
-    </Target>
     
 </Project>
 ```
+
+Publish the manifest next to the plugin zip of each release (`{SourceUrl}/{version}/oneware-plugin.json`, or set
+`manifestUrl` on the package version), so the package manager can check compatibility before downloading.
+
+### Compatibility rules
+
+`OneWare.Essentials.PackageManager.Compatibility.PluginCompatibilityChecker` checks the manifest before a plugin
+is loaded or installed:
+
+- **OneWare assemblies** (`OneWare.*`) and **assemblies of other plugins** need the same major version and an equal
+  or newer version. With calendar versioning the major version is the year: a plugin built for `2027.1.0` runs on
+  every `2027.x` release, but not on `2028.1`. A plugin built for `2027.3.0` needs at least `2027.3.0`.
+  Breaking API changes in OneWare only happen in the first release of a year.
+- **Third-party assemblies** (Avalonia, Jint, ONNX Runtime, ...) only need to be present. Their version is not checked.
+- A plugin without a valid `oneware-plugin.json` (for example one with the old `compatibility.txt`) is not loaded.
+
+### Migrating from compatibility.txt (OneWare Studio 2027.1)
+
+1. Target `net11.0` and reference `OneWare.Essentials` `2027.1.0` or newer.
+2. Remove the custom `GenerateCompatibilityFile` target and any `compatibility.txt` from the project.
+3. Publish `oneware-plugin.json` instead of `compatibility.txt` as release asset, and rename `compatibilityUrl` in
+   package manifests to `manifestUrl`.
+
+### Migrating plugins to OneWare Studio 2027.1
+
+2027.1 is a breaking release. Plugins built for 1.x are not loaded and have to be rebuilt:
+
+- **.NET 11**: target `net11.0`.
+- **Manifest**: replace `compatibility.txt` with `oneware-plugin.json` (see above).
+- **Avalonia 12**: OneWare uses Avalonia 12, Dock 12 and the OneWare forks `OneWare.AvaloniaEdit` and
+  `OneWare.Markdown.Avalonia.*`. Follow the
+  [Avalonia 12 breaking changes](https://docs.avaloniaui.net/docs/avalonia12-breaking-changes). The changes plugins
+  hit most often:
+  - `Watermark` on `TextBox` / `NumericUpDown` is now `PlaceholderText`.
+  - `GotFocus` / `LostFocus` handlers take `FocusChangedEventArgs`.
+  - Clipboard access is async and the extension methods (`SetTextAsync`, `TryGetTextAsync`) live in
+    `Avalonia.Input.Platform`.
+  - `Window.SystemDecorations` is now `WindowDecorations`. Custom window templates no longer have `TitleBar`,
+    `CaptionButtons` or `ChromeOverlayLayer` parts.
+  - `DragDrop.DoDragDropAsync` needs the `PointerPressedEventArgs` that started the drag.
+- **ReactiveUI removed**: OneWare no longer references ReactiveUI or ReactiveUI.Avalonia. `System.Reactive` and
+  DynamicData are still available:
+  - `AvaloniaScheduler.Instance` → `OneWare.Essentials.Helpers.UiScheduler.Instance`
+  - ReactiveUI's `DisposeWith` → `OneWare.Essentials.Extensions.DisposableExtensions.DisposeWith`
+  - `WhenAnyValue` → DynamicData's `WhenValueChanged` or `INotifyPropertyChanged`
+  - Use CommunityToolkit.Mvvm (`ObservableObject`, `RelayCommand`) instead of `ReactiveObject` / `ReactiveCommand`.
+- **OpenCvSharp5**: `OpenCvSharp4` is replaced by `OpenCvSharp5` 5.1 with the official runtimes. Update your
+  package references.
+- **Removed obsolete APIs**:
+
+  | Removed | Replacement |
+  |---|---|
+  | `ISettingsService.RegisterTitled*` | `RegisterSetting` |
+  | `ComboBoxSetting` constructor taking `IEnumerable<object>` | constructor taking `object[]` |
+  | `AdvancedComboBoxOption.IsEnabledObservable` / `IsVisibleObservable` (had no effect) | modify the options collection of the setting |
+  | `ToolCommand.FromShellParams` | `IToolExecutionDispatcherService.CreateToolCommandBuilder` |
+  | `ITerminalManagerService.ExecuteInTerminalAsync` without `outputProgress` | overload with `outputProgress` |
+  | `IPackageService.RefreshAsync()` | `RefreshAsync(force: false)` |
+  | `StorageProviderHelper.SelectSaveFileAsync` short overload | overload with all parameters |
+  | `BreakPointMargin` | `BreakPointLineNumberMargin` |
+  | `CommandOnEnterBehavior` | `CommandOnKeyPressedBehavior` |
+  | `ConstraintFileHelper.Convert` | `ConvertPcfToCcf` |
+  | `YosysService.CreateNetListJsonAsync` | `CreateJsonNetListAsync` |
+  | Legacy cloud DTOs (`UserPlanDto`, `UserBalanceDto`, `CurrentBalance`, ...) | current cloud account API |
+
+- **Tests**: test projects that use `Avalonia.Headless.XUnit` need xUnit v3 (`xunit.v3`) and are executables.
 
 ## Plugin packaging and loading
 
 - Plugins are loaded through `IPluginService.AddPlugin(path)`, which copies the plugin folder into a
   session plugin directory, then loads all `*.dll` files in that folder.
-- A plugin must include a `compatibility.txt` file at its root. It lists assembly dependencies and
-  versions using `AssemblyName : Version` lines. The check is enforced by
-  `OneWare.Essentials.PackageManager.Compatibility.PluginCompatibilityChecker`.
+- A plugin must include an `oneware-plugin.json` file at its root (see [Plugin manifest](#plugin-manifest-oneware-pluginjson)).
+  The check is enforced by `OneWare.Essentials.PackageManager.Compatibility.PluginCompatibilityChecker`.
 - GUI modules are discovered by scanning assemblies for `IOneWareModule` implementations.
 - CLI modules are discovered by scanning assemblies for `IOneWareCliModule` implementations.
 - `IOneWareModule.RegisterServices` contributes services to the desktop app container before
@@ -147,16 +211,18 @@ A plugin can build on another plugin, for example a camera backend for an AI plu
    ```
 
 2. **Shared assemblies.** Reference the other plugin's contract assembly with `Private="false"` so it is not
-   shipped twice, and list it in `compatibility.txt` like the core assemblies:
+   shipped twice. The generated `oneware-plugin.json` lists it like the core assemblies:
 
-   ```
-   OneWare.Essentials : 1.0.45
-   OneWare.AI.Extensibility : 1.4.0
+   ```json
+   "dependencies": {
+     "OneWare.Essentials": "2027.1.0.0",
+     "OneWare.AI.Extensibility": "1.4.0.0"
+   }
    ```
 
 3. **Load order and version check.** At startup, `IPluginService.AddPlugins` loads a plugin after the plugin that
-   ships an assembly listed in its `compatibility.txt`. The compatibility check accepts assemblies of loaded
-   plugins with the same rule as core assemblies (same major and minor version, equal or newer build). When the
+   ships an assembly listed in its `oneware-plugin.json`. The compatibility check accepts assemblies of loaded
+   plugins with the same rule as core assemblies (same major version, equal or newer version). When the
    required plugin is missing, the plugin is not loaded and reported as incompatible.
 
 Also declare the other plugin's module ID in `IOneWareModule.Dependencies`, so your module is initialized after it.
@@ -753,7 +819,8 @@ Use `IWindowService.RegisterUiExtension` to add UI to these extension points:
 
 ## Suggested validation and troubleshooting
 
-- Ensure `compatibility.txt` matches the core dependency versions.
+- Ensure `oneware-plugin.json` matches the core dependency versions (same major version, not newer than the
+  running OneWare Studio).
 - Verify your module class is public and implements `IOneWareModule` and/or `IOneWareCliModule`.
 - If CLI commands do not appear under `oneware --help`, verify the assembly is copied with the
   plugin and the command name does not collide with an existing top-level command or alias.

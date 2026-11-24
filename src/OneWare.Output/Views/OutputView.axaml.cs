@@ -90,7 +90,7 @@ public partial class OutputView : OutputBaseView
         }
     }
 
-    protected override void OnLostFocus(RoutedEventArgs e)
+    protected override void OnLostFocus(FocusChangedEventArgs e)
     {
         ResetControlModification();
         base.OnLostFocus(e);

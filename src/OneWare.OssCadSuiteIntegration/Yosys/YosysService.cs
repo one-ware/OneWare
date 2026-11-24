@@ -415,8 +415,7 @@ public class YosysService(
         }
     }
 
-    [Obsolete(message: "Use CreateJsonNetListAsync instead")]
-    public async Task CreateNetListJsonAsync(IProjectFile verilog)
+    public async Task CreateJsonNetListAsync(IProjectFile verilog)
     {
         var command = toolExecutionDispatcherService.CreateToolCommandBuilder("yosys")
             .WithWorkingDirectory(Path.GetDirectoryName(verilog.FullPath)!)

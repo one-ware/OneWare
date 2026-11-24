@@ -18,7 +18,7 @@ This file provides repo-specific guidance for coding agents working in `OneWare`
 
 ## Prerequisites
 
-- .NET SDK `10.0.x`
+- .NET SDK `11.0.x`
 - Clone with submodules:
   - `git clone --recursive <repo-url>`
   - or `git submodule update --init --recursive` in an existing clone
@@ -51,7 +51,8 @@ This file provides repo-specific guidance for coding agents working in `OneWare`
 
 ## Tests
 
-- Framework: xUnit v2 on VSTest (`build/props/XUnit.props`), so use `--filter`, not MTP-style flags.
+- Framework: xUnit v3 on VSTest (`build/props/XUnit.props`, required by `Avalonia.Headless.XUnit` 12), so use
+  `--filter`, not MTP-style flags. Test projects are executables, so don't set `<OutputType>Library</OutputType>`.
 - Naming: `tests/OneWare.<Module>.UnitTests` (logic) and `*.Tests` / `*.HeadlessTests` (UI).
 - Headless Avalonia UI tests import `build/props/Avalonia.Headless.XUnit.props`, declare
   `[assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]` in `TestApp.cs`, and use `[AvaloniaFact]`
@@ -69,11 +70,13 @@ This file provides repo-specific guidance for coding agents working in `OneWare`
 
 ## Architecture Map
 
-- UI stack: **Avalonia 11.3** (`build/props/Avalonia.props`) with `SimpleTheme`, Dock.Avalonia and AvaloniaEdit.
-  Don't use Avalonia 12 APIs or samples. MVVM uses CommunityToolkit.Mvvm (`ObservableObject`, `SetProperty`,
-  `RelayCommand`); ReactiveUI is only used in a few places.
+- UI stack: **Avalonia 12** (`build/props/Avalonia.props`) with `SimpleTheme`, Dock.Avalonia and the OneWare
+  forks of AvaloniaEdit / Markdown.Avalonia (`OneWare.AvaloniaEdit`, `OneWare.Markdown.Avalonia.*`). Don't use
+  Avalonia 11 APIs or samples (see the Avalonia 12 breaking-changes guide). MVVM uses CommunityToolkit.Mvvm
+  (`ObservableObject`, `SetProperty`, `RelayCommand`). ReactiveUI is not used; for Rx use `System.Reactive`
+  with `UiScheduler.Instance` and `DisposeWith` from `OneWare.Essentials`.
 - Core/shared infrastructure:
-  - `src/OneWare.Essentials` — base types, services interfaces, shared controls, the design system (`Styles/`), Avalonia/ReactiveUI wiring, ONNX/OpenCV/AI abstractions. Published as a NuGet package that external plugins compile against, so keep its public API backwards compatible.
+  - `src/OneWare.Essentials` — base types, services interfaces, shared controls, the design system (`Styles/`), Avalonia wiring, ONNX/OpenCV/AI abstractions. Published as a NuGet package that external plugins compile against, so keep its public API backwards compatible.
   - `src/OneWare.Core` — app shell (`App.axaml`), Serilog logging, DI bootstrap; depends on `OneWare.ApplicationCommands` and all built-in UI panels
   - `src/OneWare.ApplicationCommands` — shared application command definitions consumed by `OneWare.Core`
 - AI / cloud integrations:
@@ -124,7 +127,7 @@ module registration layout changes).
   - `src/OneWare.PackageManager/Services/PackageService.cs`
   - `src/OneWare.PackageManager/ViewModels/PackageManagerViewModel.cs`
 - For offline/network-sensitive flows, avoid surfacing user-facing exceptions; prefer graceful fallback and logging.
-- Keep changes compatible with .NET 10 and existing nullable settings in each project.
+- Keep changes compatible with .NET 11 and existing nullable settings in each project.
 - **Package versions are centralized** in `build/props/*.props` (one file per package). Import the relevant `.props` file in a project's `.csproj` rather than adding inline `<PackageReference>` with a version. The global ONNX Runtime version lives in `Directory.Build.props` (`OnnxRuntimeVersion`).
 - **Module entry point**: every feature module exposes a `*Module.cs` deriving from `OneWareModuleBase` (e.g., `CopilotModule.cs`, `ChatModule.cs`, `OneWareCloudIntegrationModule.cs`) that wires the module into the DI container. New modules must follow this pattern.
 - All module `.csproj` files import `build/props/Base.props` (version and package metadata, `StudioVersion`) and `build/props/OneWare.Module.props` (`TargetFramework`, `Nullable`, `ImplicitUsings`, `LangVersion`, `AvaloniaUseCompiledBindingsByDefault`).

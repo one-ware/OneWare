@@ -626,14 +626,6 @@ public class TerminalManagerViewModel : ExtendedTool, ITerminalManagerService
         }
     }
 
-    [Obsolete("Use the overload that accepts an IProgress<string> outputProgress parameter. " +
-              "This overload is kept for plugin binary compatibility and will be removed in a future release.")]
-    public Task<TerminalExecutionResult> ExecuteInTerminalAsync(string command, string id,
-        string? workingDirectory, bool showInUi, TimeSpan? timeout, CancellationToken cancellationToken)
-    {
-        return ExecuteInTerminalAsync(command, id, workingDirectory, showInUi, timeout, null, cancellationToken);
-    }
-
     /// <summary>
     /// Runs <paramref name="command" /> in <paramref name="workingDirectory" /> on the same command line, so a
     /// multi-line command or the encoded PowerShell block keeps working: PowerShell on Windows, bash/zsh elsewhere.

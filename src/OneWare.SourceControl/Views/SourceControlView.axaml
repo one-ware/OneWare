@@ -593,7 +593,7 @@
                 <TextBox Classes="bare"
                     IsEnabled="{Binding ActiveRepository.HeadBranch, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Text="{Binding CommitMessage}" Name="CommitMessageBox"
-                    Watermark="Describe your changes..." Padding="10 10 10 8"
+                    PlaceholderText="Describe your changes..." Padding="10 10 10 8"
                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="52"
                     VerticalContentAlignment="Top" />
 

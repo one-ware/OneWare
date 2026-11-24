@@ -6,8 +6,6 @@
     <Import Project="..\..\build\props\OmniSharp.Extensions.Language.props"/>
     <Import Project="..\..\build\props\DynamicData.props"/>
     <Import Project="..\..\build\props\Avalonia.props"/>
-    <Import Project="..\..\build\props\Avalonia.Diagnostics.props"/>
-    <Import Project="..\..\build\props\ReactiveUI.Avalonia.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.ColorPicker.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.DataGrid.props"/>
     <Import Project="..\..\build\props\Avalonia.Controls.TreeDataGrid.props"/>
@@ -22,7 +20,7 @@
     <Import Project="..\..\build\props\Asmichi.ChildProcess.props"/>
     <Import Project="..\..\build\props\Svg.Controls.Skia.Avalonia.props"/>
     <Import Project="..\..\build\props\Xaml.Behaviors.Avalonia.props"/>
-    <Import Project="..\..\build\props\OpenCvSharp4.props"/>
+    <Import Project="..\..\build\props\OpenCvSharp5.props"/>
     <Import Project="..\..\build\props\Microsoft.ML.OnnxRuntime.Managed.props"/>
     <Import Project="..\..\build\props\Microsoft.Extensions.AI.Abstractions.props"/>
     <Import Project="..\..\build\props\DiffPlex.props"/>
@@ -38,6 +36,7 @@
 
     <ItemGroup>
         <None Include="readme.md" Pack="true" PackagePath=""/>
+        <None Include="buildTransitive/OneWare.Essentials.targets" Pack="true" PackagePath="build;buildTransitive"/>
     </ItemGroup>
 
     <ItemGroup>

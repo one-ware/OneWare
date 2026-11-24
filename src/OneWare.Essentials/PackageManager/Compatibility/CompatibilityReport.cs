@@ -4,7 +4,12 @@ public enum CompatibilityRecordKind
 {
     MissingDependency,
     RequiresCoreUpdate,
-    PluginOutdated
+    PluginOutdated,
+
+    /// <summary>
+    ///     The plugin has no valid <c>oneware-plugin.json</c>, usually because it was built for an older OneWare Studio.
+    /// </summary>
+    InvalidManifest
 }
 
 public record CompatibilityIssue(
@@ -28,6 +33,9 @@ public class CompatibilityReport(
                 return " ✓ Compatible";
 
             var report = "⚠ ";
+
+            if (Issues.Any(r => r.Kind == CompatibilityRecordKind.InvalidManifest))
+                return report + $"This package has no valid **{PluginManifest.FileName}** and was built for an older version of **OneWare Studio**. \n\n > Please update the package.\n";
 
             if (StudioUpdateSuggested)
                 report += "This package requires a newer Version of **OneWare Studio**! \n\n > Please update **OneWare Studio** to the latest version.\n\n";

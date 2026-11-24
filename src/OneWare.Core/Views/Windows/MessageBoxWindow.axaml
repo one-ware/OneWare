@@ -38,7 +38,7 @@
                             <TextBlock IsVisible="{Binding ShowInputLabel}" Text="{Binding InputLabel}" />
                             <TextBox Name="InputBox" Text="{Binding Input, Mode=TwoWay}"
                                      PasswordChar="{Binding PasswordChar}"
-                                     Watermark="{Binding InputPlaceholder}" />
+                                     PlaceholderText="{Binding InputPlaceholder}" />
                         </StackPanel>
                     </DockPanel>
                 </DockPanel>

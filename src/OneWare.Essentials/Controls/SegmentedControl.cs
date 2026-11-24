@@ -30,8 +30,9 @@ public class SegmentedControl : SelectingItemsControl
     {
         base.OnPointerPressed(e);
 
-        if (e.Source is Visual source && e.GetCurrentPoint(source).Properties.IsLeftButtonPressed)
-            e.Handled = UpdateSelectionFromEventSource(e.Source);
+        if (e.Source is Visual source && e.GetCurrentPoint(source).Properties.IsLeftButtonPressed &&
+            GetContainerFromEventSource(e.Source) is { } container)
+            UpdateSelectionFromEvent(container, e);
     }
 
     protected override Control CreateContainerForItemOverride(object? item, int index, object? recycleKey)

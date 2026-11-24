@@ -65,7 +65,7 @@
                         Placement="TopEdgeAlignedRight">
                     <DockPanel MinWidth="200" MaxHeight="360">
                         <TextBox DockPanel.Dock="Top" Padding="4 5" Height="30"
-                                 Watermark="Search models..." BorderThickness="0"
+                                 PlaceholderText="Search models..." BorderThickness="0"
                                  Text="{Binding ModelSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <!-- OneWare Agents passes requests on to the model providers (terms 3.15) -->
                         <TextBlock DockPanel.Dock="Bottom" Margin="8 4 8 6" MaxWidth="260"

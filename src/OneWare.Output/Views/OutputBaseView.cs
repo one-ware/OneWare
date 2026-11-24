@@ -6,11 +6,12 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using DynamicData.Binding;
 using OneWare.Output.ViewModels;
+using OneWare.Essentials.Helpers;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.Output.Views;
 
@@ -78,13 +79,13 @@ public abstract class OutputBaseView : UserControl
     {
         _viewModel!.WhenValueChanged(x => x.AutoScroll)
             .Throttle(TimeSpan.FromMilliseconds(20))
-            .ObserveOn(AvaloniaScheduler.Instance)
+            .ObserveOn(UiScheduler.Instance)
             .Subscribe(_ => ScrollToEnd())
             .DisposeWith(_subscriptions);
 
         _viewModel!.OutputDocument.WhenValueChanged(x => x.LineCount)
             .Throttle(TimeSpan.FromMilliseconds(20))
-            .ObserveOn(AvaloniaScheduler.Instance)
+            .ObserveOn(UiScheduler.Instance)
             .Subscribe(_ =>
             {
                 UpdateLineColors();

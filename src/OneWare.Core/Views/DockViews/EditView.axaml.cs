@@ -179,7 +179,7 @@ public partial class EditView : UserControl
 
     #region General
 
-    protected override void OnLostFocus(RoutedEventArgs e)
+    protected override void OnLostFocus(FocusChangedEventArgs e)
     {
         CodeBox.TextArea.TextView.Cursor = Cursor.Parse("IBeam");
         CodeBox.ModificationService.ClearModification("Control_Underline");

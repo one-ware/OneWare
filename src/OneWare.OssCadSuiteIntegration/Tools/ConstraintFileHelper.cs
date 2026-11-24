@@ -2,11 +2,6 @@ namespace OneWare.OssCadSuiteIntegration.Tools;
 
 public class ConstraintFileHelper
 {
-    [Obsolete(message: "Use ConvertPcfToCcf instead")]
-    public static void Convert(string pcfPath, string ccfPath)
-    {
-        ConvertPcfToCcf(pcfPath, ccfPath);
-    }
 
     public static void ConvertPcfToCcf(string pcfPath, string ccfPath)
     {

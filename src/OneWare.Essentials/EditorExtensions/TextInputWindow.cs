@@ -31,7 +31,7 @@ public class TextInputWindow : Popup
         Child = _textInputControl;
 
         TextArea = textArea ?? throw new ArgumentNullException(nameof(textArea));
-        _parentWindow = textArea.GetVisualRoot() as Window ?? throw new NullReferenceException("No VisualRoot");
+        _parentWindow = TopLevel.GetTopLevel(textArea) as Window ?? throw new NullReferenceException("No VisualRoot");
 
         PlacementGravity = PopupGravity.BottomRight;
         PlacementAnchor = PopupAnchor.TopLeft;
@@ -131,7 +131,7 @@ public class TextInputWindow : Popup
 
     private void AttachEvents()
     {
-        ((ISetLogicalParent)this).SetParent(TextArea.GetVisualRoot() as ILogical);
+        ((ISetLogicalParent)this).SetParent(TopLevel.GetTopLevel(TextArea));
 
         LostFocus += Focus_Lost;
         TextArea.TextView.ScrollOffsetChanged += TextViewScrollOffsetChanged;

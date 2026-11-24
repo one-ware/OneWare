@@ -33,7 +33,7 @@
             </StackPanel>
 
             <Panel>
-                <controls:HotkeyTextBox Watermark="Press key combination"
+                <controls:HotkeyTextBox PlaceholderText="Press key combination"
                                         Background="{DynamicResource ThemeControlLowBrush}"
                                         CapturedKeyGesture="{Binding CapturedKeyGesture}">
                     <Interaction.Behaviors>

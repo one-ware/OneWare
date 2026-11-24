@@ -29,7 +29,7 @@
             </Button>
         </StackPanel>
         <TextBox IsEnabled="{Binding Setting.IsEnabledObservable^, FallbackValue={x:True}}"
-                 Watermark="{Binding Watermark}"
+                 PlaceholderText="{Binding Watermark}"
                  Text="{Binding Setting.Value, Mode=TwoWay}" />
         <TextBlock Classes="setting-validation warning caption" />
     </StackPanel>

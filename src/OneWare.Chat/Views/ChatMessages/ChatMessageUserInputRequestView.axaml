@@ -41,7 +41,7 @@
 
                 <Grid ColumnDefinitions="*, Auto" ColumnSpacing="6"
                       IsVisible="{Binding Event.AllowFreeform}">
-                    <TextBox Grid.Column="0" Watermark="Type your answer…"
+                    <TextBox Grid.Column="0" PlaceholderText="Type your answer…"
                              Text="{Binding FreeformText, Mode=TwoWay}">
                         <TextBox.KeyBindings>
                             <KeyBinding Gesture="Enter" Command="{Binding SubmitFreeform}" />

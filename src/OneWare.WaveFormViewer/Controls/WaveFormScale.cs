@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using DynamicData.Binding;
 using OneWare.Essentials.Helpers;
 using OneWare.WaveFormViewer.ViewModels;
+using OneWare.Essentials.Extensions;
 
 namespace OneWare.WaveFormViewer.Controls;
 

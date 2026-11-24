@@ -59,13 +59,13 @@
 
             <StackPanel Spacing="3" Orientation="Vertical" IsVisible="{Binding !UserIsAuthenticated}">
                 <TextBlock Text="Email (optional):" />
-                <TextBox Text="{Binding Mail}" Watermark="Enter your email so we can help you directly." />
+                <TextBox Text="{Binding Mail}" PlaceholderText="Enter your email so we can help you directly." />
             </StackPanel>
         </StackPanel>
 
         <DockPanel LastChildFill="True" Margin="0,3">
             <TextBlock Text="Message:" DockPanel.Dock="Top" Margin="0,3" />
-            <TextBox Text="{Binding Message}" AcceptsReturn="True" TextWrapping="Wrap" Watermark="Enter your message"
+            <TextBox Text="{Binding Message}" AcceptsReturn="True" TextWrapping="Wrap" PlaceholderText="Enter your message"
                      DockPanel.Dock="Bottom" />
         </DockPanel>
 

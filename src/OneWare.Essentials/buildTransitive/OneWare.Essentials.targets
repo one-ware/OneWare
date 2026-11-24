@@ -1,0 +1,56 @@
+<Project>
+    <!--
+        Generates oneware-plugin.json for OneWare Studio plugins (projects with EnableDynamicLoading=true).
+        Every PackageReference and ProjectReference marked with Private="false" is expected to be provided by
+        OneWare Studio or by another plugin and is written to the manifest with its assembly version.
+        Set OneWareGeneratePluginManifest=false to write the manifest yourself.
+    -->
+    <Target Name="GenerateOneWarePluginManifest"
+            AfterTargets="ResolveAssemblyReferences"
+            BeforeTargets="AssignTargetPaths;GetCopyToOutputDirectoryItems"
+            Condition="'$(OneWareGeneratePluginManifest)' == 'true' or ('$(OneWareGeneratePluginManifest)' == '' and '$(EnableDynamicLoading)' == 'true')">
+        <PropertyGroup>
+            <OneWarePluginManifestFile Condition="'$(OneWarePluginManifestFile)' == ''">$(IntermediateOutputPath)oneware-plugin.json</OneWarePluginManifestFile>
+        </PropertyGroup>
+        <ItemGroup>
+            <_OneWareHostPackage Include="@(PackageReference)"
+                                 Condition="'%(PackageReference.Private)' == 'false'"/>
+        </ItemGroup>
+        <PropertyGroup>
+            <_OneWareHostPackages>;@(_OneWareHostPackage->ToLowerInvariant());</_OneWareHostPackages>
+        </PropertyGroup>
+        <ItemGroup>
+            <_OneWareHostReference Include="@(ReferencePath)"
+                                   Condition="'%(ReferencePath.NuGetPackageId)' != '' and $(_OneWareHostPackages.Contains(';$([System.String]::Copy('%(ReferencePath.NuGetPackageId)').ToLowerInvariant());'))"/>
+            <_OneWareHostReference Include="@(ReferencePath)"
+                                   Condition="'%(ReferencePath.ReferenceSourceTarget)' == 'ProjectReference' and '%(ReferencePath.Private)' == 'false'"/>
+        </ItemGroup>
+
+        <GetAssemblyIdentity AssemblyFiles="@(_OneWareHostReference)">
+            <Output TaskParameter="Assemblies" ItemName="_OneWareHostAssembly"/>
+        </GetAssemblyIdentity>
+
+        <ItemGroup>
+            <_OneWarePluginManifestLine Include="{"/>
+            <_OneWarePluginManifestLine Include="%20%20&quot;manifestVersion&quot;: 1,"/>
+            <_OneWarePluginManifestLine Include="%20%20&quot;dependencies&quot;: {"/>
+            <_OneWarePluginManifestLine Include="@(_OneWareHostAssembly->'%20%20%20%20&quot;%(Name)&quot;: &quot;%(Version)&quot;', ',%0A')"
+                                        Condition="'@(_OneWareHostAssembly)' != ''"/>
+            <_OneWarePluginManifestLine Include="%20%20}"/>
+            <_OneWarePluginManifestLine Include="}"/>
+        </ItemGroup>
+
+        <WriteLinesToFile File="$(OneWarePluginManifestFile)"
+                          Lines="@(_OneWarePluginManifestLine)"
+                          Overwrite="true"
+                          WriteOnlyWhenDifferent="true"/>
+
+        <ItemGroup>
+            <FileWrites Include="$(OneWarePluginManifestFile)"/>
+            <None Include="$(OneWarePluginManifestFile)"
+                  Link="oneware-plugin.json"
+                  CopyToOutputDirectory="PreserveNewest"
+                  CopyToPublishDirectory="PreserveNewest"/>
+        </ItemGroup>
+    </Target>
+</Project>

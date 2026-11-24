@@ -193,12 +193,12 @@ public class WaveFormViewTests
         Assert.NotEqual(GetPixels(withMarkers), GetPixels(withoutMarkers));
 
         if (Environment.GetEnvironmentVariable("WAVEFORM_EXPORT_SAMPLE") is { } samplePath)
-            withMarkers.Save(samplePath);
+            withMarkers.Save(samplePath, PngBitmapEncoderOptions.Default);
 
         var path = Path.Combine(Path.GetTempPath(), $"waveform-{Guid.NewGuid()}.png");
         try
         {
-            withMarkers.Save(path);
+            withMarkers.Save(path, PngBitmapEncoderOptions.Default);
             Assert.True(new FileInfo(path).Length > 0);
         }
         finally

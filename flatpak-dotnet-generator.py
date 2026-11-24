@@ -117,7 +117,7 @@ def main() -> None:
                 check=True,
             )
             # Parse output to find Microsoft.NETCore.App runtime version
-            # Output looks like: Microsoft.NETCore.App 10.0.3 [/usr/lib/sdk/dotnet10/shared/Microsoft.NETCore.App]
+            # Output looks like: Microsoft.NETCore.App 10.0.3 [/usr/lib/sdk/dotnet11/shared/Microsoft.NETCore.App]
             for line in result.stdout.strip().split('\n'):
                 if 'Microsoft.NETCore.App' in line:
                     parts = line.split()

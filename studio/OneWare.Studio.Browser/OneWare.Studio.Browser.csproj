@@ -6,7 +6,7 @@
 
     <PropertyGroup>
         <Version>$(StudioVersion)</Version>
-        <TargetFramework>net10.0-browser</TargetFramework>
+        <TargetFramework>net11.0-browser</TargetFramework>
         <OutputType>Exe</OutputType>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <!--Enable Threading once dotnet runtime issues are resolved

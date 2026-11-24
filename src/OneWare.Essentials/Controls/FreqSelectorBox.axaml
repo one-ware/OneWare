@@ -7,7 +7,7 @@
     <Grid Margin="0">
         <Grid.ColumnDefinitions>*,50</Grid.ColumnDefinitions>
         <TextBox Padding="4 2 4 0" Name="InputBox" x:CompileBindings="False"
-                 Watermark="{Binding Label, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                 PlaceholderText="{Binding Label, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
                  Text="{Binding Input, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}" />
         <ComboBox Padding="3, 2, 1, 0" Grid.Column="1" x:CompileBindings="False"
                   SelectedIndex="{Binding FreqUnit, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"

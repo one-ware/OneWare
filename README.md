@@ -4,7 +4,7 @@
 
 ## OneWare Studio - The Next Generation IDE for Electronics Development
 
-Using .NET 10.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
+Using .NET 11.0 And [Avalonia](https://github.com/AvaloniaUI/Avalonia)
 
 ![image](https://github.com/user-attachments/assets/0f847aeb-a4df-495b-88db-c6729e0609a6)
 

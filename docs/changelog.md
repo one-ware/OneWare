@@ -1,3 +1,13 @@
+## 2027.1.0
+
+- OneWare Studio now uses calendar versioning (`YYYY.N.patch`)
+- Updated to .NET 11 and Avalonia 12, including the new window decorations
+- Updated OpenCV to OpenCvSharp5 5.1
+- Extensions now ship an `oneware-plugin.json` manifest instead of `compatibility.txt`. Extensions built for 1.x
+  are not loaded and need an update for 2027.1
+- Extensions built for a 2027 release keep working on all later 2027 releases
+- Removed APIs that were marked obsolete in 1.x. See the plugin migration guide in `docs/PluginDevelopment.md`
+
 ## 1.0.48
 
 - Fixed the project explorer not showing existing files when creating an FPGA project in an existing folder

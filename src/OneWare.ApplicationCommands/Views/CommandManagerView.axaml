@@ -14,7 +14,7 @@
                          PrefWidth="500" SizeToContent="Height"
                          ShowTitle="False" Title="Application Commands"
                          Name="CommandManagerViewView"
-                         SystemDecorations="{OnPlatform BorderOnly, Windows=None}"
+                         WindowDecorations="{OnPlatform BorderOnly, Windows=None}"
                          ExtendClientAreaToDecorationsHint="False"
                          CanResize="False"
                          WindowStartupLocation="CenterOwner"
@@ -57,7 +57,7 @@
                                          Classes="bare"
                                          Text="{Binding SearchText}"
                                          Padding="7 0"
-                                         Watermark="Find..." VerticalContentAlignment="Center">
+                                         PlaceholderText="Find..." VerticalContentAlignment="Center">
                                     <TextBox.InnerLeftContent>
                                         <PathIcon Classes="small muted" Margin="0 0 6 0"
                                                   Data="{StaticResource Icon.Search}" />

@@ -13,8 +13,8 @@ End-user documentation lives at [one-ware.com/docs](https://one-ware.com/docs/st
 
 ## Tech stack
 
-- **.NET 10**, C# with nullable reference types
-- **[Avalonia 11.3](https://docs.avaloniaui.net/)** with `SimpleTheme` and a shared design layer
+- **.NET 11**, C# with nullable reference types
+- **[Avalonia 12](https://docs.avaloniaui.net/)** with `SimpleTheme` and a shared design layer
   ([Styling](Styling.md)), [Dock.Avalonia](https://github.com/wieslawsoltes/Dock) for the docking layout and
   [AvaloniaEdit](https://github.com/AvaloniaUI/AvaloniaEdit) + TextMate for the editor
 - **MVVM** with [CommunityToolkit.Mvvm](https://learn.microsoft.com/dotnet/communitytoolkit/mvvm/)
@@ -22,7 +22,7 @@ End-user documentation lives at [one-ware.com/docs](https://one-ware.com/docs/st
 - **Dependency injection** with `Microsoft.Extensions.DependencyInjection`
 - **Logging** with `Microsoft.Extensions.Logging` backed by Serilog
 - **Language servers** over LSP (OmniSharp client) for VHDL, Verilog, C++, Python, TypeScript and more
-- **Tests** with xUnit and `Avalonia.Headless.XUnit`
+- **Tests** with xUnit v3 and `Avalonia.Headless.XUnit`
 
 ## Repository layout
 
@@ -69,7 +69,7 @@ Every feature is a module: a class deriving from `OneWareModuleBase` (`IOneWareM
    panels, languages, file icons, project types, toolchains or settings.
 
 Built-in modules and external plugins use the same contract. Plugins are folders under
-`~/OneWareStudio/Packages/Plugins` that contain the assemblies and a `compatibility.txt`, and are usually
+`~/OneWareStudio/Packages/Plugins` that contain the assemblies and an `oneware-plugin.json`, and are usually
 installed through the package manager. See [Plugin Development](PluginDevelopment.md) for details and the
 list of available services.
 

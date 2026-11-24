@@ -276,7 +276,7 @@ public class OssCadSuiteIntegrationModule : OneWareModuleBase
                 l.Add(new MenuItemModel("YosysNetList")
                 {
                     Header = "Generate Json Netlist",
-                    Command = new AsyncRelayCommand(() => yosysService.CreateNetListJsonAsync(verilog))
+                    Command = new AsyncRelayCommand(() => yosysService.CreateJsonNetListAsync(verilog))
                 });
             if (x is [IProjectFile { Extension: ".vcd" or ".ghw" or ".fst" or ".lxt" } wave] &&
                 IsOssPathValid(settingsService.GetSettingValue<string>(OssCadSuiteHelper.OssPathSetting)))

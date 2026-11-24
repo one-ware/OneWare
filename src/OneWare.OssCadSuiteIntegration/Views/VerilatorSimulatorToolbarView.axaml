@@ -13,11 +13,11 @@
         </StackPanel>
         <StackPanel Classes="form-row">
             <TextBlock Text="Arguments" ToolTip.Tip="Additional arguments passed to Verilator" />
-            <TextBox Width="180" Watermark="verilator arguments" Text="{Binding VerilatorArguments}" />
+            <TextBox Width="180" PlaceholderText="verilator arguments" Text="{Binding VerilatorArguments}" />
         </StackPanel>
         <StackPanel Classes="form-row">
             <TextBlock Text="Runtime" ToolTip.Tip="Arguments passed to the simulation executable" />
-            <TextBox Width="150" Watermark="runtime arguments" Text="{Binding VerilatorRuntimeArguments}" />
+            <TextBox Width="150" PlaceholderText="runtime arguments" Text="{Binding VerilatorRuntimeArguments}" />
         </StackPanel>
     </WrapPanel>
 </UserControl>

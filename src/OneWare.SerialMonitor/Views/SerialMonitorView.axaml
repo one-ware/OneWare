@@ -113,7 +113,7 @@
                 </StackPanel>
 
                 <TextBox Name="CommandBox"
-                         Watermark="Message to send (Enter to send, Up / Down for history)"
+                         PlaceholderText="Message to send (Enter to send, Up / Down for history)"
                          Text="{Binding CommandBoxText, Mode=TwoWay}">
                     <Interaction.Behaviors>
                         <behaviors:CommandOnKeyPressedBehavior TriggerKey="Enter" Command="{Binding SendText}"

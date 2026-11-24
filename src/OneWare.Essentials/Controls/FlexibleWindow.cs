@@ -50,8 +50,8 @@ public class FlexibleWindow : UserControl
         AvaloniaProperty.Register<FlexibleWindow, IReadOnlyList<WindowTransparencyLevel>>(nameof(TransparencyLevelHint),
             Array.Empty<WindowTransparencyLevel>());
 
-    public static readonly StyledProperty<SystemDecorations> SystemDecorationsProperty =
-        AvaloniaProperty.Register<FlexibleWindow, SystemDecorations>(nameof(SystemDecorations), SystemDecorations.Full);
+    public static readonly StyledProperty<WindowDecorations> WindowDecorationsProperty =
+        AvaloniaProperty.Register<FlexibleWindow, WindowDecorations>(nameof(WindowDecorations), WindowDecorations.Full);
 
     public static readonly StyledProperty<bool> ExtendClientAreaToDecorationsHintProperty =
         AvaloniaProperty.Register<FlexibleWindow, bool>(nameof(ExtendClientAreaToDecorationsHint), true);
@@ -134,10 +134,10 @@ public class FlexibleWindow : UserControl
         set => SetValue(TransparencyLevelHintProperty, value);
     }
 
-    public SystemDecorations SystemDecorations
+    public WindowDecorations WindowDecorations
     {
-        get => GetValue(SystemDecorationsProperty);
-        set => SetValue(SystemDecorationsProperty, value);
+        get => GetValue(WindowDecorationsProperty);
+        set => SetValue(WindowDecorationsProperty, value);
     }
 
     public bool ExtendClientAreaToDecorationsHint
@@ -249,7 +249,7 @@ public class FlexibleWindow : UserControl
         host.Bind(Window.WindowStartupLocationProperty, this.GetObservable(WindowStartupLocationProperty));
         host.Bind(Window.IconProperty, this.GetObservable(IconProperty));
         host.Bind(Window.TitleProperty, this.GetObservable(TitleProperty));
-        host.Bind(Window.SystemDecorationsProperty, this.GetObservable(SystemDecorationsProperty));
+        host.Bind(Window.WindowDecorationsProperty, this.GetObservable(WindowDecorationsProperty));
         host.Bind(Window.ExtendClientAreaToDecorationsHintProperty,
             this.GetObservable(ExtendClientAreaToDecorationsHintProperty));
         host.Bind(Window.CanResizeProperty, this.GetObservable(CanResizeProperty));

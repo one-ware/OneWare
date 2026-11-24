@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Input;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
@@ -32,7 +33,7 @@ public class ClearValidationErrorsLostFocusBehavior : Trigger<TextBox>
         base.OnDetaching();
     }
 
-    private void OnLostFocus(object? sender, RoutedEventArgs e)
+    private void OnLostFocus(object? sender, FocusChangedEventArgs e)
     {
         if (AssociatedObject == null)
             return;
