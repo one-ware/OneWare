@@ -7,6 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.23" />
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
         <ProjectReference Include="..\VtNetCore.Avalonia\VtNetCore.Avalonia\VtNetCore.Avalonia.csproj"/>
     </ItemGroup>
