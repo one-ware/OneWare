@@ -8,7 +8,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.22" />
+        <PackageReference Include="Avalonia" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.23" />
         <AvaloniaResource Include="Assets\TOML.tmLanguage.json"/>
     </ItemGroup>
 </Project>

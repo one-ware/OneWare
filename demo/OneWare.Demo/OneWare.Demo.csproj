@@ -20,6 +20,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.23" />
         <UpToDateCheckInput Remove="Assets\DemoFiles\CppTest.cpp"/>
         <UpToDateCheckInput Remove="Assets\DemoFiles\DemoProject.fpgaproj"/>
         <UpToDateCheckInput Remove="Assets\DemoFiles\out.svg"/>

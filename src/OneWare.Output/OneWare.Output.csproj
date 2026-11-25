@@ -3,7 +3,9 @@
     <Import Project="..\..\build\props\OneWare.Module.props"/>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.22" />
+        <PackageReference Include="Avalonia" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.23" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.23" />
         <ProjectReference Include="..\OneWare.Essentials\OneWare.Essentials.csproj"/>
     </ItemGroup>
 </Project>
